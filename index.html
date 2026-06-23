@@ -1,0 +1,3416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Facilities – KTMEX</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{font-family:'DM Sans',system-ui,sans-serif}
+.mono{font-family:'Space Mono',monospace}
+:root{--navy:#0A1628;--blue:#2563EB;--border:#E2E8F0;--text:#1E293B}
+body{background:#F1F5F9;min-height:100vh}
+.fade{animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.slide{animation:slideIn .25s cubic-bezier(.22,1,.36,1) both}
+@keyframes slideIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.inp{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 13px;font-size:.875rem;outline:none;background:#FAFBFC;transition:.15s}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.inp::placeholder{color:#94A3B8}
+textarea.inp{resize:none}
+select.inp{cursor:pointer}
+.card{background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-sm{background:#fff;border-radius:12px;border:1px solid var(--border)}
+.btn-p{background:var(--blue);color:#fff;border:none;border-radius:12px;padding:12px 20px;font-weight:600;cursor:pointer;transition:.15s;font-size:.875rem}
+.btn-p:hover{background:#1D4ED8}.btn-p:active{transform:scale(.98)}.btn-p:disabled{opacity:.6;cursor:not-allowed}
+.btn-g{background:#F1F5F9;color:#475569;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.btn-g:hover{background:#E2E8F0}
+.btn-ok{background:#16A34A;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.btn-ok:hover{background:#15803D}
+.btn-red{background:#DC2626;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.btn-red:hover{background:#B91C1C}
+.btn-compra{background:#7C3AED;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
+.btn-compra:hover{background:#6D28D9}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:7px;font-size:.72rem;font-weight:600;border:1px solid transparent}
+.b-pend{background:#F8FAFC;color:#475569;border-color:#CBD5E1}
+.b-ing{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
+.b-ing-rej{background:#FEE2E2;color:#B91C1C;border-color:#FECACA}
+.b-mgr{background:#F0FDF4;color:#15803D;border-color:#BBF7D0}
+.b-mgr-rej{background:#FEE2E2;color:#7F1D1D;border-color:#FECACA}
+.b-ejec{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.b-done{background:#D1FAE5;color:#065F46;border-color:#6EE7B7}
+.b-alta{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.b-media{background:#FFFBEB;color:#92400E;border-color:#FDE68A}
+.b-baja{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
+.b-compra{background:#F3E8FF;color:#7C3AED;border-color:#DDD6FE}
+.b-compra-pend{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.b-compra-aprob{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
+.b-compra-rech{background:#FEE2E2;color:#B91C1C;border-color:#FECACA}
+.b-compra-comprado{background:#DBEAFE;color:#1D4ED8;border-color:#BFDBFE}
+.b-compra-entregado{background:#D1FAE5;color:#065F46;border-color:#6EE7B7}
+.b-compra-parcial{background:#FFFBEB;color:#92400E;border-color:#FDE68A}
+.b-compra-cancel{background:#F1F5F9;color:#64748B;border-color:#CBD5E1}
+.badge-p{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
+.badge-np{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
+.badge-na{background:#F8FAFC;color:#64748B;border:1px solid #CBD5E1;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
+.tbl-row{cursor:pointer;transition:background .1s}.tbl-row:hover{background:#F8FAFC}
+.tbl-row td{padding:11px 12px;border-bottom:1px solid #F1F5F9;font-size:.82rem}
+thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--border);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748B}
+.modal-bg{position:fixed;inset:0;z-index:60;background:rgba(10,22,40,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:12px}
+.modal-box{background:#fff;border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.22);width:100%;max-width:700px;max-height:92vh;overflow-y:auto}
+#toast{position:fixed;bottom:22px;right:22px;z-index:99;background:var(--navy);color:#fff;padding:11px 17px;border-radius:13px;box-shadow:0 8px 24px rgba(0,0,0,.22);font-size:.84rem;display:flex;align-items:center;gap:9px}
+.tab-btn{padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;transition:.15s;background:transparent;color:#64748B}
+.tab-btn.active{background:#EFF6FF;color:#1D4ED8}
+.tab-btn-compra.active{background:#F3E8FF;color:#7C3AED}
+.lpa-radio{display:flex;gap:6px}
+.lpa-radio label{cursor:pointer;padding:4px 10px;border-radius:8px;font-size:.75rem;font-weight:600;border:1.5px solid #E2E8F0;color:#94A3B8;transition:.12s}
+.lpa-radio input:checked+label.lp{border-color:#22C55E;background:#F0FDF4;color:#166534}
+.lpa-radio input:checked+label.lnp{border-color:#EF4444;background:#FEF2F2;color:#B91C1C}
+.lpa-radio input:checked+label.lna{border-color:#94A3B8;background:#F8FAFC;color:#475569}
+.lpa-radio input{display:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#F1F5F9}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px}
+.status-timeline{display:flex;flex-direction:column;gap:8px}
+.st-item{display:flex;gap:10px;align-items:flex-start;padding-left:14px;position:relative}
+.st-item::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:#CBD5E1}
+.st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}.st-item.st-compra::before{background:#7C3AED}
+.nav-btn{padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s}
+.nav-btn:hover{background:rgba(255,255,255,.08)}
+.nav-btn.active{background:rgba(255,255,255,.12);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ CONFIGURACIÓN ══ -->
+<script>
+// ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOJ-qT2wGJhh3pi7WG_6oNVzuElvEMMpHij9fwGkSZMeszPAHtVcXJSO78tV_U8Yi0/exec";
+
+// Perfiles para selección en LPA (no requieren contraseña)
+const LPA_PERFILES = [
+  { nombre:"Lenin Wenceslao Acosta Soto",     puesto:"Técnico Facilities" },
+  { nombre:"Luis Antonio Serrano Rivera",      puesto:"Técnico Facilities" },
+  { nombre:"Jorge Antonio Muñiz Cano",        puesto:"Técnico Facilities" },
+  { nombre:"Juan Diego Calderon Fortanell",   puesto:"Técnico Facilities" },
+  { nombre:"Jorge Patlán Florencio",          puesto:"Técnico Facilities" },
+  { nombre:"Andres Ramirez Beltran",          puesto:"Ingeniero Facilities" },
+  { nombre:"Pedro Loya Rocha",                puesto:"Ingeniero Facilities" },
+  { nombre:"Atsushi Inagaki",                 puesto:"Manager Facilities" },
+];
+
+const TECNICOS = [
+  "Lenin Wenceslao Acosta Soto","Luis Antonio Serrano Rivera",
+  "Jorge Antonio Muñiz Cano","Juan Diego Calderon Fortanell","Jorge Patlán Florencio"
+];
+
+const DEPARTAMENTOS = [
+  "Welding","Blanking","Stamping","Maintenance","Safety","Security",
+  "Environmental","Human Resources","Accounting","Purchasing",
+  "Quality","Internal Logistics","PE","Otras"
+];
+
+const GERENTES = [
+  "José García Labastida","Francisco Gerardo Morales Llanos",
+  "Karina Guadalupe Sánchez Trejo","Takanori Jige","Hiromasa Tanaka",
+  "José Luis Ramos","Daniel Godoy","Tomás Torres",
+  "Carlos Erick García Alvirde","Toru Inose","Inagaki san","Otras"
+];
+
+const TIPOS_SOLICITUD = [
+  "Instalación eléctrica","Instalación neumática","Instalación hidráulica",
+  "Infraestructura / Edificio","Baños / Sanitarios","Aire acondicionado",
+  "Iluminación","Instalación de activo nuevo en piso",
+  "Instalación de activo nuevo en muros o pilares","Otras"
+];
+
+const ESTATUS_MANUAL = [
+  "En ejecución","Trabajo completado","En espera de refacciones","Cancelado"
+];
+
+// ── COMPRAS ────────────────────────────────────────────────
+const UNIDADES_COMPRA = [
+  "Pieza","Metros lineales","Caja","Servicio","Litros","Kilogramos",
+  "Metros cuadrados","Juego","Set","Lote","Par","Metros cúbicos"
+];
+
+const ESTATUS_COMPRA = {
+  PENDIENTE: 'Pendiente de aprobación',
+  APROBADA: 'Aprobada - En compra',
+  RECHAZADA: 'Rechazada',
+  COMPRADO: 'Comprado',
+  PARCIAL: 'Parcialmente entregado',
+  ENTREGADO: 'Entregado',
+  CANCELADO: 'Cancelado'
+};
+
+// Items LPA por área
+const LPA_AREAS = {
+  compresores: {
+    label:"Cuarto de Compresores",
+    items:[
+      "Presión de descarga del compresor dentro del rango operativo estándar (marcado en manómetro).",
+      "Temperatura de operación normal; sin alarmas activas ni indicios de sobrecalentamiento.",
+      "Nivel de aceite entre marcas mín./máx.; sin fugas en conexiones, mangueras o carcasa.",
+      "Secadores de aire en operación; punto de rocío dentro del rango especificado.",
+      "Purgas automáticas funcionando; sin acumulación de condensado en tanques o líneas.",
+      "Filtros sin alarma de saturación; diferencial de presión dentro de rango.",
+      "Sin fugas de aire audibles en la red interna del cuarto.",
+      "Bitácora de control diario llena, firmada y al turno vigente.",
+      "Área limpia y ordenada (5S); sin herramientas o materiales ajenos a la operación.",
+      "Rejillas de ventilación libres; temperatura ambiente del cuarto adecuada.",
+      "Guardas de seguridad instaladas; paros de emergencia accesibles y señalizados.",
+      "Extintor en sitio, cargado, con recarga vigente y acceso despejado."
+    ]
+  },
+  subestaciones: {
+    label:"Subestaciones Eléctricas I y II",
+    items:[
+      "Puerta cerrada con llave; acceso restringido y señalización de riesgo eléctrico visible.",
+      "Equipo dieléctrico completo y en buen estado (tapete, guantes, pértiga) en su lugar designado.",
+      "Sin alarmas activas en relevadores o medidores; lecturas de voltaje y corriente en rango.",
+      "Nivel y temperatura de aceite del transformador en rango; sin fugas ni manchas en base.",
+      "Sin ruidos anormales (zumbido excesivo, chisporroteo) ni olor a material quemado.",
+      "Termografía mensual vigente y publicada; sin puntos calientes pendientes de atender.",
+      "Tableros cerrados, identificados y sin tapas o interiores expuestos.",
+      "Diagrama unifilar visible, legible y actualizado.",
+      "Iluminación general y lámpara de emergencia funcionando.",
+      "Extintor del tipo adecuado (CO2), vigente y con acceso despejado.",
+      "Sin material, refacciones o equipo ajeno almacenado dentro de la subestación.",
+      "Bitácora de lecturas llena y firmada al turno vigente."
+    ]
+  },
+  bombas: {
+    label:"Cuarto de Bombas",
+    items:[
+      "Bombas de torre de enfriamiento operando sin vibración, ruido o calentamiento anormal.",
+      "Bombas de agua de proceso (producción) operando sin vibración, ruido o calentamiento anormal.",
+      "Presiones de descarga dentro del rango operativo estándar (marcado en manómetro).",
+      "Sin fugas en sellos mecánicos, bridas o empaques de bombas y tuberías.",
+      "Manómetros legibles, con calibración vigente y rango operativo marcado.",
+      "Nivel de agua en cárcamo / tanque de succión dentro de rango; sin succión en vacío.",
+      "Tratamiento químico del agua de torres al día; registros de parámetros (pH, conductividad) llenos.",
+      "Válvulas identificadas y en posición correcta de operación (abierta/cerrada señalizada).",
+      "Drenajes y trincheras libres; sin encharcamientos en piso.",
+      "Bitácora de presiones y niveles llena y firmada al turno vigente.",
+      "Área limpia, ordenada (5S), con iluminación funcional y accesos despejados.",
+      "Guardas de acoplamiento instaladas; paros de emergencia accesibles; extintor vigente."
+    ]
+  },
+  maquinas: {
+    label:"Cuarto de Máquinas",
+    items:[
+      "Bombas de servicios generales operando sin vibración, ruido o calentamiento anormal.",
+      "Presiones de suministro de servicios generales dentro del rango operativo estándar.",
+      "Sin fugas en sellos mecánicos, bridas, empaques o conexiones de tubería.",
+      "Manómetros legibles, con calibración vigente y rango operativo marcado.",
+      "Tanques / sistemas hidroneumáticos sin alarmas; presión de precarga en rango.",
+      "Válvulas identificadas y en posición correcta de operación (abierta/cerrada señalizada).",
+      "Tableros de control cerrados, identificados y sin alarmas activas.",
+      "Aislamiento de tuberías íntegro; tuberías identificadas por código de color.",
+      "Sustancias químicas almacenadas, etiquetadas y con HDS disponible (NOM-018-STPS).",
+      "Bitácora de parámetros llena y firmada al turno vigente.",
+      "Área limpia y ordenada (5S); sin materiales ajenos a la operación.",
+      "Guardas de seguridad y paros de emergencia en su lugar; extintor vigente y despejado."
+    ]
+  },
+  general: {
+    label:"Instalaciones Generales y Perímetro",
+    items:[
+      "Azoteas, canalones y bajadas pluviales libres de acumulación de agua o material.",
+      "Tuberías aéreas identificadas por código de color; sin fugas visibles (agua, aire, gas).",
+      "Iluminación perimetral y de áreas comunes funcionando.",
+      "Tableros eléctricos de distribución cerrados, identificados y sin obstrucciones.",
+      "Equipos de aire acondicionado de áreas críticas sin fallas reportadas pendientes.",
+      "Señalización de seguridad visible, legible y en buen estado.",
+      "Rutas de evacuación y puntos de reunión despejados.",
+      "Almacén de Facilities ordenado; materiales y refacciones identificados (5S).",
+      "Trabajos de contratistas con permiso de trabajo visible y área delimitada.",
+      "Sin reportes abiertos de fugas o desviaciones en el perímetro sin acción asignada."
+    ]
+  }
+};
+</script>
+
+<!-- ══════════════════════════════════════════ NAV ══ -->
+<nav style="background:var(--navy);position:sticky;top:0;z-index:40;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+  <div style="max-width:1280px;margin:0 auto;padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="showView('home')">
+      <div style="width:34px;height:34px;background:#2563EB;border-radius:9px;display:flex;align-items:center;justify-content:center">
+        <i class="fas fa-tools" style="color:#fff;font-size:13px"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;color:#fff;font-size:.88rem;line-height:1.1">KTMEX</div>
+        <div style="color:#64748B;font-size:.68rem">Facilities System</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button onclick="showView('solicitud')" id="nav-sol" class="nav-btn">
+        <i class="fas fa-file-alt" style="margin-right:5px"></i>Solicitudes
+      </button>
+      <button onclick="showView('compras')" id="nav-compras" class="nav-btn">
+        <i class="fas fa-shopping-cart" style="margin-right:5px"></i>Compras
+      </button>
+      <button onclick="showView('lpa-select')" id="nav-lpa" class="nav-btn">
+        <i class="fas fa-clipboard-check" style="margin-right:5px"></i>Auditoría LPA
+      </button>
+      <button onclick="goAdmin()" id="nav-admin" class="nav-btn">
+        <i class="fas fa-lock" style="margin-right:5px"></i>Admin
+      </button>
+      <button id="btn-logout" onclick="logout()" style="display:none;padding:6px 12px;background:#EF4444;color:#fff;border:none;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer">
+        <i class="fas fa-sign-out-alt" style="margin-right:5px"></i>Salir
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════ VIEW: HOME ══ -->
+<div id="view-home" class="fade" style="max-width:1000px;margin:0 auto;padding:40px 16px">
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="width:68px;height:68px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 10px 28px rgba(37,99,235,.3)">
+      <i class="fas fa-tools" style="color:#fff;font-size:24px"></i>
+    </div>
+    <h1 style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0 0 6px">Sistema Facilities KTMEX</h1>
+    <p style="color:#64748B;font-size:.9rem;margin:0">Solicitudes de trabajo · Solicitudes de Compra · Auditorías LPA · Panel de administración</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+    <!-- Solicitud Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showView('solicitud')">
+      <div style="width:48px;height:48px;background:#EFF6FF;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-file-alt" style="color:#2563EB;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Solicitud de Trabajo</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Registra una nueva solicitud de instalación o mantenimiento para Facilities.</p>
+      <span style="color:#2563EB;font-size:.8rem;font-weight:600">Abrir formulario →</span>
+    </div>
+    <!-- Compras Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showView('compras')">
+      <div style="width:48px;height:48px;background:#F3E8FF;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-shopping-cart" style="color:#7C3AED;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Solicitud de Compra</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Solicita materiales, refacciones o servicios necesarios para mantenimiento.</p>
+      <span style="color:#7C3AED;font-size:.8rem;font-weight:600">Nueva solicitud →</span>
+    </div>
+    <!-- LPA Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showView('lpa-select')">
+      <div style="width:48px;height:48px;background:#F0FDF4;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-clipboard-check" style="color:#16A34A;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Auditoría LPA</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Realiza auditorías por capas en las 5 áreas de Facilities & Utilities.</p>
+      <span style="color:#16A34A;font-size:.8rem;font-weight:600">Iniciar auditoría →</span>
+    </div>
+    <!-- Admin Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
+      <div style="width:48px;height:48px;background:#F8FAFC;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-shield-halved" style="color:#475569;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Panel Administrativo</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Autorización de solicitudes, compras, asignación de técnicos y resultados LPA.</p>
+      <span style="color:#475569;font-size:.8rem;font-weight:600">Acceder →</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ VIEW: SOLICITUD FORM ══ -->
+<div id="view-solicitud" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(37,99,235,.28)">
+      <i class="fas fa-clipboard-list" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Solicitud de Trabajo</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
+  </div>
+
+  <div class="card" style="padding:24px">
+    <div id="sol-form">
+      <!-- Fecha -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar" style="color:#2563EB;margin-right:5px"></i>Fecha de solicitud *</label>
+        <input type="date" id="s-fecha" class="inp">
+      </div>
+      <!-- Nombre -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user" style="color:#2563EB;margin-right:5px"></i>Nombre del solicitante *</label>
+        <input type="text" id="s-nombre" class="inp" placeholder="Nombre completo">
+      </div>
+      <!-- Email -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-envelope" style="color:#2563EB;margin-right:5px"></i>Correo electrónico (para recibir folio) *</label>
+        <input type="email" id="s-email" class="inp" placeholder="usuario@ktmex.com">
+      </div>
+      <!-- Gerente -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user-tie" style="color:#2563EB;margin-right:5px"></i>Nombre del gerente de área *</label>
+        <select id="s-gerente" class="inp"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Departamento -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-building" style="color:#2563EB;margin-right:5px"></i>Departamento solicitante *</label>
+        <select id="s-depto" class="inp"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Tipo -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-wrench" style="color:#2563EB;margin-right:5px"></i>Tipo de solicitud *</label>
+        <select id="s-tipo" class="inp"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Descripción -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#2563EB;margin-right:5px"></i>Descripción detallada *</label>
+        <textarea id="s-desc" class="inp" rows="4" placeholder="Describe el trabajo requerido con el mayor detalle posible…"></textarea>
+      </div>
+      <!-- Foto -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#2563EB;margin-right:5px"></i>Fotografía (máx. 5 MB)</label>
+        <input type="file" id="s-foto" accept="image/*" class="inp" style="padding:8px">
+        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG, HEIC. La foto se guardará en Google Drive.</p>
+      </div>
+      <!-- Nueva instalación -->
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:8px"><i class="fas fa-question-circle" style="color:#2563EB;margin-right:5px"></i>¿Es una instalación nueva? *</label>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="s-nueva" value="Si" style="accent-color:#2563EB"> Sí
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="s-nueva" value="No" style="accent-color:#2563EB"> No
+          </label>
+        </div>
+      </div>
+      <button class="btn-p" id="btn-sol-submit" onclick="submitSolicitud()" style="width:100%">
+        <i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud
+      </button>
+      <p style="text-align:center;font-size:.72rem;color:#94A3B8;margin-top:8px">* Campos obligatorios</p>
+    </div>
+
+    <!-- Success -->
+    <div id="sol-success" style="display:none;text-align:center;padding:20px 0">
+      <div style="width:58px;height:58px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <i class="fas fa-check-circle" style="color:#22C55E;font-size:26px"></i>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 6px">¡Solicitud Enviada!</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 12px">Número de folio:</p>
+      <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:11px;padding:10px 20px;display:inline-block;margin-bottom:18px">
+        <span id="sol-folio" class="mono" style="font-size:1.2rem;font-weight:700;color:#2563EB"></span>
+      </div>
+      <p style="color:#64748B;font-size:.8rem;margin:0 0 20px">Facilities revisará tu solicitud a la brevedad. Recibirás confirmación por email.</p>
+      <button class="btn-g" onclick="resetSolicitud()"><i class="fas fa-plus" style="margin-right:6px"></i>Nueva Solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ VIEW: COMPRAS FORM ══ -->
+<div id="view-compras" style="display:none;max-width:620px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#7C3AED,#6D28D9);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(124,58,237,.28)">
+      <i class="fas fa-shopping-cart" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Solicitud de Compra</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Materials · Refacciones · Servicios · KTMEX</p>
+  </div>
+
+  <div class="card" style="padding:24px">
+    <div id="compra-form">
+      <!-- Fecha -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar" style="color:#7C3AED;margin-right:5px"></i>Fecha de solicitud *</label>
+        <input type="date" id="c-fecha" class="inp">
+      </div>
+      <!-- Nombre solicitante -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user" style="color:#7C3AED;margin-right:5px"></i>Nombre del solicitante *</label>
+        <select id="c-solicitante" class="inp">
+          <option value="">— Selecciona —</option>
+        </select>
+      </div>
+      <!-- Prioridad -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:8px"><i class="fas fa-flag" style="color:#7C3AED;margin-right:5px"></i>Prioridad *</label>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="c-prioridad" value="Alta" style="accent-color:#DC2626"> <span style="color:#DC2626;font-weight:600">Alta</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="c-prioridad" value="Media" style="accent-color:#D97706"> <span style="color:#D97706;font-weight:600">Media</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="c-prioridad" value="Baja" checked style="accent-color:#16A34A"> <span style="color:#16A34A;font-weight:600">Baja</span>
+          </label>
+        </div>
+      </div>
+      <!-- Descripción del material -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-box" style="color:#7C3AED;margin-right:5px"></i>Descripción del material requerido *</label>
+        <textarea id="c-descripcion" class="inp" rows="3" placeholder="De ser posible incluir: Marca / Modelo / Cantidad"></textarea>
+      </div>
+      <!-- Cantidad y Unidades -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-hashtag" style="color:#7C3AED;margin-right:5px"></i>Cantidad *</label>
+          <input type="number" id="c-cantidad" class="inp" min="1" placeholder="Cantidad">
+        </div>
+        <div>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-ruler" style="color:#7C3AED;margin-right:5px"></i>Unidades *</label>
+          <select id="c-unidades" class="inp"><option value="">— Selecciona —</option></select>
+        </div>
+      </div>
+      <!-- Fecha requerida -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar-check" style="color:#7C3AED;margin-right:5px"></i>Fecha requerida de recepción *</label>
+        <input type="date" id="c-fecha-requerida" class="inp">
+      </div>
+      <!-- Propósito -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-info-circle" style="color:#7C3AED;margin-right:5px"></i>Propósito del material o servicio *</label>
+        <textarea id="c-proposito" class="inp" rows="2" placeholder="Describe el uso o necesidad del material/servicio"></textarea>
+      </div>
+      <!-- Foto -->
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#7C3AED;margin-right:5px"></i>Fotografías de referencia</label>
+        <input type="file" id="c-foto" accept="image/*" class="inp" style="padding:8px">
+        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG, PDF (máx. 10 MB)</p>
+      </div>
+      <button class="btn-compra" id="btn-compra-submit" onclick="submitCompra()" style="width:100%">
+        <i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra
+      </button>
+      <p style="text-align:center;font-size:.72rem;color:#94A3B8;margin-top:8px">* Campos obligatorios</p>
+    </div>
+
+    <!-- Success -->
+    <div id="compra-success" style="display:none;text-align:center;padding:20px 0">
+      <div style="width:58px;height:58px;background:#F3E8FF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <i class="fas fa-check-circle" style="color:#7C3AED;font-size:26px"></i>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 6px">¡Solicitud de Compra Enviada!</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 12px">Número de folio:</p>
+      <div style="background:#F3E8FF;border:1.5px solid #DDD6FE;border-radius:11px;padding:10px 20px;display:inline-block;margin-bottom:18px">
+        <span id="compra-folio" class="mono" style="font-size:1.2rem;font-weight:700;color:#7C3AED"></span>
+      </div>
+      <p style="color:#64748B;font-size:.8rem;margin:0 0 20px">Purchasing revisará tu solicitud a la brevedad.</p>
+      <button class="btn-g" onclick="resetCompra()"><i class="fas fa-plus" style="margin-right:6px"></i>Nueva Solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ VIEW: LPA SELECT AREA ══ -->
+<div id="view-lpa-select" style="display:none;max-width:700px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#16A34A,#15803D);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(22,163,74,.28)">
+      <i class="fas fa-clipboard-check" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Auditoría LPA</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">FT-FAC-LPA-01 · Facilities & Utilities · KTMEX</p>
+  </div>
+
+  <div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:13px;padding:14px 16px;margin-bottom:22px">
+    <p style="font-size:.82rem;color:#92400E;margin:0"><i class="fas fa-triangle-exclamation" style="margin-right:6px"></i><strong>Recordatorio:</strong> La auditoría se realiza 100% en piso (Gemba). EPP completo requerido antes de iniciar.</p>
+  </div>
+
+  <div id="lpa-area-cards-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"></div>
+</div>
+
+<!-- ══════════════════════════ VIEW: LPA FORM ══ -->
+<div id="view-lpa-form" style="display:none;max-width:900px;margin:0 auto;padding:20px 16px" class="fade">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button onclick="showView('lpa-select')" class="btn-g" style="padding:7px 12px;font-size:.78rem">
+      <i class="fas fa-arrow-left" style="margin-right:5px"></i>Áreas
+    </button>
+    <div>
+      <h2 id="lpa-area-title" style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0"></h2>
+      <p style="font-size:.72rem;color:#64748B;margin:0">FT-FAC-LPA-01 · V1</p>
+    </div>
+  </div>
+
+  <!-- Header fields -->
+  <div class="card" style="padding:18px;margin-bottom:16px">
+    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 14px">Encabezado</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Fecha *</label>
+        <input type="date" id="lpa-fecha" class="inp" style="padding:8px 11px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Turno *</label>
+        <select id="lpa-turno" class="inp" style="padding:8px 11px">
+          <option value="">—</option>
+          <option>Primer turno</option><option>Segundo turno</option><option>Tercer turno</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Capa *</label>
+        <select id="lpa-capa" class="inp" style="padding:8px 11px">
+          <option value="">—</option>
+          <option value="1">Capa 1</option><option value="2">Capa 2</option><option value="3">Capa 3</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Auditor *</label>
+        <select id="lpa-auditor" class="inp" style="padding:8px 11px" onchange="lpaAuditorChange()">
+          <option value="">— Selecciona —</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Puesto</label>
+        <input type="text" id="lpa-puesto" class="inp" style="padding:8px 11px" readonly placeholder="Auto">
+      </div>
+      <div>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Acompañante</label>
+        <input type="text" id="lpa-acomp" class="inp" style="padding:8px 11px" placeholder="Nombre">
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist table -->
+  <div class="card" style="overflow:hidden;margin-bottom:16px">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:680px">
+        <thead>
+          <tr>
+            <th style="width:40px">No.</th>
+            <th style="text-align:left">Punto a verificar / Estándar esperado</th>
+            <th style="width:70px;text-align:center">P</th>
+            <th style="width:70px;text-align:center">NP</th>
+            <th style="width:70px;text-align:center">N/A</th>
+            <th style="text-align:left;min-width:180px">Hallazgo / Observaciones</th>
+          </tr>
+        </thead>
+        <tbody id="lpa-items-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" style="padding:18px;margin-bottom:16px">
+    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 14px">Resultado</h4>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+      <div style="background:#F0FDF4;border-radius:10px;padding:12px;text-align:center">
+        <p style="font-size:.7rem;color:#15803D;font-weight:700;text-transform:uppercase;margin:0 0 4px">Pasa (P)</p>
+        <p id="res-p" class="mono" style="font-size:1.5rem;font-weight:700;color:#15803D;margin:0">0</p>
+      </div>
+      <div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center">
+        <p style="font-size:.7rem;color:#B91C1C;font-weight:700;text-transform:uppercase;margin:0 0 4px">No Pasa (NP)</p>
+        <p id="res-np" class="mono" style="font-size:1.5rem;font-weight:700;color:#B91C1C;margin:0">0</p>
+      </div>
+      <div style="background:#F8FAFC;border-radius:10px;padding:12px;text-align:center">
+        <p style="font-size:.7rem;color:#64748B;font-weight:700;text-transform:uppercase;margin:0 0 4px">N/A</p>
+        <p id="res-na" class="mono" style="font-size:1.5rem;font-weight:700;color:#64748B;margin:0">0</p>
+      </div>
+      <div style="background:#EFF6FF;border-radius:10px;padding:12px;text-align:center">
+        <p style="font-size:.7rem;color:#1D4ED8;font-weight:700;text-transform:uppercase;margin:0 0 4px">% Conformidad</p>
+        <p id="res-pct" class="mono" style="font-size:1.5rem;font-weight:700;color:#1D4ED8;margin:0">—</p>
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#94A3B8;margin:0">Todo punto NP debe registrarse con acción correctiva. Hallazgos críticos: contención máxima 24h.</p>
+  </div>
+
+  <button class="btn-p" id="btn-lpa-submit" onclick="submitLPA()" style="width:100%">
+    <i class="fas fa-paper-plane" style="margin-right:8px"></i>Guardar Auditoría
+  </button>
+</div>
+
+<!-- ══════════════════════════════ VIEW: LOGIN ══ -->
+<div id="view-login" style="display:none" class="fade">
+  <div style="min-height:calc(100vh - 54px);display:flex;align-items:center;justify-content:center;padding:16px">
+    <div class="card" style="width:100%;max-width:340px;padding:32px">
+      <!-- Banner Demo Mode -->
+      <div id="demo-banner" style="display:none;background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;margin-bottom:18px;text-align:center">
+        <p style="font-size:.75rem;color:#92400E;margin:0;font-weight:600"><i class="fas fa-info-circle" style="margin-right:5px"></i>MODO DEMO - Usa las credenciales de abajo</p>
+      </div>
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="width:48px;height:48px;background:var(--navy);border-radius:13px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <i class="fas fa-shield-halved" style="color:#fff;font-size:18px"></i>
+        </div>
+        <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 4px">Acceso Administrativo</h2>
+        <p style="color:#64748B;font-size:.78rem;margin:0">Ingenieros y Manager — Facilities KTMEX</p>
+      </div>
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Usuario</label>
+      <input id="log-user" type="text" class="inp" placeholder="aramirez" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')login()">
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Contraseña</label>
+      <input id="log-pwd" type="password" class="inp" placeholder="demo123" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')login()">
+      <div id="log-err" style="display:none;color:#EF4446;font-size:.78rem;text-align:center;margin-bottom:8px">
+        <i class="fas fa-times-circle" style="margin-right:4px"></i>Usuario o contraseña incorrectos
+      </div>
+      <button class="btn-p" onclick="login()" style="width:100%;margin-bottom:12px">
+        <i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar
+      </button>
+      <button onclick="showView('home')" style="display:block;width:100%;text-align:center;color:#94A3B8;font-size:.78rem;background:none;border:none;cursor:pointer">← Regresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ VIEW: ADMIN PANEL ══ -->
+<div id="view-admin" style="display:none" class="fade">
+  <div style="max-width:1280px;margin:0 auto;padding:22px 16px">
+
+    <!-- Header -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 2px">Panel Administrativo</h2>
+        <p id="admin-rol-label" style="font-size:.78rem;color:#64748B;margin:0"></p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="showQR()" class="btn-g"><i class="fas fa-qrcode" style="margin-right:6px"></i>Generar QR</button>
+        <button onclick="refreshAdmin()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total Sol.</p>
+        <p id="kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Pendientes</p>
+        <p id="kpi-pend" class="mono" style="font-size:1.8rem;font-weight:700;color:#D97706;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Esperan Ing.</p>
+        <p id="kpi-ing" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Esperan Mgr.</p>
+        <p id="kpi-mgr" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Aprobadas</p>
+        <p id="kpi-apro" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px;background:#F3E8FF">
+        <p style="font-size:.68rem;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Compras</p>
+        <p id="kpi-compra" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;margin-bottom:16px">
+      <button class="tab-btn active" id="tab-sol" onclick="switchTab('sol')">Solicitudes</button>
+      <button class="tab-btn tab-btn-compra" id="tab-compra" onclick="switchTab('compra')">Solicitudes de Compra</button>
+      <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
+      <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
+    </div>
+
+    <!-- TAB: Solicitudes -->
+    <div id="panel-sol">
+      <!-- Filters -->
+      <div class="card" style="padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="fs-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, nombre, área…" oninput="renderSolicitudes()">
+          <select id="fs-est" class="inp" style="width:auto;padding:8px 12px" onchange="renderSolicitudes()">
+            <option value="">Todos los estatus</option>
+            <option>Pendiente</option>
+            <option>Autorizado por Ingeniería</option>
+            <option>Rechazado por Ingeniería</option>
+            <option>Aprobado — En espera de ejecución</option>
+            <option>Rechazado por Gerencia</option>
+            <option>En ejecución</option>
+            <option>Trabajo completado</option>
+          </select>
+          <select id="fs-depto" class="inp" style="width:auto;padding:8px 12px" onchange="renderSolicitudes()">
+            <option value="">Todos los departamentos</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:800px">
+            <thead>
+              <tr>
+                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Departamento</th>
+                <th>Tipo</th><th>Estatus</th><th>Técnico</th><th style="text-align:center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="sol-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Compras -->
+    <div id="panel-compra" style="display:none">
+      <!-- Filters -->
+      <div class="card" style="padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="fc-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante, descripción…" oninput="renderCompras()">
+          <select id="fc-est" class="inp" style="width:auto;padding:8px 12px" onchange="renderCompras()">
+            <option value="">Todos los estatus</option>
+            <option value="Pendiente de aprobación">Pendiente de aprobación</option>
+            <option value="Aprobada - En compra">Aprobada - En compra</option>
+            <option value="Rechazada">Rechazada</option>
+            <option value="Comprado">Comprado</option>
+            <option value="Parcialmente entregado">Parcialmente entregado</option>
+            <option value="Entregado">Entregado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+          <select id="fc-prioridad" class="inp" style="width:auto;padding:8px 12px" onchange="renderCompras()">
+            <option value="">Todas las prioridades</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:900px">
+            <thead>
+              <tr>
+                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Descripción</th>
+                <th style="text-align:center">Cant.</th><th>Prioridad</th><th>F. Requerida</th>
+                <th>Estatus</th><th style="text-align:center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="compra-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LPA -->
+    <div id="panel-lpa" style="display:none">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <select id="lpa-filter-area" class="inp" style="width:auto;padding:8px 12px" onchange="renderLPA()">
+          <option value="">Todas las áreas</option>
+          <option value="compresores">Compresores</option>
+          <option value="subestaciones">Subestaciones</option>
+          <option value="bombas">Bombas</option>
+          <option value="maquinas">Máquinas</option>
+          <option value="general">General</option>
+        </select>
+        <input id="lpa-filter-auditor" type="text" class="inp" style="flex:1;min-width:160px;padding:8px 12px" placeholder="🔍 Buscar por auditor…" oninput="renderLPA()">
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:680px">
+            <thead>
+              <tr>
+                <th>Fecha</th><th>Área</th><th>Auditor</th><th>Turno</th><th>Capa</th>
+                <th style="text-align:center">P</th><th style="text-align:center">NP</th>
+                <th style="text-align:center">N/A</th><th style="text-align:center">% Conf.</th>
+              </tr>
+            </thead>
+            <tbody id="lpa-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Plan Acciones -->
+    <div id="panel-acc" style="display:none">
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:800px">
+            <thead>
+              <tr>
+                <th>Fecha</th><th>Área</th><th>Punto</th><th style="text-align:left">Hallazgo</th>
+                <th style="text-align:left">Acción correctiva</th><th>Responsable</th>
+                <th>F. Compromiso</th><th>F. Cierre</th><th>Estatus</th><th style="text-align:center">Edit</th>
+              </tr>
+            </thead>
+            <tbody id="acc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ MODAL: SOLICITUD DETALLE ══ -->
+<div id="modal-sol" class="modal-bg" style="display:none">
+  <div class="modal-box slide">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1">
+      <div>
+        <span id="ms-folio" class="mono" style="font-size:.95rem;font-weight:700;color:#2563EB"></span>
+        <p id="ms-fecha" style="font-size:.72rem;color:#94A3B8;margin:2px 0 0"></p>
+      </div>
+      <button onclick="closeModal('modal-sol')" style="width:32px;height:32px;background:#F1F5F9;border:none;border-radius:8px;cursor:pointer;color:#64748B">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Badges -->
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="ms-badges"></div>
+
+      <!-- Info grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Solicitante</p><p id="ms-nombre" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Email</p><p id="ms-email" style="font-size:.82rem;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Departamento</p><p id="ms-depto" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Gerente</p><p id="ms-gerente" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Tipo de Solicitud</p><p id="ms-tipo" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">¿Instalación nueva?</p><p id="ms-nueva" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+      </div>
+      <div class="card-sm" style="padding:12px">
+        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción</p>
+        <p id="ms-desc" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
+      </div>
+      <div id="ms-foto-wrap" style="display:none">
+        <a id="ms-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
+      </div>
+
+      <!-- GESTIÓN -->
+      <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:13px;padding:16px">
+        <h4 style="font-size:.78rem;font-weight:700;color:#1E40AF;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em">
+          <i class="fas fa-sliders" style="margin-right:6px"></i>Gestión Facilities
+        </h4>
+
+        <!-- Autorización Ingeniería -->
+        <div id="sec-auth-ing" style="margin-bottom:14px">
+          <p style="font-size:.75rem;font-weight:700;color:#1E40AF;margin:0 0 8px"><i class="fas fa-1" style="background:#2563EB;color:#fff;padding:2px 6px;border-radius:4px;margin-right:6px;font-size:.65rem"></i>Primer filtro — Ingeniería</p>
+          <textarea id="ms-ing-comentario" class="inp" rows="2" placeholder="Comentario de ingeniería (requerido para rechazar)…" style="margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:7px">
+            <button onclick="authAction('ing_autoriza')" class="btn-ok" style="flex:1;padding:8px"><i class="fas fa-check" style="margin-right:5px"></i>Autorizar</button>
+            <button onclick="authAction('ing_rechaza')" class="btn-red" style="flex:1;padding:8px"><i class="fas fa-times" style="margin-right:5px"></i>Rechazar</button>
+          </div>
+        </div>
+
+        <!-- Autorización Manager -->
+        <div id="sec-auth-mgr" style="margin-bottom:14px">
+          <p style="font-size:.75rem;font-weight:700;color:#1E40AF;margin:0 0 8px"><i class="fas fa-2" style="background:#7C3AED;color:#fff;padding:2px 6px;border-radius:4px;margin-right:6px;font-size:.65rem"></i>Segundo filtro — Manager</p>
+          <textarea id="ms-mgr-comentario" class="inp" rows="2" placeholder="Comentario del manager…" style="margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:7px">
+            <button onclick="authAction('mgr_autoriza')" class="btn-ok" style="flex:1;padding:8px"><i class="fas fa-check" style="margin-right:5px"></i>Aprobar</button>
+            <button onclick="authAction('mgr_rechaza')" class="btn-red" style="flex:1;padding:8px"><i class="fas fa-times" style="margin-right:5px"></i>Rechazar</button>
+          </div>
+        </div>
+
+        <!-- Técnico -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-user-hard-hat" style="margin-right:5px"></i>Técnico asignado</label>
+          <select id="ms-tecnico" class="inp" style="background:#fff">
+            <option value="">— Sin asignar —</option>
+          </select>
+        </div>
+
+        <!-- Estatus manual -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Cambiar estatus</label>
+          <select id="ms-estatus" class="inp" style="background:#fff">
+            <option value="">— Sin cambio —</option>
+          </select>
+        </div>
+
+        <!-- Comentario Facilities -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-comment-dots" style="margin-right:5px"></i>Comentario Facilities</label>
+          <div style="display:flex;gap:7px">
+            <input id="ms-comment" type="text" class="inp" style="flex:1;background:#fff" placeholder="Agrega una nota…" onkeydown="if(event.key==='Enter')saveComment()">
+            <button onclick="saveComment()" style="background:#2563EB;color:#fff;border:none;border-radius:9px;padding:0 14px;cursor:pointer"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+
+        <button id="btn-ms-save" onclick="saveSolicitudChanges()" class="btn-p" style="width:100%;border-radius:10px">
+          <i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios
+        </button>
+      </div>
+
+      <!-- Historial -->
+      <div>
+        <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
+        <div id="ms-historial" class="status-timeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ MODAL: COMPRA DETALLE ══ -->
+<div id="modal-compra" class="modal-bg" style="display:none">
+  <div class="modal-box slide">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #DDD6FE;position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1">
+      <div>
+        <span id="mc-folio" class="mono" style="font-size:.95rem;font-weight:700;color:#7C3AED"></span>
+        <p id="mc-fecha" style="font-size:.72rem;color:#94A3B8;margin:2px 0 0"></p>
+      </div>
+      <button onclick="closeModal('modal-compra')" style="width:32px;height:32px;background:#F3E8FF;border:none;border-radius:8px;cursor:pointer;color:#7C3AED">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Badges -->
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="mc-badges"></div>
+
+      <!-- Info grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Solicitante</p><p id="mc-solicitante" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Prioridad</p><p id="mc-prioridad" style="font-size:.85rem;font-weight:600;margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Cantidad</p><p id="mc-cantidad" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Fecha Requerida</p><p id="mc-fecha-requerida" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+      </div>
+
+      <div class="card-sm" style="padding:12px">
+        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción del Material</p>
+        <p id="mc-descripcion" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
+      </div>
+
+      <div class="card-sm" style="padding:12px">
+        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Propósito</p>
+        <p id="mc-proposito" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
+      </div>
+
+      <div id="mc-foto-wrap" style="display:none">
+        <a id="mc-foto" href="#" target="_blank" class="btn-compra" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
+      </div>
+
+      <!-- GESTIÓN COMPRAS -->
+      <div style="background:#F3E8FF;border:1.5px solid #DDD6FE;border-radius:13px;padding:16px">
+        <h4 style="font-size:.78rem;font-weight:700;color:#6D28D9;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em">
+          <i class="fas fa-shopping-cart" style="margin-right:6px"></i>Gestión de Compra
+        </h4>
+
+        <!-- Estatus Compra -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#6D28D9;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Estatus de la compra</label>
+          <select id="mc-estatus" class="inp" style="background:#fff">
+            <option value="">— Sin cambio —</option>
+            <option value="Pendiente de aprobación">Pendiente de aprobación</option>
+            <option value="Aprobada - En compra">Aprobada - En compra</option>
+            <option value="Rechazada">Rechazada</option>
+            <option value="Comprado">Comprado</option>
+            <option value="Parcialmente entregado">Parcialmente entregado</option>
+            <option value="Entregado">Entregado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <!-- Comentario Compra -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#6D28D9;margin-bottom:6px"><i class="fas fa-comment-dots" style="margin-right:5px"></i>Comentario de Compras</label>
+          <div style="display:flex;gap:7px">
+            <input id="mc-comment" type="text" class="inp" style="flex:1;background:#fff" placeholder="Agrega una nota de compra…" onkeydown="if(event.key==='Enter')saveCompraComment()">
+            <button onclick="saveCompraComment()" style="background:#7C3AED;color:#fff;border:none;border-radius:9px;padding:0 14px;cursor:pointer"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+
+        <button id="btn-mc-save" onclick="saveCompraChanges()" class="btn-compra" style="width:100%;border-radius:10px">
+          <i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios
+        </button>
+      </div>
+
+      <!-- Historial -->
+      <div>
+        <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
+        <div id="mc-historial" class="status-timeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Plan Acción Edit -->
+<div id="modal-acc" class="modal-bg" style="display:none">
+  <div class="modal-box slide" style="max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
+      <h3 style="font-size:.95rem;font-weight:700;color:var(--navy);margin:0">Editar Acción Correctiva</h3>
+      <button onclick="closeModal('modal-acc')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:13px">
+      <input type="hidden" id="acc-id">
+      <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Hallazgo</label><p id="acc-hallazgo" style="font-size:.84rem;color:#64748B;margin:0"></p></div>
+      <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Acción correctiva *</label><textarea id="acc-accion" class="inp" rows="3" placeholder="Describe la acción a tomar…"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Responsable</label><input id="acc-resp" type="text" class="inp" placeholder="Nombre"></div>
+        <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Fecha compromiso</label><input id="acc-fecha" type="date" class="inp"></div>
+      </div>
+      <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Estatus</label>
+        <select id="acc-est" class="inp"><option>Abierto</option><option>En proceso</option><option>Cerrado</option></select>
+      </div>
+      <button class="btn-p" onclick="saveAccion()" style="border-radius:10px"><i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: QR -->
+<div id="modal-qr" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:320px;padding:24px;text-align:center">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h3 style="font-size:.95rem;font-weight:700;color:var(--navy);margin:0">Código QR</h3>
+      <button onclick="closeModal('modal-qr')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p style="color:#64748B;font-size:.78rem;margin:0 0 14px">Escanea para acceder al sistema de solicitudes</p>
+    <div id="qr-wrap" style="display:flex;justify-content:center;margin-bottom:10px"></div>
+    <p id="qr-url" style="font-size:.62rem;color:#94A3B8;word-break:break-all;margin:0 0 14px"></p>
+    <button onclick="dlQR()" class="btn-p" style="width:100%;border-radius:10px;padding:10px"><i class="fas fa-download" style="margin-right:7px"></i>Descargar</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none"><i id="toast-ico" class="fas fa-circle-check" style="color:#4ADE80"></i><span id="toast-txt"></span></div>
+
+<!-- ══════════════════════════════════ JS ══ -->
+<script>
+// ── State ────────────────────────────────────────────────────
+let SESSION   = null;
+let SOL_DATA  = [];
+let COMP_DATA = [];
+let LPA_DATA  = {};
+let ACC_DATA  = [];
+let CUR_SOL   = null;
+let CUR_COMP  = null;
+
+const $  = id => document.getElementById(id);
+
+// ── Modo Demo ─────────────────────────────────────────────────
+const IS_DEMO_MODE = SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT';
+
+// Usuarios de prueba para modo demo
+const DEMO_USERS = [
+  { username: 'aramirez', password: 'demo123', nombre: 'Andres Ramirez Beltran', rol: 'ingeniero' },
+  { username: 'ploya', password: 'demo123', nombre: 'Pedro Loya Rocha', rol: 'ingeniero' },
+  { username: 'inagaki', password: 'demo123', nombre: 'Atsushi Inagaki', rol: 'manager' },
+];
+
+// Datos de prueba para modo demo
+const DEMO_SOLICITUDES = [
+  { id: 'demo1', folio: 'FAC-2026-0001', fecha: '2026-06-15', nombre: 'Juan Pérez', email: 'jperez@ktmex.com', departamento: 'Welding', tipoSolicitud: 'Instalación eléctrica', estatus: 'Pendiente', tecnico: '' },
+  { id: 'demo2', folio: 'FAC-2026-0002', fecha: '2026-06-14', nombre: 'María García', email: 'mgarcia@ktmex.com', departamento: 'Maintenance', tipoSolicitud: 'Aire acondicionado', estatus: 'Autorizado por Ingeniería', tecnico: 'Lenin Wenceslao Acosta Soto' },
+  { id: 'demo3', folio: 'FAC-2026-0003', fecha: '2026-06-13', nombre: 'Carlos López', email: 'clopez@ktmex.com', departamento: 'Safety', tipoSolicitud: 'Iluminación', estatus: 'Aprobado — En espera de ejecución', tecnico: 'Luis Antonio Serrano Rivera' },
+];
+
+const DEMO_COMPRAS = [
+  { id: 'comp1', folio: 'COMP-2026-0001', fecha: '2026-06-15', solicitante: 'Pedro Loya Rocha', prioridad: 'Alta', descripcion: 'Bomba hidráulica Marca: Grundfos Modelo: CR 45-2', cantidad: '2', unidades: 'Pieza', fechaRequerida: '2026-06-25', proposito: 'Reemplazo de bomba averiada en línea de producción', estatus: 'Pendiente de aprobación' },
+  { id: 'comp2', folio: 'COMP-2026-0002', fecha: '2026-06-14', solicitante: 'Andres Ramirez Beltran', prioridad: 'Media', descripcion: 'Cable eléctrico 12 AWG Marca: Condumex', cantidad: '100', unidades: 'Metros lineales', fechaRequerida: '2026-07-01', proposito: 'Instalación eléctrica en área de mantenimiento', estatus: 'Aprobada - En compra' },
+];
+
+// ── API ──────────────────────────────────────────────────────
+async function api(data) {
+  // Modo demo - simular respuestas
+  if (IS_DEMO_MODE) {
+    return simulateApiResponse(data);
+  }
+
+  try {
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(data)
+    });
+
+    // Verificar si la respuesta es correcta
+    if (!r.ok) {
+      // Manejar errores HTTP
+      let errorMsg = `Error del servidor (${r.status})`;
+      try {
+        const errorData = await r.json();
+        if (errorData && errorData.error) {
+          errorMsg = errorData.error;
+        }
+      } catch (e) {
+        // Si no se puede parsear, usar el mensaje de error por defecto
+      }
+      return { success: false, error: errorMsg };
+    }
+
+    // Intentar parsear la respuesta JSON
+    try {
+      return await r.json();
+    } catch (e) {
+      return { success: false, error: 'Error al procesar respuesta del servidor' };
+    }
+  } catch (err) {
+    // Manejar errores de red, CORS, etc.
+    let errorMessage = 'Error de conexión';
+
+    if (err.message) {
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        errorMessage = 'No se puede conectar al servidor. Verifica tu conexión a internet.';
+      } else if (err.message.includes('CORS') || err.message.includes('Access-Control')) {
+        errorMessage = 'Error de configuración CORS. Verifica que Google Apps Script esté desplegado correctamente.';
+      } else {
+        errorMessage = 'Error de conexión: ' + err.message;
+      }
+    }
+
+    console.error('API Error:', err);
+    return { success: false, error: errorMessage };
+  }
+}
+
+// Simular respuestas del API en modo demo
+function simulateApiResponse(data) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      switch(data.action) {
+        case 'login':
+          const user = DEMO_USERS.find(u => u.username === data.username && u.password === data.password);
+          if (user) {
+            resolve({ success: true, token: 'demo-token-' + Date.now(), user: { username: user.username, nombre: user.nombre, rol: user.rol } });
+          } else {
+            resolve({ success: false, error: 'Usuario o contraseña incorrectos' });
+          }
+          break;
+        case 'validateSession':
+          if (SESSION && SESSION.token) {
+            resolve({ valid: true, user: SESSION.user });
+          } else {
+            resolve({ valid: false });
+          }
+          break;
+        case 'logout':
+          resolve({ success: true });
+          break;
+        case 'getRequests':
+          resolve({ success: true, requests: SOL_DATA.length ? SOL_DATA : DEMO_SOLICITUDES });
+          break;
+        case 'getCompras':
+          resolve({ success: true, compras: COMP_DATA.length ? COMP_DATA : DEMO_COMPRAS });
+          break;
+        case 'submitRequest':
+          const folioSol = 'FAC-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+          const newSol = { id: 'sol-' + Date.now(), folio: folioSol, fecha: data.fecha || new Date().toISOString().slice(0,10), nombre: data.nombre, email: data.email, departamento: data.departamento, tipoSolicitud: data.tipoSolicitud, descripcion: data.descripcion, estatus: 'Pendiente', tecnico: '' };
+          SOL_DATA.push(newSol);
+          resolve({ success: true, folio: folioSol, id: newSol.id });
+          break;
+        case 'submitCompra':
+          const folioComp = 'COMP-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+          const newComp = { id: 'comp-' + Date.now(), folio: folioComp, fecha: data.fecha || new Date().toISOString().slice(0,10), solicitante: data.solicitante, prioridad: data.prioridad, descripcion: data.descripcion, cantidad: data.cantidad, unidades: data.unidades, fechaRequerida: data.fechaRequerida, proposito: data.proposito, estatus: 'Pendiente de aprobación' };
+          COMP_DATA.push(newComp);
+          resolve({ success: true, folio: folioComp, id: newComp.id });
+          break;
+        case 'updateRequest':
+          resolve({ success: true });
+          break;
+        case 'updateCompra':
+          resolve({ success: true });
+          break;
+        case 'getLPA':
+          resolve({ success: true, data: {} });
+          break;
+        case 'getPlanAcciones':
+          resolve({ success: true, acciones: [] });
+          break;
+        case 'submitLPA':
+          resolve({ success: true, id: 'lpa-' + Date.now(), totalP: 10, totalNP: 2, totalNA: 0, porcentaje: 83 });
+          break;
+        case 'updateAccion':
+          resolve({ success: true });
+          break;
+        default:
+          resolve({ success: false, error: 'Acción no reconocida' });
+      }
+    }, 300); // Simular delay de red
+  });
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const t=$('toast'); $('toast-txt').textContent=msg;
+  const ico=$('toast-ico');
+  ico.className = type==='ok'?'fas fa-circle-check':type==='err'?'fas fa-circle-xmark':'fas fa-circle-info';
+  ico.style.color = type==='ok'?'#4ADE80':type==='err'?'#F87171':'#60A5FA';
+  t.style.display='flex'; clearTimeout(t._t);
+  t._t=setTimeout(()=>t.style.display='none',3500);
+}
+
+// ── Views ────────────────────────────────────────────────────
+function showView(v) {
+  ['home','solicitud','compras','lpa-select','lpa-form','login','admin'].forEach(x=>
+    $('view-'+x).style.display='none');
+  $('view-'+v).style.display='';
+  $('btn-logout').style.display = SESSION?'':'none';
+
+  // Update nav buttons
+  ['nav-sol','nav-compras','nav-lpa','nav-admin'].forEach(id => {
+    const el = $(id);
+    el.classList.remove('active');
+  });
+  if(v === 'solicitud') $('nav-sol').classList.add('active');
+  else if(v === 'compras') $('nav-compras').classList.add('active');
+  else if(v === 'lpa-select' || v === 'lpa-form') $('nav-lpa').classList.add('active');
+}
+
+function goAdmin() {
+  if (SESSION) { showView('admin'); refreshAdmin(); }
+  else showView('login');
+}
+
+// ── Auth ─────────────────────────────────────────────────────
+async function performLogin() {
+  const u=$('log-user').value.trim(), p=$('log-pwd').value;
+  if (!u||!p){toast('Completa usuario y contraseña','err');return;}
+
+  const btn=document.querySelector('#view-login .btn-p');
+  btn.disabled=true; btn.textContent='Verificando…';
+  try {
+    const res = await api({action:'login',username:u,password:p});
+    if (res.success) {
+      SESSION = { token:res.token, user:res.user };
+      $('log-err').style.display='none';
+      $('log-pwd').value='';
+      $('btn-logout').style.display='';
+      $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+      showView('admin');
+      $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
+      sessionStorage.setItem('ktmex_session', JSON.stringify(SESSION));
+      refreshAdmin();
+      toast('Bienvenido, ' + res.user.nombre + (IS_DEMO_MODE ? ' (MODO DEMO)' : ''));
+    } else {
+      $('log-err').style.display='';
+      toast(res.error || 'Usuario o contraseña incorrectos','err');
+    }
+  } catch(e) {
+    toast('Error de conexión: ' + (e.message || 'Verifica tu conexión a internet'),'err');
+    console.error('Login error:', e);
+  }
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+}
+
+function login() {
+  performLogin();
+}
+
+async function logout() {
+  if (SESSION) await api({action:'logout',token:SESSION.token}).catch(()=>{});
+  SESSION=null;
+  $('btn-logout').style.display='none';
+  $('nav-admin').innerHTML='<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
+  showView('home');
+  toast('Sesión cerrada','info');
+}
+
+// ── Solicitud Form ───────────────────────────────────────────
+function initSolicitudForm() {
+  const today = new Date().toISOString().slice(0,10);
+  $('s-fecha').value = today;
+  $('s-gerente').innerHTML='<option value="">— Selecciona —</option>'+GERENTES.map(g=>`<option>${g}</option>`).join('');
+  $('s-depto').innerHTML='<option value="">— Selecciona —</option>'+DEPARTAMENTOS.map(d=>`<option>${d}</option>`).join('');
+  $('s-tipo').innerHTML='<option value="">— Selecciona —</option>'+TIPOS_SOLICITUD.map(t=>`<option>${t}</option>`).join('');
+}
+
+async function submitSolicitud() {
+  const fecha  = $('s-fecha').value;
+  const nombre = $('s-nombre').value.trim();
+  const email  = $('s-email').value.trim();
+  const gerente= $('s-gerente').value;
+  const depto  = $('s-depto').value;
+  const tipo   = $('s-tipo').value;
+  const desc   = $('s-desc').value.trim();
+  const nueva  = document.querySelector('input[name="s-nueva"]:checked')?.value;
+
+  if (!fecha||!nombre||!email||!gerente||!depto||!tipo||!desc||!nueva) {
+    toast('Completa todos los campos obligatorios','err'); return;
+  }
+  if (!/\S+@\S+\.\S+/.test(email)) { toast('Ingresa un email válido','err'); return; }
+
+  const btn=$('btn-sol-submit');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
+
+  let fotoBase64='', fotoName='';
+  const fotoFile=$('s-foto').files[0];
+  if (fotoFile) {
+    if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud'; return; }
+    fotoBase64 = await fileToBase64(fotoFile);
+    fotoName   = fotoFile.name;
+  }
+
+  try {
+    const res = await api({action:'submitRequest',fecha,nombre,email,gerente,
+      departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,fotoBase64,fotoName});
+    if (res.success) {
+      $('sol-folio').textContent=res.folio;
+      $('sol-form').style.display='none';
+      $('sol-success').style.display='';
+    } else toast(res.error||'Error al enviar','err');
+  } catch(e){ toast('Error de conexión: '+e.message,'err'); }
+
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud';
+}
+
+function resetSolicitud() {
+  $('sol-form').style.display=''; $('sol-success').style.display='none';
+  ['s-nombre','s-email','s-desc'].forEach(id=>$(id).value='');
+  $('s-gerente').value=''; $('s-depto').value=''; $('s-tipo').value='';
+  $('s-foto').value='';
+  document.querySelectorAll('input[name="s-nueva"]').forEach(r=>r.checked=false);
+  $('s-fecha').value=new Date().toISOString().slice(0,10);
+}
+
+// ── COMPRAS FORM ─────────────────────────────────────────────
+function initComprasForm() {
+  const today = new Date().toISOString().slice(0,10);
+  $('c-fecha').value = today;
+  $('c-fecha-requerida').value = today;
+
+  // Populate solicitantes from LPA_PERFILES
+  $('c-solicitante').innerHTML='<option value="">— Selecciona —</option>'+
+    LPA_PERFILES.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+
+  // Populate unidades
+  $('c-unidades').innerHTML='<option value="">— Selecciona —</option>'+
+    UNIDADES_COMPRA.map(u=>`<option value="${u}">${u}</option>`).join('');
+}
+
+async function submitCompra() {
+  const fecha      = $('c-fecha').value;
+  const solicitante= $('c-solicitante').value;
+  const prioridad  = document.querySelector('input[name="c-prioridad"]:checked')?.value || 'Baja';
+  const descripcion= $('c-descripcion').value.trim();
+  const cantidad   = $('c-cantidad').value;
+  const unidades   = $('c-unidades').value;
+  const fechaReq  = $('c-fecha-requerida').value;
+  const proposito = $('c-proposito').value.trim();
+
+  if (!fecha||!solicitante||!descripcion||!cantidad||!unidades||!fechaReq||!proposito) {
+    toast('Completa todos los campos obligatorios','err'); return;
+  }
+  if (Number(cantidad) <= 0) { toast('La cantidad debe ser mayor a 0','err'); return; }
+
+  const btn=$('btn-compra-submit');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
+
+  let fotoBase64='', fotoName='';
+  const fotoFile=$('c-foto').files[0];
+  if (fotoFile) {
+    if (fotoFile.size > 10*1024*1024) { toast('El archivo supera 10 MB.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra'; return; }
+    fotoBase64 = await fileToBase64(fotoFile);
+    fotoName   = fotoFile.name;
+  }
+
+  try {
+    const res = await api({
+      action:'submitCompra',fecha,solicitante,prioridad,
+      descripcion,cantidad,unidades,fechaRequerida:fechaReq,proposito,
+      fotoBase64,fotoName
+    });
+    if (res.success) {
+      $('compra-folio').textContent=res.folio;
+      $('compra-form').style.display='none';
+      $('compra-success').style.display='';
+    } else toast(res.error||'Error al enviar','err');
+  } catch(e){ toast('Error de conexión: '+e.message,'err'); }
+
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';
+}
+
+function resetCompra() {
+  $('compra-form').style.display=''; $('compra-success').style.display='none';
+  $('c-solicitante').value='';
+  $('c-descripcion').value='';
+  $('c-cantidad').value='';
+  $('c-unidades').value='';
+  $('c-proposito').value='';
+  $('c-foto').value='';
+  document.querySelectorAll('input[name="c-prioridad"]').forEach(r=>r.checked=false);
+  $('c-fecha').value=new Date().toISOString().slice(0,10);
+  $('c-fecha-requerida').value=new Date().toISOString().slice(0,10);
+}
+
+// ── LPA ─────────────────────────────────────────────────────
+let curLpaArea = null;
+
+function initLpaAreaCards() {
+  const wrap = $('lpa-area-cards-wrap');
+  wrap.innerHTML = Object.entries(LPA_AREAS).map(([key,area])=>`
+    <div class="card" style="padding:22px;cursor:pointer;transition:.2s"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.09)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''"
+      onclick="openLpaArea('${key}')">
+      <div style="width:40px;height:40px;background:#F0FDF4;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+        <i class="fas fa-clipboard-check" style="color:#16A34A;font-size:16px"></i>
+      </div>
+      <h4 style="font-size:.88rem;font-weight:700;color:var(--navy);margin:0 0 4px">${area.label}</h4>
+      <p style="color:#64748B;font-size:.75rem;margin:0 0 12px">${area.items.length} puntos de verificación</p>
+      <span style="color:#16A34A;font-size:.75rem;font-weight:600">Iniciar →</span>
+    </div>`).join('');
+}
+
+function openLpaArea(area) {
+  curLpaArea = area;
+  const areaData = LPA_AREAS[area];
+  $('lpa-area-title').textContent = areaData.label;
+  $('lpa-fecha').value = new Date().toISOString().slice(0,10);
+  $('lpa-turno').value=''; $('lpa-capa').value='';
+
+  $('lpa-auditor').innerHTML='<option value="">— Selecciona tu nombre —</option>'+
+    LPA_PERFILES.map(p=>`<option value="${p.nombre}" data-puesto="${p.puesto}">${p.nombre}</option>`).join('');
+  $('lpa-puesto').value='';
+
+  const tbody=$('lpa-items-body');
+  tbody.innerHTML=areaData.items.map((item,i)=>`
+    <tr style="border-bottom:1px solid #F1F5F9">
+      <td style="text-align:center;font-size:.78rem;font-weight:700;color:#64748B;padding:10px">${i+1}</td>
+      <td style="padding:10px;font-size:.8rem;color:#334155;line-height:1.45">${item}</td>
+      <td style="padding:10px;text-align:center">
+        <div class="lpa-radio">
+          <input type="radio" name="item${i}" id="p${i}" value="p" onchange="calcLPA()">
+          <label for="p${i}" class="lp">P</label>
+        </div>
+      </td>
+      <td style="padding:10px;text-align:center">
+        <div class="lpa-radio">
+          <input type="radio" name="item${i}" id="np${i}" value="np" onchange="calcLPA()">
+          <label for="np${i}" class="lnp">NP</label>
+        </div>
+      </td>
+      <td style="padding:10px;text-align:center">
+        <div class="lpa-radio">
+          <input type="radio" name="item${i}" id="na${i}" value="na" onchange="calcLPA()">
+          <label for="na${i}" class="lna">N/A</label>
+        </div>
+      </td>
+      <td style="padding:8px">
+        <input type="text" id="obs${i}" class="inp" style="padding:6px 9px;font-size:.77rem" placeholder="Observación…">
+      </td>
+    </tr>`).join('');
+
+  calcLPA();
+  showView('lpa-form');
+}
+
+function lpaAuditorChange() {
+  const sel=$('lpa-auditor');
+  const opt=sel.options[sel.selectedIndex];
+  $('lpa-puesto').value = opt ? (opt.dataset.puesto||'') : '';
+}
+
+function calcLPA() {
+  const n=LPA_AREAS[curLpaArea].items.length;
+  let P=0,NP=0,NA=0;
+  for(let i=0;i<n;i++){
+    const v=document.querySelector(`input[name="item${i}"]:checked`)?.value;
+    if(v==='p')P++; else if(v==='np')NP++; else if(v==='na')NA++;
+  }
+  $('res-p').textContent=P; $('res-np').textContent=NP; $('res-na').textContent=NA;
+  const pct=(P+NP)>0?Math.round(P/(P+NP)*100):null;
+  $('res-pct').textContent=pct!==null?pct+'%':'—';
+  $('res-pct').style.color=pct===null?'#94A3B8':pct>=90?'#16A34A':pct>=70?'#D97706':'#DC2626';
+}
+
+async function submitLPA() {
+  const fecha=$('lpa-fecha').value, turno=$('lpa-turno').value,
+        capa=$('lpa-capa').value, auditor=$('lpa-auditor').value;
+  if(!fecha||!turno||!capa||!auditor){toast('Completa el encabezado (fecha, turno, capa, auditor)','err');return;}
+
+  const n=LPA_AREAS[curLpaArea].items.length;
+  let allAnswered=true;
+  const items=[];
+  for(let i=0;i<n;i++){
+    const v=document.querySelector(`input[name="item${i}"]:checked`)?.value;
+    if(!v) allAnswered=false;
+    items.push({numero:i+1, p:v==='p', np:v==='np', na:v==='na', obs:$('obs'+i).value.trim()});
+  }
+  if(!allAnswered){toast('Todos los puntos deben tener una respuesta (P, NP o N/A)','err');return;}
+
+  const npNoObs=items.filter(it=>it.np&&!it.obs);
+  if(npNoObs.length>0){toast(`${npNoObs.length} punto(s) NP sin observación. Agrega descripción del hallazgo.`,'err');return;}
+
+  const btn=$('btn-lpa-submit');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Guardando…';
+
+  try {
+    const res=await api({action:'submitLPA', area:curLpaArea, fecha, turno, capa,
+      auditor, puesto:$('lpa-puesto').value, acompañante:$('lpa-acomp').value, items});
+    if(res.success){
+      toast(`Auditoría guardada. Conformidad: ${res.porcentaje}%${res.totalNP>0?' — '+res.totalNP+' NP generaron acciones correctivas':''}`,'ok');
+      showView('lpa-select');
+    } else toast(res.error||'Error al guardar','err');
+  } catch(e){toast('Error de conexión','err');}
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Guardar Auditoría';
+}
+
+// ── Admin ────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['sol','compra','lpa','acc'].forEach(t=>{
+    $('tab-'+t).classList.toggle('active',t===tab);
+    $('panel-'+t).style.display=t===tab?'':'none';
+  });
+  if(tab==='lpa' && Object.keys(LPA_DATA).length===0) loadLPA();
+  if(tab==='acc' && ACC_DATA.length===0) loadAcciones();
+  if(tab==='compra' && COMP_DATA.length===0) loadCompras();
+}
+
+async function refreshAdmin() {
+  if(!SESSION){showView('login');return;}
+  loadSolicitudes();
+  loadCompras();
+}
+
+async function loadSolicitudes() {
+  try {
+    const res=await api({action:'getRequests',token:SESSION.token});
+    if(res.success){ SOL_DATA=res.requests; renderSolicitudes(); renderKPIs(); }
+    else toast(res.error,'err');
+  } catch(e){ toast('Error al cargar solicitudes','err'); }
+}
+
+async function loadCompras() {
+  try {
+    const res=await api({action:'getCompras',token:SESSION.token});
+    if(res.success){ COMP_DATA=res.compras; renderCompras(); renderKPIs(); }
+    else toast(res.error,'err');
+  } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
+}
+
+async function loadLPA() {
+  try {
+    const res=await api({action:'getLPA',token:SESSION.token});
+    if(res.success){ LPA_DATA=res.data; renderLPA(); }
+  } catch(e){ toast('Error al cargar LPA','err'); }
+}
+
+async function loadAcciones() {
+  try {
+    const res=await api({action:'getPlanAcciones',token:SESSION.token});
+    if(res.success){ ACC_DATA=res.acciones; renderAcciones(); }
+  } catch(e){ toast('Error al cargar plan de acciones','err'); }
+}
+
+function renderKPIs() {
+  $('kpi-total').textContent=SOL_DATA.length;
+  $('kpi-pend').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente').length;
+  $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería').length;
+  $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Autorizado por Ingeniería').length;
+  $('kpi-apro').textContent=SOL_DATA.filter(r=>r.estatus&&r.estatus.startsWith('Aprobado')).length;
+  $('kpi-compra').textContent=COMP_DATA.length;
+}
+
+const estatusBadge = s => {
+  if(!s) return '<span class="badge b-pend">—</span>';
+  if(s==='Pendiente') return `<span class="badge b-pend">${s}</span>`;
+  if(s==='Autorizado por Ingeniería') return `<span class="badge b-ing">${s}</span>`;
+  if(s.startsWith('Rechazado')) return `<span class="badge b-ing-rej">${s}</span>`;
+  if(s.startsWith('Aprobado')) return `<span class="badge b-mgr">${s}</span>`;
+  if(s==='En ejecución') return `<span class="badge b-ejec">${s}</span>`;
+  if(s==='Trabajo completado') return `<span class="badge b-done">${s}</span>`;
+  return `<span class="badge b-pend">${s}</span>`;
+};
+
+const compraBadge = s => {
+  if(!s) return '<span class="badge b-compra">—</span>';
+  const map = {
+    'Pendiente de aprobación': 'b-compra-pend',
+    'Aprobada - En compra': 'b-compra-aprob',
+    'Rechazada': 'b-compra-rech',
+    'Comprado': 'b-compra-comprado',
+    'Parcialmente entregado': 'b-compra-parcial',
+    'Entregado': 'b-compra-entregado',
+    'Cancelado': 'b-compra-cancel'
+  };
+  return `<span class="badge ${map[s]||'b-compra'}">${s}</span>`;
+};
+
+const prioridadColor = p => {
+  if(p==='Alta') return '<span style="color:#DC2626;font-weight:700">Alta</span>';
+  if(p==='Media') return '<span style="color:#D97706;font-weight:700">Media</span>';
+  return '<span style="color:#16A34A;font-weight:700">Baja</span>';
+};
+
+function renderSolicitudes() {
+  const q=$('fs-search').value.toLowerCase(), fe=$('fs-est').value, fd=$('fs-depto').value;
+  const list=SOL_DATA.filter(r=>
+    (!q||[r.folio,r.nombre,r.departamento,r.tipoSolicitud].some(v=>(v||'').toLowerCase().includes(q)))&&
+    (!fe||r.estatus===fe)&&(!fd||r.departamento===fd)
+  ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  const tbody=$('sol-tbody');
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin resultados</td></tr>';
+    return;
+  }
+  tbody.innerHTML=list.map(r=>`
+    <tr class="tbl-row" onclick="openSolicitudModal('${r.id}')">
+      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#2563EB">${r.folio||'—'}</span></td>
+      <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
+      <td style="font-weight:500;color:var(--navy)">${r.nombre||'—'}</td>
+      <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${r.departamento||'—'}</span></td>
+      <td style="color:#64748B;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.tipoSolicitud||'—'}</td>
+      <td>${estatusBadge(r.estatus)}</td>
+      <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">Sin asignar</span>'}</td>
+      <td style="text-align:center">
+        <button onclick="event.stopPropagation();openSolicitudModal('${r.id}')"
+          style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB">
+          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderCompras() {
+  const q=$('fc-search').value.toLowerCase(), fe=$('fc-est').value, fp=$('fc-prioridad').value;
+  const list=COMP_DATA.filter(r=>
+    (!q||[r.folio,r.solicitante,r.descripcion].some(v=>(v||'').toLowerCase().includes(q)))&&
+    (!fe||r.estatus===fe)&&(!fp||r.prioridad===fp)
+  ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  const tbody=$('compra-tbody');
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra</td></tr>';
+    return;
+  }
+  tbody.innerHTML=list.map(r=>`
+    <tr class="tbl-row" onclick="openCompraModal('${r.id}')">
+      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#7C3AED">${r.folio||'—'}</span></td>
+      <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
+      <td style="font-weight:500;color:var(--navy)">${r.solicitante||'—'}</td>
+      <td style="color:#64748B;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descripcion||'—'}</td>
+      <td style="text-align:center;font-weight:600">${r.cantidad||'—'} <span style="color:#94A3B8;font-size:.7rem">${r.unidades||''}</span></td>
+      <td>${prioridadColor(r.prioridad)}</td>
+      <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
+      <td>${compraBadge(r.estatus)}</td>
+      <td style="text-align:center">
+        <button onclick="event.stopPropagation();openCompraModal('${r.id}')"
+          style="width:28px;height:28px;background:#F3E8FF;border:none;border-radius:7px;cursor:pointer;color:#7C3AED">
+          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderLPA() {
+  const fa=$('lpa-filter-area').value, fau=$('lpa-filter-auditor').value.toLowerCase();
+  let rows=[];
+  Object.entries(LPA_DATA).forEach(([area,list])=>{
+    if(fa&&area!==fa) return;
+    list.forEach(r=>rows.push({...r,_area:area}));
+  });
+  rows=rows.filter(r=>!fau||(r.auditor||'').toLowerCase().includes(fau))
+           .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  const tbody=$('lpa-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:#94A3B8">Sin registros</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const pct=Number(r.porcentaje)||0;
+    const pctColor=pct>=90?'#16A34A':pct>=70?'#D97706':'#DC2626';
+    return`<tr>
+      <td style="white-space:nowrap;color:#64748B">${fmtDate(r.fecha)}</td>
+      <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${LPA_AREAS[r._area]?.label||r._area}</span></td>
+      <td style="font-weight:500;color:var(--navy)">${r.auditor||'—'}</td>
+      <td style="color:#64748B">${r.turno||'—'}</td>
+      <td style="text-align:center"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">Capa ${r.capa}</span></td>
+      <td style="text-align:center"><span class="badge-p">${r.totalP||0}</span></td>
+      <td style="text-align:center"><span class="badge-np">${r.totalNP||0}</span></td>
+      <td style="text-align:center"><span class="badge-na">${r.totalNA||0}</span></td>
+      <td style="text-align:center"><span class="mono" style="font-weight:700;color:${pctColor}">${pct}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAcciones() {
+  const tbody=$('acc-tbody');
+  if(!ACC_DATA.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:#94A3B8">Sin acciones registradas</td></tr>';return;}
+  const estColor={Abierto:'b-ing-rej',  'En proceso':'b-ejec', Cerrado:'b-done'};
+  tbody.innerHTML=ACC_DATA.map(a=>`
+    <tr style="border-bottom:1px solid #F1F5F9">
+      <td style="font-size:.78rem;color:#64748B;white-space:nowrap">${fmtDate(a.fecha)}</td>
+      <td><span style="background:#F1F5F9;color:#475569;padding:2px 7px;border-radius:6px;font-size:.72rem;font-weight:600">${a.area||'—'}</span></td>
+      <td style="text-align:center;font-weight:700;color:#2563EB">${a.puntoNo||'—'}</td>
+      <td style="font-size:.8rem;color:#334155;max-width:160px">${a.hallazgo||'—'}</td>
+      <td style="font-size:.78rem;color:#64748B;max-width:160px">${a.accionCorrectiva||'<span style="color:#CBD5E1">Pendiente</span>'}</td>
+      <td style="font-size:.78rem;color:#64748B">${a.responsable||'—'}</td>
+      <td style="font-size:.75rem;color:#64748B;white-space:nowrap">${a.fechaCompromiso||'—'}</td>
+      <td style="font-size:.75rem;color:#64748B;white-space:nowrap">${a.fechaCierre||'—'}</td>
+      <td><span class="badge ${estColor[a.estatus]||'b-pend'}">${a.estatus||'—'}</span></td>
+      <td style="text-align:center">
+        <button onclick="openAccModal('${a.id}')"
+          style="width:26px;height:26px;background:#EFF6FF;border:none;border-radius:6px;cursor:pointer;color:#2563EB">
+          <i class="fas fa-pen-to-square" style="font-size:.7rem"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Solicitud Modal ───────────────────────────────────────────
+function openSolicitudModal(id) {
+  CUR_SOL = SOL_DATA.find(r=>r.id===id);
+  if(!CUR_SOL) return;
+  const r=CUR_SOL;
+
+  $('ms-folio').textContent=r.folio||'—';
+  $('ms-fecha').textContent=fmtDate(r.fecha);
+  $('ms-nombre').textContent=r.nombre||'—';
+  $('ms-email').textContent=r.email||'—';
+  $('ms-depto').textContent=r.departamento||'—';
+  $('ms-gerente').textContent=r.gerente||'—';
+  $('ms-tipo').textContent=r.tipoSolicitud||'—';
+  $('ms-nueva').textContent=r.esNueva||'—';
+  $('ms-desc').textContent=r.descripcion||'—';
+
+  if(r.fotoURL&&r.fotoURL.startsWith('http')){
+    $('ms-foto').href=r.fotoURL; $('ms-foto-wrap').style.display='';
+  } else $('ms-foto-wrap').style.display='none';
+
+  $('ms-badges').innerHTML=estatusBadge(r.estatus);
+
+  const rol=SESSION?.user?.rol;
+  $('sec-auth-ing').style.display=(rol==='ingeniero'&&(r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería'))?'':'none';
+  $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Autorizado por Ingeniería')?'':'none';
+
+  $('ms-tecnico').innerHTML='<option value="">— Sin asignar —</option>'+
+    TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
+
+  $('ms-estatus').innerHTML='<option value="">— Sin cambio —</option>'+
+    ESTATUS_MANUAL.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  $('ms-ing-comentario').value='';
+  $('ms-mgr-comentario').value='';
+  $('ms-comment').value='';
+
+  renderHistorial(r, 'ms-historial');
+  $('modal-sol').style.display='flex';
+}
+
+// ── Compra Modal ─────────────────────────────────────────────
+function openCompraModal(id) {
+  CUR_COMP = COMP_DATA.find(r=>r.id===id);
+  if(!CUR_COMP) return;
+  const r=CUR_COMP;
+
+  $('mc-folio').textContent=r.folio||'—';
+  $('mc-fecha').textContent=fmtDate(r.fecha);
+  $('mc-solicitante').textContent=r.solicitante||'—';
+  $('mc-prioridad').innerHTML=prioridadColor(r.prioridad);
+  $('mc-cantidad').textContent=(r.cantidad||'—') + ' ' + (r.unidades||'');
+  $('mc-fecha-requerida').textContent=fmtDate(r.fechaRequerida);
+  $('mc-descripcion').textContent=r.descripcion||'—';
+  $('mc-proposito').textContent=r.proposito||'—';
+
+  if(r.fotoURL&&r.fotoURL.startsWith('http')){
+    $('mc-foto').href=r.fotoURL; $('mc-foto-wrap').style.display='';
+  } else $('mc-foto-wrap').style.display='none';
+
+  $('mc-badges').innerHTML=compraBadge(r.estatus);
+  $('mc-estatus').value='';
+  $('mc-comment').value='';
+
+  renderHistorial(r, 'mc-historial', true);
+  $('modal-compra').style.display='flex';
+}
+
+function renderHistorial(r, containerId, isCompra=false) {
+  let hist=[];
+  try{ hist=JSON.parse(r.historial||'[]'); }catch{}
+  const icons={
+    created:'fa-circle-plus',
+    status:'fa-arrows-rotate',
+    comment:'fa-comment',
+    tech:'fa-user-gear',
+    compra:'fa-shopping-cart'
+  };
+  const typeClass = isCompra ? 'st-compra' : 'st-info';
+  $('mc-historial').className = 'status-timeline';
+  $(containerId).innerHTML=hist.length?[...hist].reverse().map(h=>`
+    <div class="st-item ${typeClass}">
+      <div>
+        <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
+        <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
+      </div>
+    </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">Sin historial</p>';
+}
+
+async function authAction(action) {
+  if(!CUR_SOL||!SESSION) return;
+  const comentario = action.startsWith('ing') ? $('ms-ing-comentario').value : $('ms-mgr-comentario').value;
+  if((action==='ing_rechaza'||action==='mgr_rechaza')&&!comentario.trim()){
+    toast('El comentario es obligatorio para rechazar','err'); return;
+  }
+  const btn=document.querySelector(`button[onclick="authAction('${action}')"]`);
+  if(btn){btn.disabled=true;}
+  try {
+    const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,authAction:action,comentario});
+    if(res.success){toast('Actualizado correctamente');closeModal('modal-sol');loadSolicitudes();}
+    else toast(res.error||'Error','err');
+  } catch(e){toast('Error de conexión','err');}
+  if(btn){btn.disabled=false;}
+}
+
+async function saveSolicitudChanges() {
+  if(!CUR_SOL||!SESSION) return;
+  const tecnico=$('ms-tecnico').value, estatus=$('ms-estatus').value;
+  if(!tecnico&&!estatus){toast('Selecciona técnico o estatus para guardar','err');return;}
+  const btn=$('btn-ms-save');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,
+      tecnico:tecnico||undefined, estatus:estatus||undefined});
+    if(res.success){toast('Cambios guardados');closeModal('modal-sol');loadSolicitudes();}
+    else toast(res.error||'Error','err');
+  } catch(e){toast('Error de conexión','err');}
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios';
+}
+
+async function saveComment() {
+  const txt=$('ms-comment').value.trim();
+  if(!txt||!CUR_SOL||!SESSION) return;
+  try {
+    const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,comentarioFacilities:txt});
+    if(res.success){$('ms-comment').value='';toast('Comentario guardado');loadSolicitudes();}
+    else toast(res.error,'err');
+  } catch(e){toast('Error','err');}
+}
+
+// ── Compra Actions ────────────────────────────────────────────
+async function saveCompraChanges() {
+  if(!CUR_COMP||!SESSION) return;
+  const estatus=$('mc-estatus').value;
+  if(!estatus){toast('Selecciona un estatus para guardar','err');return;}
+  const btn=$('btn-mc-save');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMP.id,estatus});
+    if(res.success){toast('Cambios guardados');closeModal('modal-compra');loadCompras();}
+    else toast(res.error||'Error','err');
+  } catch(e){toast('Error de conexión','err');}
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios';
+}
+
+async function saveCompraComment() {
+  const txt=$('mc-comment').value.trim();
+  if(!txt||!CUR_COMP||!SESSION) return;
+  try {
+    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMP.id,comentario:txt});
+    if(res.success){$('mc-comment').value='';toast('Comentario guardado');loadCompras();}
+    else toast(res.error,'err');
+  } catch(e){toast('Error','err');}
+}
+
+// ── Plan Acciones ─────────────────────────────────────────────
+function openAccModal(id) {
+  const a=ACC_DATA.find(x=>x.id===id); if(!a) return;
+  $('acc-id').value=a.id;
+  $('acc-hallazgo').textContent=a.hallazgo||'—';
+  $('acc-accion').value=a.accionCorrectiva||'';
+  $('acc-resp').value=a.responsable||'';
+  $('acc-fecha').value=a.fechaCompromiso||'';
+  $('acc-est').value=a.estatus||'Abierto';
+  $('modal-acc').style.display='flex';
+}
+
+async function saveAccion() {
+  if(!SESSION) return;
+  const id=$('acc-id').value;
+  const btn=document.querySelector('#modal-acc .btn-p');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    const res=await api({action:'updateAccion',token:SESSION.token,id,
+      accionCorrectiva:$('acc-accion').value, responsable:$('acc-resp').value,
+      fechaCompromiso:$('acc-fecha').value, estatus:$('acc-est').value,
+      fechaCierre:$('acc-est').value==='Cerrado'?new Date().toISOString().slice(0,10):''});
+    if(res.success){toast('Acción actualizada');closeModal('modal-acc');loadAcciones();}
+    else toast(res.error,'err');
+  } catch(e){toast('Error','err');}
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar';
+}
+
+// ── QR ────────────────────────────────────────────────────────
+function showQR() {
+  const url=window.location.href.split('#')[0];
+  $('qr-url').textContent=url; $('qr-wrap').innerHTML='';
+  new QRCode($('qr-wrap'),{text:url,width:192,height:192,colorDark:'#0A1628',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+  $('modal-qr').style.display='flex';
+}
+function dlQR() {
+  const c=$('qr-wrap').querySelector('canvas'); if(!c) return;
+  const a=document.createElement('a'); a.download='QR-Facilities-KTMEX.png'; a.href=c.toDataURL(); a.click();
+}
+
+// ── Misc ──────────────────────────────────────────────────────
+function closeModal(id) { $(id).style.display='none'; }
+
+function fmtDate(iso) {
+  if(!iso) return '—';
+  const d=new Date(iso);
+  if(isNaN(d)) return String(iso).slice(0,10);
+  return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function init() {
+  initSolicitudForm();
+  initComprasForm();
+  initLpaAreaCards();
+
+  // Mostrar banner de modo demo si aplica
+  if (IS_DEMO_MODE && $('demo-banner')) {
+    $('demo-banner').style.display = '';
+  }
+
+  DEPARTAMENTOS.forEach(d=>{ const o=document.createElement('option'); o.value=o.textContent=d; $('fs-depto').appendChild(o); });
+
+  ['modal-sol','modal-qr','modal-acc','modal-compra'].forEach(id=>{
+    $(id).addEventListener('click',e=>{ if(e.target===$(id)) closeModal(id); });
+  });
+
+  const saved=sessionStorage.getItem('ktmex_session');
+  if(saved) {
+    try {
+      const parsed=JSON.parse(saved);
+      api({action:'validateSession', token:parsed.token}).then(res=>{
+        if(res.valid) {
+          SESSION=parsed;
+          $('btn-logout').style.display='';
+          $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+          if($('admin-rol-label')) $('admin-rol-label').textContent=res.user.nombre+' · '+res.user.rol;
+        } else {
+          sessionStorage.removeItem('ktmex_session');
+        }
+      }).catch(()=>{
+        SESSION=parsed;
+        $('btn-logout').style.display='';
+        $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+      });
+    } catch { SESSION=null; }
+  }
+
+  showView('home');
+}
+
+function saveSession() {
+  if (SESSION) sessionStorage.setItem('ktmex_session', JSON.stringify(SESSION));
+  else sessionStorage.removeItem('ktmex_session');
+}
+
+function logout() {
+  if (SESSION) {
+    api({action:'logout',token:SESSION.token}).catch(()=>{});
+  }
+  SESSION = null;
+  sessionStorage.removeItem('ktmex_session');
+  if ($('btn-logout')) $('btn-logout').style.display = 'none';
+  if ($('nav-admin')) $('nav-admin').innerHTML = '<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
+  showView('home');
+  toast('Sesión cerrada', 'info');
+}
+
+init();
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+</body>
+</html>
