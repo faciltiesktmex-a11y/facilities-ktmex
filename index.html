@@ -21,7 +21,6 @@ body{background:#F1F5F9;min-height:100vh}
 .inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
 .inp::placeholder{color:#94A3B8}
 textarea.inp{resize:none}
-select.inp{cursor:pointer}
 .card{background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .card-sm{background:#fff;border-radius:12px;border:1px solid var(--border)}
 .btn-p{background:var(--blue);color:#fff;border:none;border-radius:12px;padding:12px 20px;font-weight:600;cursor:pointer;transition:.15s;font-size:.875rem}
@@ -32,8 +31,6 @@ select.inp{cursor:pointer}
 .btn-ok:hover{background:#15803D}
 .btn-red{background:#DC2626;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
 .btn-red:hover{background:#B91C1C}
-.btn-compra{background:#7C3AED;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s}
-.btn-compra:hover{background:#6D28D9}
 .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:7px;font-size:.72rem;font-weight:600;border:1px solid transparent}
 .b-pend{background:#F8FAFC;color:#475569;border-color:#CBD5E1}
 .b-ing{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
@@ -45,14 +42,6 @@ select.inp{cursor:pointer}
 .b-alta{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
 .b-media{background:#FFFBEB;color:#92400E;border-color:#FDE68A}
 .b-baja{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
-.b-compra{background:#F3E8FF;color:#7C3AED;border-color:#DDD6FE}
-.b-compra-pend{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
-.b-compra-aprob{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
-.b-compra-rech{background:#FEE2E2;color:#B91C1C;border-color:#FECACA}
-.b-compra-comprado{background:#DBEAFE;color:#1D4ED8;border-color:#BFDBFE}
-.b-compra-entregado{background:#D1FAE5;color:#065F46;border-color:#6EE7B7}
-.b-compra-parcial{background:#FFFBEB;color:#92400E;border-color:#FDE68A}
-.b-compra-cancel{background:#F1F5F9;color:#64748B;border-color:#CBD5E1}
 .badge-p{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
 .badge-np{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
 .badge-na{background:#F8FAFC;color:#64748B;border:1px solid #CBD5E1;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
@@ -64,7 +53,6 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 #toast{position:fixed;bottom:22px;right:22px;z-index:99;background:var(--navy);color:#fff;padding:11px 17px;border-radius:13px;box-shadow:0 8px 24px rgba(0,0,0,.22);font-size:.84rem;display:flex;align-items:center;gap:9px}
 .tab-btn{padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;transition:.15s;background:transparent;color:#64748B}
 .tab-btn.active{background:#EFF6FF;color:#1D4ED8}
-.tab-btn-compra.active{background:#F3E8FF;color:#7C3AED}
 .lpa-radio{display:flex;gap:6px}
 .lpa-radio label{cursor:pointer;padding:4px 10px;border-radius:8px;font-size:.75rem;font-weight:600;border:1.5px solid #E2E8F0;color:#94A3B8;transition:.12s}
 .lpa-radio input:checked+label.lp{border-color:#22C55E;background:#F0FDF4;color:#166534}
@@ -75,10 +63,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .status-timeline{display:flex;flex-direction:column;gap:8px}
 .st-item{display:flex;gap:10px;align-items:flex-start;padding-left:14px;position:relative}
 .st-item::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:#CBD5E1}
-.st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}.st-item.st-compra::before{background:#7C3AED}
-.nav-btn{padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s}
-.nav-btn:hover{background:rgba(255,255,255,.08)}
-.nav-btn.active{background:rgba(255,255,255,.12);color:#fff}
+.st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}
 </style>
 </head>
 <body>
@@ -86,18 +71,18 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOJ-qT2wGJhh3pi7WG_6oNVzuElvEMMpHij9fwGkSZMeszPAHtVcXJSO78tV_U8Yi0/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAgJRp0Wr0M1tsZrXRU5iwsaBZO89ojsSK2UTTaU5TiLLHc1RHt31B3fkl61jQcMxy/exec";
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
   { nombre:"Lenin Wenceslao Acosta Soto",     puesto:"Técnico Facilities" },
   { nombre:"Luis Antonio Serrano Rivera",      puesto:"Técnico Facilities" },
-  { nombre:"Jorge Antonio Muñiz Cano",        puesto:"Técnico Facilities" },
-  { nombre:"Juan Diego Calderon Fortanell",   puesto:"Técnico Facilities" },
-  { nombre:"Jorge Patlán Florencio",          puesto:"Técnico Facilities" },
-  { nombre:"Andres Ramirez Beltran",          puesto:"Ingeniero Facilities" },
-  { nombre:"Pedro Loya Rocha",                puesto:"Ingeniero Facilities" },
-  { nombre:"Atsushi Inagaki",                 puesto:"Manager Facilities" },
+  { nombre:"Jorge Antonio Muñiz Cano",         puesto:"Técnico Facilities" },
+  { nombre:"Juan Diego Calderon Fortanell",    puesto:"Técnico Facilities" },
+  { nombre:"Jorge Patlán Florencio",           puesto:"Técnico Facilities" },
+  { nombre:"Andres Ramirez Beltran",           puesto:"Ingeniero Facilities" },
+  { nombre:"Pedro Loya Rocha",                 puesto:"Ingeniero Facilities" },
+  { nombre:"Atsushi Inagaki",                  puesto:"Manager Facilities" },
 ];
 
 const TECNICOS = [
@@ -129,20 +114,37 @@ const ESTATUS_MANUAL = [
   "En ejecución","Trabajo completado","En espera de refacciones","Cancelado"
 ];
 
-// ── COMPRAS ────────────────────────────────────────────────
-const UNIDADES_COMPRA = [
-  "Pieza","Metros lineales","Caja","Servicio","Litros","Kilogramos",
-  "Metros cuadrados","Juego","Set","Lote","Par","Metros cúbicos"
+// ── Configuración: Solicitudes de Compra ──
+const SOLICITANTES_COMPRA = [
+  "Juan Diego Calderón Fortanel",
+  "Lenin Wenceslao Acosta Soto",
+  "Jorge Patlán",
+  "Luis Antonio Serrano Rivera",
+  "Jorge Antonio Muñíz Cano",
+  "Pedro Loya Rocha",
+  "Andrés Ramírez Beltrán"
 ];
 
-const ESTATUS_COMPRA = {
-  PENDIENTE: 'Pendiente de aprobación',
-  APROBADA: 'Aprobada - En compra',
-  RECHAZADA: 'Rechazada',
-  COMPRADO: 'Comprado',
-  PARCIAL: 'Parcialmente entregado',
-  ENTREGADO: 'Entregado',
-  CANCELADO: 'Cancelado'
+const UNIDADES_COMPRA = [
+  "Pieza","Metros lineales","Caja","Servicio","Litros"
+];
+
+const ESTATUS_COMPRA = [
+  "Solicitada","Autorizada","Rechazada","En cotización","Ordenada","Recibida","Cancelada"
+];
+
+// Mapea el rol de sesión al puesto mostrado en formularios (LPA, Compras)
+const ROL_PUESTO = {
+  tecnico:   "Técnico Facilities",
+  ingeniero: "Ingeniero Facilities",
+  manager:   "Manager Facilities",
+  compras:   "Área de Compras"
+};
+
+const ESTATUS_ACTIVIDAD_LABELS = {
+  'En curso': 'En curso',
+  'Cerrada': 'Cerrada',
+  'Cerrada automáticamente — sin evidencia de cierre': 'Cerrada automáticamente (sin evidencia)'
 };
 
 // Items LPA por área
@@ -246,16 +248,22 @@ const LPA_AREAS = {
       </div>
     </div>
     <div style="display:flex;gap:4px;align-items:center">
-      <button onclick="showView('solicitud')" id="nav-sol" class="nav-btn">
+      <button onclick="showView('solicitud')" id="nav-sol" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-file-alt" style="margin-right:5px"></i>Solicitudes
       </button>
-      <button onclick="showView('compras')" id="nav-compras" class="nav-btn">
-        <i class="fas fa-shopping-cart" style="margin-right:5px"></i>Compras
-      </button>
-      <button onclick="showView('lpa-select')" id="nav-lpa" class="nav-btn">
+      <button onclick="goLpaSelect()" id="nav-lpa" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-clipboard-check" style="margin-right:5px"></i>Auditoría LPA
       </button>
-      <button onclick="goAdmin()" id="nav-admin" class="nav-btn">
+      <button onclick="goCompra()" id="nav-compra" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-cart-shopping" style="margin-right:5px"></i>Compras
+      </button>
+      <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
+      </button>
+      <button onclick="goInventario()" id="nav-inv" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-boxes-stacked" style="margin-right:5px"></i>Inventario
+      </button>
+      <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
       </button>
       <button id="btn-logout" onclick="logout()" style="display:none;padding:6px 12px;background:#EF4444;color:#fff;border:none;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer">
@@ -265,14 +273,14 @@ const LPA_AREAS = {
   </div>
 </nav>
 
-<!-- ══════════════════════════ VIEW: HOME ══ -->
+<!-- ══════════════════════════════════ VIEW: HOME ══ -->
 <div id="view-home" class="fade" style="max-width:1000px;margin:0 auto;padding:40px 16px">
   <div style="text-align:center;margin-bottom:40px">
     <div style="width:68px;height:68px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 10px 28px rgba(37,99,235,.3)">
       <i class="fas fa-tools" style="color:#fff;font-size:24px"></i>
     </div>
     <h1 style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0 0 6px">Sistema Facilities KTMEX</h1>
-    <p style="color:#64748B;font-size:.9rem;margin:0">Solicitudes de trabajo · Solicitudes de Compra · Auditorías LPA · Panel de administración</p>
+    <p style="color:#64748B;font-size:.9rem;margin:0">Solicitudes de trabajo · Solicitudes de compra · Auditorías LPA · Panel de administración</p>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
     <!-- Solicitud Card -->
@@ -284,17 +292,17 @@ const LPA_AREAS = {
       <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Registra una nueva solicitud de instalación o mantenimiento para Facilities.</p>
       <span style="color:#2563EB;font-size:.8rem;font-weight:600">Abrir formulario →</span>
     </div>
-    <!-- Compras Card -->
-    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showView('compras')">
-      <div style="width:48px;height:48px;background:#F3E8FF;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-        <i class="fas fa-shopping-cart" style="color:#7C3AED;font-size:20px"></i>
+    <!-- Compra Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goCompra()">
+      <div style="width:48px;height:48px;background:#FEF3C7;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-cart-shopping" style="color:#D97706;font-size:20px"></i>
       </div>
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Solicitud de Compra</h3>
-      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Solicita materiales, refacciones o servicios necesarios para mantenimiento.</p>
-      <span style="color:#7C3AED;font-size:.8rem;font-weight:600">Nueva solicitud →</span>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Solicita materiales, refacciones o servicios para Facilities.</p>
+      <span style="color:#D97706;font-size:.8rem;font-weight:600">Abrir formulario →</span>
     </div>
     <!-- LPA Card -->
-    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showView('lpa-select')">
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goLpaSelect()">
       <div style="width:48px;height:48px;background:#F0FDF4;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <i class="fas fa-clipboard-check" style="color:#16A34A;font-size:20px"></i>
       </div>
@@ -302,13 +310,31 @@ const LPA_AREAS = {
       <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Realiza auditorías por capas en las 5 áreas de Facilities & Utilities.</p>
       <span style="color:#16A34A;font-size:.8rem;font-weight:600">Iniciar auditoría →</span>
     </div>
+    <!-- Actividades Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goActividades()">
+      <div style="width:48px;height:48px;background:#EDE9FE;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-person-digging" style="color:#7C3AED;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Mis Actividades</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Técnicos: inicia y cierra tus actividades asignadas con evidencia fotográfica.</p>
+      <span style="color:#7C3AED;font-size:.8rem;font-weight:600">Ver mis actividades →</span>
+    </div>
+    <!-- Inventario Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goInventario()">
+      <div style="width:48px;height:48px;background:#E0F2FE;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-boxes-stacked" style="color:#0284C7;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Inventario</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Registra la salida de refacciones de las gavetas ligadas a tu actividad.</p>
+      <span style="color:#0284C7;font-size:.8rem;font-weight:600">Abrir inventario →</span>
+    </div>
     <!-- Admin Card -->
     <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
       <div style="width:48px;height:48px;background:#F8FAFC;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <i class="fas fa-shield-halved" style="color:#475569;font-size:20px"></i>
       </div>
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Panel Administrativo</h3>
-      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Autorización de solicitudes, compras, asignación de técnicos y resultados LPA.</p>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Autorización de solicitudes, asignación de técnicos y resultados LPA.</p>
       <span style="color:#475569;font-size:.8rem;font-weight:600">Acceder →</span>
     </div>
   </div>
@@ -344,17 +370,17 @@ const LPA_AREAS = {
       <!-- Gerente -->
       <div style="margin-bottom:16px">
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user-tie" style="color:#2563EB;margin-right:5px"></i>Nombre del gerente de área *</label>
-        <select id="s-gerente" class="inp"><option value="">— Selecciona —</option></select>
+        <select id="s-gerente" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
       </div>
       <!-- Departamento -->
       <div style="margin-bottom:16px">
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-building" style="color:#2563EB;margin-right:5px"></i>Departamento solicitante *</label>
-        <select id="s-depto" class="inp"><option value="">— Selecciona —</option></select>
+        <select id="s-depto" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
       </div>
       <!-- Tipo -->
       <div style="margin-bottom:16px">
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-wrench" style="color:#2563EB;margin-right:5px"></i>Tipo de solicitud *</label>
-        <select id="s-tipo" class="inp"><option value="">— Selecciona —</option></select>
+        <select id="s-tipo" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
       </div>
       <!-- Descripción -->
       <div style="margin-bottom:16px">
@@ -401,78 +427,72 @@ const LPA_AREAS = {
   </div>
 </div>
 
-<!-- ══════════════════════════ VIEW: COMPRAS FORM ══ -->
-<div id="view-compras" style="display:none;max-width:620px;margin:0 auto;padding:28px 16px" class="fade">
+<!-- ══════════════════════ VIEW: SOLICITUD DE COMPRA ══ -->
+<div id="view-compra" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade">
   <div style="text-align:center;margin-bottom:24px">
-    <div style="width:56px;height:56px;background:linear-gradient(135deg,#7C3AED,#6D28D9);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(124,58,237,.28)">
-      <i class="fas fa-shopping-cart" style="color:#fff;font-size:20px"></i>
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#D97706,#B45309);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(217,119,6,.28)">
+      <i class="fas fa-cart-shopping" style="color:#fff;font-size:20px"></i>
     </div>
     <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Solicitud de Compra</h2>
-    <p style="color:#64748B;font-size:.82rem;margin:0">Materials · Refacciones · Servicios · KTMEX</p>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
   </div>
 
   <div class="card" style="padding:24px">
     <div id="compra-form">
-      <!-- Fecha -->
+      <!-- Fecha de solicitud -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar" style="color:#7C3AED;margin-right:5px"></i>Fecha de solicitud *</label>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar" style="color:#D97706;margin-right:5px"></i>Fecha de solicitud *</label>
         <input type="date" id="c-fecha" class="inp">
       </div>
-      <!-- Nombre solicitante -->
+      <!-- Nombre del solicitante (de la sesión iniciada) -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user" style="color:#7C3AED;margin-right:5px"></i>Nombre del solicitante *</label>
-        <select id="c-solicitante" class="inp">
-          <option value="">— Selecciona —</option>
-        </select>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user" style="color:#D97706;margin-right:5px"></i>Solicitante</label>
+        <div id="c-nombre-display" class="inp" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E;font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-circle-check" style="font-size:.8rem"></i><span></span></div>
+        <input type="hidden" id="c-nombre">
       </div>
       <!-- Prioridad -->
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:8px"><i class="fas fa-flag" style="color:#7C3AED;margin-right:5px"></i>Prioridad *</label>
-        <div style="display:flex;gap:10px">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
-            <input type="radio" name="c-prioridad" value="Alta" style="accent-color:#DC2626"> <span style="color:#DC2626;font-weight:600">Alta</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
-            <input type="radio" name="c-prioridad" value="Media" style="accent-color:#D97706"> <span style="color:#D97706;font-weight:600">Media</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
-            <input type="radio" name="c-prioridad" value="Baja" checked style="accent-color:#16A34A"> <span style="color:#16A34A;font-weight:600">Baja</span>
-          </label>
+      <div style="margin-bottom:18px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:9px"><i class="fas fa-exclamation-circle" style="color:#D97706;margin-right:5px"></i>Prioridad *</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <button type="button" class="prio-btn" data-p="Alta"  onclick="selectPrioCompra('Alta')"><i class="fas fa-fire" style="color:#EF4444;margin-right:4px"></i>Alta</button>
+          <button type="button" class="prio-btn" data-p="Media" onclick="selectPrioCompra('Media')"><i class="fas fa-equals" style="color:#F59E0B;margin-right:4px"></i>Media</button>
+          <button type="button" class="prio-btn" data-p="Baja"  onclick="selectPrioCompra('Baja')"><i class="fas fa-arrow-down" style="color:#22C55E;margin-right:4px"></i>Baja</button>
         </div>
+        <input type="hidden" id="c-prioridad">
       </div>
       <!-- Descripción del material -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-box" style="color:#7C3AED;margin-right:5px"></i>Descripción del material requerido *</label>
-        <textarea id="c-descripcion" class="inp" rows="3" placeholder="De ser posible incluir: Marca / Modelo / Cantidad"></textarea>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#D97706;margin-right:5px"></i>Descripción del material requerido *</label>
+        <textarea id="c-desc" class="inp" rows="3" placeholder="De ser posible añadir: Marca / Modelo / Cantidad…"></textarea>
       </div>
       <!-- Cantidad y Unidades -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div>
-          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-hashtag" style="color:#7C3AED;margin-right:5px"></i>Cantidad *</label>
-          <input type="number" id="c-cantidad" class="inp" min="1" placeholder="Cantidad">
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-hashtag" style="color:#D97706;margin-right:5px"></i>Cantidad *</label>
+          <input type="number" min="0" step="any" id="c-cantidad" class="inp" placeholder="Ej. 10">
         </div>
         <div>
-          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-ruler" style="color:#7C3AED;margin-right:5px"></i>Unidades *</label>
-          <select id="c-unidades" class="inp"><option value="">— Selecciona —</option></select>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-ruler" style="color:#D97706;margin-right:5px"></i>Unidades *</label>
+          <select id="c-unidad" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
         </div>
       </div>
-      <!-- Fecha requerida -->
+      <!-- Fecha requerida de recepción -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar-check" style="color:#7C3AED;margin-right:5px"></i>Fecha requerida de recepción *</label>
-        <input type="date" id="c-fecha-requerida" class="inp">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar-check" style="color:#D97706;margin-right:5px"></i>Fecha requerida de recepción *</label>
+        <input type="date" id="c-fecha-req" class="inp">
       </div>
       <!-- Propósito -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-info-circle" style="color:#7C3AED;margin-right:5px"></i>Propósito del material o servicio *</label>
-        <textarea id="c-proposito" class="inp" rows="2" placeholder="Describe el uso o necesidad del material/servicio"></textarea>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-bullseye" style="color:#D97706;margin-right:5px"></i>Propósito del material o servicio *</label>
+        <textarea id="c-proposito" class="inp" rows="3" placeholder="¿Para qué se requiere este material o servicio?"></textarea>
       </div>
-      <!-- Foto -->
+      <!-- Fotografía -->
       <div style="margin-bottom:20px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#7C3AED;margin-right:5px"></i>Fotografías de referencia</label>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#D97706;margin-right:5px"></i>Fotografías de referencia *</label>
         <input type="file" id="c-foto" accept="image/*" class="inp" style="padding:8px">
-        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG, PDF (máx. 10 MB)</p>
+        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG. Máx. 5 MB. Se guardará en Google Drive.</p>
       </div>
-      <button class="btn-compra" id="btn-compra-submit" onclick="submitCompra()" style="width:100%">
+      <button class="btn-p" id="btn-compra-submit" onclick="submitCompra()" style="width:100%;background:#D97706" onmouseover="this.style.background='#B45309'" onmouseout="this.style.background='#D97706'">
         <i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra
       </button>
       <p style="text-align:center;font-size:.72rem;color:#94A3B8;margin-top:8px">* Campos obligatorios</p>
@@ -480,16 +500,16 @@ const LPA_AREAS = {
 
     <!-- Success -->
     <div id="compra-success" style="display:none;text-align:center;padding:20px 0">
-      <div style="width:58px;height:58px;background:#F3E8FF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-        <i class="fas fa-check-circle" style="color:#7C3AED;font-size:26px"></i>
+      <div style="width:58px;height:58px;background:#FEF3C7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <i class="fas fa-check-circle" style="color:#D97706;font-size:26px"></i>
       </div>
       <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 6px">¡Solicitud de Compra Enviada!</h3>
       <p style="color:#64748B;font-size:.82rem;margin:0 0 12px">Número de folio:</p>
-      <div style="background:#F3E8FF;border:1.5px solid #DDD6FE;border-radius:11px;padding:10px 20px;display:inline-block;margin-bottom:18px">
-        <span id="compra-folio" class="mono" style="font-size:1.2rem;font-weight:700;color:#7C3AED"></span>
+      <div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:11px;padding:10px 20px;display:inline-block;margin-bottom:18px">
+        <span id="compra-folio" class="mono" style="font-size:1.2rem;font-weight:700;color:#D97706"></span>
       </div>
-      <p style="color:#64748B;font-size:.8rem;margin:0 0 20px">Purchasing revisará tu solicitud a la brevedad.</p>
-      <button class="btn-g" onclick="resetCompra()"><i class="fas fa-plus" style="margin-right:6px"></i>Nueva Solicitud</button>
+      <p style="color:#64748B;font-size:.8rem;margin:0 0 20px">Facilities revisará tu solicitud de compra a la brevedad.</p>
+      <button class="btn-g" onclick="resetCompra()"><i class="fas fa-plus" style="margin-right:6px"></i>Nueva Solicitud de Compra</button>
     </div>
   </div>
 </div>
@@ -508,13 +528,16 @@ const LPA_AREAS = {
     <p style="font-size:.82rem;color:#92400E;margin:0"><i class="fas fa-triangle-exclamation" style="margin-right:6px"></i><strong>Recordatorio:</strong> La auditoría se realiza 100% en piso (Gemba). EPP completo requerido antes de iniciar.</p>
   </div>
 
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+    <div id="lpa-area-cards"></div>
+  </div>
   <div id="lpa-area-cards-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: LPA FORM ══ -->
 <div id="view-lpa-form" style="display:none;max-width:900px;margin:0 auto;padding:20px 16px" class="fade">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-    <button onclick="showView('lpa-select')" class="btn-g" style="padding:7px 12px;font-size:.78rem">
+    <button onclick="goLpaSelect()" class="btn-g" style="padding:7px 12px;font-size:.78rem">
       <i class="fas fa-arrow-left" style="margin-right:5px"></i>Áreas
     </button>
     <div>
@@ -533,23 +556,22 @@ const LPA_AREAS = {
       </div>
       <div>
         <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Turno *</label>
-        <select id="lpa-turno" class="inp" style="padding:8px 11px">
+        <select id="lpa-turno" class="inp" style="padding:8px 11px;cursor:pointer">
           <option value="">—</option>
           <option>Primer turno</option><option>Segundo turno</option><option>Tercer turno</option>
         </select>
       </div>
       <div>
         <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Capa *</label>
-        <select id="lpa-capa" class="inp" style="padding:8px 11px">
+        <select id="lpa-capa" class="inp" style="padding:8px 11px;cursor:pointer">
           <option value="">—</option>
           <option value="1">Capa 1</option><option value="2">Capa 2</option><option value="3">Capa 3</option>
         </select>
       </div>
       <div>
-        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Auditor *</label>
-        <select id="lpa-auditor" class="inp" style="padding:8px 11px" onchange="lpaAuditorChange()">
-          <option value="">— Selecciona —</option>
-        </select>
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Auditor</label>
+        <div id="lpa-auditor-display" class="inp" style="padding:8px 11px;background:#F0FDF4;border-color:#BBF7D0;color:#166534;font-weight:600;display:flex;align-items:center;gap:7px"><i class="fas fa-circle-check" style="font-size:.78rem"></i><span></span></div>
+        <input type="hidden" id="lpa-auditor">
       </div>
       <div>
         <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Puesto</label>
@@ -610,14 +632,159 @@ const LPA_AREAS = {
   </button>
 </div>
 
+<!-- ══════════════════════════ VIEW: MIS ACTIVIDADES ══ -->
+<div id="view-actividades" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#7C3AED,#5B21B6);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(124,58,237,.28)">
+      <i class="fas fa-person-digging" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Mis Actividades</h2>
+    <p id="act-user-label" style="color:#64748B;font-size:.82rem;margin:0"></p>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
+    <button onclick="openActividadEspontaneaModal()" class="btn-p" style="background:#7C3AED;flex:1" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
+      <i class="fas fa-bolt" style="margin-right:7px"></i>Actividad Espontánea
+    </button>
+    <button onclick="loadMisActividades()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
+  </div>
+
+  <div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
+</div>
+
+<!-- ══════════════════════════ VIEW: INVENTARIO ══ -->
+<div id="view-inventario" style="display:none;max-width:820px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#0284C7,#075985);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(2,132,199,.28)">
+      <i class="fas fa-boxes-stacked" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inventario de Gavetas</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Registra la salida de refacciones ligada a tu actividad</p>
+  </div>
+
+  <div class="card" style="padding:18px;margin-bottom:16px">
+    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 14px">Registrar salida</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Refacción *</label>
+        <select id="inv-refaccion" class="inp" style="cursor:pointer" onchange="invRefaccionChange()"><option value="">— Selecciona —</option></select>
+      </div>
+      <div>
+        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Solicitud de trabajo (folio) *</label>
+        <select id="inv-solicitud" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
+      </div>
+    </div>
+    <div id="inv-stock-info" style="display:none;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+      <p style="font-size:.78rem;color:#075985;margin:0"><i class="fas fa-circle-info" style="margin-right:5px"></i><span id="inv-stock-text"></span></p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Cantidad a retirar *</label>
+        <input type="number" min="1" step="1" id="inv-cantidad" class="inp" placeholder="Ej. 2">
+      </div>
+    </div>
+    <button class="btn-p" id="btn-inv-submit" onclick="registrarSalidaInventario()" style="width:100%;background:#0284C7" onmouseover="this.style.background='#075985'" onmouseout="this.style.background='#0284C7'">
+      <i class="fas fa-right-from-bracket" style="margin-right:8px"></i>Registrar Salida
+    </button>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0">Catálogo de gavetas</h4>
+    <button onclick="loadInventarioTec()" class="btn-g" style="padding:7px 12px;font-size:.75rem"><i class="fas fa-rotate-right" style="margin-right:5px"></i>Actualizar</button>
+  </div>
+  <div class="card" style="overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:600px">
+        <thead>
+          <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock</th><th>Mínimo</th></tr>
+        </thead>
+        <tbody id="inv-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ VIEW: PANEL COMPRAS (rol compras) ══ -->
+<div id="view-compras-rol" style="display:none;max-width:1100px;margin:0 auto;padding:24px 16px" class="fade">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div style="width:38px;height:38px;background:linear-gradient(135deg,#D97706,#B45309);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <i class="fas fa-cart-shopping" style="color:#fff;font-size:15px"></i>
+        </div>
+        <h2 style="font-size:1.2rem;font-weight:700;color:var(--navy);margin:0">Panel de Compras</h2>
+      </div>
+      <p id="cr-user-label" style="color:#64748B;font-size:.8rem;margin:0"></p>
+    </div>
+    <button onclick="loadComprasRol()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+    <div class="card" style="padding:14px 16px">
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total</p>
+      <p id="cr-kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Solicitadas</p>
+      <p id="cr-kpi-sol" class="mono" style="font-size:1.8rem;font-weight:700;color:#D97706;margin:0">0</p>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En cotización</p>
+      <p id="cr-kpi-cot" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Ordenadas</p>
+      <p id="cr-kpi-ord" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Recibidas</p>
+      <p id="cr-kpi-rec" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card" style="padding:12px 14px;margin-bottom:12px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <input id="cr-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante…" oninput="renderComprasRol()">
+      <select id="cr-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
+        <option value="">Todos los estatus</option>
+        <option>Solicitada</option>
+        <option>Autorizada</option>
+        <option>Rechazada</option>
+        <option>En cotización</option>
+        <option>Ordenada</option>
+        <option>Recibida</option>
+        <option>Cancelada</option>
+      </select>
+      <select id="cr-prio" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
+        <option value="">Todas las prioridades</option>
+        <option>Alta</option><option>Media</option><option>Baja</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card" style="overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:700px">
+        <thead>
+          <tr>
+            <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Prioridad</th>
+            <th style="text-align:left">Descripción</th><th>Cantidad</th>
+            <th>F. Requerida</th><th>Estatus</th><th style="text-align:center">Gestionar</th>
+          </tr>
+        </thead>
+        <tbody id="cr-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════ VIEW: LOGIN ══ -->
 <div id="view-login" style="display:none" class="fade">
   <div style="min-height:calc(100vh - 54px);display:flex;align-items:center;justify-content:center;padding:16px">
     <div class="card" style="width:100%;max-width:340px;padding:32px">
-      <!-- Banner Demo Mode -->
-      <div id="demo-banner" style="display:none;background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;margin-bottom:18px;text-align:center">
-        <p style="font-size:.75rem;color:#92400E;margin:0;font-weight:600"><i class="fas fa-info-circle" style="margin-right:5px"></i>MODO DEMO - Usa las credenciales de abajo</p>
-      </div>
       <div style="text-align:center;margin-bottom:24px">
         <div style="width:48px;height:48px;background:var(--navy);border-radius:13px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
           <i class="fas fa-shield-halved" style="color:#fff;font-size:18px"></i>
@@ -628,8 +795,8 @@ const LPA_AREAS = {
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Usuario</label>
       <input id="log-user" type="text" class="inp" placeholder="aramirez" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')login()">
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Contraseña</label>
-      <input id="log-pwd" type="password" class="inp" placeholder="demo123" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')login()">
-      <div id="log-err" style="display:none;color:#EF4446;font-size:.78rem;text-align:center;margin-bottom:8px">
+      <input id="log-pwd" type="password" class="inp" placeholder="••••••••" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')login()">
+      <div id="log-err" style="display:none;color:#EF4444;font-size:.78rem;text-align:center;margin-bottom:8px">
         <i class="fas fa-times-circle" style="margin-right:4px"></i>Usuario o contraseña incorrectos
       </div>
       <button class="btn-p" onclick="login()" style="width:100%;margin-bottom:12px">
@@ -657,9 +824,9 @@ const LPA_AREAS = {
     </div>
 
     <!-- KPIs -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px" id="kpi-row">
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total Sol.</p>
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total</p>
         <p id="kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
@@ -678,18 +845,15 @@ const LPA_AREAS = {
         <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Aprobadas</p>
         <p id="kpi-apro" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
       </div>
-      <div class="card" style="padding:14px 16px;background:#F3E8FF">
-        <p style="font-size:.68rem;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Compras</p>
-        <p id="kpi-compra" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
-      </div>
     </div>
 
     <!-- Tabs -->
     <div style="display:flex;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;margin-bottom:16px">
       <button class="tab-btn active" id="tab-sol" onclick="switchTab('sol')">Solicitudes</button>
-      <button class="tab-btn tab-btn-compra" id="tab-compra" onclick="switchTab('compra')">Solicitudes de Compra</button>
+      <button class="tab-btn" id="tab-compra" onclick="switchTab('compra')">Compras</button>
       <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
       <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
+      <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')">Inventario <span id="inv-alert-dot" style="display:none;background:#EF4444;color:#fff;border-radius:8px;padding:1px 6px;font-size:.68rem;margin-left:4px"></span></button>
     </div>
 
     <!-- TAB: Solicitudes -->
@@ -698,7 +862,7 @@ const LPA_AREAS = {
       <div class="card" style="padding:12px 14px;margin-bottom:12px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
           <input id="fs-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, nombre, área…" oninput="renderSolicitudes()">
-          <select id="fs-est" class="inp" style="width:auto;padding:8px 12px" onchange="renderSolicitudes()">
+          <select id="fs-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
             <option value="">Todos los estatus</option>
             <option>Pendiente</option>
             <option>Autorizado por Ingeniería</option>
@@ -707,8 +871,9 @@ const LPA_AREAS = {
             <option>Rechazado por Gerencia</option>
             <option>En ejecución</option>
             <option>Trabajo completado</option>
+            <option>Requiere revisión (auto-cierre)</option>
           </select>
-          <select id="fs-depto" class="inp" style="width:auto;padding:8px 12px" onchange="renderSolicitudes()">
+          <select id="fs-depto" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
             <option value="">Todos los departamentos</option>
           </select>
         </div>
@@ -730,36 +895,25 @@ const LPA_AREAS = {
 
     <!-- TAB: Compras -->
     <div id="panel-compra" style="display:none">
-      <!-- Filters -->
       <div class="card" style="padding:12px 14px;margin-bottom:12px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-          <input id="fc-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante, descripción…" oninput="renderCompras()">
-          <select id="fc-est" class="inp" style="width:auto;padding:8px 12px" onchange="renderCompras()">
+          <input id="fc-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio o solicitante…" oninput="renderCompras()">
+          <select id="fc-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderCompras()">
             <option value="">Todos los estatus</option>
-            <option value="Pendiente de aprobación">Pendiente de aprobación</option>
-            <option value="Aprobada - En compra">Aprobada - En compra</option>
-            <option value="Rechazada">Rechazada</option>
-            <option value="Comprado">Comprado</option>
-            <option value="Parcialmente entregado">Parcialmente entregado</option>
-            <option value="Entregado">Entregado</option>
-            <option value="Cancelado">Cancelado</option>
           </select>
-          <select id="fc-prioridad" class="inp" style="width:auto;padding:8px 12px" onchange="renderCompras()">
+          <select id="fc-prio" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderCompras()">
             <option value="">Todas las prioridades</option>
-            <option value="Alta">Alta</option>
-            <option value="Media">Media</option>
-            <option value="Baja">Baja</option>
+            <option>Alta</option><option>Media</option><option>Baja</option>
           </select>
         </div>
       </div>
       <div class="card" style="overflow:hidden">
         <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;min-width:900px">
+          <table style="width:100%;border-collapse:collapse;min-width:800px">
             <thead>
               <tr>
-                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Descripción</th>
-                <th style="text-align:center">Cant.</th><th>Prioridad</th><th>F. Requerida</th>
-                <th>Estatus</th><th style="text-align:center">Acción</th>
+                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Prioridad</th>
+                <th>Cantidad</th><th>F. Requerida</th><th>Estatus</th><th style="text-align:center">Acción</th>
               </tr>
             </thead>
             <tbody id="compra-tbody"></tbody>
@@ -771,7 +925,7 @@ const LPA_AREAS = {
     <!-- TAB: LPA -->
     <div id="panel-lpa" style="display:none">
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <select id="lpa-filter-area" class="inp" style="width:auto;padding:8px 12px" onchange="renderLPA()">
+        <select id="lpa-filter-area" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderLPA()">
           <option value="">Todas las áreas</option>
           <option value="compresores">Compresores</option>
           <option value="subestaciones">Subestaciones</option>
@@ -810,6 +964,23 @@ const LPA_AREAS = {
               </tr>
             </thead>
             <tbody id="acc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Inventario -->
+    <div id="panel-inv" style="display:none">
+      <div id="inv-summary-banner" style="display:none;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px;padding:14px 18px;margin-bottom:14px">
+        <p style="font-size:.85rem;color:#B91C1C;margin:0;font-weight:600"><i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><span id="inv-summary-text"></span></p>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:680px">
+            <thead>
+              <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock actual</th><th>Mínimo</th><th>Estatus</th></tr>
+            </thead>
+            <tbody id="admin-inv-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -880,7 +1051,7 @@ const LPA_AREAS = {
         <!-- Técnico -->
         <div style="margin-bottom:14px">
           <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-user-hard-hat" style="margin-right:5px"></i>Técnico asignado</label>
-          <select id="ms-tecnico" class="inp" style="background:#fff">
+          <select id="ms-tecnico" class="inp" style="background:#fff;cursor:pointer">
             <option value="">— Sin asignar —</option>
           </select>
         </div>
@@ -888,7 +1059,7 @@ const LPA_AREAS = {
         <!-- Estatus manual -->
         <div style="margin-bottom:14px">
           <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Cambiar estatus</label>
-          <select id="ms-estatus" class="inp" style="background:#fff">
+          <select id="ms-estatus" class="inp" style="background:#fff;cursor:pointer">
             <option value="">— Sin cambio —</option>
           </select>
         </div>
@@ -916,89 +1087,6 @@ const LPA_AREAS = {
   </div>
 </div>
 
-<!-- ══════════════════════ MODAL: COMPRA DETALLE ══ -->
-<div id="modal-compra" class="modal-bg" style="display:none">
-  <div class="modal-box slide">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #DDD6FE;position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1">
-      <div>
-        <span id="mc-folio" class="mono" style="font-size:.95rem;font-weight:700;color:#7C3AED"></span>
-        <p id="mc-fecha" style="font-size:.72rem;color:#94A3B8;margin:2px 0 0"></p>
-      </div>
-      <button onclick="closeModal('modal-compra')" style="width:32px;height:32px;background:#F3E8FF;border:none;border-radius:8px;cursor:pointer;color:#7C3AED">
-        <i class="fas fa-xmark"></i>
-      </button>
-    </div>
-    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-
-      <!-- Badges -->
-      <div style="display:flex;flex-wrap:wrap;gap:7px" id="mc-badges"></div>
-
-      <!-- Info grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Solicitante</p><p id="mc-solicitante" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
-        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Prioridad</p><p id="mc-prioridad" style="font-size:.85rem;font-weight:600;margin:0"></p></div>
-        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Cantidad</p><p id="mc-cantidad" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
-        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Fecha Requerida</p><p id="mc-fecha-requerida" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
-      </div>
-
-      <div class="card-sm" style="padding:12px">
-        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción del Material</p>
-        <p id="mc-descripcion" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
-      </div>
-
-      <div class="card-sm" style="padding:12px">
-        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Propósito</p>
-        <p id="mc-proposito" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
-      </div>
-
-      <div id="mc-foto-wrap" style="display:none">
-        <a id="mc-foto" href="#" target="_blank" class="btn-compra" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
-      </div>
-
-      <!-- GESTIÓN COMPRAS -->
-      <div style="background:#F3E8FF;border:1.5px solid #DDD6FE;border-radius:13px;padding:16px">
-        <h4 style="font-size:.78rem;font-weight:700;color:#6D28D9;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em">
-          <i class="fas fa-shopping-cart" style="margin-right:6px"></i>Gestión de Compra
-        </h4>
-
-        <!-- Estatus Compra -->
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-size:.75rem;font-weight:600;color:#6D28D9;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Estatus de la compra</label>
-          <select id="mc-estatus" class="inp" style="background:#fff">
-            <option value="">— Sin cambio —</option>
-            <option value="Pendiente de aprobación">Pendiente de aprobación</option>
-            <option value="Aprobada - En compra">Aprobada - En compra</option>
-            <option value="Rechazada">Rechazada</option>
-            <option value="Comprado">Comprado</option>
-            <option value="Parcialmente entregado">Parcialmente entregado</option>
-            <option value="Entregado">Entregado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
-
-        <!-- Comentario Compra -->
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-size:.75rem;font-weight:600;color:#6D28D9;margin-bottom:6px"><i class="fas fa-comment-dots" style="margin-right:5px"></i>Comentario de Compras</label>
-          <div style="display:flex;gap:7px">
-            <input id="mc-comment" type="text" class="inp" style="flex:1;background:#fff" placeholder="Agrega una nota de compra…" onkeydown="if(event.key==='Enter')saveCompraComment()">
-            <button onclick="saveCompraComment()" style="background:#7C3AED;color:#fff;border:none;border-radius:9px;padding:0 14px;cursor:pointer"><i class="fas fa-plus"></i></button>
-          </div>
-        </div>
-
-        <button id="btn-mc-save" onclick="saveCompraChanges()" class="btn-compra" style="width:100%;border-radius:10px">
-          <i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios
-        </button>
-      </div>
-
-      <!-- Historial -->
-      <div>
-        <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
-        <div id="mc-historial" class="status-timeline"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL: Plan Acción Edit -->
 <div id="modal-acc" class="modal-bg" style="display:none">
   <div class="modal-box slide" style="max-width:520px">
@@ -1015,10 +1103,118 @@ const LPA_AREAS = {
         <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Fecha compromiso</label><input id="acc-fecha" type="date" class="inp"></div>
       </div>
       <div><label style="font-size:.78rem;font-weight:600;color:#334155;display:block;margin-bottom:5px">Estatus</label>
-        <select id="acc-est" class="inp"><option>Abierto</option><option>En proceso</option><option>Cerrado</option></select>
+        <select id="acc-est" class="inp" style="cursor:pointer"><option>Abierto</option><option>En proceso</option><option>Cerrado</option></select>
       </div>
       <button class="btn-p" onclick="saveAccion()" style="border-radius:10px"><i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: Solicitud de Compra Detalle -->
+<div id="modal-compra" class="modal-bg" style="display:none">
+  <div class="modal-box slide" style="max-width:620px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1">
+      <div>
+        <span id="mc-folio" class="mono" style="font-size:.95rem;font-weight:700;color:#D97706"></span>
+        <p id="mc-fecha" style="font-size:.72rem;color:#94A3B8;margin:2px 0 0"></p>
+      </div>
+      <button onclick="closeModal('modal-compra')" style="width:32px;height:32px;background:#F1F5F9;border:none;border-radius:8px;cursor:pointer;color:#64748B">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="mc-badges"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Solicitante</p><p id="mc-nombre" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Cantidad / Unidad</p><p id="mc-cantidad" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Fecha requerida</p><p id="mc-fecha-req" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Prioridad</p><p id="mc-prioridad" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+      </div>
+      <div class="card-sm" style="padding:12px">
+        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción del material</p>
+        <p id="mc-desc" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
+      </div>
+      <div class="card-sm" style="padding:12px">
+        <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Propósito</p>
+        <p id="mc-proposito" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
+      </div>
+      <div id="mc-foto-wrap" style="display:none">
+        <a id="mc-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía de referencia</a>
+      </div>
+
+      <!-- GESTIÓN -->
+      <div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:13px;padding:16px">
+        <h4 style="font-size:.78rem;font-weight:700;color:#92400E;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em">
+          <i class="fas fa-sliders" style="margin-right:6px"></i>Gestión de Compra
+        </h4>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#92400E;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Estatus</label>
+          <select id="mc-estatus" class="inp" style="background:#fff;cursor:pointer"></select>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#92400E;margin-bottom:6px"><i class="fas fa-comment-dots" style="margin-right:5px"></i>Comentario</label>
+          <div style="display:flex;gap:7px">
+            <input id="mc-comment" type="text" class="inp" style="flex:1;background:#fff" placeholder="Agrega una nota (proveedor, cotización, etc.)…" onkeydown="if(event.key==='Enter')saveCompraComment()">
+            <button onclick="saveCompraComment()" style="background:#D97706;color:#fff;border:none;border-radius:9px;padding:0 14px;cursor:pointer"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+        <button id="btn-mc-save" onclick="saveCompraChanges()" class="btn-p" style="width:100%;border-radius:10px;background:#D97706" onmouseover="this.style.background='#B45309'" onmouseout="this.style.background='#D97706'">
+          <i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios
+        </button>
+      </div>
+
+      <div>
+        <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
+        <div id="mc-historial" class="status-timeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Foto Inicio/Cierre de Actividad -->
+<div id="modal-act-foto" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:380px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 id="act-foto-title" style="font-size:1rem;font-weight:700;color:var(--navy);margin:0">Iniciar actividad</h3>
+      <button onclick="closeModal('modal-act-foto')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p id="act-foto-folio" class="mono" style="font-size:.82rem;color:#7C3AED;font-weight:700;margin:0 0 14px"></p>
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica *</label>
+    <input type="file" id="act-foto-input" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:10px">
+    <div id="act-foto-cierre-extra" style="display:none;margin-bottom:10px">
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Comentario de cierre (opcional)</label>
+      <textarea id="act-foto-comentario" class="inp" rows="2" placeholder="Detalles del trabajo realizado…"></textarea>
+    </div>
+    <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">Máx. 5 MB. La foto y la hora quedan registradas como evidencia.</p>
+    <button class="btn-p" id="btn-act-foto-confirm" onclick="confirmActividadFoto()" style="width:100%;background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
+      <i class="fas fa-check" style="margin-right:7px"></i>Confirmar
+    </button>
+  </div>
+</div>
+
+<!-- MODAL: Crear Actividad Espontánea -->
+<div id="modal-act-nueva" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:420px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-bolt" style="color:#7C3AED;margin-right:7px"></i>Actividad Espontánea</h3>
+      <button onclick="closeModal('modal-act-nueva')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p style="font-size:.78rem;color:#64748B;margin:0 0 16px">Para trabajo que surge en el momento, sin una solicitud previa. Se inicia de inmediato y queda visible para Ingeniería.</p>
+
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#7C3AED;margin-right:5px"></i>¿Qué vas a hacer? *</label>
+    <textarea id="act-nueva-desc" class="inp" rows="3" placeholder="Describe la actividad…" style="margin-bottom:12px"></textarea>
+
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-tag" style="color:#7C3AED;margin-right:5px"></i>Tipo (opcional)</label>
+    <input type="text" id="act-nueva-tipo" class="inp" placeholder="Ej. Fuga de aire, falla eléctrica…" style="margin-bottom:12px">
+
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica *</label>
+    <input type="file" id="act-nueva-foto" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:14px">
+
+    <button class="btn-p" id="btn-act-nueva-confirm" onclick="confirmActividadEspontanea()" style="width:100%;background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
+      <i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora
+    </button>
   </div>
 </div>
 
@@ -1042,156 +1238,30 @@ const LPA_AREAS = {
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // ── State ────────────────────────────────────────────────────
-let SESSION   = null;
-let SOL_DATA  = [];
-let COMP_DATA = [];
-let LPA_DATA  = {};
-let ACC_DATA  = [];
-let CUR_SOL   = null;
-let CUR_COMP  = null;
+let SESSION   = null;   // { token, user: { username, nombre, rol } }
+let SOL_DATA    = [];     // cached requests
+let COMPRA_DATA = [];     // cached purchase requests (admin)
+let CR_DATA     = [];     // cached purchase requests (rol compras)
+let CR_MODAL_ORIGEN = 'admin'; // 'admin' | 'rol' — de dónde se abrió modal-compra
+let LPA_DATA    = {};     // cached LPA results
+let ACC_DATA    = [];     // cached plan acciones
+let CUR_SOL     = null;   // request open in modal
+let CUR_COMPRA  = null;   // compra open in modal
 
 const $  = id => document.getElementById(id);
-
-// ── Modo Demo ─────────────────────────────────────────────────
-const IS_DEMO_MODE = SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT';
-
-// Usuarios de prueba para modo demo
-const DEMO_USERS = [
-  { username: 'aramirez', password: 'demo123', nombre: 'Andres Ramirez Beltran', rol: 'ingeniero' },
-  { username: 'ploya', password: 'demo123', nombre: 'Pedro Loya Rocha', rol: 'ingeniero' },
-  { username: 'inagaki', password: 'demo123', nombre: 'Atsushi Inagaki', rol: 'manager' },
-];
-
-// Datos de prueba para modo demo
-const DEMO_SOLICITUDES = [
-  { id: 'demo1', folio: 'FAC-2026-0001', fecha: '2026-06-15', nombre: 'Juan Pérez', email: 'jperez@ktmex.com', departamento: 'Welding', tipoSolicitud: 'Instalación eléctrica', estatus: 'Pendiente', tecnico: '' },
-  { id: 'demo2', folio: 'FAC-2026-0002', fecha: '2026-06-14', nombre: 'María García', email: 'mgarcia@ktmex.com', departamento: 'Maintenance', tipoSolicitud: 'Aire acondicionado', estatus: 'Autorizado por Ingeniería', tecnico: 'Lenin Wenceslao Acosta Soto' },
-  { id: 'demo3', folio: 'FAC-2026-0003', fecha: '2026-06-13', nombre: 'Carlos López', email: 'clopez@ktmex.com', departamento: 'Safety', tipoSolicitud: 'Iluminación', estatus: 'Aprobado — En espera de ejecución', tecnico: 'Luis Antonio Serrano Rivera' },
-];
-
-const DEMO_COMPRAS = [
-  { id: 'comp1', folio: 'COMP-2026-0001', fecha: '2026-06-15', solicitante: 'Pedro Loya Rocha', prioridad: 'Alta', descripcion: 'Bomba hidráulica Marca: Grundfos Modelo: CR 45-2', cantidad: '2', unidades: 'Pieza', fechaRequerida: '2026-06-25', proposito: 'Reemplazo de bomba averiada en línea de producción', estatus: 'Pendiente de aprobación' },
-  { id: 'comp2', folio: 'COMP-2026-0002', fecha: '2026-06-14', solicitante: 'Andres Ramirez Beltran', prioridad: 'Media', descripcion: 'Cable eléctrico 12 AWG Marca: Condumex', cantidad: '100', unidades: 'Metros lineales', fechaRequerida: '2026-07-01', proposito: 'Instalación eléctrica en área de mantenimiento', estatus: 'Aprobada - En compra' },
-];
+const prioSlug = p => ({Alta:'alta',Media:'media',Baja:'baja'}[p]||'baja');
 
 // ── API ──────────────────────────────────────────────────────
 async function api(data) {
-  // Modo demo - simular respuestas
-  if (IS_DEMO_MODE) {
-    return simulateApiResponse(data);
+  if (SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT') {
+    toast('⚠ Configura SCRIPT_URL en el HTML antes de usar el sistema.','err'); throw new Error('SCRIPT_URL no configurado');
   }
-
-  try {
-    const r = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(data)
-    });
-
-    // Verificar si la respuesta es correcta
-    if (!r.ok) {
-      // Manejar errores HTTP
-      let errorMsg = `Error del servidor (${r.status})`;
-      try {
-        const errorData = await r.json();
-        if (errorData && errorData.error) {
-          errorMsg = errorData.error;
-        }
-      } catch (e) {
-        // Si no se puede parsear, usar el mensaje de error por defecto
-      }
-      return { success: false, error: errorMsg };
-    }
-
-    // Intentar parsear la respuesta JSON
-    try {
-      return await r.json();
-    } catch (e) {
-      return { success: false, error: 'Error al procesar respuesta del servidor' };
-    }
-  } catch (err) {
-    // Manejar errores de red, CORS, etc.
-    let errorMessage = 'Error de conexión';
-
-    if (err.message) {
-      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        errorMessage = 'No se puede conectar al servidor. Verifica tu conexión a internet.';
-      } else if (err.message.includes('CORS') || err.message.includes('Access-Control')) {
-        errorMessage = 'Error de configuración CORS. Verifica que Google Apps Script esté desplegado correctamente.';
-      } else {
-        errorMessage = 'Error de conexión: ' + err.message;
-      }
-    }
-
-    console.error('API Error:', err);
-    return { success: false, error: errorMessage };
-  }
-}
-
-// Simular respuestas del API en modo demo
-function simulateApiResponse(data) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      switch(data.action) {
-        case 'login':
-          const user = DEMO_USERS.find(u => u.username === data.username && u.password === data.password);
-          if (user) {
-            resolve({ success: true, token: 'demo-token-' + Date.now(), user: { username: user.username, nombre: user.nombre, rol: user.rol } });
-          } else {
-            resolve({ success: false, error: 'Usuario o contraseña incorrectos' });
-          }
-          break;
-        case 'validateSession':
-          if (SESSION && SESSION.token) {
-            resolve({ valid: true, user: SESSION.user });
-          } else {
-            resolve({ valid: false });
-          }
-          break;
-        case 'logout':
-          resolve({ success: true });
-          break;
-        case 'getRequests':
-          resolve({ success: true, requests: SOL_DATA.length ? SOL_DATA : DEMO_SOLICITUDES });
-          break;
-        case 'getCompras':
-          resolve({ success: true, compras: COMP_DATA.length ? COMP_DATA : DEMO_COMPRAS });
-          break;
-        case 'submitRequest':
-          const folioSol = 'FAC-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-          const newSol = { id: 'sol-' + Date.now(), folio: folioSol, fecha: data.fecha || new Date().toISOString().slice(0,10), nombre: data.nombre, email: data.email, departamento: data.departamento, tipoSolicitud: data.tipoSolicitud, descripcion: data.descripcion, estatus: 'Pendiente', tecnico: '' };
-          SOL_DATA.push(newSol);
-          resolve({ success: true, folio: folioSol, id: newSol.id });
-          break;
-        case 'submitCompra':
-          const folioComp = 'COMP-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-          const newComp = { id: 'comp-' + Date.now(), folio: folioComp, fecha: data.fecha || new Date().toISOString().slice(0,10), solicitante: data.solicitante, prioridad: data.prioridad, descripcion: data.descripcion, cantidad: data.cantidad, unidades: data.unidades, fechaRequerida: data.fechaRequerida, proposito: data.proposito, estatus: 'Pendiente de aprobación' };
-          COMP_DATA.push(newComp);
-          resolve({ success: true, folio: folioComp, id: newComp.id });
-          break;
-        case 'updateRequest':
-          resolve({ success: true });
-          break;
-        case 'updateCompra':
-          resolve({ success: true });
-          break;
-        case 'getLPA':
-          resolve({ success: true, data: {} });
-          break;
-        case 'getPlanAcciones':
-          resolve({ success: true, acciones: [] });
-          break;
-        case 'submitLPA':
-          resolve({ success: true, id: 'lpa-' + Date.now(), totalP: 10, totalNP: 2, totalNA: 0, porcentaje: 83 });
-          break;
-        case 'updateAccion':
-          resolve({ success: true });
-          break;
-        default:
-          resolve({ success: false, error: 'Acción no reconocida' });
-      }
-    }, 300); // Simular delay de red
+  const r = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(data)
   });
+  return r.json();
 }
 
 // ── Toast ────────────────────────────────────────────────────
@@ -1205,32 +1275,108 @@ function toast(msg, type='ok') {
 }
 
 // ── Views ────────────────────────────────────────────────────
+let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
+
 function showView(v) {
-  ['home','solicitud','compras','lpa-select','lpa-form','login','admin'].forEach(x=>
+  // El usuario con rol "compras" SOLO puede utilizar su panel de compras.
+  // Esta validación central evita que pueda entrar por botones, tarjetas,
+  // llamadas directas a showView() o por una vista pendiente del login.
+  if (SESSION?.user?.rol === 'compras' && !['compras-rol','login'].includes(v)) {
+    toast('Tu cuenta no tiene acceso a esta ventana.','err');
+    v = 'compras-rol';
+  }
+
+  ['home','solicitud','compra','lpa-select','lpa-form','actividades','inventario','compras-rol','login','admin'].forEach(x=>
     $('view-'+x).style.display='none');
   $('view-'+v).style.display='';
   $('btn-logout').style.display = SESSION?'':'none';
+}
 
-  // Update nav buttons
-  ['nav-sol','nav-compras','nav-lpa','nav-admin'].forEach(id => {
-    const el = $(id);
-    el.classList.remove('active');
-  });
-  if(v === 'solicitud') $('nav-sol').classList.add('active');
-  else if(v === 'compras') $('nav-compras').classList.add('active');
-  else if(v === 'lpa-select' || v === 'lpa-form') $('nav-lpa').classList.add('active');
+// Vistas que requieren sesión iniciada (cualquier rol). Si no hay sesión,
+// guarda la vista solicitada y manda a login; al iniciar sesión regresa aquí.
+function requireLogin(viewName) {
+  if (SESSION) return true;
+  PENDING_VIEW = viewName;
+  showView('login');
+  return false;
+}
+
+function goCompra() {
+  if (!requireLogin('compra')) return;
+
+  // El usuario de Compras entra exclusivamente a su panel de compras.
+  if (SESSION.user.rol === 'compras') {
+    goComprasRol();
+    return;
+  }
+
+  initCompraForm();
+  showView('compra');
+}
+
+function goLpaSelect() {
+  if (SESSION?.user?.rol === 'compras') {
+    toast('Tu cuenta no tiene acceso a Auditoría LPA.','err');
+    return;
+  }
+  if (requireLogin('lpa-select')) showView('lpa-select');
+}
+
+function goActividades() {
+  if (SESSION?.user?.rol === 'compras') {
+    toast('Tu cuenta no tiene acceso a Mis Actividades.','err');
+    return;
+  }
+  if (requireLogin('actividades')) {
+    showView('actividades');
+    loadMisActividades();
+  }
+}
+
+function goComprasRol() {
+  if (!SESSION) {
+    PENDING_VIEW = 'compras-rol';
+    showView('login');
+    return;
+  }
+  if (SESSION.user.rol !== 'compras') {
+    toast('Esta ventana es exclusiva para el usuario de Compras.','err');
+    return;
+  }
+  showView('compras-rol');
+  loadComprasRol();
+}
+
+function goInventario() {
+  if (SESSION?.user?.rol === 'compras') {
+    toast('Tu cuenta no tiene acceso a Inventario.','err');
+    return;
+  }
+  if (requireLogin('inventario')) {
+    showView('inventario');
+    loadInventarioTec();
+  }
 }
 
 function goAdmin() {
-  if (SESSION) { showView('admin'); refreshAdmin(); }
-  else showView('login');
+  PENDING_VIEW = 'admin';
+  if (!SESSION) { showView('login'); return; }
+  if (SESSION.user.rol === 'tecnico') {
+    toast('Tu cuenta de técnico no tiene acceso al Panel Administrativo.','err');
+    showView('home');
+    return;
+  }
+  if (SESSION.user.rol === 'compras') {
+    goComprasRol();
+    return;
+  }
+  showView('admin'); refreshAdmin();
 }
 
 // ── Auth ─────────────────────────────────────────────────────
 async function performLogin() {
   const u=$('log-user').value.trim(), p=$('log-pwd').value;
   if (!u||!p){toast('Completa usuario y contraseña','err');return;}
-
   const btn=document.querySelector('#view-login .btn-p');
   btn.disabled=true; btn.textContent='Verificando…';
   try {
@@ -1241,27 +1387,42 @@ async function performLogin() {
       $('log-pwd').value='';
       $('btn-logout').style.display='';
       $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
-      showView('admin');
-      $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
-      sessionStorage.setItem('ktmex_session', JSON.stringify(SESSION));
-      refreshAdmin();
-      toast('Bienvenido, ' + res.user.nombre + (IS_DEMO_MODE ? ' (MODO DEMO)' : ''));
+
+      const dest = PENDING_VIEW || 'admin';
+      PENDING_VIEW = null;
+
+      // El usuario de Compras no puede regresar a ninguna otra ventana,
+      // independientemente de qué vista haya solicitado antes de iniciar sesión.
+      if (SESSION.user.rol === 'compras') {
+        toast('Bienvenido, ' + SESSION.user.nombre,'ok');
+        goComprasRol();
+      } else if (dest === 'admin') {
+        if (SESSION.user.rol === 'tecnico') {
+          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
+          showView('home');
+        } else {
+          showView('admin');
+          $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
+          refreshAdmin();
+        }
+      } else if (dest === 'compra') {
+        initCompraForm(); showView('compra');
+      } else if (dest === 'actividades') {
+        showView('actividades'); loadMisActividades();
+      } else if (dest === 'inventario') {
+        showView('inventario'); loadInventarioTec();
+      } else {
+        showView(dest);
+      }
     } else {
       $('log-err').style.display='';
-      toast(res.error || 'Usuario o contraseña incorrectos','err');
+      toast(res.error||'Usuario o contraseña incorrectos','err');
     }
-  } catch(e) {
-    toast('Error de conexión: ' + (e.message || 'Verifica tu conexión a internet'),'err');
-    console.error('Login error:', e);
-  }
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
   btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
 }
 
-function login() {
-  performLogin();
-}
-
-async function logout() {
+async function performLogout() {
   if (SESSION) await api({action:'logout',token:SESSION.token}).catch(()=>{});
   SESSION=null;
   $('btn-logout').style.display='none';
@@ -1297,6 +1458,7 @@ async function submitSolicitud() {
   const btn=$('btn-sol-submit');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
 
+  // Photo to base64
   let fotoBase64='', fotoName='';
   const fotoFile=$('s-foto').files[0];
   if (fotoFile) {
@@ -1327,74 +1489,83 @@ function resetSolicitud() {
   $('s-fecha').value=new Date().toISOString().slice(0,10);
 }
 
-// ── COMPRAS FORM ─────────────────────────────────────────────
-function initComprasForm() {
+// ── Solicitud de Compra ──────────────────────────────────────
+function initCompraForm() {
   const today = new Date().toISOString().slice(0,10);
   $('c-fecha').value = today;
-  $('c-fecha-requerida').value = today;
+  if (SESSION) {
+    $('c-nombre').value = SESSION.user.nombre;
+    $('c-nombre-display').querySelector('span').textContent = SESSION.user.nombre + ' (' + (ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol) + ')';
+  }
+  $('c-unidad').innerHTML='<option value="">— Selecciona —</option>'+UNIDADES_COMPRA.map(u=>`<option>${u}</option>`).join('');
+}
 
-  // Populate solicitantes from LPA_PERFILES
-  $('c-solicitante').innerHTML='<option value="">— Selecciona —</option>'+
-    LPA_PERFILES.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
-
-  // Populate unidades
-  $('c-unidades').innerHTML='<option value="">— Selecciona —</option>'+
-    UNIDADES_COMPRA.map(u=>`<option value="${u}">${u}</option>`).join('');
+let selPrioCompra = '';
+function selectPrioCompra(p) {
+  selPrioCompra = p;
+  $('c-prioridad').value = p;
+  document.querySelectorAll('#view-compra .prio-btn').forEach(b=>{
+    b.className = 'prio-btn' + (b.dataset.p===p ? ` active-${p.toLowerCase()}` : '');
+  });
 }
 
 async function submitCompra() {
-  const fecha      = $('c-fecha').value;
-  const solicitante= $('c-solicitante').value;
-  const prioridad  = document.querySelector('input[name="c-prioridad"]:checked')?.value || 'Baja';
-  const descripcion= $('c-descripcion').value.trim();
-  const cantidad   = $('c-cantidad').value;
-  const unidades   = $('c-unidades').value;
-  const fechaReq  = $('c-fecha-requerida').value;
+  if (!SESSION) { toast('Tu sesión expiró. Inicia sesión de nuevo.','err'); showView('login'); return; }
+  const fecha     = $('c-fecha').value;
+  const prioridad = $('c-prioridad').value;
+  const desc      = $('c-desc').value.trim();
+  const cantidad  = $('c-cantidad').value;
+  const unidad    = $('c-unidad').value;
+  const fechaReq  = $('c-fecha-req').value;
   const proposito = $('c-proposito').value.trim();
+  const fotoFile  = $('c-foto').files[0];
 
-  if (!fecha||!solicitante||!descripcion||!cantidad||!unidades||!fechaReq||!proposito) {
+  if (!fecha||!prioridad||!desc||!cantidad||!unidad||!fechaReq||!proposito) {
     toast('Completa todos los campos obligatorios','err'); return;
   }
-  if (Number(cantidad) <= 0) { toast('La cantidad debe ser mayor a 0','err'); return; }
+  if (!fotoFile) { toast('Adjunta una fotografía de referencia','err'); return; }
 
   const btn=$('btn-compra-submit');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
 
   let fotoBase64='', fotoName='';
-  const fotoFile=$('c-foto').files[0];
-  if (fotoFile) {
-    if (fotoFile.size > 10*1024*1024) { toast('El archivo supera 10 MB.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra'; return; }
-    fotoBase64 = await fileToBase64(fotoFile);
-    fotoName   = fotoFile.name;
+  if (fotoFile.size > 5*1024*1024) {
+    toast('La foto supera 5 MB. Comprime la imagen.','err');
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';
+    return;
   }
+  fotoBase64 = await fileToBase64(fotoFile);
+  fotoName   = fotoFile.name;
 
   try {
-    const res = await api({
-      action:'submitCompra',fecha,solicitante,prioridad,
-      descripcion,cantidad,unidades,fechaRequerida:fechaReq,proposito,
-      fotoBase64,fotoName
-    });
+    const res = await api({action:'submitCompra', token:SESSION.token, fecha, prioridad,
+      descripcion:desc, cantidad, unidad, fechaRequerida:fechaReq, proposito, fotoBase64, fotoName});
     if (res.success) {
       $('compra-folio').textContent=res.folio;
       $('compra-form').style.display='none';
       $('compra-success').style.display='';
     } else toast(res.error||'Error al enviar','err');
-  } catch(e){ toast('Error de conexión: '+e.message,'err'); }
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
 
   btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';
 }
 
 function resetCompra() {
   $('compra-form').style.display=''; $('compra-success').style.display='none';
-  $('c-solicitante').value='';
-  $('c-descripcion').value='';
-  $('c-cantidad').value='';
-  $('c-unidades').value='';
-  $('c-proposito').value='';
+  ['c-desc','c-cantidad','c-fecha-req','c-proposito'].forEach(id=>$(id).value='');
+  $('c-nombre').value=''; $('c-unidad').value=''; $('c-prioridad').value=''; selPrioCompra='';
   $('c-foto').value='';
-  document.querySelectorAll('input[name="c-prioridad"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('#view-compra .prio-btn').forEach(b=>b.className='prio-btn');
   $('c-fecha').value=new Date().toISOString().slice(0,10);
-  $('c-fecha-requerida').value=new Date().toISOString().slice(0,10);
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
 }
 
 // ── LPA ─────────────────────────────────────────────────────
@@ -1423,10 +1594,14 @@ function openLpaArea(area) {
   $('lpa-fecha').value = new Date().toISOString().slice(0,10);
   $('lpa-turno').value=''; $('lpa-capa').value='';
 
-  $('lpa-auditor').innerHTML='<option value="">— Selecciona tu nombre —</option>'+
-    LPA_PERFILES.map(p=>`<option value="${p.nombre}" data-puesto="${p.puesto}">${p.nombre}</option>`).join('');
-  $('lpa-puesto').value='';
+  // Auditor e identidad provienen de la sesión iniciada (no editable)
+  if (SESSION) {
+    $('lpa-auditor').value = SESSION.user.nombre;
+    $('lpa-auditor-display').querySelector('span').textContent = SESSION.user.nombre;
+    $('lpa-puesto').value = ROL_PUESTO[SESSION.user.rol] || SESSION.user.rol;
+  }
 
+  // Build items table
   const tbody=$('lpa-items-body');
   tbody.innerHTML=areaData.items.map((item,i)=>`
     <tr style="border-bottom:1px solid #F1F5F9">
@@ -1459,12 +1634,6 @@ function openLpaArea(area) {
   showView('lpa-form');
 }
 
-function lpaAuditorChange() {
-  const sel=$('lpa-auditor');
-  const opt=sel.options[sel.selectedIndex];
-  $('lpa-puesto').value = opt ? (opt.dataset.puesto||'') : '';
-}
-
 function calcLPA() {
   const n=LPA_AREAS[curLpaArea].items.length;
   let P=0,NP=0,NA=0;
@@ -1479,9 +1648,9 @@ function calcLPA() {
 }
 
 async function submitLPA() {
-  const fecha=$('lpa-fecha').value, turno=$('lpa-turno').value,
-        capa=$('lpa-capa').value, auditor=$('lpa-auditor').value;
-  if(!fecha||!turno||!capa||!auditor){toast('Completa el encabezado (fecha, turno, capa, auditor)','err');return;}
+  if (!SESSION) { toast('Tu sesión expiró. Inicia sesión de nuevo.','err'); showView('login'); return; }
+  const fecha=$('lpa-fecha').value, turno=$('lpa-turno').value, capa=$('lpa-capa').value;
+  if(!fecha||!turno||!capa){toast('Completa el encabezado (fecha, turno, capa)','err');return;}
 
   const n=LPA_AREAS[curLpaArea].items.length;
   let allAnswered=true;
@@ -1493,6 +1662,7 @@ async function submitLPA() {
   }
   if(!allAnswered){toast('Todos los puntos deben tener una respuesta (P, NP o N/A)','err');return;}
 
+  // Warn if NP without observation
   const npNoObs=items.filter(it=>it.np&&!it.obs);
   if(npNoObs.length>0){toast(`${npNoObs.length} punto(s) NP sin observación. Agrega descripción del hallazgo.`,'err');return;}
 
@@ -1500,8 +1670,8 @@ async function submitLPA() {
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Guardando…';
 
   try {
-    const res=await api({action:'submitLPA', area:curLpaArea, fecha, turno, capa,
-      auditor, puesto:$('lpa-puesto').value, acompañante:$('lpa-acomp').value, items});
+    const res=await api({action:'submitLPA', token:SESSION.token, area:curLpaArea, fecha, turno, capa,
+      acompañante:$('lpa-acomp').value, items});
     if(res.success){
       toast(`Auditoría guardada. Conformidad: ${res.porcentaje}%${res.totalNP>0?' — '+res.totalNP+' NP generaron acciones correctivas':''}`,'ok');
       showView('lpa-select');
@@ -1510,21 +1680,285 @@ async function submitLPA() {
   btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Guardar Auditoría';
 }
 
+// ── Mis Actividades (técnicos) ────────────────────────────────
+let ACT_DATA = { solicitudes: [], actividades: [] };
+let ACT_FOTO_MODE = null;      // 'iniciar' | 'cerrar'
+let ACT_FOTO_TARGET = null;    // solicitudId (iniciar) o actividadId (cerrar)
+
+async function loadMisActividades() {
+  if (!SESSION) { showView('login'); return; }
+  if ($('act-user-label')) $('act-user-label').textContent = SESSION.user.nombre + ' · ' + (ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol);
+  try {
+    const res = await api({action:'getMisActividades', token:SESSION.token});
+    if (res.success) { ACT_DATA = res; renderMisActividades(); }
+    else toast(res.error||'Error al cargar actividades','err');
+  } catch(e) { toast('Error de conexión','err'); }
+}
+
+function renderMisActividades() {
+  const list = $('act-list');
+  const { solicitudes, actividades } = ACT_DATA;
+
+  if (!solicitudes.length) {
+    list.innerHTML = `<div class="card" style="padding:36px;text-align:center;color:#94A3B8">
+      <i class="fas fa-clipboard-check" style="font-size:1.8rem;display:block;margin-bottom:10px"></i>
+      No tienes actividades asignadas en este momento.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = solicitudes.map(s => {
+    const act = actividades.find(a => a.solicitudId === s.id && a.estatusActividad === 'En curso');
+    const cerradaPrevia = actividades.filter(a => a.solicitudId === s.id && a.estatusActividad !== 'En curso').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
+
+    let accionHtml = '';
+    if (act) {
+      accionHtml = `
+        <div style="background:#EDE9FE;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px 14px;margin-bottom:10px">
+          <p style="font-size:.78rem;color:#5B21B6;margin:0"><i class="fas fa-play" style="margin-right:5px"></i>Actividad en curso desde ${fmtDateTime(act.horaInicio)}</p>
+        </div>
+        <button class="btn-p" style="background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'" onclick="openCerrarModal('${act.id}','${s.folio}')">
+          <i class="fas fa-stop" style="margin-right:7px"></i>Cerrar Actividad
+        </button>`;
+    } else if (cerradaPrevia && cerradaPrevia.estatusActividad === 'Cerrada automáticamente — sin evidencia de cierre') {
+      accionHtml = `
+        <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:10px">
+          <p style="font-size:.78rem;color:#B91C1C;margin:0"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>La actividad anterior se cerró automáticamente sin evidencia. Será revisada por Ingeniería.</p>
+        </div>`;
+    } else {
+      accionHtml = `
+        <button class="btn-p" style="background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'" onclick="openIniciarModal('${s.id}','${s.folio}')">
+          <i class="fas fa-play" style="margin-right:7px"></i>Iniciar Actividad
+        </button>`;
+    }
+
+    return `<div class="card" style="padding:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span class="mono" style="font-size:.85rem;font-weight:700;color:#7C3AED">${s.folio}</span>
+        ${estatusBadge(s.estatus)}
+      </div>
+      <p style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0 0 4px">${s.tipoSolicitud||'—'}</p>
+      <p style="font-size:.8rem;color:#64748B;margin:0 0 12px;line-height:1.5">${s.descripcion||'—'}</p>
+      ${accionHtml}
+    </div>`;
+  }).join('');
+}
+
+function openIniciarModal(solicitudId, folio) {
+  ACT_FOTO_MODE = 'iniciar'; ACT_FOTO_TARGET = solicitudId;
+  $('act-foto-title').textContent = 'Iniciar actividad';
+  $('act-foto-folio').textContent = folio;
+  $('act-foto-input').value = '';
+  $('act-foto-cierre-extra').style.display = 'none';
+  $('modal-act-foto').style.display = 'flex';
+}
+
+function openCerrarModal(actividadId, folio) {
+  ACT_FOTO_MODE = 'cerrar'; ACT_FOTO_TARGET = actividadId;
+  $('act-foto-title').textContent = 'Cerrar actividad';
+  $('act-foto-folio').textContent = folio;
+  $('act-foto-input').value = '';
+  $('act-foto-comentario').value = '';
+  $('act-foto-cierre-extra').style.display = '';
+  $('modal-act-foto').style.display = 'flex';
+}
+
+async function confirmActividadFoto() {
+  const fotoFile = $('act-foto-input').files[0];
+  if (!fotoFile) { toast('Adjunta la evidencia fotográfica','err'); return; }
+  if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); return; }
+
+  const btn = $('btn-act-foto-confirm');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
+
+  const fotoBase64 = await fileToBase64(fotoFile);
+  const fotoName   = fotoFile.name;
+
+  try {
+    let res;
+    if (ACT_FOTO_MODE === 'iniciar') {
+      res = await api({action:'iniciarActividad', token:SESSION.token, solicitudId:ACT_FOTO_TARGET, fotoBase64, fotoName});
+    } else {
+      const comentario = $('act-foto-comentario').value.trim();
+      res = await api({action:'cerrarActividad', token:SESSION.token, actividadId:ACT_FOTO_TARGET, fotoBase64, fotoName, comentario});
+    }
+    if (res.success) {
+      toast(ACT_FOTO_MODE === 'iniciar' ? 'Actividad iniciada' : 'Actividad cerrada');
+      closeModal('modal-act-foto');
+      loadMisActividades();
+    } else toast(res.error||'Error','err');
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
+
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';
+}
+
+function openActividadEspontaneaModal() {
+  if (!SESSION) { showView('login'); return; }
+  $('act-nueva-desc').value = '';
+  $('act-nueva-tipo').value = '';
+  $('act-nueva-foto').value = '';
+  $('modal-act-nueva').style.display = 'flex';
+}
+
+async function confirmActividadEspontanea() {
+  const descripcion = $('act-nueva-desc').value.trim();
+  const tipo = $('act-nueva-tipo').value.trim();
+  const fotoFile = $('act-nueva-foto').files[0];
+
+  if (!descripcion) { toast('Describe la actividad que vas a realizar','err'); return; }
+  if (!fotoFile) { toast('Adjunta la evidencia fotográfica','err'); return; }
+  if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); return; }
+
+  const btn = $('btn-act-nueva-confirm');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
+
+  const fotoBase64 = await fileToBase64(fotoFile);
+  const fotoName   = fotoFile.name;
+
+  try {
+    const res = await api({action:'crearActividadEspontanea', token:SESSION.token, descripcion, tipo, fotoBase64, fotoName});
+    if (res.success) {
+      toast('Actividad espontánea iniciada — folio ' + res.folio);
+      closeModal('modal-act-nueva');
+      loadMisActividades();
+    } else toast(res.error||'Error','err');
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
+
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora';
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return String(iso);
+  return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Inventario (técnicos) ──────────────────────────────────────
+let INV_DATA = [];
+
+async function loadInventarioTec() {
+  if (!SESSION) { showView('login'); return; }
+  try {
+    const res = await api({action:'getInventario', token:SESSION.token});
+    if (res.success) {
+      INV_DATA = res.items;
+      renderInventarioCatalog();
+      $('inv-refaccion').innerHTML = '<option value="">— Selecciona —</option>' +
+        INV_DATA.map(it => `<option value="${it.id}">${it.codigo} — ${it.descripcion}</option>`).join('');
+    } else toast(res.error||'Error al cargar inventario','err');
+  } catch(e) { toast('Error de conexión','err'); }
+
+  // Cargar solicitudes activas del técnico para ligar la salida
+  try {
+    const res2 = await api({action:'getMisActividades', token:SESSION.token});
+    if (res2.success) {
+      $('inv-solicitud').innerHTML = '<option value="">— Selecciona —</option>' +
+        res2.solicitudes.map(s => `<option value="${s.id}">${s.folio} — ${(s.tipoSolicitud||'').slice(0,30)}</option>`).join('');
+    }
+  } catch(e) {}
+}
+
+function renderInventarioCatalog() {
+  const tbody = $('inv-tbody');
+  if (!INV_DATA.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#94A3B8">El catálogo de inventario está vacío. Pide a Facilities que lo configure en Google Sheets.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = INV_DATA.map(it => `
+    <tr style="${it.bajoMinimo?'background:#FEF2F2':''}">
+      <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
+      <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
+      <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
+      <td style="text-align:center;color:#94A3B8">${it.stockMinimo}</td>
+    </tr>`).join('');
+}
+
+function invRefaccionChange() {
+  const id = $('inv-refaccion').value;
+  const item = INV_DATA.find(it => it.id === id);
+  if (!item) { $('inv-stock-info').style.display='none'; return; }
+  $('inv-stock-text').textContent = `Stock disponible: ${item.stockActual} ${item.unidad||''} — Mínimo: ${item.stockMinimo}`;
+  $('inv-stock-info').style.display = '';
+}
+
+async function registrarSalidaInventario() {
+  if (!SESSION) { showView('login'); return; }
+  const refaccionId = $('inv-refaccion').value;
+  const solicitudId = $('inv-solicitud').value;
+  const cantidad = Number($('inv-cantidad').value);
+
+  if (!refaccionId) { toast('Selecciona la refacción','err'); return; }
+  if (!solicitudId) { toast('Selecciona la solicitud de trabajo que origina esta salida','err'); return; }
+  if (!cantidad || cantidad <= 0) { toast('Ingresa una cantidad válida','err'); return; }
+
+  const btn = $('btn-inv-submit');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Registrando…';
+
+  try {
+    const res = await api({action:'salidaInventario', token:SESSION.token, refaccionId, solicitudId, cantidad});
+    if (res.success) {
+      toast('Salida registrada. Nuevo stock: ' + res.nuevoStock);
+      if (res.bajoMinimo) toast('⚠ Esta refacción quedó por debajo del stock mínimo ('+res.stockMinimo+')','err');
+      $('inv-cantidad').value=''; $('inv-stock-info').style.display='none';
+      loadInventarioTec();
+    } else toast(res.error||'Error al registrar salida','err');
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
+
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-right-from-bracket" style="margin-right:8px"></i>Registrar Salida';
+}
+
 // ── Admin ────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['sol','compra','lpa','acc'].forEach(t=>{
+  ['sol','compra','lpa','acc','inv'].forEach(t=>{
     $('tab-'+t).classList.toggle('active',t===tab);
     $('panel-'+t).style.display=t===tab?'':'none';
   });
+  if(tab==='compra' && COMPRA_DATA.length===0) loadCompras();
   if(tab==='lpa' && Object.keys(LPA_DATA).length===0) loadLPA();
   if(tab==='acc' && ACC_DATA.length===0) loadAcciones();
-  if(tab==='compra' && COMP_DATA.length===0) loadCompras();
+  if(tab==='inv') loadAdminInventario();
 }
 
 async function refreshAdmin() {
   if(!SESSION){showView('login');return;}
   loadSolicitudes();
   loadCompras();
+  loadAdminInventario();
+}
+
+async function loadAdminInventario() {
+  try {
+    const res = await api({action:'getInventario', token:SESSION.token});
+    if (!res.success) return;
+    const items = res.items;
+    const dot = $('inv-alert-dot');
+    if (res.bajoMinimoCount > 0) {
+      dot.style.display=''; dot.textContent = res.bajoMinimoCount;
+    } else { dot.style.display='none'; }
+
+    const banner = $('inv-summary-banner');
+    if (res.bajoMinimoCount > 0) {
+      banner.style.display='';
+      $('inv-summary-text').textContent = res.bajoMinimoCount + ' pieza(s) bajo el stock mínimo — requieren reabastecimiento.';
+    } else banner.style.display='none';
+
+    const tbody = $('admin-inv-tbody');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8">Catálogo de inventario vacío. Configúralo en la hoja "Inventario" de Google Sheets.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(it=>`
+      <tr style="${it.bajoMinimo?'background:#FEF2F2':''}">
+        <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
+        <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
+        <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
+        <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
+        <td style="text-align:center;color:#94A3B8">${it.stockMinimo}</td>
+        <td style="text-align:center">${it.bajoMinimo?'<span class="badge b-ing-rej">Bajo mínimo</span>':'<span class="badge b-done">OK</span>'}</td>
+      </tr>`).join('');
+  } catch(e) {}
 }
 
 async function loadSolicitudes() {
@@ -1538,8 +1972,12 @@ async function loadSolicitudes() {
 async function loadCompras() {
   try {
     const res=await api({action:'getCompras',token:SESSION.token});
-    if(res.success){ COMP_DATA=res.compras; renderCompras(); renderKPIs(); }
-    else toast(res.error,'err');
+    if(res.success){
+      COMPRA_DATA=res.compras;
+      const sel=$('fc-est');
+      if(sel.options.length<=1) sel.innerHTML='<option value="">Todos los estatus</option>'+ESTATUS_COMPRA.map(s=>`<option>${s}</option>`).join('');
+      renderCompras();
+    } else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
 }
 
@@ -1563,7 +2001,6 @@ function renderKPIs() {
   $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería').length;
   $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Autorizado por Ingeniería').length;
   $('kpi-apro').textContent=SOL_DATA.filter(r=>r.estatus&&r.estatus.startsWith('Aprobado')).length;
-  $('kpi-compra').textContent=COMP_DATA.length;
 }
 
 const estatusBadge = s => {
@@ -1574,27 +2011,8 @@ const estatusBadge = s => {
   if(s.startsWith('Aprobado')) return `<span class="badge b-mgr">${s}</span>`;
   if(s==='En ejecución') return `<span class="badge b-ejec">${s}</span>`;
   if(s==='Trabajo completado') return `<span class="badge b-done">${s}</span>`;
+  if(s==='Requiere revisión (auto-cierre)') return `<span class="badge b-ing-rej"><i class="fas fa-triangle-exclamation" style="margin-right:4px"></i>${s}</span>`;
   return `<span class="badge b-pend">${s}</span>`;
-};
-
-const compraBadge = s => {
-  if(!s) return '<span class="badge b-compra">—</span>';
-  const map = {
-    'Pendiente de aprobación': 'b-compra-pend',
-    'Aprobada - En compra': 'b-compra-aprob',
-    'Rechazada': 'b-compra-rech',
-    'Comprado': 'b-compra-comprado',
-    'Parcialmente entregado': 'b-compra-parcial',
-    'Entregado': 'b-compra-entregado',
-    'Cancelado': 'b-compra-cancel'
-  };
-  return `<span class="badge ${map[s]||'b-compra'}">${s}</span>`;
-};
-
-const prioridadColor = p => {
-  if(p==='Alta') return '<span style="color:#DC2626;font-weight:700">Alta</span>';
-  if(p==='Media') return '<span style="color:#D97706;font-weight:700">Media</span>';
-  return '<span style="color:#16A34A;font-weight:700">Baja</span>';
 };
 
 function renderSolicitudes() {
@@ -1615,7 +2033,7 @@ function renderSolicitudes() {
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
       <td style="font-weight:500;color:var(--navy)">${r.nombre||'—'}</td>
       <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${r.departamento||'—'}</span></td>
-      <td style="color:#64748B;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.tipoSolicitud||'—'}</td>
+      <td style="color:#64748B;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.tipoSolicitud||'').startsWith('Espontánea')?'<i class="fas fa-bolt" style="color:#7C3AED;margin-right:4px" title="Actividad espontánea"></i>':''}${r.tipoSolicitud||'—'}</td>
       <td>${estatusBadge(r.estatus)}</td>
       <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">Sin asignar</span>'}</td>
       <td style="text-align:center">
@@ -1627,31 +2045,46 @@ function renderSolicitudes() {
     </tr>`).join('');
 }
 
+const compraBadge = s => {
+  const map = {
+    'Solicitada':      'b-pend',
+    'Autorizada':      'b-ing',
+    'Rechazada':       'b-ing-rej',
+    'En cotización':   'b-ejec',
+    'Ordenada':        'b-mgr',
+    'Recibida':        'b-done',
+    'Cancelada':       'b-ing-rej',
+  };
+  return `<span class="badge ${map[s]||'b-pend'}">${s||'—'}</span>`;
+};
+
 function renderCompras() {
-  const q=$('fc-search').value.toLowerCase(), fe=$('fc-est').value, fp=$('fc-prioridad').value;
-  const list=COMP_DATA.filter(r=>
-    (!q||[r.folio,r.solicitante,r.descripcion].some(v=>(v||'').toLowerCase().includes(q)))&&
+  const q=$('fc-search').value.toLowerCase(), fe=$('fc-est').value, fp=$('fc-prio').value;
+  const list=COMPRA_DATA.filter(r=>
+    (!q||[r.folio,r.nombre].some(v=>(v||'').toLowerCase().includes(q)))&&
     (!fe||r.estatus===fe)&&(!fp||r.prioridad===fp)
-  ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  ).sort((a,b)=>{
+    const pd=(prioOrder[a.prioridad]??3)-(prioOrder[b.prioridad]??3);
+    return pd!==0?pd:new Date(b.fecha)-new Date(a.fecha);
+  });
 
   const tbody=$('compra-tbody');
   if(!list.length){
-    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-cart-shopping" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin resultados</td></tr>';
     return;
   }
   tbody.innerHTML=list.map(r=>`
     <tr class="tbl-row" onclick="openCompraModal('${r.id}')">
-      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#7C3AED">${r.folio||'—'}</span></td>
+      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#D97706">${r.folio||'—'}</span></td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
-      <td style="font-weight:500;color:var(--navy)">${r.solicitante||'—'}</td>
-      <td style="color:#64748B;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descripcion||'—'}</td>
-      <td style="text-align:center;font-weight:600">${r.cantidad||'—'} <span style="color:#94A3B8;font-size:.7rem">${r.unidades||''}</span></td>
-      <td>${prioridadColor(r.prioridad)}</td>
+      <td style="font-weight:500;color:var(--navy)">${r.nombre||'—'}</td>
+      <td><span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad||'—'}</span></td>
+      <td style="color:#64748B">${r.cantidad||'—'} ${r.unidad||''}</td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
       <td>${compraBadge(r.estatus)}</td>
       <td style="text-align:center">
         <button onclick="event.stopPropagation();openCompraModal('${r.id}')"
-          style="width:28px;height:28px;background:#F3E8FF;border:none;border-radius:7px;cursor:pointer;color:#7C3AED">
+          style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706">
           <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
         </button>
       </td>
@@ -1727,19 +2160,24 @@ function openSolicitudModal(id) {
   $('ms-nueva').textContent=r.esNueva||'—';
   $('ms-desc').textContent=r.descripcion||'—';
 
+  // Foto
   if(r.fotoURL&&r.fotoURL.startsWith('http')){
     $('ms-foto').href=r.fotoURL; $('ms-foto-wrap').style.display='';
   } else $('ms-foto-wrap').style.display='none';
 
+  // Badges
   $('ms-badges').innerHTML=estatusBadge(r.estatus);
 
+  // Auth sections visibility
   const rol=SESSION?.user?.rol;
   $('sec-auth-ing').style.display=(rol==='ingeniero'&&(r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería'))?'':'none';
   $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Autorizado por Ingeniería')?'':'none';
 
+  // Técnico
   $('ms-tecnico').innerHTML='<option value="">— Sin asignar —</option>'+
     TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
 
+  // Estatus manual
   $('ms-estatus').innerHTML='<option value="">— Sin cambio —</option>'+
     ESTATUS_MANUAL.map(s=>`<option value="${s}">${s}</option>`).join('');
 
@@ -1747,51 +2185,17 @@ function openSolicitudModal(id) {
   $('ms-mgr-comentario').value='';
   $('ms-comment').value='';
 
-  renderHistorial(r, 'ms-historial');
+  // Historial
+  renderHistorial(r);
   $('modal-sol').style.display='flex';
 }
 
-// ── Compra Modal ─────────────────────────────────────────────
-function openCompraModal(id) {
-  CUR_COMP = COMP_DATA.find(r=>r.id===id);
-  if(!CUR_COMP) return;
-  const r=CUR_COMP;
-
-  $('mc-folio').textContent=r.folio||'—';
-  $('mc-fecha').textContent=fmtDate(r.fecha);
-  $('mc-solicitante').textContent=r.solicitante||'—';
-  $('mc-prioridad').innerHTML=prioridadColor(r.prioridad);
-  $('mc-cantidad').textContent=(r.cantidad||'—') + ' ' + (r.unidades||'');
-  $('mc-fecha-requerida').textContent=fmtDate(r.fechaRequerida);
-  $('mc-descripcion').textContent=r.descripcion||'—';
-  $('mc-proposito').textContent=r.proposito||'—';
-
-  if(r.fotoURL&&r.fotoURL.startsWith('http')){
-    $('mc-foto').href=r.fotoURL; $('mc-foto-wrap').style.display='';
-  } else $('mc-foto-wrap').style.display='none';
-
-  $('mc-badges').innerHTML=compraBadge(r.estatus);
-  $('mc-estatus').value='';
-  $('mc-comment').value='';
-
-  renderHistorial(r, 'mc-historial', true);
-  $('modal-compra').style.display='flex';
-}
-
-function renderHistorial(r, containerId, isCompra=false) {
+function renderHistorial(r) {
   let hist=[];
   try{ hist=JSON.parse(r.historial||'[]'); }catch{}
-  const icons={
-    created:'fa-circle-plus',
-    status:'fa-arrows-rotate',
-    comment:'fa-comment',
-    tech:'fa-user-gear',
-    compra:'fa-shopping-cart'
-  };
-  const typeClass = isCompra ? 'st-compra' : 'st-info';
-  $('mc-historial').className = 'status-timeline';
-  $(containerId).innerHTML=hist.length?[...hist].reverse().map(h=>`
-    <div class="st-item ${typeClass}">
+  const icons={created:'fa-circle-plus',status:'fa-arrows-rotate',comment:'fa-comment',tech:'fa-user-gear'};
+  $('ms-historial').innerHTML=hist.length?[...hist].reverse().map(h=>`
+    <div class="st-item st-info">
       <div>
         <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
         <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
@@ -1840,29 +2244,173 @@ async function saveComment() {
   } catch(e){toast('Error','err');}
 }
 
-// ── Compra Actions ────────────────────────────────────────────
+// ── Solicitud de Compra — Modal ────────────────────────────────
+function openCompraModal(id) {
+  CR_MODAL_ORIGEN = 'admin';
+  CUR_COMPRA = COMPRA_DATA.find(r=>r.id===id);
+  if(!CUR_COMPRA) return;
+  const r=CUR_COMPRA;
+
+  $('mc-folio').textContent=r.folio||'—';
+  $('mc-fecha').textContent=fmtDate(r.fecha);
+  $('mc-nombre').textContent=r.nombre||'—';
+  $('mc-cantidad').textContent=(r.cantidad||'—')+' '+(r.unidad||'');
+  $('mc-fecha-req').textContent=fmtDate(r.fechaRequerida);
+  $('mc-prioridad').textContent=r.prioridad||'—';
+  $('mc-desc').textContent=r.descripcion||'—';
+  $('mc-proposito').textContent=r.proposito||'—';
+
+  if(r.fotoURL&&r.fotoURL.startsWith('http')){
+    $('mc-foto').href=r.fotoURL; $('mc-foto-wrap').style.display='';
+  } else $('mc-foto-wrap').style.display='none';
+
+  $('mc-badges').innerHTML=`<span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad}</span>`+compraBadge(r.estatus);
+
+  $('mc-estatus').innerHTML=ESTATUS_COMPRA.map(s=>`<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
+  $('mc-comment').value='';
+
+  renderCompraHistorial(r);
+  $('modal-compra').style.display='flex';
+}
+
+function renderCompraHistorial(r) {
+  let hist=[];
+  try{ hist=JSON.parse(r.historial||'[]'); }catch{}
+  $('mc-historial').innerHTML=hist.length?[...hist].reverse().map(h=>`
+    <div class="st-item st-info">
+      <div>
+        <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
+        <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
+      </div>
+    </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">Sin historial</p>';
+}
+
 async function saveCompraChanges() {
-  if(!CUR_COMP||!SESSION) return;
+  if(!CUR_COMPRA||!SESSION) return;
   const estatus=$('mc-estatus').value;
-  if(!estatus){toast('Selecciona un estatus para guardar','err');return;}
   const btn=$('btn-mc-save');
   btn.disabled=true; btn.textContent='Guardando…';
   try {
-    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMP.id,estatus});
-    if(res.success){toast('Cambios guardados');closeModal('modal-compra');loadCompras();}
-    else toast(res.error||'Error','err');
+    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMPRA.id,estatus});
+    if(res.success){
+      toast('Cambios guardados');
+      closeModal('modal-compra');
+      if(CR_MODAL_ORIGEN==='rol') loadComprasRol();
+      else loadCompras();
+    } else toast(res.error||'Error','err');
   } catch(e){toast('Error de conexión','err');}
   btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:7px"></i>Guardar Cambios';
 }
 
 async function saveCompraComment() {
   const txt=$('mc-comment').value.trim();
-  if(!txt||!CUR_COMP||!SESSION) return;
+  if(!txt||!CUR_COMPRA||!SESSION) return;
   try {
-    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMP.id,comentario:txt});
-    if(res.success){$('mc-comment').value='';toast('Comentario guardado');loadCompras();}
-    else toast(res.error,'err');
+    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMPRA.id,comentario:txt});
+    if(res.success){
+      $('mc-comment').value='';
+      toast('Comentario guardado');
+      // Recargar según el rol activo
+      if(SESSION.user.rol==='compras') loadComprasRol();
+      else loadCompras();
+    } else toast(res.error,'err');
   } catch(e){toast('Error','err');}
+}
+
+// ── Panel Compras (rol compras) ───────────────────────────────
+
+async function loadComprasRol() {
+  if (!SESSION) { showView('login'); return; }
+  if ($('cr-user-label')) {
+    $('cr-user-label').textContent = SESSION.user.nombre + ' · ' + (ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol);
+  }
+  try {
+    const res = await api({action:'getCompras', token:SESSION.token});
+    if (res.success) {
+      CR_DATA = res.compras || [];
+      renderComprasRol();
+      renderComprasRolKPIs();
+    } else toast(res.error||'Error al cargar solicitudes de compra','err');
+  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
+}
+
+function renderComprasRolKPIs() {
+  $('cr-kpi-total').textContent = CR_DATA.length;
+  $('cr-kpi-sol').textContent   = CR_DATA.filter(r=>r.estatus==='Solicitada').length;
+  $('cr-kpi-cot').textContent   = CR_DATA.filter(r=>r.estatus==='En cotización').length;
+  $('cr-kpi-ord').textContent   = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
+  $('cr-kpi-rec').textContent   = CR_DATA.filter(r=>r.estatus==='Recibida').length;
+}
+
+function renderComprasRol() {
+  const q   = $('cr-search').value.toLowerCase();
+  const fe  = $('cr-est').value;
+  const fp  = $('cr-prio').value;
+
+  const list = CR_DATA.filter(r =>
+    (!q  || [r.folio,r.nombre].some(v=>(v||'').toLowerCase().includes(q))) &&
+    (!fe || r.estatus===fe) &&
+    (!fp || r.prioridad===fp)
+  ).sort((a,b) => {
+    const pd = (prioOrder[a.prioridad]??3) - (prioOrder[b.prioridad]??3);
+    return pd !== 0 ? pd : new Date(b.fecha) - new Date(a.fecha);
+  });
+
+  const tbody = $('cr-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr class="tbl-row" onclick="openCompraModalDesde(event,'${r.id}','rol')">
+      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#D97706">${r.folio||'—'}</span></td>
+      <td style="color:#64748B;white-space:nowrap;font-size:.8rem">${fmtDate(r.fecha)}</td>
+      <td style="font-weight:500;color:var(--navy);font-size:.82rem">${r.nombre||'—'}</td>
+      <td><span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad||'—'}</span></td>
+      <td style="font-size:.8rem;color:#334155;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.descripcion||''}">${r.descripcion||'—'}</td>
+      <td style="font-size:.8rem;color:#64748B;text-align:center">${r.cantidad||'—'} ${r.unidad||''}</td>
+      <td style="font-size:.78rem;color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
+      <td>${compraBadge(r.estatus)}</td>
+      <td style="text-align:center">
+        <button onclick="event.stopPropagation();openCompraModalDesde(event,'${r.id}','rol')"
+          style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706">
+          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+// Función unificada que abre el modal de compra tanto desde el Admin
+// como desde el panel del rol compras — registra de dónde viene para
+// saber qué datos recargar al guardar.
+// CR_MODAL_ORIGEN se declara en estado global arriba
+
+function openCompraModalDesde(event, id, origen) {
+  CR_MODAL_ORIGEN = origen;
+  CUR_COMPRA = (origen === 'rol' ? CR_DATA : COMPRA_DATA).find(r => r.id === id);
+  if (!CUR_COMPRA) return;
+
+  const r = CUR_COMPRA;
+  $('mc-folio').textContent    = r.folio||'—';
+  $('mc-fecha').textContent    = fmtDate(r.fecha);
+  $('mc-nombre').textContent   = r.nombre||'—';
+  $('mc-cantidad').textContent = (r.cantidad||'—') + ' ' + (r.unidad||'');
+  $('mc-fecha-req').textContent= fmtDate(r.fechaRequerida);
+  $('mc-prioridad').textContent= r.prioridad||'—';
+  $('mc-desc').textContent     = r.descripcion||'—';
+  $('mc-proposito').textContent= r.proposito||'—';
+
+  if (r.fotoURL && r.fotoURL.startsWith('http')) {
+    $('mc-foto').href = r.fotoURL; $('mc-foto-wrap').style.display='';
+  } else $('mc-foto-wrap').style.display='none';
+
+  $('mc-badges').innerHTML = `<span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad}</span>` + compraBadge(r.estatus);
+  $('mc-estatus').innerHTML = ESTATUS_COMPRA.map(s =>
+    `<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
+  $('mc-comment').value = '';
+
+  renderCompraHistorial(r);
+  $('modal-compra').style.display = 'flex';
 }
 
 // ── Plan Acciones ─────────────────────────────────────────────
@@ -1915,36 +2463,31 @@ function fmtDate(iso) {
   return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
 }
 
-function fileToBase64(file) {
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-}
-
 // ── INIT ──────────────────────────────────────────────────────
 function init() {
+  // Init solicitud dropdowns
   initSolicitudForm();
-  initComprasForm();
+
+  // Init compra dropdowns
+  initCompraForm();
+
+  // Init LPA area cards
   initLpaAreaCards();
 
-  // Mostrar banner de modo demo si aplica
-  if (IS_DEMO_MODE && $('demo-banner')) {
-    $('demo-banner').style.display = '';
-  }
-
+  // Populate admin department filter
   DEPARTAMENTOS.forEach(d=>{ const o=document.createElement('option'); o.value=o.textContent=d; $('fs-depto').appendChild(o); });
 
-  ['modal-sol','modal-qr','modal-acc','modal-compra'].forEach(id=>{
+  // Close modals on overlay
+  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc'].forEach(id=>{
     $(id).addEventListener('click',e=>{ if(e.target===$(id)) closeModal(id); });
   });
 
+  // Check saved session and validate with server
   const saved=sessionStorage.getItem('ktmex_session');
   if(saved) {
     try {
       const parsed=JSON.parse(saved);
+      // Quick validate token with server
       api({action:'validateSession', token:parsed.token}).then(res=>{
         if(res.valid) {
           SESSION=parsed;
@@ -1955,6 +2498,7 @@ function init() {
           sessionStorage.removeItem('ktmex_session');
         }
       }).catch(()=>{
+        // Offline fallback — trust saved session
         SESSION=parsed;
         $('btn-logout').style.display='';
         $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
@@ -1965,1452 +2509,24 @@ function init() {
   showView('home');
 }
 
+// Persist session in sessionStorage
 function saveSession() {
   if (SESSION) sessionStorage.setItem('ktmex_session', JSON.stringify(SESSION));
   else sessionStorage.removeItem('ktmex_session');
 }
 
-function logout() {
-  if (SESSION) {
-    api({action:'logout',token:SESSION.token}).catch(()=>{});
-  }
-  SESSION = null;
-  sessionStorage.removeItem('ktmex_session');
-  if ($('btn-logout')) $('btn-logout').style.display = 'none';
-  if ($('nav-admin')) $('nav-admin').innerHTML = '<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
-  showView('home');
-  toast('Sesión cerrada', 'info');
+// login() and logout() wrap the real logic and persist the session afterward
+async function login() {
+  await performLogin();
+  saveSession();
+}
+
+async function logout() {
+  await performLogout();
+  saveSession();
 }
 
 init();
-</script>
-
-<script>
-/**
- * Iframe 元素高亮注入脚本
- * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
- *
- * 使用方法：
- * 1. 将此脚本添加到目标网站的 HTML 中
- * 2. 或通过浏览器扩展、用户脚本等方式注入
- */
-
-(function () {
-  "use strict";
-
-  // 检查是否在 iframe 中
-  if (window.self === window.top) {
-    return; // 不在 iframe 中，不执行
-  }
-
-  // 检查是否已经初始化过
-  if (window.__iframeHighlightInitialized) {
-    return;
-  }
-  window.__iframeHighlightInitialized = true;
-  console.log("Iframe 高亮脚本已加载");
-
-  // 创建高亮覆盖层
-  var overlay = document.createElement("div");
-  overlay.id = "iframe-highlight-overlay";
-  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
-
-  // 创建悬停高亮框（虚线边框）
-  var highlightBox = document.createElement("div");
-  highlightBox.id = "iframe-highlight-box";
-  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
-
-  // 创建选中节点的常驻高亮框（实线边框）
-  var selectedBox = document.createElement("div");
-  selectedBox.id = "iframe-selected-box";
-  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
-
-  // 创建悬停标签显示
-  var tagLabel = document.createElement("div");
-  tagLabel.id = "iframe-tag-label";
-  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
-
-  // 创建选中节点标签
-  var selectedLabel = document.createElement("div");
-  selectedLabel.id = "iframe-selected-label";
-  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
-  overlay.appendChild(highlightBox);
-  overlay.appendChild(selectedBox);
-  overlay.appendChild(tagLabel);
-  overlay.appendChild(selectedLabel);
-  document.body.appendChild(overlay);
-
-  // 存储当前选中的元素
-  var selectedElement = null;
-  var highlightEnabled = false;
-
-  // 更新选中元素的高亮显示
-  function updateSelectedHighlight(element) {
-    console.log("updateSelectedHighlight called with:", element);
-    if (!element) {
-      selectedBox.style.display = "none";
-      selectedLabel.style.display = "none";
-      selectedElement = null;
-      console.log("Cleared selected highlight");
-      return;
-    }
-    selectedElement = element;
-    var rect = element.getBoundingClientRect();
-    console.log("Selected element rect:", rect);
-
-    // 更新选中高亮框位置
-    selectedBox.style.display = "block";
-    selectedBox.style.left = "".concat(rect.left - 2, "px");
-    selectedBox.style.top = "".concat(rect.top - 2, "px");
-    selectedBox.style.width = "".concat(rect.width + 4, "px");
-    selectedBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新选中标签位置和内容
-    selectedLabel.style.display = "block";
-    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 28;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 5) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
-    if (labelLeft + labelWidth > window.innerWidth - 10) {
-      labelLeft = window.innerWidth - labelWidth - 10;
-    }
-    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
-    selectedLabel.style.top = "".concat(labelTop, "px");
-    console.log("Selected highlight positioned at:", {
-      left: selectedBox.style.left,
-      top: selectedBox.style.top,
-      width: selectedBox.style.width,
-      height: selectedBox.style.height
-    });
-  }
-  function getElementSelector(element) {
-    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
-    var segments = [];
-    var current = element;
-    while (current !== document.documentElement) {
-      var selector = '';
-      // 优先检查唯一ID
-      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
-        segments.unshift("#".concat(current.id));
-        break; // ID唯一，无需继续向上
-      }
-
-      // 生成类名选择器（取第一个有效类名）
-      var classes = Array.from(current.classList).filter(function (c) {
-        return !c.startsWith('js-');
-      });
-      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
-
-      // 生成位置索引（nth-child）
-      var tag = current.tagName.toLowerCase();
-      if (!className) {
-        var siblings = Array.from(current.parentNode.children);
-        var index = siblings.findIndex(function (el) {
-          return el === current;
-        }) + 1;
-        selector = "".concat(tag, ":nth-child(").concat(index, ")");
-      } else {
-        selector = className;
-      }
-      segments.unshift(selector);
-      current = current.parentElement;
-    }
-
-    // 处理根元素
-    if (current === document.documentElement) {
-      segments.unshift('html');
-    }
-    return segments.join(' > ');
-  }
-
-  // 获取元素文本内容
-  function getElementText(element) {
-    var _element$textContent;
-    if (element.tagName === "INPUT") {
-      return element.value || element.placeholder || "";
-    }
-    if (element.tagName === "TEXTAREA") {
-      return element.value || element.placeholder || "";
-    }
-    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
-    return text.length > 50 ? text.substring(0, 50) + "..." : text;
-  }
-
-  // 获取元素属性信息
-  function getElementAttributes(element) {
-    var attrs = {};
-    for (var i = 0; i < element.attributes.length; i++) {
-      var attr = element.attributes[i];
-      attrs[attr.name] = attr.value;
-    }
-    return attrs;
-  }
-
-  // 鼠标悬停事件处理
-  function handleMouseOver(e) {
-    if (!highlightEnabled) return;
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免高亮 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 如果是已选中的元素，不显示悬停高亮
-    if (target === selectedElement) {
-      highlightBox.style.display = "none";
-      tagLabel.style.display = "none";
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-
-    // 更新悬停高亮框位置
-    highlightBox.style.display = "block";
-    highlightBox.style.left = "".concat(rect.left - 2, "px");
-    highlightBox.style.top = "".concat(rect.top - 2, "px");
-    highlightBox.style.width = "".concat(rect.width + 4, "px");
-    highlightBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新标签位置和内容
-    tagLabel.style.display = "block";
-    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 22;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 0) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
-      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
-    }
-    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
-    tagLabel.style.top = "".concat(labelTop, "px");
-
-    // 发送消息到父窗口
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 鼠标离开事件处理
-  function handleMouseOut(e) {
-    if (!highlightEnabled) return;
-    var relatedTarget = e.relatedTarget;
-
-    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
-    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
-      return;
-    }
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: null,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 点击事件处理
-  function handleClick(e) {
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免处理 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 检查是否是交互元素，这些元素需要保留默认行为
-    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
-
-    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
-    if (highlightEnabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-    console.log("Element clicked:", {
-      tagName: target.tagName,
-      selector: selector,
-      rect: rect
-    });
-
-    // 立即更新选中高亮
-    updateSelectedHighlight(target);
-
-    // 隐藏悬停高亮，因为现在是选中状态
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-click",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 监听来自父窗口的消息
-  function handleParentMessage(event) {
-    console.log("Received message from parent:", event.data);
-    if (event.data.type === "iframe-highlight-toggle") {
-      var enabled = event.data.enabled;
-      console.log("Highlight toggle:", enabled);
-      if (enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "enable-iframe-highlight") {
-      console.log("Enable iframe highlight");
-      enableHighlight();
-    } else if (event.data.type === "disable-iframe-highlight") {
-      console.log("Disable iframe highlight");
-      disableHighlight();
-    } else if (event.data.type === "toggle-iframe-highlight") {
-      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
-      console.log("Toggle iframe highlight to:", _enabled);
-      if (_enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "update-selected-element") {
-      var selector = event.data.selector;
-      console.log("Update selected element with selector:", selector);
-      if (selector) {
-        try {
-          var element = document.querySelector(selector);
-          console.log("Found element by selector:", element);
-          updateSelectedHighlight(element);
-        } catch (error) {
-          console.warn("Failed to select element:", error);
-          updateSelectedHighlight(null);
-        }
-      } else {
-        updateSelectedHighlight(null);
-      }
-    } else if (event.data.type === "clear-selected-element") {
-      console.log("Clear selected element");
-      updateSelectedHighlight(null);
-    }
-  }
-
-  // 启用高亮功能
-  function enableHighlight() {
-    console.log("Enabling highlight");
-    document.addEventListener("mouseover", handleMouseOver, true);
-    document.addEventListener("mouseout", handleMouseOut, true);
-    document.addEventListener("click", handleClick, true);
-    highlightEnabled = true;
-    overlay.style.display = "block";
-  }
-
-  // 禁用高亮功能
-  function disableHighlight() {
-    console.log("Disabling highlight");
-    highlightEnabled = false;
-    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
-    // 这样可以保留选中状态的显示
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
-  }
-
-  // 完全禁用高亮功能（移除所有监听器）
-  function fullyDisableHighlight() {
-    console.log("Fully disabling highlight");
-    highlightEnabled = false;
-    document.removeEventListener("mouseover", handleMouseOver, true);
-    document.removeEventListener("mouseout", handleMouseOut, true);
-    document.removeEventListener("click", handleClick, true);
-    overlay.style.display = "none";
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    selectedBox.style.display = "none";
-    selectedLabel.style.display = "none";
-  }
-
-  // 添加事件监听
-  enableHighlight();
-  window.addEventListener("message", handleParentMessage);
-
-  // 暴露全局函数供外部调用
-  window.__iframeHighlightControl = {
-    enable: enableHighlight,
-    disable: disableHighlight,
-    fullyDisable: fullyDisableHighlight,
-    isEnabled: function isEnabled() {
-      return highlightEnabled;
-    },
-    getSelectedElement: function getSelectedElement() {
-      return selectedElement;
-    },
-    updateSelected: updateSelectedHighlight,
-    // 通过消息发送开关控制
-    sendToggleMessage: function sendToggleMessage(enabled) {
-      window.parent.postMessage({
-        type: 'iframe-highlight-status',
-        enabled: enabled || highlightEnabled,
-        source: 'iframe-highlight-injector'
-      }, '*');
-    }
-  };
-
-  // 通知父窗口脚本已加载
-  try {
-    window.parent.postMessage({
-      type: "iframe-highlight-ready",
-      data: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now()
-      },
-      source: "iframe-highlight-injector"
-    }, "*");
-  } catch (error) {
-    console.warn("无法发送就绪消息到父窗口:", error);
-  }
-
-  // 清理函数
-  window.__iframeHighlightCleanup = function () {
-    fullyDisableHighlight();
-    window.removeEventListener("message", handleParentMessage);
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
-    }
-    delete window.__iframeHighlightInitialized;
-    delete window.__iframeHighlightCleanup;
-  };
-})();
-
-</script>
-
-<script>
-/**
- * Iframe 元素高亮注入脚本
- * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
- *
- * 使用方法：
- * 1. 将此脚本添加到目标网站的 HTML 中
- * 2. 或通过浏览器扩展、用户脚本等方式注入
- */
-
-(function () {
-  "use strict";
-
-  // 检查是否在 iframe 中
-  if (window.self === window.top) {
-    return; // 不在 iframe 中，不执行
-  }
-
-  // 检查是否已经初始化过
-  if (window.__iframeHighlightInitialized) {
-    return;
-  }
-  window.__iframeHighlightInitialized = true;
-  console.log("Iframe 高亮脚本已加载");
-
-  // 创建高亮覆盖层
-  var overlay = document.createElement("div");
-  overlay.id = "iframe-highlight-overlay";
-  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
-
-  // 创建悬停高亮框（虚线边框）
-  var highlightBox = document.createElement("div");
-  highlightBox.id = "iframe-highlight-box";
-  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
-
-  // 创建选中节点的常驻高亮框（实线边框）
-  var selectedBox = document.createElement("div");
-  selectedBox.id = "iframe-selected-box";
-  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
-
-  // 创建悬停标签显示
-  var tagLabel = document.createElement("div");
-  tagLabel.id = "iframe-tag-label";
-  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
-
-  // 创建选中节点标签
-  var selectedLabel = document.createElement("div");
-  selectedLabel.id = "iframe-selected-label";
-  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
-  overlay.appendChild(highlightBox);
-  overlay.appendChild(selectedBox);
-  overlay.appendChild(tagLabel);
-  overlay.appendChild(selectedLabel);
-  document.body.appendChild(overlay);
-
-  // 存储当前选中的元素
-  var selectedElement = null;
-  var highlightEnabled = false;
-
-  // 更新选中元素的高亮显示
-  function updateSelectedHighlight(element) {
-    console.log("updateSelectedHighlight called with:", element);
-    if (!element) {
-      selectedBox.style.display = "none";
-      selectedLabel.style.display = "none";
-      selectedElement = null;
-      console.log("Cleared selected highlight");
-      return;
-    }
-    selectedElement = element;
-    var rect = element.getBoundingClientRect();
-    console.log("Selected element rect:", rect);
-
-    // 更新选中高亮框位置
-    selectedBox.style.display = "block";
-    selectedBox.style.left = "".concat(rect.left - 2, "px");
-    selectedBox.style.top = "".concat(rect.top - 2, "px");
-    selectedBox.style.width = "".concat(rect.width + 4, "px");
-    selectedBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新选中标签位置和内容
-    selectedLabel.style.display = "block";
-    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 28;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 5) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
-    if (labelLeft + labelWidth > window.innerWidth - 10) {
-      labelLeft = window.innerWidth - labelWidth - 10;
-    }
-    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
-    selectedLabel.style.top = "".concat(labelTop, "px");
-    console.log("Selected highlight positioned at:", {
-      left: selectedBox.style.left,
-      top: selectedBox.style.top,
-      width: selectedBox.style.width,
-      height: selectedBox.style.height
-    });
-  }
-  function getElementSelector(element) {
-    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
-    var segments = [];
-    var current = element;
-    while (current !== document.documentElement) {
-      var selector = '';
-      // 优先检查唯一ID
-      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
-        segments.unshift("#".concat(current.id));
-        break; // ID唯一，无需继续向上
-      }
-
-      // 生成类名选择器（取第一个有效类名）
-      var classes = Array.from(current.classList).filter(function (c) {
-        return !c.startsWith('js-');
-      });
-      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
-
-      // 生成位置索引（nth-child）
-      var tag = current.tagName.toLowerCase();
-      if (!className) {
-        var siblings = Array.from(current.parentNode.children);
-        var index = siblings.findIndex(function (el) {
-          return el === current;
-        }) + 1;
-        selector = "".concat(tag, ":nth-child(").concat(index, ")");
-      } else {
-        selector = className;
-      }
-      segments.unshift(selector);
-      current = current.parentElement;
-    }
-
-    // 处理根元素
-    if (current === document.documentElement) {
-      segments.unshift('html');
-    }
-    return segments.join(' > ');
-  }
-
-  // 获取元素文本内容
-  function getElementText(element) {
-    var _element$textContent;
-    if (element.tagName === "INPUT") {
-      return element.value || element.placeholder || "";
-    }
-    if (element.tagName === "TEXTAREA") {
-      return element.value || element.placeholder || "";
-    }
-    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
-    return text.length > 50 ? text.substring(0, 50) + "..." : text;
-  }
-
-  // 获取元素属性信息
-  function getElementAttributes(element) {
-    var attrs = {};
-    for (var i = 0; i < element.attributes.length; i++) {
-      var attr = element.attributes[i];
-      attrs[attr.name] = attr.value;
-    }
-    return attrs;
-  }
-
-  // 鼠标悬停事件处理
-  function handleMouseOver(e) {
-    if (!highlightEnabled) return;
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免高亮 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 如果是已选中的元素，不显示悬停高亮
-    if (target === selectedElement) {
-      highlightBox.style.display = "none";
-      tagLabel.style.display = "none";
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-
-    // 更新悬停高亮框位置
-    highlightBox.style.display = "block";
-    highlightBox.style.left = "".concat(rect.left - 2, "px");
-    highlightBox.style.top = "".concat(rect.top - 2, "px");
-    highlightBox.style.width = "".concat(rect.width + 4, "px");
-    highlightBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新标签位置和内容
-    tagLabel.style.display = "block";
-    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 22;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 0) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
-      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
-    }
-    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
-    tagLabel.style.top = "".concat(labelTop, "px");
-
-    // 发送消息到父窗口
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 鼠标离开事件处理
-  function handleMouseOut(e) {
-    if (!highlightEnabled) return;
-    var relatedTarget = e.relatedTarget;
-
-    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
-    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
-      return;
-    }
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: null,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 点击事件处理
-  function handleClick(e) {
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免处理 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 检查是否是交互元素，这些元素需要保留默认行为
-    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
-
-    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
-    if (highlightEnabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-    console.log("Element clicked:", {
-      tagName: target.tagName,
-      selector: selector,
-      rect: rect
-    });
-
-    // 立即更新选中高亮
-    updateSelectedHighlight(target);
-
-    // 隐藏悬停高亮，因为现在是选中状态
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-click",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 监听来自父窗口的消息
-  function handleParentMessage(event) {
-    console.log("Received message from parent:", event.data);
-    if (event.data.type === "iframe-highlight-toggle") {
-      var enabled = event.data.enabled;
-      console.log("Highlight toggle:", enabled);
-      if (enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "enable-iframe-highlight") {
-      console.log("Enable iframe highlight");
-      enableHighlight();
-    } else if (event.data.type === "disable-iframe-highlight") {
-      console.log("Disable iframe highlight");
-      disableHighlight();
-    } else if (event.data.type === "toggle-iframe-highlight") {
-      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
-      console.log("Toggle iframe highlight to:", _enabled);
-      if (_enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "update-selected-element") {
-      var selector = event.data.selector;
-      console.log("Update selected element with selector:", selector);
-      if (selector) {
-        try {
-          var element = document.querySelector(selector);
-          console.log("Found element by selector:", element);
-          updateSelectedHighlight(element);
-        } catch (error) {
-          console.warn("Failed to select element:", error);
-          updateSelectedHighlight(null);
-        }
-      } else {
-        updateSelectedHighlight(null);
-      }
-    } else if (event.data.type === "clear-selected-element") {
-      console.log("Clear selected element");
-      updateSelectedHighlight(null);
-    }
-  }
-
-  // 启用高亮功能
-  function enableHighlight() {
-    console.log("Enabling highlight");
-    document.addEventListener("mouseover", handleMouseOver, true);
-    document.addEventListener("mouseout", handleMouseOut, true);
-    document.addEventListener("click", handleClick, true);
-    highlightEnabled = true;
-    overlay.style.display = "block";
-  }
-
-  // 禁用高亮功能
-  function disableHighlight() {
-    console.log("Disabling highlight");
-    highlightEnabled = false;
-    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
-    // 这样可以保留选中状态的显示
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
-  }
-
-  // 完全禁用高亮功能（移除所有监听器）
-  function fullyDisableHighlight() {
-    console.log("Fully disabling highlight");
-    highlightEnabled = false;
-    document.removeEventListener("mouseover", handleMouseOver, true);
-    document.removeEventListener("mouseout", handleMouseOut, true);
-    document.removeEventListener("click", handleClick, true);
-    overlay.style.display = "none";
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    selectedBox.style.display = "none";
-    selectedLabel.style.display = "none";
-  }
-
-  // 添加事件监听
-  enableHighlight();
-  window.addEventListener("message", handleParentMessage);
-
-  // 暴露全局函数供外部调用
-  window.__iframeHighlightControl = {
-    enable: enableHighlight,
-    disable: disableHighlight,
-    fullyDisable: fullyDisableHighlight,
-    isEnabled: function isEnabled() {
-      return highlightEnabled;
-    },
-    getSelectedElement: function getSelectedElement() {
-      return selectedElement;
-    },
-    updateSelected: updateSelectedHighlight,
-    // 通过消息发送开关控制
-    sendToggleMessage: function sendToggleMessage(enabled) {
-      window.parent.postMessage({
-        type: 'iframe-highlight-status',
-        enabled: enabled || highlightEnabled,
-        source: 'iframe-highlight-injector'
-      }, '*');
-    }
-  };
-
-  // 通知父窗口脚本已加载
-  try {
-    window.parent.postMessage({
-      type: "iframe-highlight-ready",
-      data: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now()
-      },
-      source: "iframe-highlight-injector"
-    }, "*");
-  } catch (error) {
-    console.warn("无法发送就绪消息到父窗口:", error);
-  }
-
-  // 清理函数
-  window.__iframeHighlightCleanup = function () {
-    fullyDisableHighlight();
-    window.removeEventListener("message", handleParentMessage);
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
-    }
-    delete window.__iframeHighlightInitialized;
-    delete window.__iframeHighlightCleanup;
-  };
-})();
-
-</script>
-
-<script>
-/**
- * Iframe 元素高亮注入脚本
- * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
- *
- * 使用方法：
- * 1. 将此脚本添加到目标网站的 HTML 中
- * 2. 或通过浏览器扩展、用户脚本等方式注入
- */
-
-(function () {
-  "use strict";
-
-  // 检查是否在 iframe 中
-  if (window.self === window.top) {
-    return; // 不在 iframe 中，不执行
-  }
-
-  // 检查是否已经初始化过
-  if (window.__iframeHighlightInitialized) {
-    return;
-  }
-  window.__iframeHighlightInitialized = true;
-  console.log("Iframe 高亮脚本已加载");
-
-  // 创建高亮覆盖层
-  var overlay = document.createElement("div");
-  overlay.id = "iframe-highlight-overlay";
-  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
-
-  // 创建悬停高亮框（虚线边框）
-  var highlightBox = document.createElement("div");
-  highlightBox.id = "iframe-highlight-box";
-  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
-
-  // 创建选中节点的常驻高亮框（实线边框）
-  var selectedBox = document.createElement("div");
-  selectedBox.id = "iframe-selected-box";
-  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
-
-  // 创建悬停标签显示
-  var tagLabel = document.createElement("div");
-  tagLabel.id = "iframe-tag-label";
-  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
-
-  // 创建选中节点标签
-  var selectedLabel = document.createElement("div");
-  selectedLabel.id = "iframe-selected-label";
-  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
-  overlay.appendChild(highlightBox);
-  overlay.appendChild(selectedBox);
-  overlay.appendChild(tagLabel);
-  overlay.appendChild(selectedLabel);
-  document.body.appendChild(overlay);
-
-  // 存储当前选中的元素
-  var selectedElement = null;
-  var highlightEnabled = false;
-
-  // 更新选中元素的高亮显示
-  function updateSelectedHighlight(element) {
-    console.log("updateSelectedHighlight called with:", element);
-    if (!element) {
-      selectedBox.style.display = "none";
-      selectedLabel.style.display = "none";
-      selectedElement = null;
-      console.log("Cleared selected highlight");
-      return;
-    }
-    selectedElement = element;
-    var rect = element.getBoundingClientRect();
-    console.log("Selected element rect:", rect);
-
-    // 更新选中高亮框位置
-    selectedBox.style.display = "block";
-    selectedBox.style.left = "".concat(rect.left - 2, "px");
-    selectedBox.style.top = "".concat(rect.top - 2, "px");
-    selectedBox.style.width = "".concat(rect.width + 4, "px");
-    selectedBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新选中标签位置和内容
-    selectedLabel.style.display = "block";
-    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 28;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 5) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
-    if (labelLeft + labelWidth > window.innerWidth - 10) {
-      labelLeft = window.innerWidth - labelWidth - 10;
-    }
-    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
-    selectedLabel.style.top = "".concat(labelTop, "px");
-    console.log("Selected highlight positioned at:", {
-      left: selectedBox.style.left,
-      top: selectedBox.style.top,
-      width: selectedBox.style.width,
-      height: selectedBox.style.height
-    });
-  }
-  function getElementSelector(element) {
-    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
-    var segments = [];
-    var current = element;
-    while (current !== document.documentElement) {
-      var selector = '';
-      // 优先检查唯一ID
-      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
-        segments.unshift("#".concat(current.id));
-        break; // ID唯一，无需继续向上
-      }
-
-      // 生成类名选择器（取第一个有效类名）
-      var classes = Array.from(current.classList).filter(function (c) {
-        return !c.startsWith('js-');
-      });
-      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
-
-      // 生成位置索引（nth-child）
-      var tag = current.tagName.toLowerCase();
-      if (!className) {
-        var siblings = Array.from(current.parentNode.children);
-        var index = siblings.findIndex(function (el) {
-          return el === current;
-        }) + 1;
-        selector = "".concat(tag, ":nth-child(").concat(index, ")");
-      } else {
-        selector = className;
-      }
-      segments.unshift(selector);
-      current = current.parentElement;
-    }
-
-    // 处理根元素
-    if (current === document.documentElement) {
-      segments.unshift('html');
-    }
-    return segments.join(' > ');
-  }
-
-  // 获取元素文本内容
-  function getElementText(element) {
-    var _element$textContent;
-    if (element.tagName === "INPUT") {
-      return element.value || element.placeholder || "";
-    }
-    if (element.tagName === "TEXTAREA") {
-      return element.value || element.placeholder || "";
-    }
-    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
-    return text.length > 50 ? text.substring(0, 50) + "..." : text;
-  }
-
-  // 获取元素属性信息
-  function getElementAttributes(element) {
-    var attrs = {};
-    for (var i = 0; i < element.attributes.length; i++) {
-      var attr = element.attributes[i];
-      attrs[attr.name] = attr.value;
-    }
-    return attrs;
-  }
-
-  // 鼠标悬停事件处理
-  function handleMouseOver(e) {
-    if (!highlightEnabled) return;
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免高亮 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 如果是已选中的元素，不显示悬停高亮
-    if (target === selectedElement) {
-      highlightBox.style.display = "none";
-      tagLabel.style.display = "none";
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-
-    // 更新悬停高亮框位置
-    highlightBox.style.display = "block";
-    highlightBox.style.left = "".concat(rect.left - 2, "px");
-    highlightBox.style.top = "".concat(rect.top - 2, "px");
-    highlightBox.style.width = "".concat(rect.width + 4, "px");
-    highlightBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新标签位置和内容
-    tagLabel.style.display = "block";
-    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 22;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 0) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
-      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
-    }
-    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
-    tagLabel.style.top = "".concat(labelTop, "px");
-
-    // 发送消息到父窗口
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 鼠标离开事件处理
-  function handleMouseOut(e) {
-    if (!highlightEnabled) return;
-    var relatedTarget = e.relatedTarget;
-
-    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
-    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
-      return;
-    }
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: null,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 点击事件处理
-  function handleClick(e) {
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免处理 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 检查是否是交互元素，这些元素需要保留默认行为
-    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
-
-    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
-    if (highlightEnabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-    console.log("Element clicked:", {
-      tagName: target.tagName,
-      selector: selector,
-      rect: rect
-    });
-
-    // 立即更新选中高亮
-    updateSelectedHighlight(target);
-
-    // 隐藏悬停高亮，因为现在是选中状态
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-click",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 监听来自父窗口的消息
-  function handleParentMessage(event) {
-    console.log("Received message from parent:", event.data);
-    if (event.data.type === "iframe-highlight-toggle") {
-      var enabled = event.data.enabled;
-      console.log("Highlight toggle:", enabled);
-      if (enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "enable-iframe-highlight") {
-      console.log("Enable iframe highlight");
-      enableHighlight();
-    } else if (event.data.type === "disable-iframe-highlight") {
-      console.log("Disable iframe highlight");
-      disableHighlight();
-    } else if (event.data.type === "toggle-iframe-highlight") {
-      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
-      console.log("Toggle iframe highlight to:", _enabled);
-      if (_enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "update-selected-element") {
-      var selector = event.data.selector;
-      console.log("Update selected element with selector:", selector);
-      if (selector) {
-        try {
-          var element = document.querySelector(selector);
-          console.log("Found element by selector:", element);
-          updateSelectedHighlight(element);
-        } catch (error) {
-          console.warn("Failed to select element:", error);
-          updateSelectedHighlight(null);
-        }
-      } else {
-        updateSelectedHighlight(null);
-      }
-    } else if (event.data.type === "clear-selected-element") {
-      console.log("Clear selected element");
-      updateSelectedHighlight(null);
-    }
-  }
-
-  // 启用高亮功能
-  function enableHighlight() {
-    console.log("Enabling highlight");
-    document.addEventListener("mouseover", handleMouseOver, true);
-    document.addEventListener("mouseout", handleMouseOut, true);
-    document.addEventListener("click", handleClick, true);
-    highlightEnabled = true;
-    overlay.style.display = "block";
-  }
-
-  // 禁用高亮功能
-  function disableHighlight() {
-    console.log("Disabling highlight");
-    highlightEnabled = false;
-    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
-    // 这样可以保留选中状态的显示
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
-  }
-
-  // 完全禁用高亮功能（移除所有监听器）
-  function fullyDisableHighlight() {
-    console.log("Fully disabling highlight");
-    highlightEnabled = false;
-    document.removeEventListener("mouseover", handleMouseOver, true);
-    document.removeEventListener("mouseout", handleMouseOut, true);
-    document.removeEventListener("click", handleClick, true);
-    overlay.style.display = "none";
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    selectedBox.style.display = "none";
-    selectedLabel.style.display = "none";
-  }
-
-  // 添加事件监听
-  enableHighlight();
-  window.addEventListener("message", handleParentMessage);
-
-  // 暴露全局函数供外部调用
-  window.__iframeHighlightControl = {
-    enable: enableHighlight,
-    disable: disableHighlight,
-    fullyDisable: fullyDisableHighlight,
-    isEnabled: function isEnabled() {
-      return highlightEnabled;
-    },
-    getSelectedElement: function getSelectedElement() {
-      return selectedElement;
-    },
-    updateSelected: updateSelectedHighlight,
-    // 通过消息发送开关控制
-    sendToggleMessage: function sendToggleMessage(enabled) {
-      window.parent.postMessage({
-        type: 'iframe-highlight-status',
-        enabled: enabled || highlightEnabled,
-        source: 'iframe-highlight-injector'
-      }, '*');
-    }
-  };
-
-  // 通知父窗口脚本已加载
-  try {
-    window.parent.postMessage({
-      type: "iframe-highlight-ready",
-      data: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now()
-      },
-      source: "iframe-highlight-injector"
-    }, "*");
-  } catch (error) {
-    console.warn("无法发送就绪消息到父窗口:", error);
-  }
-
-  // 清理函数
-  window.__iframeHighlightCleanup = function () {
-    fullyDisableHighlight();
-    window.removeEventListener("message", handleParentMessage);
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
-    }
-    delete window.__iframeHighlightInitialized;
-    delete window.__iframeHighlightCleanup;
-  };
-})();
-
 </script>
 </body>
 </html>
