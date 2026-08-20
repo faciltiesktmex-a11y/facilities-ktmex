@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
 *{font-family:'DM Sans',system-ui,sans-serif}
 .mono{font-family:'Space Mono',monospace}
@@ -2274,55 +2275,72 @@ async function buscarCodigoQR() {
 }
 
 async function startQRScanner() {
-  if (!SESSION || SESSION.user.rol !== 'tecnico') {
-    toast('Solo los técnicos pueden utilizar la recepción por QR.','err'); return;
+  if (!SESSION || SESSION.user.rol !== 'tecnico') { toast('Solo los técnicos pueden utilizar la recepción por QR.','err'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast('Este navegador no permite acceso a la cámara. Usa "Leer QR desde foto" o escribe el código.','err'); return;
   }
-  if (!('BarcodeDetector' in window)) {
-    toast('Este navegador no permite lectura QR directa. Usa "Leer QR desde foto" o escribe el código.','err');
-    return;
-  }
-
   try {
-    const supported = await BarcodeDetector.getSupportedFormats();
-    if (!supported.includes('qr_code')) {
-      toast('El navegador no tiene soporte para QR. Usa la opción de fotografía.','err'); return;
-    }
-
     stopQRScanner();
     QR_STREAM=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
-      audio:false
+      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false
     });
     const video=$('qr-video');
     video.srcObject=QR_STREAM;
     $('qr-camera-wrap').style.display='';
     await video.play();
 
-    const detector=new BarcodeDetector({formats:['qr_code']});
-    const scan=async()=>{
-      if(!QR_STREAM) return;
+    if ('BarcodeDetector' in window) {
+      try {
+        const supported=await BarcodeDetector.getSupportedFormats();
+        if (supported.includes('qr_code')) {
+          const detector=new BarcodeDetector({formats:['qr_code']});
+          const scanNative=async()=>{
+            if(!QR_STREAM)return;
+            try{
+              const codes=await detector.detect(video);
+              if(codes?.length){
+                const value=normalizeQRCode(codes[0].rawValue);
+                if(value){$('qr-codigo').value=value;stopQRScanner();toast('QR leído: '+value,'ok');await buscarCodigoQR();return;}
+              }
+            }catch(e){}
+            QR_SCAN_TIMER=setTimeout(scanNative,250);
+          };
+          scanNative(); return;
+        }
+      } catch(e) {}
+    }
+
+    if (typeof jsQR!=='function') {
+      stopQRScanner(); toast('No se cargó el lector QR compatible con iPad. Verifica la conexión y vuelve a intentar.','err'); return;
+    }
+
+    const canvas=document.createElement('canvas');
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const scanJsQR=async()=>{
+      if(!QR_STREAM)return;
       try{
-        const codes=await detector.detect(video);
-        if(codes && codes.length){
-          const value=normalizeQRCode(codes[0].rawValue);
-          if(value){
-            $('qr-codigo').value=value;
-            stopQRScanner();
-            toast('QR leído: '+value,'ok');
-            await buscarCodigoQR();
-            return;
+        if(video.readyState>=2 && video.videoWidth>0){
+          canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+          ctx.drawImage(video,0,0,canvas.width,canvas.height);
+          const im=ctx.getImageData(0,0,canvas.width,canvas.height);
+          const r=jsQR(im.data,im.width,im.height,{inversionAttempts:'attemptBoth'});
+          if(r?.data){
+            const value=normalizeQRCode(r.data);
+            if(value){$('qr-codigo').value=value;stopQRScanner();toast('QR leído: '+value,'ok');await buscarCodigoQR();return;}
           }
         }
       }catch(e){}
-      QR_SCAN_TIMER=setTimeout(scan,250);
+      QR_SCAN_TIMER=setTimeout(scanJsQR,180);
     };
-    scan();
+    scanJsQR();
   } catch(e) {
     stopQRScanner();
-    toast('No se pudo abrir la cámara: '+e.message,'err');
+    const msg=String(e?.message||e);
+    if(/NotAllowedError|Permission denied|denied/i.test(msg))
+      toast('Permiso de cámara bloqueado. En iPad habilita Cámara para Safari y vuelve a intentar.','err');
+    else toast('No se pudo abrir la cámara: '+msg,'err');
   }
 }
-
 function stopQRScanner() {
   if(QR_SCAN_TIMER){clearTimeout(QR_SCAN_TIMER);QR_SCAN_TIMER=null;}
   if(QR_STREAM){
@@ -2335,26 +2353,29 @@ function stopQRScanner() {
 }
 
 async function scanQRFromImage(input) {
-  const file=input.files?.[0];
-  input.value='';
-  if(!file) return;
-  if(!('BarcodeDetector' in window)){
-    toast('Este navegador no puede interpretar QR desde imagen. Escribe el código manualmente.','err'); return;
-  }
+  const file=input.files?.[0]; input.value=''; if(!file)return;
   try{
-    const detector=new BarcodeDetector({formats:['qr_code']});
     const bmp=await createImageBitmap(file);
-    const codes=await detector.detect(bmp);
-    if(!codes.length){toast('No se encontró un QR legible en la fotografía.','err');return;}
-    const value=normalizeQRCode(codes[0].rawValue);
-    $('qr-codigo').value=value;
-    toast('QR leído: '+value,'ok');
-    await buscarCodigoQR();
-  }catch(e){
-    toast('No fue posible leer el QR de la imagen: '+e.message,'err');
-  }
+    if('BarcodeDetector' in window){
+      try{
+        const detector=new BarcodeDetector({formats:['qr_code']});
+        const codes=await detector.detect(bmp);
+        if(codes?.length){
+          const value=normalizeQRCode(codes[0].rawValue);
+          $('qr-codigo').value=value; toast('QR leído: '+value,'ok'); await buscarCodigoQR(); return;
+        }
+      }catch(e){}
+    }
+    if(typeof jsQR!=='function'){toast('No se cargó el lector QR compatible con iPad.','err');return;}
+    const canvas=document.createElement('canvas'); canvas.width=bmp.width; canvas.height=bmp.height;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true}); ctx.drawImage(bmp,0,0);
+    const im=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const r=jsQR(im.data,im.width,im.height,{inversionAttempts:'attemptBoth'});
+    if(!r?.data){toast('No se encontró un QR legible en la fotografía. Acércate más e intenta otra vez.','err');return;}
+    const value=normalizeQRCode(r.data);
+    $('qr-codigo').value=value; toast('QR leído: '+value,'ok'); await buscarCodigoQR();
+  }catch(e){toast('No fue posible leer el QR de la imagen: '+e.message,'err');}
 }
-
 async function registrarEntradaQR() {
   if(!SESSION || SESSION.user.rol!=='tecnico'){
     toast('Solo técnicos Facilities pueden registrar entradas.','err'); return;
