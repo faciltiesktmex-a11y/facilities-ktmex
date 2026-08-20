@@ -248,7 +248,7 @@ const LPA_AREAS = {
       </div>
     </div>
     <div style="display:flex;gap:4px;align-items:center">
-      <button onclick="showView('solicitud')" id="nav-sol" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+      <button onclick="goSolicitud()" id="nav-sol" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-file-alt" style="margin-right:5px"></i>Solicitudes
       </button>
       <button onclick="goLpaSelect()" id="nav-lpa" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
@@ -262,6 +262,9 @@ const LPA_AREAS = {
       </button>
       <button onclick="goInventario()" id="nav-inv" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-boxes-stacked" style="margin-right:5px"></i>Inventario
+      </button>
+      <button onclick="goRecepcionQR()" id="nav-recepcion" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-qrcode" style="margin-right:5px"></i>Recepción QR
       </button>
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
@@ -709,11 +712,116 @@ const LPA_AREAS = {
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;min-width:600px">
         <thead>
-          <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock</th><th>Mínimo</th></tr>
+          <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock</th><th>Mínimo</th><th>QR</th></tr>
         </thead>
         <tbody id="inv-tbody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ VIEW: RECEPCIÓN DE MATERIAL QR ══ -->
+<div id="view-recepcion-qr" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#059669,#047857);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(5,150,105,.25)">
+      <i class="fas fa-qrcode" style="color:#fff;font-size:22px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Recepción de Material por QR</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Técnicos Facilities · Entrada y alta de materiales en inventario</p>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:16px">
+    <div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:12px;padding:12px 14px;margin-bottom:16px">
+      <p style="font-size:.78rem;color:#065F46;margin:0"><i class="fas fa-circle-info" style="margin-right:6px"></i>
+        Escanea el QR del material. Si el código ya existe, la cantidad recibida se suma al stock. Si es un código nuevo, completa los datos para darlo de alta.
+      </p>
+    </div>
+
+    <div id="qr-camera-wrap" style="display:none;margin-bottom:16px">
+      <video id="qr-video" playsinline muted style="width:100%;max-height:340px;background:#0F172A;border-radius:14px;object-fit:cover"></video>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button type="button" class="btn-red" onclick="stopQRScanner()" style="flex:1"><i class="fas fa-stop" style="margin-right:6px"></i>Detener cámara</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <button type="button" class="btn-p" onclick="startQRScanner()" style="background:#059669">
+        <i class="fas fa-camera" style="margin-right:7px"></i>Escanear QR
+      </button>
+      <label class="btn-g" style="display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <i class="fas fa-image" style="margin-right:7px"></i>Leer QR desde foto
+        <input type="file" id="qr-image-input" accept="image/*" capture="environment" style="display:none" onchange="scanQRFromImage(this)">
+      </label>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Código del material / QR *</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="qr-codigo" class="inp" placeholder="Escanea el QR o escribe el código" oninput="qrCodigoChanged()">
+        <button type="button" class="btn-g" onclick="buscarCodigoQR()" style="white-space:nowrap"><i class="fas fa-magnifying-glass" style="margin-right:5px"></i>Buscar</button>
+      </div>
+    </div>
+
+    <div id="qr-item-status" style="display:none;border-radius:11px;padding:11px 13px;margin-bottom:14px"></div>
+
+    <div id="qr-existing-fields" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Descripción</label>
+          <input type="text" id="qr-ex-desc" class="inp" readonly>
+        </div>
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Stock actual</label>
+          <input type="text" id="qr-ex-stock" class="inp" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div id="qr-new-fields" style="display:none">
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Descripción del material *</label>
+        <input type="text" id="qr-descripcion" class="inp" placeholder="Ej. Rodamiento 6204 2RS">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Ubicación / Gaveta *</label>
+          <input type="text" id="qr-gaveta" class="inp" placeholder="Ej. GAV-A-12">
+        </div>
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Unidad *</label>
+          <select id="qr-unidad" class="inp">
+            <option value="">— Selecciona —</option>
+            <option>Pieza</option><option>Caja</option><option>Juego</option><option>Metro</option>
+            <option>Litro</option><option>Kilogramo</option><option>Paquete</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Stock mínimo *</label>
+          <input type="number" min="0" step="1" id="qr-stock-min" class="inp" placeholder="Ej. 2">
+        </div>
+        <div>
+          <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Stock máximo (opcional)</label>
+          <input type="number" min="0" step="1" id="qr-stock-max" class="inp" placeholder="Definir si aplica">
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Cantidad recibida *</label>
+      <input type="number" min="0.01" step="any" id="qr-cantidad" class="inp" placeholder="Ej. 10">
+    </div>
+
+    <button id="btn-qr-entrada" class="btn-p" onclick="registrarEntradaQR()" style="width:100%;background:#059669" disabled>
+      <i class="fas fa-box-open" style="margin-right:8px"></i>Registrar entrada al inventario
+    </button>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <h4 style="font-size:.8rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px">Última recepción</h4>
+    <div id="qr-last-result" style="font-size:.82rem;color:#64748B">Todavía no se ha registrado ninguna entrada en esta sesión.</div>
   </div>
 </div>
 
@@ -833,6 +941,18 @@ const LPA_AREAS = {
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="showQR()" class="btn-g"><i class="fas fa-qrcode" style="margin-right:6px"></i>Generar QR</button>
         <button onclick="refreshAdmin()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
+      </div>
+    </div>
+
+    <!-- Alerta global de inventario: visible al abrir el panel -->
+    <div id="admin-stock-alert" style="display:none;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px;padding:13px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <p id="admin-stock-alert-text" style="font-size:.84rem;color:#B91C1C;margin:0;font-weight:600">
+          <i class="fas fa-triangle-exclamation" style="margin-right:7px"></i>
+        </p>
+        <button class="btn-red" style="padding:7px 12px" onclick="switchTab('inv')">
+          <i class="fas fa-boxes-stacked" style="margin-right:6px"></i>Ver inventario
+        </button>
       </div>
     </div>
 
@@ -991,12 +1111,37 @@ const LPA_AREAS = {
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;min-width:680px">
             <thead>
-              <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock actual</th><th>Mínimo</th><th>Estatus</th></tr>
+              <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock actual</th><th>Mínimo</th><th>Máximo</th><th>Estatus</th><th>QR</th></tr>
             </thead>
             <tbody id="admin-inv-tbody"></tbody>
           </table>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════ MODAL: ETIQUETA QR INVENTARIO ══ -->
+<div id="modal-inv-qr" class="modal-bg" style="display:none">
+  <div class="modal-box slide" style="max-width:420px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
+      <div>
+        <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0">Etiqueta QR de Inventario</h3>
+        <p style="font-size:.72rem;color:#64748B;margin:2px 0 0">Formato estándar KTMEX Facilities</p>
+      </div>
+      <button onclick="closeModal('modal-inv-qr')" class="btn-g" style="padding:7px 10px"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div id="inv-qr-print-area" style="padding:22px;text-align:center">
+      <div id="inv-qr-code" style="display:flex;justify-content:center;margin-bottom:14px"></div>
+      <div id="inv-qr-item-code" class="mono" style="font-size:1.05rem;font-weight:700;color:var(--navy)"></div>
+      <div id="inv-qr-item-desc" style="font-size:.82rem;color:#334155;margin-top:5px"></div>
+      <div id="inv-qr-item-location" style="font-size:.72rem;color:#64748B;margin-top:4px"></div>
+      <div style="font-size:.62rem;color:#94A3B8;margin-top:8px">KTMEX-FAC-INV · Facilities</div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button class="btn-p" onclick="printInventoryQR()" style="flex:1;background:#059669"><i class="fas fa-print" style="margin-right:7px"></i>Imprimir etiqueta</button>
+      <button class="btn-g" onclick="closeModal('modal-inv-qr')" style="flex:1">Cerrar</button>
     </div>
   </div>
 </div>
@@ -1333,15 +1478,53 @@ function toast(msg, type='ok') {
 // ── Views ────────────────────────────────────────────────────
 let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
 
-function showView(v) {
-  ['home','solicitud','compra','lpa-select','lpa-form','actividades','inventario','compras-rol','login','admin'].forEach(x=>
-    $('view-'+x).style.display='none');
-  $('view-'+v).style.display='';
-  $('btn-logout').style.display = SESSION?'':'none';
+function configureRoleUI() {
+  const role = SESSION?.user?.rol || '';
+  const ids = ['nav-sol','nav-lpa','nav-compra','nav-act','nav-inv','nav-recepcion','nav-admin'];
+  ids.forEach(id => { if ($(id)) $(id).style.display=''; });
+
+  if (role === 'compras') {
+    // Compras: únicamente Solicitudes de Trabajo + Panel de Compras.
+    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-admin'].forEach(id => { if($(id)) $(id).style.display='none'; });
+    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Panel Compras';
+  } else {
+    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Compras';
+    if (role !== 'tecnico' && $('nav-recepcion')) $('nav-recepcion').style.display='none';
+    if (!SESSION && $('nav-recepcion')) $('nav-recepcion').style.display='none';
+  }
 }
 
-// Vistas que requieren sesión iniciada (cualquier rol). Si no hay sesión,
-// guarda la vista solicitada y manda a login; al iniciar sesión regresa aquí.
+function roleCanView(v) {
+  if (!SESSION) return true;
+  const role = SESSION.user.rol;
+
+  if (role === 'compras') {
+    return ['home','solicitud','compras-rol','login'].includes(v);
+  }
+
+  if (role === 'tecnico') {
+    return !['admin','compras-rol'].includes(v);
+  }
+
+  return true;
+}
+
+function showView(v) {
+  if (!roleCanView(v)) {
+    toast('Tu usuario no tiene permiso para acceder a esta sección.','err');
+    v = SESSION?.user?.rol === 'compras' ? 'compras-rol' : 'home';
+  }
+
+  ['home','solicitud','compra','lpa-select','lpa-form','actividades','inventario','recepcion-qr','compras-rol','login','admin'].forEach(x=>{
+    const el=$('view-'+x); if(el) el.style.display='none';
+  });
+  const target=$('view-'+v);
+  if(target) target.style.display='';
+  $('btn-logout').style.display = SESSION?'':'none';
+  configureRoleUI();
+}
+
+// Vistas que requieren sesión iniciada.
 function requireLogin(viewName) {
   if (SESSION) return true;
   PENDING_VIEW = viewName;
@@ -1349,11 +1532,45 @@ function requireLogin(viewName) {
   return false;
 }
 
-function goCompra()      { if (requireLogin('compra'))      { initCompraForm(); showView('compra'); } }
-function goLpaSelect()   { if (requireLogin('lpa-select'))  showView('lpa-select'); }
-function goActividades() { if (requireLogin('actividades')) { showView('actividades'); loadMisActividades(); } }
-function goComprasRol()  { showView('compras-rol'); loadComprasRol(); }
-function goInventario()  { if (requireLogin('inventario'))  { showView('inventario'); loadInventarioTec(); } }
+function goSolicitud() {
+  // Solicitud de trabajo disponible para todos los roles; Compras sí puede acceder.
+  showView('solicitud');
+}
+
+function goCompra() {
+  if (!requireLogin('compra')) return;
+  if (SESSION.user.rol === 'compras') { goComprasRol(); return; }
+  initCompraForm(); showView('compra');
+}
+function goLpaSelect() {
+  if (!requireLogin('lpa-select')) return;
+  if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a Auditoría LPA.','err'); goComprasRol(); return; }
+  showView('lpa-select');
+}
+function goActividades() {
+  if (!requireLogin('actividades')) return;
+  if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a actividades técnicas.','err'); goComprasRol(); return; }
+  showView('actividades'); loadMisActividades();
+}
+function goComprasRol() {
+  if (!SESSION) { PENDING_VIEW='admin'; showView('login'); return; }
+  if (SESSION.user.rol !== 'compras') { toast('Esta sección es exclusiva del área de Compras.','err'); return; }
+  showView('compras-rol'); loadComprasRol();
+}
+function goInventario() {
+  if (!requireLogin('inventario')) return;
+  if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso al inventario.','err'); goComprasRol(); return; }
+  showView('inventario'); loadInventarioTec();
+}
+function goRecepcionQR() {
+  if (!requireLogin('recepcion-qr')) return;
+  if (SESSION.user.rol !== 'tecnico') {
+    toast('La recepción por QR está habilitada únicamente para técnicos Facilities.','err');
+    showView('home'); return;
+  }
+  showView('recepcion-qr');
+  resetRecepcionQR();
+}
 
 function goAdmin() {
   PENDING_VIEW = 'admin';
@@ -1403,6 +1620,7 @@ async function performLogin() {
       $('log-pwd').value='';
       $('btn-logout').style.display='';
       $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+      configureRoleUI();
 
       const dest = PENDING_VIEW || 'admin';
       PENDING_VIEW = null;
@@ -1449,6 +1667,7 @@ async function performLogin() {
 }
 
 async function performLogout() {
+  stopQRScanner();
   if (SESSION) await api({action:'logout',token:SESSION.token}).catch(()=>{});
   SESSION=null;
   $('btn-logout').style.display='none';
@@ -1912,19 +2131,19 @@ async function loadInventarioTec() {
 function renderInventarioCatalog() {
   const tbody = $('inv-tbody');
   if (!INV_DATA.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#94A3B8">El catálogo de inventario está vacío. Pide a Facilities que lo configure en Google Sheets.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8">El catálogo de inventario está vacío. Pide a Facilities que lo configure en Google Sheets.</td></tr>';
     return;
   }
   tbody.innerHTML = INV_DATA.map(it => `
-    <tr style="${it.bajoMinimo?'background:#FEF2F2':''}">
+    <tr style="${it.bajoMinimo?'background:#FEF2F2':it.sobreMaximo?'background:#FFFBEB':''}">
       <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
       <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
       <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
-      <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
-      <td style="text-align:center;color:#94A3B8">${it.stockMinimo}</td>
+      <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':it.sobreMaximo?'#92400E':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
+      <td style="text-align:center;color:#94A3B8">${it.stockMinimoValido?it.stockMinimo:'—'}</td>
+      <td style="text-align:center"><button class="btn-g" style="padding:5px 9px" onclick='openInventoryQR(${JSON.stringify(it)})'><i class="fas fa-qrcode"></i></button></td>
     </tr>`).join('');
 }
-
 function invRefaccionChange() {
   const id = $('inv-refaccion').value;
   const item = INV_DATA.find(it => it.id === id);
@@ -1959,6 +2178,237 @@ async function registrarSalidaInventario() {
   btn.disabled = false; btn.innerHTML = '<i class="fas fa-right-from-bracket" style="margin-right:8px"></i>Registrar Salida';
 }
 
+
+// ── Recepción de Material por QR (técnicos) ───────────────────
+let QR_STREAM = null;
+let QR_SCAN_TIMER = null;
+let QR_CURRENT_ITEM = null;
+let QR_LOOKUP_TIMER = null;
+
+function normalizeQRCode(raw) {
+  let value = String(raw || '').trim();
+  if (!value) return '';
+
+  // Permite QRs que contengan una URL del tipo ?codigo=ABC123.
+  try {
+    const u = new URL(value);
+    const q = u.searchParams.get('codigo') || u.searchParams.get('code') || u.searchParams.get('sku');
+    if (q) value = q;
+  } catch(e) {}
+
+  // Formato interno generado por KTMEX: KTMEX-FAC-INV|SKU001
+  const prefix = 'KTMEX-FAC-INV|';
+  if (value.toUpperCase().startsWith(prefix)) {
+    value = value.slice(prefix.length);
+  }
+
+  return value.trim().slice(0,120);
+}
+
+function inventoryQRPayload(codigo) {
+  return 'KTMEX-FAC-INV|' + String(codigo||'').trim();
+}
+
+function resetRecepcionQR() {
+  stopQRScanner();
+  QR_CURRENT_ITEM = null;
+  ['qr-codigo','qr-descripcion','qr-gaveta','qr-stock-min','qr-stock-max','qr-cantidad','qr-ex-desc','qr-ex-stock'].forEach(id=>{
+    if($(id)) $(id).value='';
+  });
+  if($('qr-unidad')) $('qr-unidad').value='';
+  if($('qr-item-status')) $('qr-item-status').style.display='none';
+  if($('qr-existing-fields')) $('qr-existing-fields').style.display='none';
+  if($('qr-new-fields')) $('qr-new-fields').style.display='none';
+  if($('btn-qr-entrada')) $('btn-qr-entrada').disabled=true;
+}
+
+function qrCodigoChanged() {
+  QR_CURRENT_ITEM = null;
+  if($('qr-item-status')) $('qr-item-status').style.display='none';
+  if($('qr-existing-fields')) $('qr-existing-fields').style.display='none';
+  if($('qr-new-fields')) $('qr-new-fields').style.display='none';
+  if($('btn-qr-entrada')) $('btn-qr-entrada').disabled=true;
+
+  clearTimeout(QR_LOOKUP_TIMER);
+  const code = normalizeQRCode($('qr-codigo').value);
+  if (code.length >= 2) QR_LOOKUP_TIMER=setTimeout(buscarCodigoQR,350);
+}
+
+async function buscarCodigoQR() {
+  if (!SESSION || SESSION.user.rol !== 'tecnico') return;
+  const codigo = normalizeQRCode($('qr-codigo').value);
+  if (!codigo) { toast('Escanea o escribe el código del material.','err'); return; }
+  $('qr-codigo').value = codigo;
+
+  const status=$('qr-item-status');
+  status.style.display='';
+  status.style.background='#EFF6FF';
+  status.style.border='1.5px solid #BFDBFE';
+  status.style.color='#1D4ED8';
+  status.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Buscando código en inventario…';
+
+  try {
+    const res=await api({action:'buscarInventarioPorCodigo',token:SESSION.token,codigo});
+    if(!res.success){ toast(res.error||'No fue posible consultar inventario','err'); return; }
+
+    if(res.encontrado){
+      QR_CURRENT_ITEM=res.item;
+      status.style.background='#F0FDF4'; status.style.borderColor='#BBF7D0'; status.style.color='#166534';
+      status.innerHTML='<i class="fas fa-circle-check" style="margin-right:6px"></i><strong>Material existente.</strong> La entrada se sumará al stock actual.';
+      $('qr-existing-fields').style.display='';
+      $('qr-new-fields').style.display='none';
+      $('qr-ex-desc').value=res.item.descripcion||'';
+      $('qr-ex-stock').value=(res.item.stockActual??0)+' '+(res.item.unidad||'');
+    } else {
+      QR_CURRENT_ITEM=null;
+      status.style.background='#FFFBEB'; status.style.borderColor='#FDE68A'; status.style.color='#92400E';
+      status.innerHTML='<i class="fas fa-circle-plus" style="margin-right:6px"></i><strong>Código nuevo.</strong> Completa los datos para darlo de alta.';
+      $('qr-existing-fields').style.display='none';
+      $('qr-new-fields').style.display='';
+    }
+    $('btn-qr-entrada').disabled=false;
+  } catch(e) {
+    status.style.display='none';
+    toast('Error consultando el inventario: '+e.message,'err');
+  }
+}
+
+async function startQRScanner() {
+  if (!SESSION || SESSION.user.rol !== 'tecnico') {
+    toast('Solo los técnicos pueden utilizar la recepción por QR.','err'); return;
+  }
+  if (!('BarcodeDetector' in window)) {
+    toast('Este navegador no permite lectura QR directa. Usa "Leer QR desde foto" o escribe el código.','err');
+    return;
+  }
+
+  try {
+    const supported = await BarcodeDetector.getSupportedFormats();
+    if (!supported.includes('qr_code')) {
+      toast('El navegador no tiene soporte para QR. Usa la opción de fotografía.','err'); return;
+    }
+
+    stopQRScanner();
+    QR_STREAM=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
+      audio:false
+    });
+    const video=$('qr-video');
+    video.srcObject=QR_STREAM;
+    $('qr-camera-wrap').style.display='';
+    await video.play();
+
+    const detector=new BarcodeDetector({formats:['qr_code']});
+    const scan=async()=>{
+      if(!QR_STREAM) return;
+      try{
+        const codes=await detector.detect(video);
+        if(codes && codes.length){
+          const value=normalizeQRCode(codes[0].rawValue);
+          if(value){
+            $('qr-codigo').value=value;
+            stopQRScanner();
+            toast('QR leído: '+value,'ok');
+            await buscarCodigoQR();
+            return;
+          }
+        }
+      }catch(e){}
+      QR_SCAN_TIMER=setTimeout(scan,250);
+    };
+    scan();
+  } catch(e) {
+    stopQRScanner();
+    toast('No se pudo abrir la cámara: '+e.message,'err');
+  }
+}
+
+function stopQRScanner() {
+  if(QR_SCAN_TIMER){clearTimeout(QR_SCAN_TIMER);QR_SCAN_TIMER=null;}
+  if(QR_STREAM){
+    QR_STREAM.getTracks().forEach(t=>t.stop());
+    QR_STREAM=null;
+  }
+  const video=$('qr-video');
+  if(video) video.srcObject=null;
+  if($('qr-camera-wrap')) $('qr-camera-wrap').style.display='none';
+}
+
+async function scanQRFromImage(input) {
+  const file=input.files?.[0];
+  input.value='';
+  if(!file) return;
+  if(!('BarcodeDetector' in window)){
+    toast('Este navegador no puede interpretar QR desde imagen. Escribe el código manualmente.','err'); return;
+  }
+  try{
+    const detector=new BarcodeDetector({formats:['qr_code']});
+    const bmp=await createImageBitmap(file);
+    const codes=await detector.detect(bmp);
+    if(!codes.length){toast('No se encontró un QR legible en la fotografía.','err');return;}
+    const value=normalizeQRCode(codes[0].rawValue);
+    $('qr-codigo').value=value;
+    toast('QR leído: '+value,'ok');
+    await buscarCodigoQR();
+  }catch(e){
+    toast('No fue posible leer el QR de la imagen: '+e.message,'err');
+  }
+}
+
+async function registrarEntradaQR() {
+  if(!SESSION || SESSION.user.rol!=='tecnico'){
+    toast('Solo técnicos Facilities pueden registrar entradas.','err'); return;
+  }
+
+  const codigo=normalizeQRCode($('qr-codigo').value);
+  const cantidad=Number($('qr-cantidad').value);
+  if(!codigo){toast('Escanea o escribe el código del material.','err');return;}
+  if(!cantidad || cantidad<=0){toast('Captura una cantidad recibida válida.','err');return;}
+
+  const payload={
+    action:'entradaInventarioQR', token:SESSION.token, codigo, cantidad
+  };
+
+  if(!QR_CURRENT_ITEM){
+    payload.descripcion=$('qr-descripcion').value.trim();
+    payload.ubicacionGaveta=$('qr-gaveta').value.trim();
+    payload.unidad=$('qr-unidad').value;
+    payload.stockMinimo=Number($('qr-stock-min').value);
+    const maxRaw=$('qr-stock-max').value;
+    payload.stockMaximo=maxRaw==='' ? '' : Number(maxRaw);
+
+    if(!payload.descripcion||!payload.ubicacionGaveta||!payload.unidad||Number.isNaN(payload.stockMinimo)||payload.stockMinimo<0){
+      toast('Para un material nuevo completa descripción, gaveta, unidad y stock mínimo.','err');return;
+    }
+    if(payload.stockMaximo!=='' && (Number.isNaN(payload.stockMaximo)||payload.stockMaximo<0||payload.stockMaximo<payload.stockMinimo)){
+      toast('El stock máximo debe ser mayor o igual al stock mínimo.','err');return;
+    }
+  }
+
+  const btn=$('btn-qr-entrada');
+  btn.disabled=true;
+  btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Registrando entrada…';
+
+  try{
+    const res=await api(payload);
+    if(res.success){
+      const modo=res.creado?'Material nuevo dado de alta':'Stock actualizado';
+      $('qr-last-result').innerHTML=
+        `<strong style="color:#166534">${modo}</strong><br>`+
+        `Código: <span class="mono">${res.codigo}</span> · Entrada: ${cantidad} ${res.unidad||''} · Stock nuevo: <strong>${res.nuevoStock}</strong>`;
+      toast(modo+' correctamente.','ok');
+      const last=$('qr-last-result').innerHTML;
+      resetRecepcionQR();
+      $('qr-last-result').innerHTML=last;
+    } else toast(res.error||'No fue posible registrar la entrada.','err');
+  }catch(e){
+    toast('Error al registrar entrada: '+e.message,'err');
+  }
+
+  btn.disabled=false;
+  btn.innerHTML='<i class="fas fa-box-open" style="margin-right:8px"></i>Registrar entrada al inventario';
+}
+
 // ── Admin ────────────────────────────────────────────────────
 function switchTab(tab) {
   ['sol','compra','lpa','acc','inv'].forEach(t=>{
@@ -1983,34 +2433,100 @@ async function loadAdminInventario() {
     const res = await api({action:'getInventario', token:SESSION.token});
     if (!res.success) return;
     const items = res.items;
+
     const dot = $('inv-alert-dot');
     if (res.bajoMinimoCount > 0) {
       dot.style.display=''; dot.textContent = res.bajoMinimoCount;
     } else { dot.style.display='none'; }
 
+    // Alerta global visible inmediatamente al abrir el Panel Administrativo.
+    const globalAlert=$('admin-stock-alert');
+    if(globalAlert){
+      if(res.bajoMinimoCount>0){
+        globalAlert.style.display='';
+        const examples=(res.bajoMinimoItems||[]).slice(0,5).map(x=>x.codigo).join(', ');
+        $('admin-stock-alert-text').innerHTML=
+          `<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i>`+
+          `<strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo`+
+          (examples?` · Ej.: ${examples}`:'')+
+          `. Requieren revisión para reabastecimiento.`;
+      }else globalAlert.style.display='none';
+    }
+
     const banner = $('inv-summary-banner');
-    if (res.bajoMinimoCount > 0) {
+    if (res.bajoMinimoCount > 0 || res.sobreMaximoCount > 0) {
       banner.style.display='';
-      $('inv-summary-text').textContent = res.bajoMinimoCount + ' pieza(s) bajo el stock mínimo — requieren reabastecimiento.';
+      let txt = `${res.bajoMinimoCount} material(es) en mínimo o por debajo`;
+      if(res.sobreMaximoCount>0) txt += ` · ${res.sobreMaximoCount} sobre el máximo definido`;
+      if(res.sinMinimoCount>0) txt += ` · ${res.sinMinimoCount} sin mínimo válido`;
+      $('inv-summary-text').textContent = txt + '.';
     } else banner.style.display='none';
 
     const tbody = $('admin-inv-tbody');
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8">Catálogo de inventario vacío. Configúralo en la hoja "Inventario" de Google Sheets.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#94A3B8">Catálogo de inventario vacío. Configúralo en la hoja "Inventario" de Google Sheets.</td></tr>';
       return;
     }
     tbody.innerHTML = items.map(it=>`
-      <tr style="${it.bajoMinimo?'background:#FEF2F2':''}">
+      <tr style="${it.bajoMinimo?'background:#FEF2F2':it.sobreMaximo?'background:#FFFBEB':''}">
         <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
         <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
         <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
-        <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
-        <td style="text-align:center;color:#94A3B8">${it.stockMinimo}</td>
-        <td style="text-align:center">${it.bajoMinimo?'<span class="badge b-ing-rej">Bajo mínimo</span>':'<span class="badge b-done">OK</span>'}</td>
+        <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':it.sobreMaximo?'#92400E':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
+        <td style="text-align:center;color:#64748B">${it.stockMinimoValido?it.stockMinimo:'—'}</td>
+        <td style="text-align:center;color:#64748B">${it.stockMaximoValido?it.stockMaximo:'—'}</td>
+        <td style="text-align:center">${
+          it.bajoMinimo?'<span class="badge b-ing-rej">Bajo mínimo</span>':
+          it.sobreMaximo?'<span class="badge b-media">Sobre máximo</span>':
+          !it.stockMinimoValido?'<span class="badge b-pend">Revisar mínimo</span>':
+          '<span class="badge b-done">OK</span>'
+        }</td>
+        <td style="text-align:center"><button class="btn-g" style="padding:5px 9px" onclick='openInventoryQR(${JSON.stringify(it)})' title="Ver / imprimir QR"><i class="fas fa-qrcode"></i></button></td>
       </tr>`).join('');
   } catch(e) {}
 }
 
+function openInventoryQR(item) {
+  if(!item || !item.codigo) return;
+  $('inv-qr-item-code').textContent=item.codigo;
+  $('inv-qr-item-desc').textContent=item.descripcion||'';
+  $('inv-qr-item-location').textContent=item.ubicacionGaveta?('Ubicación: '+item.ubicacionGaveta):'';
+  const box=$('inv-qr-code');
+  box.innerHTML='';
+  new QRCode(box,{
+    text:inventoryQRPayload(item.codigo),
+    width:190,height:190,
+    correctLevel:QRCode.CorrectLevel.H
+  });
+  $('modal-inv-qr').style.display='flex';
+}
+
+function printInventoryQR() {
+  const box=$('inv-qr-code');
+  const canvas=box.querySelector('canvas');
+  const img=box.querySelector('img');
+  const src=canvas?canvas.toDataURL('image/png'):(img?img.src:'');
+  if(!src){toast('No se pudo preparar el QR para impresión.','err');return;}
+
+  const code=$('inv-qr-item-code').textContent;
+  const desc=$('inv-qr-item-desc').textContent;
+  const location=$('inv-qr-item-location').textContent;
+  const w=window.open('','_blank','width=520,height=650');
+  if(!w){toast('El navegador bloqueó la ventana de impresión.','err');return;}
+  w.document.write(`<!DOCTYPE html><html><head><title>QR ${code}</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:0;display:flex;justify-content:center;padding:24px}
+      .label{width:320px;border:2px solid #111827;border-radius:12px;padding:18px;text-align:center}
+      img{width:210px;height:210px}.code{font-size:22px;font-weight:700;margin-top:10px}
+      .desc{font-size:14px;margin-top:6px}.loc{font-size:12px;color:#475569;margin-top:5px}
+      .foot{font-size:10px;color:#64748B;margin-top:8px}
+      @media print{body{padding:0}.label{break-inside:avoid}}
+    </style></head><body><div class="label">
+    <img src="${src}"><div class="code">${code}</div><div class="desc">${desc}</div>
+    <div class="loc">${location}</div><div class="foot">KTMEX-FAC-INV · Facilities</div>
+    </div><script>window.onload=()=>{window.print();};<\/script></body></html>`);
+  w.document.close();
+}
 async function loadSolicitudes() {
   try {
     const res=await api({action:'getRequests',token:SESSION.token});
@@ -2552,6 +3068,7 @@ function init() {
           $('btn-logout').style.display='';
           $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
           if($('admin-rol-label')) $('admin-rol-label').textContent=res.user.nombre+' · '+res.user.rol;
+          configureRoleUI();
         } else {
           sessionStorage.removeItem('ktmex_session');
         }
