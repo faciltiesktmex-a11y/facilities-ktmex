@@ -71,7 +71,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4HVOtxRn_UQZp1pf_HOkOuFVBu5WpEXzhIqZkAVVDVKtz1hzT9EOwHI8Wo-9nYec-/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOJ-qT2wGJhh3pi7WG_6oNVzuElvEMMpHij9fwGkSZMeszPAHtVcXJSO78tV_U8Yi0/exec";
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -1268,15 +1268,56 @@ const prioSlug = p => ({Alta:'alta',Media:'media',Baja:'baja'}[p]||'baja');
 
 // ── API ──────────────────────────────────────────────────────
 async function api(data) {
-  if (SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT') {
-    toast('⚠ Configura SCRIPT_URL en el HTML antes de usar el sistema.','err'); throw new Error('SCRIPT_URL no configurado');
+  if (!SCRIPT_URL || SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT') {
+    toast('⚠ Configura SCRIPT_URL con la URL /exec de la implementación activa.','err');
+    throw new Error('SCRIPT_URL no configurado');
   }
+
   const r = await fetch(SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
+    cache: 'no-store'
   });
-  return r.json();
+
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+
+  let res;
+  try {
+    res = await r.json();
+  } catch (e) {
+    throw new Error('La respuesta del Apps Script no es JSON válido.');
+  }
+
+  // Si el servidor informa que el token ya no sirve, limpiar la sesión local.
+  const err = String(res?.error || '');
+  if (/sesión inválida|sesion invalida|expirada/i.test(err) && data.action !== 'login') {
+    SESSION = null;
+    sessionStorage.removeItem('ktmex_session');
+    if ($('btn-logout')) $('btn-logout').style.display = 'none';
+    if ($('nav-admin')) $('nav-admin').innerHTML =
+      '<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
+  }
+
+  return res;
+}
+
+// Confirma que la URL /exec corresponde al backend actualizado.
+// Evita una cascada de "Acción no reconocida" cuando el HTML apunta
+// accidentalmente a una implementación antigua.
+async function verifyBackendVersion() {
+  try {
+    const res = await api({action:'systemInfo'});
+    if (!res.success || !res.version) {
+      return {
+        ok:false,
+        error:'La URL de Apps Script apunta a una implementación anterior. Actualiza la implementación y confirma que SCRIPT_URL use esa misma URL /exec.'
+      };
+    }
+    return {ok:true, version:res.version};
+  } catch (e) {
+    return {ok:false, error:e.message};
+  }
 }
 
 // ── Toast ────────────────────────────────────────────────────
@@ -1333,12 +1374,31 @@ function goAdmin() {
 async function performLogin() {
   const u=$('log-user').value.trim(), p=$('log-pwd').value;
   if (!u||!p){toast('Completa usuario y contraseña','err');return;}
+
+  // Nunca reutilizar un token anterior durante un inicio de sesión nuevo.
+  SESSION = null;
+  sessionStorage.removeItem('ktmex_session');
+
   const btn=document.querySelector('#view-login .btn-p');
   btn.disabled=true; btn.textContent='Verificando…';
+
   try {
+    // Primero verifica que la URL /exec sea la versión nueva del backend.
+    const backend = await verifyBackendVersion();
+    if (!backend.ok) {
+      $('log-err').style.display='';
+      toast(backend.error,'err');
+      btn.disabled=false;
+      btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+      return;
+    }
+
     const res = await api({action:'login',username:u,password:p});
+
     if (res.success) {
-      SESSION = { token:res.token, user:res.user };
+      SESSION = { token:String(res.token), user:res.user };
+      saveSession(); // guardar ANTES de cargar módulos protegidos
+
       $('log-err').style.display='none';
       $('log-pwd').value='';
       $('btn-logout').style.display='';
@@ -1352,13 +1412,12 @@ async function performLogin() {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           showView('home');
         } else if (SESSION.user.rol === 'compras') {
-          // El rol Compras entra directo a la ventana de compras, sin Panel Admin
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           goComprasRol();
         } else {
           showView('admin');
           $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
-          refreshAdmin();
+          await refreshAdmin();
         }
       } else if (dest === 'compra') {
         if (SESSION.user.rol === 'compras') {
@@ -1367,18 +1426,26 @@ async function performLogin() {
           initCompraForm(); showView('compra');
         }
       } else if (dest === 'actividades') {
-        showView('actividades'); loadMisActividades();
+        showView('actividades'); await loadMisActividades();
       } else if (dest === 'inventario') {
-        showView('inventario'); loadInventarioTec();
+        showView('inventario'); await loadInventarioTec();
       } else {
         showView(dest);
       }
     } else {
+      SESSION=null;
+      saveSession();
       $('log-err').style.display='';
       toast(res.error||'Usuario o contraseña incorrectos','err');
     }
-  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+  } catch(e) {
+    SESSION=null;
+    saveSession();
+    toast('Error de conexión: '+e.message,'err');
+  }
+
+  btn.disabled=false;
+  btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
 }
 
 async function performLogout() {
@@ -2489,10 +2556,9 @@ function init() {
           sessionStorage.removeItem('ktmex_session');
         }
       }).catch(()=>{
-        // Offline fallback — trust saved session
-        SESSION=parsed;
-        $('btn-logout').style.display='';
-        $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+        // No conservar una sesión que no pudo validarse contra el servidor.
+        SESSION=null;
+        sessionStorage.removeItem('ktmex_session');
       });
     } catch { SESSION=null; }
   }
