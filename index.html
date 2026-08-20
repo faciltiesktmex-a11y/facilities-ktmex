@@ -71,7 +71,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAgJRp0Wr0M1tsZrXRU5iwsaBZO89ojsSK2UTTaU5TiLLHc1RHt31B3fkl61jQcMxy/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4HVOtxRn_UQZp1pf_HOkOuFVBu5WpEXzhIqZkAVVDVKtz1hzT9EOwHI8Wo-9nYec-/exec";
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -398,11 +398,24 @@ const LPA_AREAS = {
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:8px"><i class="fas fa-question-circle" style="color:#2563EB;margin-right:5px"></i>¿Es una instalación nueva? *</label>
         <div style="display:flex;gap:10px">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
-            <input type="radio" name="s-nueva" value="Si" style="accent-color:#2563EB"> Sí
+            <input type="radio" name="s-nueva" value="Si" onchange="togglePresupuestoFields()" style="accent-color:#2563EB"> Sí
           </label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
-            <input type="radio" name="s-nueva" value="No" style="accent-color:#2563EB"> No
+            <input type="radio" name="s-nueva" value="No" onchange="togglePresupuestoFields()" style="accent-color:#2563EB"> No
           </label>
+        </div>
+      </div>
+
+      <!-- Datos de presupuesto: visibles solo para instalación nueva -->
+      <div id="s-presupuesto-fields" style="display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:14px;margin-bottom:20px">
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-hashtag" style="color:#2563EB;margin-right:5px"></i>Anota el número de presupuesto asignado *</label>
+          <input type="text" id="s-presupuesto-num" class="inp" placeholder="Ej. CAPEX-2026-0158">
+        </div>
+        <div>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-dollar-sign" style="color:#2563EB;margin-right:5px"></i>Anota el monto asignado para el trabajo *</label>
+          <input type="number" id="s-presupuesto-monto" class="inp" min="0" step="0.01" inputmode="decimal" placeholder="Ej. 125500.00">
+          <p style="font-size:.72rem;color:#64748B;margin-top:4px">Monto en pesos mexicanos (MXN).</p>
         </div>
       </div>
       <button class="btn-p" id="btn-sol-submit" onclick="submitSolicitud()" style="width:100%">
@@ -1013,6 +1026,8 @@ const LPA_AREAS = {
         <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Gerente</p><p id="ms-gerente" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
         <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Tipo de Solicitud</p><p id="ms-tipo" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
         <div class="card-sm" style="padding:11px"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">¿Instalación nueva?</p><p id="ms-nueva" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div id="ms-presupuesto-num-wrap" class="card-sm" style="padding:11px;display:none"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Número de presupuesto</p><p id="ms-presupuesto-num" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
+        <div id="ms-presupuesto-monto-wrap" class="card-sm" style="padding:11px;display:none"><p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 2px">Monto asignado</p><p id="ms-presupuesto-monto" style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0"></p></div>
       </div>
       <div class="card-sm" style="padding:12px">
         <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción</p>
@@ -1278,14 +1293,6 @@ function toast(msg, type='ok') {
 let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
 
 function showView(v) {
-  // El usuario con rol "compras" SOLO puede utilizar su panel de compras.
-  // Esta validación central evita que pueda entrar por botones, tarjetas,
-  // llamadas directas a showView() o por una vista pendiente del login.
-  if (SESSION?.user?.rol === 'compras' && !['compras-rol','login'].includes(v)) {
-    toast('Tu cuenta no tiene acceso a esta ventana.','err');
-    v = 'compras-rol';
-  }
-
   ['home','solicitud','compra','lpa-select','lpa-form','actividades','inventario','compras-rol','login','admin'].forEach(x=>
     $('view-'+x).style.display='none');
   $('view-'+v).style.display='';
@@ -1301,62 +1308,11 @@ function requireLogin(viewName) {
   return false;
 }
 
-function goCompra() {
-  if (!requireLogin('compra')) return;
-
-  // El usuario de Compras entra exclusivamente a su panel de compras.
-  if (SESSION.user.rol === 'compras') {
-    goComprasRol();
-    return;
-  }
-
-  initCompraForm();
-  showView('compra');
-}
-
-function goLpaSelect() {
-  if (SESSION?.user?.rol === 'compras') {
-    toast('Tu cuenta no tiene acceso a Auditoría LPA.','err');
-    return;
-  }
-  if (requireLogin('lpa-select')) showView('lpa-select');
-}
-
-function goActividades() {
-  if (SESSION?.user?.rol === 'compras') {
-    toast('Tu cuenta no tiene acceso a Mis Actividades.','err');
-    return;
-  }
-  if (requireLogin('actividades')) {
-    showView('actividades');
-    loadMisActividades();
-  }
-}
-
-function goComprasRol() {
-  if (!SESSION) {
-    PENDING_VIEW = 'compras-rol';
-    showView('login');
-    return;
-  }
-  if (SESSION.user.rol !== 'compras') {
-    toast('Esta ventana es exclusiva para el usuario de Compras.','err');
-    return;
-  }
-  showView('compras-rol');
-  loadComprasRol();
-}
-
-function goInventario() {
-  if (SESSION?.user?.rol === 'compras') {
-    toast('Tu cuenta no tiene acceso a Inventario.','err');
-    return;
-  }
-  if (requireLogin('inventario')) {
-    showView('inventario');
-    loadInventarioTec();
-  }
-}
+function goCompra()      { if (requireLogin('compra'))      { initCompraForm(); showView('compra'); } }
+function goLpaSelect()   { if (requireLogin('lpa-select'))  showView('lpa-select'); }
+function goActividades() { if (requireLogin('actividades')) { showView('actividades'); loadMisActividades(); } }
+function goComprasRol()  { showView('compras-rol'); loadComprasRol(); }
+function goInventario()  { if (requireLogin('inventario'))  { showView('inventario'); loadInventarioTec(); } }
 
 function goAdmin() {
   PENDING_VIEW = 'admin';
@@ -1391,22 +1347,25 @@ async function performLogin() {
       const dest = PENDING_VIEW || 'admin';
       PENDING_VIEW = null;
 
-      // El usuario de Compras no puede regresar a ninguna otra ventana,
-      // independientemente de qué vista haya solicitado antes de iniciar sesión.
-      if (SESSION.user.rol === 'compras') {
-        toast('Bienvenido, ' + SESSION.user.nombre,'ok');
-        goComprasRol();
-      } else if (dest === 'admin') {
+      if (dest === 'admin') {
         if (SESSION.user.rol === 'tecnico') {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           showView('home');
+        } else if (SESSION.user.rol === 'compras') {
+          // El rol Compras entra directo a la ventana de compras, sin Panel Admin
+          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
+          goComprasRol();
         } else {
           showView('admin');
           $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
           refreshAdmin();
         }
       } else if (dest === 'compra') {
-        initCompraForm(); showView('compra');
+        if (SESSION.user.rol === 'compras') {
+          goComprasRol();
+        } else {
+          initCompraForm(); showView('compra');
+        }
       } else if (dest === 'actividades') {
         showView('actividades'); loadMisActividades();
       } else if (dest === 'inventario') {
@@ -1438,6 +1397,19 @@ function initSolicitudForm() {
   $('s-gerente').innerHTML='<option value="">— Selecciona —</option>'+GERENTES.map(g=>`<option>${g}</option>`).join('');
   $('s-depto').innerHTML='<option value="">— Selecciona —</option>'+DEPARTAMENTOS.map(d=>`<option>${d}</option>`).join('');
   $('s-tipo').innerHTML='<option value="">— Selecciona —</option>'+TIPOS_SOLICITUD.map(t=>`<option>${t}</option>`).join('');
+  togglePresupuestoFields();
+}
+
+function togglePresupuestoFields() {
+  const nueva = document.querySelector('input[name="s-nueva"]:checked')?.value;
+  const wrap = $('s-presupuesto-fields');
+  if (!wrap) return;
+  const mostrar = nueva === 'Si';
+  wrap.style.display = mostrar ? '' : 'none';
+  if (!mostrar) {
+    $('s-presupuesto-num').value = '';
+    $('s-presupuesto-monto').value = '';
+  }
 }
 
 async function submitSolicitud() {
@@ -1449,9 +1421,17 @@ async function submitSolicitud() {
   const tipo   = $('s-tipo').value;
   const desc   = $('s-desc').value.trim();
   const nueva  = document.querySelector('input[name="s-nueva"]:checked')?.value;
+  const presupuestoNumero = $('s-presupuesto-num').value.trim();
+  const presupuestoMonto  = $('s-presupuesto-monto').value.trim();
 
   if (!fecha||!nombre||!email||!gerente||!depto||!tipo||!desc||!nueva) {
     toast('Completa todos los campos obligatorios','err'); return;
+  }
+  if (nueva === 'Si' && (!presupuestoNumero || presupuestoMonto === '')) {
+    toast('Para una instalación nueva, anota el número y el monto del presupuesto asignado','err'); return;
+  }
+  if (nueva === 'Si' && (Number(presupuestoMonto) < 0 || !Number.isFinite(Number(presupuestoMonto)))) {
+    toast('Ingresa un monto de presupuesto válido','err'); return;
   }
   if (!/\S+@\S+\.\S+/.test(email)) { toast('Ingresa un email válido','err'); return; }
 
@@ -1469,7 +1449,9 @@ async function submitSolicitud() {
 
   try {
     const res = await api({action:'submitRequest',fecha,nombre,email,gerente,
-      departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,fotoBase64,fotoName});
+      departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,
+      presupuestoNumero:nueva==='Si'?presupuestoNumero:'',
+      presupuestoMonto:nueva==='Si'?presupuestoMonto:'',fotoBase64,fotoName});
     if (res.success) {
       $('sol-folio').textContent=res.folio;
       $('sol-form').style.display='none';
@@ -1482,10 +1464,11 @@ async function submitSolicitud() {
 
 function resetSolicitud() {
   $('sol-form').style.display=''; $('sol-success').style.display='none';
-  ['s-nombre','s-email','s-desc'].forEach(id=>$(id).value='');
+  ['s-nombre','s-email','s-desc','s-presupuesto-num','s-presupuesto-monto'].forEach(id=>$(id).value='');
   $('s-gerente').value=''; $('s-depto').value=''; $('s-tipo').value='';
   $('s-foto').value='';
   document.querySelectorAll('input[name="s-nueva"]').forEach(r=>r.checked=false);
+  togglePresupuestoFields();
   $('s-fecha').value=new Date().toISOString().slice(0,10);
 }
 
@@ -2158,6 +2141,14 @@ function openSolicitudModal(id) {
   $('ms-gerente').textContent=r.gerente||'—';
   $('ms-tipo').textContent=r.tipoSolicitud||'—';
   $('ms-nueva').textContent=r.esNueva||'—';
+  const mostrarPresupuesto = r.esNueva === 'Si';
+  $('ms-presupuesto-num-wrap').style.display = mostrarPresupuesto ? '' : 'none';
+  $('ms-presupuesto-monto-wrap').style.display = mostrarPresupuesto ? '' : 'none';
+  $('ms-presupuesto-num').textContent = r.presupuestoNumero || '—';
+  const montoPresupuesto = Number(r.presupuestoMonto);
+  $('ms-presupuesto-monto').textContent = r.presupuestoMonto !== '' && r.presupuestoMonto != null && Number.isFinite(montoPresupuesto)
+    ? montoPresupuesto.toLocaleString('es-MX',{style:'currency',currency:'MXN'})
+    : '—';
   $('ms-desc').textContent=r.descripcion||'—';
 
   // Foto
