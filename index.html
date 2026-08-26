@@ -131,7 +131,19 @@ const UNIDADES_COMPRA = [
 ];
 
 const ESTATUS_COMPRA = [
-  "Solicitada","Autorizada","Rechazada","En cotización","Ordenada","Recibida","Cancelada"
+  "Pendiente de Ingeniería",
+  "Rechazada por Ingeniería",
+  "Pendiente de Manager",
+  "Rechazada por Manager",
+  "Autorizada para Compra",
+  "En cotización",
+  "Ordenada",
+  "Recibida",
+  "Cancelada"
+];
+
+const ESTATUS_COMPRA_GESTION = [
+  "Autorizada para Compra","En cotización","Ordenada","Recibida","Cancelada"
 ];
 
 const prioOrder = {
@@ -399,8 +411,8 @@ const LPA_AREAS = {
       </div>
       <!-- Foto -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#2563EB;margin-right:5px"></i>Fotografía (máx. 5 MB)</label>
-        <input type="file" id="s-foto" accept="image/*" class="inp" style="padding:8px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#2563EB;margin-right:5px"></i>Fotografía * (máx. 5 MB)</label>
+        <input type="file" id="s-foto" accept="image/*" capture="environment" class="inp" style="padding:8px" required>
         <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG, HEIC. La foto se guardará en Google Drive.</p>
       </div>
       <!-- Nueva instalación -->
@@ -581,7 +593,7 @@ const LPA_AREAS = {
         <label style="display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:5px">Turno *</label>
         <select id="lpa-turno" class="inp" style="padding:8px 11px;cursor:pointer">
           <option value="">—</option>
-          <option>Primer turno</option><option>Segundo turno</option><option>Tercer turno</option>
+          <option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option>
         </select>
       </div>
       <div>
@@ -854,7 +866,7 @@ const LPA_AREAS = {
       <p id="cr-kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
     </div>
     <div class="card" style="padding:14px 16px">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Solicitadas</p>
+      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Autorizadas</p>
       <p id="cr-kpi-sol" class="mono" style="font-size:1.8rem;font-weight:700;color:#D97706;margin:0">0</p>
     </div>
     <div class="card" style="padding:14px 16px">
@@ -877,9 +889,7 @@ const LPA_AREAS = {
       <input id="cr-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante…" oninput="renderComprasRol()">
       <select id="cr-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
         <option value="">Todos los estatus</option>
-        <option>Solicitada</option>
-        <option>Autorizada</option>
-        <option>Rechazada</option>
+        <option>Autorizada para Compra</option>
         <option>En cotización</option>
         <option>Ordenada</option>
         <option>Recibida</option>
@@ -1216,7 +1226,7 @@ const LPA_AREAS = {
         </div>
 
         <!-- Técnico -->
-        <div style="margin-bottom:14px">
+        <div id="sec-asignar-tecnico" style="margin-bottom:14px">
           <label style="display:block;font-size:.75rem;font-weight:600;color:#1E40AF;margin-bottom:6px"><i class="fas fa-user-hard-hat" style="margin-right:5px"></i>Técnico asignado</label>
           <select id="ms-tecnico" class="inp" style="background:#fff;cursor:pointer">
             <option value="">— Sin asignar —</option>
@@ -1316,8 +1326,15 @@ const LPA_AREAS = {
         <h4 style="font-size:.78rem;font-weight:700;color:#92400E;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em">
           <i class="fas fa-sliders" style="margin-right:6px"></i>Gestión de Compra
         </h4>
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-size:.75rem;font-weight:600;color:#92400E;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Estatus</label>
+        <div id="mc-auth-wrap" style="display:none;margin-bottom:14px">
+          <p id="mc-auth-title" style="font-size:.75rem;font-weight:700;color:#92400E;margin:0 0 8px"></p>
+          <div style="display:flex;gap:7px">
+            <button id="mc-auth-ok" class="btn-ok" style="flex:1;padding:8px"><i class="fas fa-check" style="margin-right:5px"></i>Aprobar</button>
+            <button id="mc-auth-reject" class="btn-red" style="flex:1;padding:8px"><i class="fas fa-times" style="margin-right:5px"></i>Rechazar</button>
+          </div>
+        </div>
+        <div id="mc-status-wrap" style="margin-bottom:14px">
+          <label style="display:block;font-size:.75rem;font-weight:600;color:#92400E;margin-bottom:6px"><i class="fas fa-flag" style="margin-right:5px"></i>Estatus de compra</label>
           <select id="mc-estatus" class="inp" style="background:#fff;cursor:pointer"></select>
         </div>
         <div style="margin-bottom:14px">
@@ -1396,6 +1413,22 @@ const LPA_AREAS = {
     <div id="qr-wrap" style="display:flex;justify-content:center;margin-bottom:10px"></div>
     <p id="qr-url" style="font-size:.62rem;color:#94A3B8;word-break:break-all;margin:0 0 14px"></p>
     <button onclick="dlQR()" class="btn-p" style="width:100%;border-radius:10px;padding:10px"><i class="fas fa-download" style="margin-right:7px"></i>Descargar</button>
+  </div>
+</div>
+
+
+<!-- MODAL: Aviso de solicitudes asignadas -->
+<div id="modal-tech-notice" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:430px;padding:26px;text-align:center">
+    <div style="width:58px;height:58px;border-radius:16px;background:#EDE9FE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <i class="fas fa-bell" style="font-size:22px;color:#7C3AED"></i>
+    </div>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 8px">Tienes solicitud(es) de trabajo asignada(s)</h3>
+    <p id="tech-notice-text" style="font-size:.84rem;color:#64748B;line-height:1.6;margin:0 0 18px"></p>
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" onclick="closeModal('modal-tech-notice')" style="flex:1">Cerrar</button>
+      <button class="btn-p" onclick="closeModal('modal-tech-notice');goActividades()" style="flex:1;background:#7C3AED">Ver actividades</button>
+    </div>
   </div>
 </div>
 
@@ -1496,6 +1529,7 @@ function configureRoleUI() {
     if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Panel Compras';
   } else {
     if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Compras';
+    if ($('nav-compra')) $('nav-compra').style.display = (role==='tecnico' || !SESSION) ? '' : 'none';
     if (role !== 'tecnico' && $('nav-recepcion')) $('nav-recepcion').style.display='none';
     if (!SESSION && $('nav-recepcion')) $('nav-recepcion').style.display='none';
   }
@@ -1547,6 +1581,10 @@ function goSolicitud() {
 function goCompra() {
   if (!requireLogin('compra')) return;
   if (SESSION.user.rol === 'compras') { goComprasRol(); return; }
+  if (SESSION.user.rol !== 'tecnico') {
+    toast('Las solicitudes de compra solo pueden ser creadas por técnicos. Revisa las solicitudes desde el Panel Administrativo.','err');
+    goAdmin(); return;
+  }
   initCompraForm(); showView('compra');
 }
 function goLpaSelect() {
@@ -1594,6 +1632,20 @@ function goAdmin() {
   showView('admin'); refreshAdmin();
 }
 
+
+async function notifyTechnicianAssignments() {
+  if(!SESSION || SESSION.user.rol!=='tecnico') return;
+  try {
+    const res=await api({action:'getMisActividades',token:SESSION.token});
+    if(res.success && Array.isArray(res.solicitudes) && res.solicitudes.length>0) {
+      const n=res.solicitudes.length;
+      $('tech-notice-text').textContent =
+        `Tienes ${n} solicitud${n===1?'':'es'} de trabajo pendiente${n===1?'':'s'} de atender. Revisa Mis Actividades para iniciar el trabajo y registrar la evidencia.`;
+      $('modal-tech-notice').style.display='flex';
+    }
+  } catch(e) {}
+}
+
 // ── Auth ─────────────────────────────────────────────────────
 async function performLogin() {
   const u=$('log-user').value.trim(), p=$('log-pwd').value;
@@ -1636,6 +1688,7 @@ async function performLogin() {
         if (SESSION.user.rol === 'tecnico') {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           showView('home');
+          await notifyTechnicianAssignments();
         } else if (SESSION.user.rol === 'compras') {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           goComprasRol();
@@ -1716,9 +1769,13 @@ async function submitSolicitud() {
   const nueva  = document.querySelector('input[name="s-nueva"]:checked')?.value;
   const presupuestoNumero = $('s-presupuesto-num').value.trim();
   const presupuestoMonto  = $('s-presupuesto-monto').value.trim();
+  const fotoFile = $('s-foto').files[0];
 
   if (!fecha||!nombre||!email||!gerente||!depto||!tipo||!desc||!nueva) {
     toast('Completa todos los campos obligatorios','err'); return;
+  }
+  if (!fotoFile) {
+    toast('La fotografía es obligatoria para enviar la solicitud de trabajo','err'); return;
   }
   if (nueva === 'Si' && (!presupuestoNumero || presupuestoMonto === '')) {
     toast('Para una instalación nueva, anota el número y el monto del presupuesto asignado','err'); return;
@@ -1733,7 +1790,6 @@ async function submitSolicitud() {
 
   // Photo to base64
   let fotoBase64='', fotoName='';
-  const fotoFile=$('s-foto').files[0];
   if (fotoFile) {
     if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud'; return; }
     fotoBase64 = await fileToBase64(fotoFile);
@@ -1787,6 +1843,9 @@ function selectPrioCompra(p) {
 
 async function submitCompra() {
   if (!SESSION) { toast('Tu sesión expiró. Inicia sesión de nuevo.','err'); showView('login'); return; }
+  if (SESSION.user.rol !== 'tecnico') {
+    toast('Solo los técnicos Facilities pueden generar solicitudes de compra.','err'); return;
+  }
   const fecha     = $('c-fecha').value;
   const prioridad = $('c-prioridad').value;
   const desc      = $('c-desc').value.trim();
@@ -2640,13 +2699,15 @@ function renderSolicitudes() {
 
 const compraBadge = s => {
   const map = {
-    'Solicitada':      'b-pend',
-    'Autorizada':      'b-ing',
-    'Rechazada':       'b-ing-rej',
-    'En cotización':   'b-ejec',
-    'Ordenada':        'b-mgr',
-    'Recibida':        'b-done',
-    'Cancelada':       'b-ing-rej',
+    'Pendiente de Ingeniería': 'b-pend',
+    'Rechazada por Ingeniería':'b-ing-rej',
+    'Pendiente de Manager':    'b-mgr',
+    'Rechazada por Manager':   'b-ing-rej',
+    'Autorizada para Compra':  'b-ing',
+    'En cotización':           'b-ejec',
+    'Ordenada':                'b-mgr',
+    'Recibida':                'b-done',
+    'Cancelada':               'b-ing-rej',
   };
   return `<span class="badge ${map[s]||'b-pend'}">${s||'—'}</span>`;
 };
@@ -2771,10 +2832,14 @@ function openSolicitudModal(id) {
 
   // Auth sections visibility
   const rol=SESSION?.user?.rol;
-  $('sec-auth-ing').style.display=(rol==='ingeniero'&&(r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería'))?'':'none';
-  $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Autorizado por Ingeniería')?'':'none';
+  $('sec-auth-ing').style.display=(rol==='ingeniero'&&r.estatus==='Pendiente de Ingeniería')?'':'none';
+  $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Pendiente de Manager')?'':'none';
 
-  // Técnico
+  // El técnico solo puede asignarse después de aprobación del Manager y únicamente por Ingeniería.
+  const puedeAsignar = rol==='ingeniero' &&
+    (r.estatus==='Aprobado por Manager — Pendiente de asignación' || r.estatus==='Asignado a técnico' || r.estatus==='En ejecución');
+  $('sec-asignar-tecnico').style.display = puedeAsignar ? '' : 'none';
+
   $('ms-tecnico').innerHTML='<option value="">— Sin asignar —</option>'+
     TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
 
@@ -2845,6 +2910,51 @@ async function saveComment() {
   } catch(e){toast('Error','err');}
 }
 
+
+function configureCompraWorkflowUI(r) {
+  const rol = SESSION?.user?.rol || '';
+  const authWrap = $('mc-auth-wrap');
+  const statusWrap = $('mc-status-wrap');
+  const saveBtn = $('btn-mc-save');
+
+  authWrap.style.display='none';
+  statusWrap.style.display='none';
+  saveBtn.style.display='none';
+
+  if (rol==='ingeniero' && r.estatus==='Pendiente de Ingeniería') {
+    authWrap.style.display='';
+    $('mc-auth-title').textContent='Primer filtro — Autorización de Ingeniería';
+    $('mc-auth-ok').onclick=()=>compraAuthAction('ing_aprueba');
+    $('mc-auth-reject').onclick=()=>compraAuthAction('ing_rechaza');
+  } else if (rol==='manager' && r.estatus==='Pendiente de Manager') {
+    authWrap.style.display='';
+    $('mc-auth-title').textContent='Segundo filtro — Autorización de Manager';
+    $('mc-auth-ok').onclick=()=>compraAuthAction('mgr_aprueba');
+    $('mc-auth-reject').onclick=()=>compraAuthAction('mgr_rechaza');
+  } else if (rol==='compras') {
+    statusWrap.style.display='';
+    saveBtn.style.display='';
+    const permitidos = ESTATUS_COMPRA_GESTION;
+    $('mc-estatus').innerHTML=permitidos.map(s=>`<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
+  }
+}
+
+async function compraAuthAction(action) {
+  if(!CUR_COMPRA || !SESSION) return;
+  const comentario=$('mc-comment').value.trim();
+  if((action==='ing_rechaza'||action==='mgr_rechaza') && !comentario) {
+    toast('El comentario es obligatorio para rechazar la solicitud de compra.','err'); return;
+  }
+  try {
+    const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMPRA.id,authAction:action,comentario});
+    if(res.success){
+      toast('Solicitud de compra actualizada correctamente','ok');
+      closeModal('modal-compra');
+      if(SESSION.user.rol==='compras') loadComprasRol(); else loadCompras();
+    } else toast(res.error||'No fue posible actualizar la solicitud','err');
+  } catch(e){ toast('Error de conexión: '+e.message,'err'); }
+}
+
 // ── Solicitud de Compra — Modal ────────────────────────────────
 function openCompraModal(id) {
   CR_MODAL_ORIGEN = 'admin';
@@ -2867,8 +2977,8 @@ function openCompraModal(id) {
 
   $('mc-badges').innerHTML=`<span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad}</span>`+compraBadge(r.estatus);
 
-  $('mc-estatus').innerHTML=ESTATUS_COMPRA.map(s=>`<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
   $('mc-comment').value='';
+  configureCompraWorkflowUI(r);
 
   renderCompraHistorial(r);
   $('modal-compra').style.display='flex';
@@ -2937,7 +3047,7 @@ async function loadComprasRol() {
 
 function renderComprasRolKPIs() {
   $('cr-kpi-total').textContent = CR_DATA.length;
-  $('cr-kpi-sol').textContent   = CR_DATA.filter(r=>r.estatus==='Solicitada').length;
+  $('cr-kpi-sol').textContent   = CR_DATA.filter(r=>r.estatus==='Autorizada para Compra').length;
   $('cr-kpi-cot').textContent   = CR_DATA.filter(r=>r.estatus==='En cotización').length;
   $('cr-kpi-ord').textContent   = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
   $('cr-kpi-rec').textContent   = CR_DATA.filter(r=>r.estatus==='Recibida').length;
@@ -3006,9 +3116,8 @@ function openCompraModalDesde(event, id, origen) {
   } else $('mc-foto-wrap').style.display='none';
 
   $('mc-badges').innerHTML = `<span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad}</span>` + compraBadge(r.estatus);
-  $('mc-estatus').innerHTML = ESTATUS_COMPRA.map(s =>
-    `<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
   $('mc-comment').value = '';
+  configureCompraWorkflowUI(r);
 
   renderCompraHistorial(r);
   $('modal-compra').style.display = 'flex';
@@ -3079,7 +3188,7 @@ function init() {
   DEPARTAMENTOS.forEach(d=>{ const o=document.createElement('option'); o.value=o.textContent=d; $('fs-depto').appendChild(o); });
 
   // Close modals on overlay
-  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc'].forEach(id=>{
+  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc','modal-tech-notice'].forEach(id=>{
     $(id).addEventListener('click',e=>{ if(e.target===$(id)) closeModal(id); });
   });
 
