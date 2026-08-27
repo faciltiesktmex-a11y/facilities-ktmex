@@ -73,7 +73,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec";
+const SCRIPT_URL = "AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz";
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -1570,6 +1570,12 @@ let CUR_COMPRA  = null;   // compra open in modal
 
 let LANG = localStorage.getItem('ktmex_lang') || 'es';
 
+const ADMIN_PRIVILEGED_USERS = ['jpatlan'];
+function hasAdminPrivilege(){
+  return !!SESSION && ADMIN_PRIVILEGED_USERS.includes(String(SESSION.user?.username||'').toLowerCase());
+}
+
+
 const TEXT_I18N = {
   'Solicitudes':'Requests',
   'Auditoría LPA':'LPA Audit',
@@ -1749,6 +1755,121 @@ const TEXT_I18N = {
   'OK':'OK'
 };
 
+const TEXT_I18N_EXTRA = {
+  "Registra una nueva solicitud de instalación o mantenimiento para Facilities.": "Register a new Facilities installation or maintenance request.",
+  "Realiza auditorías por capas en las 5 áreas de Facilities & Utilities.": "Perform layered process audits in the 5 Facilities & Utilities areas.",
+  "Iniciar auditoría →": "Start Audit →",
+  "Técnicos: inicia y cierra tus actividades asignadas con evidencia fotográfica.": "Technicians: start and close assigned activities with photographic evidence.",
+  "Ver mis actividades →": "View My Activities →",
+  "Registra la salida de refacciones de las gavetas ligadas a tu actividad.": "Register parts issued from bins for your activity.",
+  "Abrir inventario →": "Open Inventory →",
+  "Autorización de solicitudes, asignación de técnicos y resultados LPA.": "Request approvals, technician assignment, and LPA results.",
+  "Fecha de solicitud *": "Request Date *",
+  "Nombre del solicitante *": "Requester Name *",
+  "Correo electrónico (para recibir folio) *": "Email Address (to receive folio) *",
+  "Nombre del gerente de área *": "Area Manager Name *",
+  "— Selecciona —": "— Select —",
+  "Departamento solicitante *": "Requesting Department *",
+  "Tipo de solicitud *": "Request Type *",
+  "Descripción detallada *": "Detailed Description *",
+  "Formatos: JPG, PNG, HEIC. La foto se guardará en Google Drive.": "Formats: JPG, PNG, HEIC. The photo will be saved to Google Drive.",
+  "¿Es una instalación nueva? *": "Is this a new installation? *",
+  "Anota el número de presupuesto asignado *": "Enter the assigned budget number *",
+  "Anota el monto asignado para el trabajo *": "Enter the budget amount assigned to the work *",
+  "¡Solicitud Enviada!": "Request Submitted!",
+  "Número de folio:": "Folio Number:",
+  "Facilities revisará tu solicitud a la brevedad. Recibirás confirmación por email.": "Facilities will review your request shortly. You will receive confirmation by email.",
+  "Prioridad *": "Priority *",
+  "Descripción del material requerido *": "Required Material Description *",
+  "Cantidad *": "Quantity *",
+  "Fecha requerida de recepción *": "Required Receipt Date *",
+  "Propósito del material o servicio *": "Purpose of Material or Service *",
+  "Fotografías de referencia *": "Reference Photos *",
+  "Formatos: JPG, PNG. Máx. 5 MB. Se guardará en Google Drive.": "Formats: JPG, PNG. Max. 5 MB. It will be saved to Google Drive.",
+  "Enviar Solicitud de Compra": "Submit Purchase Request",
+  "¡Solicitud de Compra Enviada!": "Purchase Request Submitted!",
+  "Facilities revisará tu solicitud de compra a la brevedad.": "Facilities will review your purchase request shortly.",
+  "La auditoría se realiza 100% en piso (Gemba). EPP completo requerido antes de iniciar.": "The audit is performed 100% on the floor (Gemba). Full PPE is required before starting.",
+  "Áreas": "Areas",
+  "Fecha *": "Date *",
+  "Turno *": "Shift *",
+  "Acompañante": "Accompanying Person",
+  "Punto a verificar / Estándar esperado": "Verification Point / Expected Standard",
+  "Hallazgo / Observaciones": "Finding / Observations",
+  "Resultado": "Result",
+  "Todo punto NP debe registrarse con acción correctiva. Hallazgos críticos: contención máxima 24h.": "Every NP item must have a corrective action. Critical findings: maximum containment time 24h.",
+  "Actividad Espontánea": "Unplanned Activity",
+  "Inventario de Gavetas": "Bin Inventory",
+  "Registra la salida de refacciones ligada a tu actividad": "Register parts issued for your activity",
+  "Refacción *": "Part *",
+  "Solicitud de trabajo (folio) *": "Work Request (Folio) *",
+  "Cantidad a retirar *": "Quantity to Issue *",
+  "Catálogo de gavetas": "Bin Catalog",
+  "Recepción de Material por QR": "QR Material Receiving",
+  "Técnicos Facilities · Entrada y alta de materiales en inventario": "Facilities Technicians · Receive and Create Inventory Materials",
+  "Escanea el QR del material. Si el código ya existe, la cantidad recibida se suma al stock. Si es un código nuevo, completa los datos para darlo de alta.": "Scan the material QR code. If the code already exists, the received quantity is added to stock. If it is new, complete the information to create it.",
+  "Detener cámara": "Stop Camera",
+  "Código del material / QR *": "Material Code / QR *",
+  "Descripción del material *": "Material Description *",
+  "Ubicación / Gaveta *": "Location / Bin *",
+  "Stock mínimo *": "Minimum Stock *",
+  "Stock máximo (opcional)": "Maximum Stock (optional)",
+  "Cantidad recibida *": "Received Quantity *",
+  "Registrar entrada al inventario": "Register Inventory Receipt",
+  "Última recepción": "Latest Receipt",
+  "Todavía no se ha registrado ninguna entrada en esta sesión.": "No inventory receipt has been recorded in this session yet.",
+  "Los cálculos pueden guardarse en Google Sheets para trazabilidad. En SEPAM, los registros guardados alimentan el Histórico Energético.": "Calculations can be saved to Google Sheets for traceability. Saved SEPAM records feed the Energy History.",
+  "(recomendado para el histórico)": "(recommended for history)",
+  "Panel de Compras": "Purchasing Panel",
+  "Acceso Administrativo": "Administrative Access",
+  "Usuario o contraseña incorrectos": "Incorrect username or password",
+  "Rechazado por Ingeniería": "Rejected by Engineering",
+  "Rechazado por Manager — Devuelto a Ingeniería": "Rejected by Manager — Returned to Engineering",
+  "Asignado a técnico": "Assigned to Technician",
+  "Trabajo completado": "Work Completed",
+  "Todas las áreas": "All Areas",
+  "Máquinas": "Machines",
+  "Etiqueta QR de Inventario": "Inventory QR Label",
+  "Formato estándar KTMEX Facilities": "KTMEX Facilities Standard Format",
+  "Comentario Facilities": "Facilities Comment",
+  "Editar Acción Correctiva": "Edit Corrective Action",
+  "Acción correctiva *": "Corrective Action *",
+  "Fecha compromiso": "Due Date",
+  "Cantidad / Unidad": "Quantity / Unit",
+  "Propósito": "Purpose",
+  "Ver fotografía de referencia": "View Reference Photo",
+  "Gestión de Compra": "Purchase Management",
+  "Estatus de compra": "Purchase Status",
+  "Iniciar actividad": "Start Activity",
+  "Evidencia fotográfica *": "Photographic Evidence *",
+  "Comentario de cierre (opcional)": "Close-out Comment (optional)",
+  "Máx. 5 MB. La foto y la hora quedan registradas como evidencia.": "Max. 5 MB. The photo and time are recorded as evidence.",
+  "Para trabajo que surge en el momento, sin una solicitud previa. Se inicia de inmediato y queda visible para Ingeniería.": "For work that arises unexpectedly without a prior request. It starts immediately and becomes visible to Engineering.",
+  "¿Qué vas a hacer? *": "What are you going to do? *",
+  "Código QR": "QR Code",
+  "Escanea para acceder al sistema de solicitudes": "Scan to access the request system",
+  "Descargar": "Download",
+  "Tienes solicitud(es) de trabajo asignada(s)": "You Have Assigned Work Request(s)",
+  "Ver actividades": "View Activities",
+  "Segundo filtro — Manager": "Second Filter — Manager",
+  "Monto asignado": "Assigned Amount",
+  "Todos los materiales": "All Materials",
+  "Sobre máximo": "Above Maximum",
+  "Revisar mínimo": "Review Minimum",
+  "Catálogo de inventario vacío. Configúralo en la hoja \"Inventario\" de Google Sheets.": "Inventory catalog is empty. Configure it in the \"Inventario\" Google Sheet.",
+  "No se encontraron materiales.": "No materials found.",
+  "Sin datos": "No Data",
+  "Ver / imprimir QR": "View / Print QR",
+  "Guardar Auditoría": "Save Audit",
+  "Guardar Cambios": "Save Changes",
+  "Guardar comentario": "Save Comment",
+  "Actualizar": "Refresh",
+  "Nueva Solicitud": "New Request",
+  "Nueva Solicitud de Compra": "New Purchase Request",
+  "Ver inventario": "View Inventory"
+};
+Object.assign(TEXT_I18N, TEXT_I18N_EXTRA);
+
 const STATUS_I18N = {
   'Pendiente de Ingeniería':'Pending Engineering Approval',
   'Rechazado por Ingeniería':'Rejected by Engineering',
@@ -1774,7 +1895,9 @@ const STATUS_I18N = {
 
 function uiText(es) {
   if(LANG==='es') return es;
-  return TEXT_I18N[es] || STATUS_I18N[es] || es;
+  const raw=String(es??'');
+  const trimmed=raw.trim();
+  return TEXT_I18N[raw] || TEXT_I18N[trimmed] || STATUS_I18N[raw] || STATUS_I18N[trimmed] || raw;
 }
 function statusLabel(s){ return LANG==='en' ? (STATUS_I18N[s]||s) : s; }
 
@@ -1839,7 +1962,12 @@ function applyLanguage(root=document) {
   document.querySelectorAll('[title]').forEach(el=>{
     if(el.dataset.esTitle===undefined) el.dataset.esTitle=el.getAttribute('title')||'';
     const es=el.dataset.esTitle;
-    el.setAttribute('title',LANG==='en'?(TEXT_I18N[es]||es):es);
+    el.setAttribute('title',LANG==='en'?uiText(es):es);
+  });
+  document.querySelectorAll('option').forEach(el=>{
+    if(el.dataset.esText===undefined) el.dataset.esText=el.textContent;
+    const es=el.dataset.esText;
+    el.textContent=LANG==='en'?(STATUS_I18N[el.value]||uiText(es)):es;
   });
   if($('lang-es')&&$('lang-en')){
     $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
@@ -1847,6 +1975,22 @@ function applyLanguage(root=document) {
     $('lang-en').style.background=LANG==='en'?'#2563EB':'transparent';
     $('lang-en').style.color=LANG==='en'?'#fff':'#94A3B8';
   }
+}
+
+
+let I18N_OBSERVER=null;
+function startI18nObserver(){
+  if(I18N_OBSERVER) return;
+  I18N_OBSERVER=new MutationObserver(muts=>{
+    if(LANG!=='en') return;
+    for(const m of muts){
+      m.addedNodes.forEach(n=>{
+        if(n.nodeType===1) applyLanguage(n);
+        else if(n.nodeType===3 && n.parentElement) applyLanguage(n.parentElement);
+      });
+    }
+  });
+  I18N_OBSERVER.observe(document.body,{childList:true,subtree:true});
 }
 
 function setLanguage(lang){
@@ -1959,8 +2103,9 @@ function configureRoleUI() {
     if (role !== 'tecnico' && $('nav-recepcion')) $('nav-recepcion').style.display='none';
     if (!SESSION && $('nav-recepcion')) $('nav-recepcion').style.display='none';
     if ($('nav-electricas')) $('nav-electricas').style.display = (role==='tecnico' || role==='ingeniero') ? '' : 'none';
+    if (role==='tecnico' && $('nav-admin')) $('nav-admin').style.display = hasAdminPrivilege() ? '' : 'none';
   }
-  setTimeout(()=>applyLanguage(),0);
+  setTimeout(()=>{applyLanguage();startI18nObserver();},0);
 }
 
 function roleCanView(v) {
@@ -1974,7 +2119,8 @@ function roleCanView(v) {
   if (v === 'electricas' && !['tecnico','ingeniero'].includes(role)) return false;
 
   if (role === 'tecnico') {
-    return !['admin','compras-rol'].includes(v);
+    if (v === 'admin') return hasAdminPrivilege();
+    return v !== 'compras-rol';
   }
 
   return true;
@@ -2050,7 +2196,7 @@ function goRecepcionQR() {
 function goAdmin() {
   PENDING_VIEW = 'admin';
   if (!SESSION) { showView('login'); return; }
-  if (SESSION.user.rol === 'tecnico') {
+  if (SESSION.user.rol === 'tecnico' && !hasAdminPrivilege()) {
     toast('Tu cuenta de técnico no tiene acceso al Panel Administrativo.','err');
     showView('home');
     return;
@@ -2097,10 +2243,12 @@ function decodeToolHtml(b64) {
 
 function localizeEmbeddedToolHtml(src,tool){
   if(LANG!=='en') return src;
-  if(tool==='memoria_electrica') return src; // La memoria V18.3 ya contiene etiquetas ES/EN.
-  const repl={
+
+  const dictionary={
     'Calculadora de consumo eléctrico mensual':'Monthly Electrical Consumption Calculator',
     'Calculadora de energía reactiva':'Reactive Energy Calculator',
+    'SEPAM 40 · LECTURA POR PANTALLA LCD':'SEPAM 40 · LCD SCREEN READING',
+    'SEPAM 40 · SOLO ENERGÍA REACTIVA (kVARh)':'SEPAM 40 · REACTIVE ENERGY ONLY (kVARh)',
     'Lecturas de energía acumulada':'Accumulated Energy Readings',
     'Lecturas de energía reactiva':'Reactive Energy Readings',
     'Fecha lectura anterior':'Previous Reading Date',
@@ -2109,6 +2257,7 @@ function localizeEmbeddedToolHtml(src,tool){
     'Lectura actual (kWh)':'Current Reading (kWh)',
     'Lectura reactiva anterior (kVARh)':'Previous Reactive Reading (kVARh)',
     'Lectura reactiva actual (kVARh)':'Current Reactive Reading (kVARh)',
+    'Incluir energía reactiva (kVARh)':'Include Reactive Energy (kVARh)',
     'Calcular consumo del periodo':'Calculate Period Consumption',
     'Calcular consumo reactivo del periodo':'Calculate Reactive Period Consumption',
     'Consumo activo':'Active Consumption',
@@ -2125,18 +2274,75 @@ function localizeEmbeddedToolHtml(src,tool){
     'Factor de potencia':'Power Factor',
     'Factor de potencia (cos φ)':'Power Factor (cos φ)',
     'Horas de operación en el periodo':'Operating Hours in Period',
+    'Calcular P, S y energía estimada':'Calculate P, S and Estimated Energy',
+    'Calcular Q, S y energía reactiva estimada':'Calculate Q, S and Estimated Reactive Energy',
     'Potencia activa (P)':'Active Power (P)',
     'Potencia reactiva (Q)':'Reactive Power (Q)',
     'Potencia aparente (S)':'Apparent Power (S)',
     'Energía estimada (P × horas)':'Estimated Energy (P × hours)',
     'Energía reactiva estimada (Q × horas)':'Estimated Reactive Energy (Q × hours)',
     'opcional':'optional',
+    'usa el resultado de 01':'uses result from 01',
     'Faltan datos':'Missing Data',
     'Revisa las fechas':'Check Dates',
-    'Agrega fechas':'Add Dates'
+    'Agrega fechas':'Add Dates',
+    'La lectura actual es menor que la anterior. Verifica si el contador tuvo un reinicio (rollover) o si intercambiaste los valores.':'The current reading is lower than the previous reading. Check whether the counter rolled over or the values were reversed.'
   };
-  Object.entries(repl).forEach(([a,b])=>{src=src.split(a).join(b);});
-  return src;
+
+  // SEPAM files: replace all known visible strings before loading.
+  if(tool!=='memoria_electrica'){
+    Object.entries(dictionary).forEach(([a,b])=>{src=src.split(a).join(b);});
+    src=src.replace(/Calcula el consumo del periodo restando la lectura acumulada del SEPAM \(método de odómetro\), estima el costo y valida los datos con la potencia instantánea mostrada en pantalla\./g,
+      'Calculates period consumption by subtracting accumulated SEPAM readings, estimates cost, and validates data using instantaneous power shown on the display.');
+    src=src.replace(/Como en tu pantalla solo está disponible el dato de energía reactiva, esta versión trabaja únicamente con kVARh: consumo del periodo por diferencia de lecturas, y una verificación opcional con potencia instantánea\./g,
+      'This version works only with kVARh: period consumption from the difference between readings, plus optional verification using instantaneous power.');
+    src=src.replace(/Menú del SEPAM:/g,'SEPAM Menu:');
+    src=src.replace(/Como el SEPAM 40 ya muestra valores primarios, no necesitas aplicar √3 ni factores de TC\/TP aquí\./g,
+      'Because SEPAM 40 already displays primary values, no √3 or CT/PT factors are required here.');
+    src=src.replace(/Sirve para confirmar que las lecturas de energía son coherentes con U, I y el factor de potencia mostrados en pantalla\./g,
+      'Used to confirm that energy readings are consistent with U, I, and the power factor shown on the display.');
+    src=src.replace(/Confirma que la lectura de energía reactiva es coherente con U, I y el factor de potencia mostrados en pantalla\./g,
+      'Confirms that the reactive energy reading is consistent with U, I, and the power factor shown on the display.');
+    return src;
+  }
+
+  // Calculation Report V18.3 already has English companion spans.
+  // In EN mode, remove direct Spanish text nodes from bilingual labels/headings
+  // and keep their .en-text content as the visible label.
+  const inject=`<script>
+  window.addEventListener('DOMContentLoaded',()=>{
+    document.documentElement.lang='en';
+    document.querySelectorAll('.en-text').forEach(sp=>{
+      const p=sp.parentElement;
+      if(!p) return;
+      [...p.childNodes].forEach(n=>{
+        if(n!==sp && n.nodeType===Node.TEXT_NODE && n.nodeValue.trim()) n.nodeValue='';
+      });
+      sp.style.display=(p.tagName==='LABEL'||p.tagName==='DIV')?'block':'inline';
+      sp.style.color='inherit';
+      sp.style.fontSize='inherit';
+    });
+    const map={
+      'Imprimir Memoria':'Print Report',
+      'Automático':'Auto','Escritorio':'Desktop','Móvil':'Mobile',
+      'Carta':'Letter','Doble Carta':'Tabloid',
+      'CUMPLE / COMPLIES':'COMPLIES',
+      'EXCEDE / EXCEEDS 5%':'EXCEEDS 5%',
+      'ALERTA / WARNING':'WARNING',
+      'CRÍTICO / CRITICAL':'CRITICAL',
+      'REEMPLAZAR / REPLACE':'REPLACE',
+      'SUBDIMENSIONADO / UNDERSIZED':'UNDERSIZED',
+      'NO APLICA ALUMINIO / N/A AL':'N/A ALUMINUM'
+    };
+    const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    let n; while(n=w.nextNode()){
+      let s=n.nodeValue;
+      Object.entries(map).forEach(([a,b])=>s=s.split(a).join(b));
+      n.nodeValue=s;
+    }
+  });
+  <\/script>`;
+  return src.replace('</body>',inject+'</body>');
 }
 
 function openElectricTool(tool, preserveEquipment=false) {
@@ -2334,7 +2540,7 @@ async function performLogin() {
   sessionStorage.removeItem('ktmex_session');
 
   const btn=document.querySelector('#view-login .btn-p');
-  btn.disabled=true; btn.textContent='Verificando…';
+  btn.disabled=true; btn.textContent=LANG==='en'?'Verifying…':'Verificando…';
 
   try {
     // Primero verifica que la URL /exec sea la versión nueva del backend.
@@ -2363,9 +2569,15 @@ async function performLogin() {
       PENDING_VIEW = null;
 
       if (dest === 'admin') {
-        if (SESSION.user.rol === 'tecnico') {
+        if (SESSION.user.rol === 'tecnico' && !hasAdminPrivilege()) {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
           showView('home');
+          await notifyTechnicianAssignments();
+        } else if (SESSION.user.rol === 'tecnico' && hasAdminPrivilege()) {
+          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
+          showView('admin');
+          $('admin-rol-label').textContent = res.user.nombre + ' · Técnico Facilities · Admin';
+          await refreshAdmin();
           await notifyTechnicianAssignments();
         } else if (SESSION.user.rol === 'compras') {
           toast('Bienvenido, ' + SESSION.user.nombre,'ok');
@@ -3211,9 +3423,11 @@ async function loadAdminInventario() {
         const examples=(res.bajoMinimoItems||[]).slice(0,5).map(x=>x.codigo).join(', ');
         $('admin-stock-alert-text').innerHTML=
           `<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i>`+
-          `<strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo`+
-          (examples?` · Ej.: ${examples}`:'')+
-          `. Requieren revisión para reabastecimiento.`;
+          (LANG==='en'
+            ? `<strong>${res.bajoMinimoCount} material(s)</strong> are at or below minimum stock`+
+              (examples?` · E.g.: ${examples}`:'')+`. Replenishment review is required.`
+            : `<strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo`+
+              (examples?` · Ej.: ${examples}`:'')+`. Requieren revisión para reabastecimiento.`);
       }else globalAlert.style.display='none';
     }
 
@@ -3240,9 +3454,9 @@ async function loadAdminInventario() {
         <td style="text-align:center;color:#64748B">${it.stockMinimoValido?it.stockMinimo:'—'}</td>
         <td style="text-align:center;color:#64748B">${it.stockMaximoValido?it.stockMaximo:'—'}</td>
         <td style="text-align:center">${
-          it.bajoMinimo?'<span class="badge b-ing-rej">Bajo mínimo</span>':
-          it.sobreMaximo?'<span class="badge b-media">Sobre máximo</span>':
-          !it.stockMinimoValido?'<span class="badge b-pend">Revisar mínimo</span>':
+          it.bajoMinimo?'<span class="badge b-ing-rej">'+uiText('Bajo mínimo')+'</span>':
+          it.sobreMaximo?'<span class="badge b-media">'+uiText('Sobre máximo')+'</span>':
+          !it.stockMinimoValido?'<span class="badge b-pend">'+uiText('Revisar mínimo')+'</span>':
           '<span class="badge b-done">OK</span>'
         }</td>
         <td style="text-align:center"><button class="btn-g" style="padding:5px 9px" onclick='openInventoryQR(${JSON.stringify(it)})' title="Ver / imprimir QR"><i class="fas fa-qrcode"></i></button></td>
@@ -3528,7 +3742,7 @@ function openSolicitudModal(id) {
   $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Pendiente de Manager')?'':'none';
 
   // El técnico solo puede asignarse después de aprobación del Manager y únicamente por Ingeniería.
-  const puedeAsignar = rol==='ingeniero' &&
+  const puedeAsignar = (rol==='ingeniero' || hasAdminPrivilege()) &&
     (r.estatus==='Aprobado por Manager — Pendiente de asignación' || r.estatus==='Asignado a técnico' || r.estatus==='En ejecución');
   $('sec-asignar-tecnico').style.display = puedeAsignar ? '' : 'none';
 
@@ -3537,7 +3751,7 @@ function openSolicitudModal(id) {
 
   // Estatus manual
   $('ms-estatus').innerHTML='<option value="">— '+uiText('Sin cambio')+' —</option>'+
-    ESTATUS_MANUAL.map(s=>`<option value="${s}">${s}</option>`).join('');
+    ESTATUS_MANUAL.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
 
   $('ms-ing-comentario').value='';
   $('ms-mgr-comentario').value='';
@@ -3548,6 +3762,32 @@ function openSolicitudModal(id) {
   $('modal-sol').style.display='flex';
 }
 
+
+function translateHistoryAction(txt){
+  if(LANG==='es') return txt||'';
+  let s=String(txt||'');
+  const pairs=[
+    ['Aprobado por Ingeniería; enviado a Manager','Approved by Engineering; sent to Manager'],
+    ['Rechazado por Ingeniería','Rejected by Engineering'],
+    ['Aprobado por Manager; devuelto a Ingeniería para asignación','Approved by Manager; returned to Engineering for assignment'],
+    ['Rechazado por Manager; devuelto a Ingeniería','Rejected by Manager; returned to Engineering'],
+    ['Técnico asignado:','Technician assigned:'],
+    ['Técnico removido.','Technician removed.'],
+    ['Estatus actualizado a:','Status updated to:'],
+    ['Comentario:','Comment:'],
+    ['Solicitud creada','Request created'],
+    ['Solicitud de compra creada','Purchase request created'],
+    ['Sin comentario adicional','No additional comment'],
+    ['Sin comentario','No comment'],
+    ['Pendiente de Manager','Pending Manager Approval'],
+    ['Pendiente de Ingeniería','Pending Engineering Approval'],
+    ['En ejecución','In Progress'],
+    ['Trabajo completado','Work Completed']
+  ];
+  pairs.forEach(([a,b])=>s=s.split(a).join(b));
+  return s;
+}
+
 function renderHistorial(r) {
   let hist=[];
   try{ hist=JSON.parse(r.historial||'[]'); }catch{}
@@ -3555,7 +3795,7 @@ function renderHistorial(r) {
   $('ms-historial').innerHTML=hist.length?[...hist].reverse().map(h=>`
     <div class="st-item st-info">
       <div>
-        <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
+        <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${translateHistoryAction(h.accion)}</p>
         <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
       </div>
     </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">'+uiText('Sin historial')+'</p>';
@@ -3587,7 +3827,7 @@ async function saveSolicitudChanges() {
   const tecnico=$('ms-tecnico').value, estatus=$('ms-estatus').value;
   if(!tecnico&&!estatus){toast('Selecciona técnico o estatus para guardar','err');return;}
   const btn=$('btn-ms-save');
-  btn.disabled=true; btn.textContent='Guardando…';
+  btn.disabled=true; btn.textContent=LANG==='en'?'Saving…':'Guardando…';
   try {
     const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,
       tecnico:tecnico||undefined, estatus:estatus||undefined});
