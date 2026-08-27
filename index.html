@@ -292,6 +292,10 @@ const LPA_AREAS = {
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
       </button>
+      <div id="lang-switch" style="display:flex;background:#1E293B;border:1px solid #334155;border-radius:8px;padding:2px;margin-left:4px">
+        <button id="lang-es" onclick="setLanguage('es')" title="Español" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:#2563EB;color:white">ES</button>
+        <button id="lang-en" onclick="setLanguage('en')" title="English" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:transparent;color:#94A3B8">EN</button>
+      </div>
       <button id="btn-logout" onclick="logout()" style="display:none;padding:6px 12px;background:#EF4444;color:#fff;border:none;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer">
         <i class="fas fa-sign-out-alt" style="margin-right:5px"></i>Salir
       </button>
@@ -1084,27 +1088,31 @@ const LPA_AREAS = {
       </div>
     </div>
 
-    <!-- KPIs -->
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px" id="kpi-row">
+    <!-- KPIs / Seguimiento de flujo -->
+    <div style="display:grid;grid-template-columns:repeat(6,minmax(115px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
       <div class="card" style="padding:14px 16px">
         <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total</p>
         <p id="kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Pendientes</p>
-        <p id="kpi-pend" class="mono" style="font-size:1.8rem;font-weight:700;color:#D97706;margin:0">0</p>
-      </div>
-      <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Esperan Ing.</p>
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Pendientes de Ingeniería</p>
         <p id="kpi-ing" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
       </div>
-      <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Esperan Mgr.</p>
+      <div class="card" style="padding:14px 16px;border:1.5px solid #DDD6FE">
+        <p style="font-size:.68rem;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Con Manager</p>
         <p id="kpi-mgr" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
         <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Aprobadas</p>
         <p id="kpi-apro" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Rechazadas</p>
+        <p id="kpi-rech" class="mono" style="font-size:1.8rem;font-weight:700;color:#DC2626;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En ejecución</p>
+        <p id="kpi-ejec" class="mono" style="font-size:1.8rem;font-weight:700;color:#0891B2;margin:0">0</p>
       </div>
     </div>
 
@@ -1125,14 +1133,15 @@ const LPA_AREAS = {
           <input id="fs-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, nombre, área…" oninput="renderSolicitudes()">
           <select id="fs-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
             <option value="">Todos los estatus</option>
-            <option>Pendiente</option>
-            <option>Autorizado por Ingeniería</option>
-            <option>Rechazado por Ingeniería</option>
-            <option>Aprobado — En espera de ejecución</option>
-            <option>Rechazado por Gerencia</option>
-            <option>En ejecución</option>
-            <option>Trabajo completado</option>
-            <option>Requiere revisión (auto-cierre)</option>
+            <option value="Pendiente de Ingeniería">Pendiente de Ingeniería</option>
+            <option value="Rechazado por Ingeniería">Rechazado por Ingeniería</option>
+            <option value="Pendiente de Manager">Pendiente de Manager</option>
+            <option value="Aprobado por Manager — Pendiente de asignación">Aprobado por Manager — Pendiente de asignación</option>
+            <option value="Rechazado por Manager — Devuelto a Ingeniería">Rechazado por Manager — Devuelto a Ingeniería</option>
+            <option value="Asignado a técnico">Asignado a técnico</option>
+            <option value="En ejecución">En ejecución</option>
+            <option value="Trabajo completado">Trabajo completado</option>
+            <option value="Requiere revisión (auto-cierre)">Requiere revisión (auto-cierre)</option>
           </select>
           <select id="fs-depto" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
             <option value="">Todos los departamentos</option>
@@ -1559,6 +1568,300 @@ let ACC_DATA    = [];     // cached plan acciones
 let CUR_SOL     = null;   // request open in modal
 let CUR_COMPRA  = null;   // compra open in modal
 
+let LANG = localStorage.getItem('ktmex_lang') || 'es';
+
+const TEXT_I18N = {
+  'Solicitudes':'Requests',
+  'Auditoría LPA':'LPA Audit',
+  'Compras':'Purchases',
+  'Panel Compras':'Purchasing Panel',
+  'Mis Actividades':'My Activities',
+  'Inventario':'Inventory',
+  'Recepción QR':'QR Receiving',
+  'Herramientas Eléctricas':'Electrical Tools',
+  'Admin':'Admin',
+  'Salir':'Log out',
+  'Sistema Facilities KTMEX':'KTMEX Facilities System',
+  'Solicitudes de trabajo · Solicitudes de compra · Auditorías LPA · Panel de administración':'Work requests · Purchase requests · LPA audits · Administration panel',
+  'Nueva Solicitud':'New Request',
+  'Solicitud de Trabajo':'Work Request',
+  'Solicitud de Compra':'Purchase Request',
+  'Auditoría LPA — Facilities':'LPA Audit — Facilities',
+  'Panel Administrativo':'Administration Panel',
+  'Generar QR':'Generate QR',
+  'Actualizar':'Refresh',
+  'Ver inventario':'View Inventory',
+  'Total':'Total',
+  'Pendientes de Ingeniería':'Pending Engineering',
+  'Con Manager':'With Manager',
+  'Aprobadas':'Approved',
+  'Rechazadas':'Rejected',
+  'En ejecución':'In Progress',
+  'Solicitudes':'Requests',
+  'Resultados LPA':'LPA Results',
+  'Plan de Acciones':'Action Plan',
+  'Todos los estatus':'All Statuses',
+  'Todos los departamentos':'All Departments',
+  'Todas las prioridades':'All Priorities',
+  'Todas las áreas':'All Areas',
+  'Folio':'Folio',
+  'Fecha':'Date',
+  'Solicitante':'Requester',
+  'Departamento':'Department',
+  'Tipo':'Type',
+  'Estatus':'Status',
+  'Técnico':'Technician',
+  'Acción':'Action',
+  'Prioridad':'Priority',
+  'Cantidad':'Quantity',
+  'F. Requerida':'Required Date',
+  'Área':'Area',
+  'Auditor':'Auditor',
+  'Turno':'Shift',
+  'Capa':'Layer',
+  'Punto':'Item',
+  'Hallazgo':'Finding',
+  'Acción correctiva':'Corrective Action',
+  'Responsable':'Responsible',
+  'F. Compromiso':'Due Date',
+  'F. Cierre':'Close Date',
+  'Edit':'Edit',
+  'Código':'Code',
+  'Descripción':'Description',
+  'Gaveta':'Bin',
+  'Stock actual':'Current Stock',
+  'Mínimo':'Minimum',
+  'Máximo':'Maximum',
+  'Etiqueta QR de Inventario':'Inventory QR Label',
+  'Formato estándar KTMEX Facilities':'KTMEX Facilities Standard Format',
+  'Imprimir etiqueta':'Print Label',
+  'Cerrar':'Close',
+  'Email':'Email',
+  'Gerente':'Manager',
+  'Tipo de Solicitud':'Request Type',
+  '¿Instalación nueva?':'New installation?',
+  'Número de presupuesto':'Budget Number',
+  'Monto asignado':'Assigned Amount',
+  'Ver fotografía adjunta':'View Attached Photo',
+  'Gestión Facilities':'Facilities Management',
+  'Primer filtro — Ingeniería':'First Filter — Engineering',
+  'Segundo filtro — Manager':'Second Filter — Manager',
+  'Autorizar':'Approve',
+  'Aprobar':'Approve',
+  'Rechazar':'Reject',
+  'Técnico asignado':'Assigned Technician',
+  'Cambiar estatus':'Change Status',
+  'Guardar Cambios':'Save Changes',
+  'Agregar comentario':'Add Comment',
+  'Guardar comentario':'Save Comment',
+  'Historial':'History',
+  'Sin historial':'No History',
+  'Sin asignar':'Unassigned',
+  'Sin cambio':'No Change',
+  'Sin resultados':'No Results',
+  'Fotografía':'Photo',
+  'Fecha de solicitud':'Request Date',
+  'Nombre del solicitante':'Requester Name',
+  'Correo electrónico':'Email Address',
+  'Selecciona':'Select',
+  'Descripción del trabajo':'Work Description',
+  '¿Es una instalación nueva?':'Is this a new installation?',
+  'Sí':'Yes',
+  'No':'No',
+  'Fotografía * (máx. 5 MB)':'Photo * (max. 5 MB)',
+  'Enviar Solicitud':'Submit Request',
+  'Solicitud enviada correctamente':'Request submitted successfully',
+  'Nueva Solicitud de Compra':'New Purchase Request',
+  'Descripción del material o servicio':'Material or Service Description',
+  'Fecha requerida':'Required Date',
+  'Propósito / Justificación':'Purpose / Justification',
+  'Fotografía de referencia *':'Reference Photo *',
+  'Enviar solicitud de compra':'Submit Purchase Request',
+  'Alta':'High',
+  'Media':'Medium',
+  'Baja':'Low',
+  'Cuarto de Compresores':'Compressor Room',
+  'Subestaciones Eléctricas I y II':'Electrical Substations I and II',
+  'Bombas de Agua':'Water Pumps',
+  'Máquinas / Equipos':'Machines / Equipment',
+  'Instalaciones Generales':'General Facilities',
+  'Turno Verde':'Green Shift',
+  'Turno Azul':'Blue Shift',
+  'Turno Mixto':'Mixed Shift',
+  'Guardar Auditoría':'Save Audit',
+  'Cumple':'Pass',
+  'No cumple':'Fail',
+  'No aplica':'Not Applicable',
+  'Observación':'Observation',
+  'Actividades del técnico':'Technician Activities',
+  'Actividad espontánea':'Unplanned Activity',
+  'Iniciar':'Start',
+  'Cerrar actividad':'Close Activity',
+  'Evidencia de cierre':'Close-out Evidence',
+  'Inventario Facilities':'Facilities Inventory',
+  'Buscar material':'Search Material',
+  'Registrar salida':'Register Issue',
+  'Registrar entrada':'Register Receipt',
+  'Escanear QR':'Scan QR',
+  'Recepción de Inventario por QR':'QR Inventory Receiving',
+  'Código QR / SKU':'QR Code / SKU',
+  'Buscar':'Search',
+  'Cantidad recibida':'Received Quantity',
+  'Registrar recepción':'Register Receipt',
+  'Acceso':'Access',
+  'Usuario':'Username',
+  'Contraseña':'Password',
+  'Ingresar':'Sign In',
+  'Histórico Energético':'Energy History',
+  'Acceso exclusivo: Técnicos e Ingenieros Facilities':'Exclusive access: Facilities Technicians and Engineers',
+  'Consumo Eléctrico SEPAM 40':'SEPAM 40 Electrical Consumption',
+  'Energía Reactiva SEPAM 40':'SEPAM 40 Reactive Energy',
+  'Memoria de Cálculo Eléctrico':'Electrical Calculation Report',
+  'Consumo activo, promedio diario, costo estimado y verificación con potencia instantánea.':'Active consumption, daily average, estimated cost, and instantaneous power verification.',
+  'Consumo kVARh, promedio diario y comprobación mediante potencia reactiva instantánea.':'kVARh consumption, daily average, and verification using instantaneous reactive power.',
+  'Circuitos, protecciones, conductores, caída de tensión, tableros, BOM e impresión de memoria.':'Circuits, protection, conductors, voltage drop, panels, BOM, and report printing.',
+  'Abrir calculadora →':'Open Calculator →',
+  'Abrir memoria →':'Open Report →',
+  'Equipo / medidor / ubicación':'Equipment / Meter / Location',
+  'Guardar cálculo':'Save Calculation',
+  'Herramientas':'Tools',
+  'Tendencia basada en cálculos SEPAM guardados por Técnicos e Ingenieros.':'Trend based on SEPAM calculations saved by Technicians and Engineers.',
+  'Herramienta':'Tool',
+  'Equipo / ubicación':'Equipment / Location',
+  'Periodo':'Period',
+  'Activo kWh':'Active kWh',
+  'Reactivo kVARh':'Reactive kVARh',
+  'Costo':'Cost',
+  'SEPAM activo + reactivo':'Active + Reactive SEPAM',
+  'Consumo activo SEPAM':'SEPAM Active Consumption',
+  'Energía reactiva SEPAM':'SEPAM Reactive Energy',
+  'Memorias eléctricas':'Electrical Reports',
+  'Sin registros para estos filtros':'No records for these filters',
+  'Autorizadas':'Authorized',
+  'En cotización':'Quoting',
+  'Ordenada':'Ordered',
+  'Recibida':'Received',
+  'Cancelada':'Cancelled',
+  'Comentarios':'Comments',
+  'Guardar':'Save',
+  'PENDIENTE':'PENDING',
+  'Bajo mínimo':'Below Minimum',
+  'OK':'OK'
+};
+
+const STATUS_I18N = {
+  'Pendiente de Ingeniería':'Pending Engineering Approval',
+  'Rechazado por Ingeniería':'Rejected by Engineering',
+  'Pendiente de Manager':'Pending Manager Approval',
+  'Aprobado por Manager — Pendiente de asignación':'Approved by Manager — Pending Technician Assignment',
+  'Rechazado por Manager — Devuelto a Ingeniería':'Rejected by Manager — Returned to Engineering',
+  'Asignado a técnico':'Assigned to Technician',
+  'En ejecución':'In Progress',
+  'Trabajo completado':'Work Completed',
+  'Requiere revisión (auto-cierre)':'Review Required (Auto-close)',
+  'Rechazada por Ingeniería':'Rejected by Engineering',
+  'Rechazada por Manager':'Rejected by Manager',
+  'Autorizada para Compra':'Authorized for Purchasing',
+  'En cotización':'Quoting',
+  'Ordenada':'Ordered',
+  'Recibida':'Received',
+  'Cancelada':'Cancelled',
+  'Solicitada':'Requested',
+  'En curso':'In Progress',
+  'Cerrada':'Closed',
+  'Cerrada automáticamente — sin evidencia de cierre':'Automatically Closed — No Close-out Evidence'
+};
+
+function uiText(es) {
+  if(LANG==='es') return es;
+  return TEXT_I18N[es] || STATUS_I18N[es] || es;
+}
+function statusLabel(s){ return LANG==='en' ? (STATUS_I18N[s]||s) : s; }
+
+function translateDynamicMessage(msg){
+  if(LANG==='es' || !msg) return msg;
+  const exact={
+    'Completa usuario y contraseña':'Enter username and password',
+    'Usuario o contraseña incorrectos':'Incorrect username or password',
+    'Sesión cerrada':'Session closed',
+    'Completa todos los campos obligatorios':'Complete all required fields',
+    'La fotografía es obligatoria para enviar la solicitud de trabajo':'A photo is required to submit the work request',
+    'Adjunta una fotografía de referencia':'Attach a reference photo',
+    'Actualizado correctamente':'Updated successfully',
+    'Cambios guardados':'Changes saved',
+    'Comentario guardado':'Comment saved',
+    'El comentario es obligatorio para rechazar':'A comment is required to reject',
+    'Error de conexión':'Connection error',
+    'Error al cargar solicitudes':'Error loading requests',
+    'Error al cargar solicitudes de compra':'Error loading purchase requests',
+    'Acceso no autorizado.':'Unauthorized access.',
+    'La herramienta todavía no termina de cargar.':'The tool is still loading.',
+    'Primero calcula el consumo activo antes de guardar.':'Calculate active consumption before saving.',
+    'Primero calcula el consumo reactivo antes de guardar.':'Calculate reactive consumption before saving.',
+    'Cálculo guardado en el histórico eléctrico.':'Calculation saved to the electrical history.',
+    'No se pudo cargar el histórico':'Could not load history',
+    'Solicitud de compra actualizada correctamente':'Purchase request updated successfully',
+    'Solicitud de compra enviada':'Purchase request submitted',
+    'Tu sesión expiró. Inicia sesión de nuevo.':'Your session expired. Please sign in again.'
+  };
+  if(exact[msg]) return exact[msg];
+  return msg
+    .replace(/^Bienvenido, /,'Welcome, ')
+    .replace(/^Error al guardar: /,'Error saving: ')
+    .replace(/^Error al cargar histórico: /,'Error loading history: ')
+    .replace(/^Error de conexión: /,'Connection error: ')
+    .replace(/Pendiente de Manager/g,'Pending Manager Approval')
+    .replace(/Pendiente de Ingeniería/g,'Pending Engineering Approval');
+}
+
+function applyLanguage(root=document) {
+  const skip=new Set(['SCRIPT','STYLE','NOSCRIPT','IFRAME','CANVAS']);
+  const walker=document.createTreeWalker(root===document?document.body:root,NodeFilter.SHOW_TEXT);
+  let node;
+  while(node=walker.nextNode()){
+    const p=node.parentElement;
+    if(!p || skip.has(p.tagName)) continue;
+    if(node.__esOriginal===undefined) node.__esOriginal=node.nodeValue;
+    const raw=node.__esOriginal;
+    const trimmed=raw.trim();
+    if(!trimmed) continue;
+    const translated=uiText(trimmed);
+    if(translated!==trimmed){
+      const lead=raw.match(/^\s*/)?.[0]||'', tail=raw.match(/\s*$/)?.[0]||'';
+      node.nodeValue=lead+translated+tail;
+    } else if(LANG==='es') node.nodeValue=raw;
+  }
+  document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
+    if(el.dataset.esPlaceholder===undefined) el.dataset.esPlaceholder=el.getAttribute('placeholder')||'';
+    const es=el.dataset.esPlaceholder;
+    el.setAttribute('placeholder',LANG==='en'?(TEXT_I18N[es]||es):es);
+  });
+  document.querySelectorAll('[title]').forEach(el=>{
+    if(el.dataset.esTitle===undefined) el.dataset.esTitle=el.getAttribute('title')||'';
+    const es=el.dataset.esTitle;
+    el.setAttribute('title',LANG==='en'?(TEXT_I18N[es]||es):es);
+  });
+  if($('lang-es')&&$('lang-en')){
+    $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
+    $('lang-es').style.color=LANG==='es'?'#fff':'#94A3B8';
+    $('lang-en').style.background=LANG==='en'?'#2563EB':'transparent';
+    $('lang-en').style.color=LANG==='en'?'#fff':'#94A3B8';
+  }
+}
+
+function setLanguage(lang){
+  LANG=lang==='en'?'en':'es';
+  localStorage.setItem('ktmex_lang',LANG);
+  applyLanguage();
+  if(typeof renderSolicitudes==='function' && SOL_DATA) renderSolicitudes();
+  if(typeof renderCompras==='function' && COMPRA_DATA) renderCompras();
+  if(typeof renderComprasRol==='function' && CR_DATA) renderComprasRol();
+  if(typeof renderKPIs==='function' && SESSION && ['ingeniero','manager'].includes(SESSION.user.rol)) renderKPIs();
+  if(ELEC_CURRENT_TOOL) openElectricTool(ELEC_CURRENT_TOOL,true);
+}
+
+
+
 let ELEC_CURRENT_TOOL = null;
 let ELEC_HISTORY_DATA = [];
 let ELEC_HISTORY_CHART = null;
@@ -1629,6 +1932,7 @@ async function verifyBackendVersion() {
 
 // ── Toast ────────────────────────────────────────────────────
 function toast(msg, type='ok') {
+  msg=translateDynamicMessage(msg);
   const t=$('toast'); $('toast-txt').textContent=msg;
   const ico=$('toast-ico');
   ico.className = type==='ok'?'fas fa-circle-check':type==='err'?'fas fa-circle-xmark':'fas fa-circle-info';
@@ -1648,14 +1952,15 @@ function configureRoleUI() {
   if (role === 'compras') {
     // Compras: únicamente Solicitudes de Trabajo + Panel de Compras.
     ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id => { if($(id)) $(id).style.display='none'; });
-    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Panel Compras';
+    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
   } else {
-    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>Compras';
+    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
     if ($('nav-compra')) $('nav-compra').style.display = (role==='tecnico' || role==='ingeniero' || !SESSION) ? '' : 'none';
     if (role !== 'tecnico' && $('nav-recepcion')) $('nav-recepcion').style.display='none';
     if (!SESSION && $('nav-recepcion')) $('nav-recepcion').style.display='none';
     if ($('nav-electricas')) $('nav-electricas').style.display = (role==='tecnico' || role==='ingeniero') ? '' : 'none';
   }
+  setTimeout(()=>applyLanguage(),0);
 }
 
 function roleCanView(v) {
@@ -1789,7 +2094,52 @@ function decodeToolHtml(b64) {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
-function openElectricTool(tool) {
+
+function localizeEmbeddedToolHtml(src,tool){
+  if(LANG!=='en') return src;
+  if(tool==='memoria_electrica') return src; // La memoria V18.3 ya contiene etiquetas ES/EN.
+  const repl={
+    'Calculadora de consumo eléctrico mensual':'Monthly Electrical Consumption Calculator',
+    'Calculadora de energía reactiva':'Reactive Energy Calculator',
+    'Lecturas de energía acumulada':'Accumulated Energy Readings',
+    'Lecturas de energía reactiva':'Reactive Energy Readings',
+    'Fecha lectura anterior':'Previous Reading Date',
+    'Fecha lectura actual':'Current Reading Date',
+    'Lectura anterior (kWh)':'Previous Reading (kWh)',
+    'Lectura actual (kWh)':'Current Reading (kWh)',
+    'Lectura reactiva anterior (kVARh)':'Previous Reactive Reading (kVARh)',
+    'Lectura reactiva actual (kVARh)':'Current Reactive Reading (kVARh)',
+    'Calcular consumo del periodo':'Calculate Period Consumption',
+    'Calcular consumo reactivo del periodo':'Calculate Reactive Period Consumption',
+    'Consumo activo':'Active Consumption',
+    'Consumo reactivo':'Reactive Consumption',
+    'Promedio diario':'Daily Average',
+    'Costo estimado del periodo':'Estimated Period Cost',
+    'Precio por kWh (según tu recibo)':'Price per kWh (from your bill)',
+    'Calcular costo total':'Calculate Total Cost',
+    'Costo total del periodo':'Total Period Cost',
+    'Verificación con potencia instantánea':'Instantaneous Power Verification',
+    'Verificación con potencia reactiva instantánea':'Instantaneous Reactive Power Verification',
+    'U promedio (V)':'Average U (V)',
+    'I promedio (A)':'Average I (A)',
+    'Factor de potencia':'Power Factor',
+    'Factor de potencia (cos φ)':'Power Factor (cos φ)',
+    'Horas de operación en el periodo':'Operating Hours in Period',
+    'Potencia activa (P)':'Active Power (P)',
+    'Potencia reactiva (Q)':'Reactive Power (Q)',
+    'Potencia aparente (S)':'Apparent Power (S)',
+    'Energía estimada (P × horas)':'Estimated Energy (P × hours)',
+    'Energía reactiva estimada (Q × horas)':'Estimated Reactive Energy (Q × hours)',
+    'opcional':'optional',
+    'Faltan datos':'Missing Data',
+    'Revisa las fechas':'Check Dates',
+    'Agrega fechas':'Add Dates'
+  };
+  Object.entries(repl).forEach(([a,b])=>{src=src.split(a).join(b);});
+  return src;
+}
+
+function openElectricTool(tool, preserveEquipment=false) {
   if (!SESSION || !['tecnico','ingeniero'].includes(SESSION.user.rol)) {
     toast('Acceso no autorizado.','err'); return;
   }
@@ -1797,16 +2147,16 @@ function openElectricTool(tool) {
   $('elec-tool-selector').style.display='none';
   $('elec-history').style.display='none';
   $('elec-tool-runner').style.display='';
-  $('elec-equipo').value='';
+  if(!preserveEquipment) $('elec-equipo').value='';
 
   const labels={
     sepam_activa:'Consumo Eléctrico SEPAM 40',
     sepam_reactiva:'Energía Reactiva SEPAM 40',
     memoria_electrica:'Memoria de Cálculo Eléctrico'
   };
-  $('elec-tool-title').textContent=labels[tool]||tool;
+  $('elec-tool-title').textContent=uiText(labels[tool]||tool);
   const frame=$('elec-frame');
-  frame.srcdoc=decodeToolHtml(ELECTRIC_TOOL_B64[tool]);
+  frame.srcdoc=localizeEmbeddedToolHtml(decodeToolHtml(ELECTRIC_TOOL_B64[tool]),tool);
   frame.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -2941,10 +3291,18 @@ function printInventoryQR() {
     </div><script>window.onload=()=>{window.print();};<\/script></body></html>`);
   w.document.close();
 }
+function refreshWorkStatusFilterLabels(){
+  const sel=$('fs-est'); if(!sel) return;
+  [...sel.options].forEach(o=>{
+    if(!o.value) o.textContent=uiText('Todos los estatus');
+    else o.textContent=statusLabel(o.value);
+  });
+}
+
 async function loadSolicitudes() {
   try {
     const res=await api({action:'getRequests',token:SESSION.token});
-    if(res.success){ SOL_DATA=res.requests; renderSolicitudes(); renderKPIs(); }
+    if(res.success){ SOL_DATA=res.requests; refreshWorkStatusFilterLabels(); renderSolicitudes(); renderKPIs(); }
     else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes','err'); }
 }
@@ -2955,7 +3313,7 @@ async function loadCompras() {
     if(res.success){
       COMPRA_DATA=res.compras;
       const sel=$('fc-est');
-      if(sel.options.length<=1) sel.innerHTML='<option value="">Todos los estatus</option>'+ESTATUS_COMPRA.map(s=>`<option>${s}</option>`).join('');
+      if(sel.options.length<=1) sel.innerHTML='<option value="">'+uiText('Todos los estatus')+'</option>'+ESTATUS_COMPRA.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
       renderCompras();
     } else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
@@ -2977,22 +3335,28 @@ async function loadAcciones() {
 
 function renderKPIs() {
   $('kpi-total').textContent=SOL_DATA.length;
-  $('kpi-pend').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente').length;
-  $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente'||r.estatus==='Rechazado por Ingeniería').length;
-  $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Autorizado por Ingeniería').length;
-  $('kpi-apro').textContent=SOL_DATA.filter(r=>r.estatus&&r.estatus.startsWith('Aprobado')).length;
+  $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
+  $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Manager').length;
+  $('kpi-apro').textContent=SOL_DATA.filter(r=>
+    ['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado'].includes(r.estatus)
+  ).length;
+  $('kpi-rech').textContent=SOL_DATA.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
+  $('kpi-ejec').textContent=SOL_DATA.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
+  setTimeout(()=>applyLanguage($('kpi-row')),0);
 }
 
 const estatusBadge = s => {
   if(!s) return '<span class="badge b-pend">—</span>';
-  if(s==='Pendiente') return `<span class="badge b-pend">${s}</span>`;
-  if(s==='Autorizado por Ingeniería') return `<span class="badge b-ing">${s}</span>`;
-  if(s.startsWith('Rechazado')) return `<span class="badge b-ing-rej">${s}</span>`;
-  if(s.startsWith('Aprobado')) return `<span class="badge b-mgr">${s}</span>`;
-  if(s==='En ejecución') return `<span class="badge b-ejec">${s}</span>`;
-  if(s==='Trabajo completado') return `<span class="badge b-done">${s}</span>`;
-  if(s==='Requiere revisión (auto-cierre)') return `<span class="badge b-ing-rej"><i class="fas fa-triangle-exclamation" style="margin-right:4px"></i>${s}</span>`;
-  return `<span class="badge b-pend">${s}</span>`;
+  let cls='b-pend';
+  if(s==='Pendiente de Ingeniería') cls='b-pend';
+  else if(s==='Pendiente de Manager') cls='b-mgr';
+  else if(String(s).startsWith('Rechazado')) cls='b-ing-rej';
+  else if(s==='Aprobado por Manager — Pendiente de asignación') cls='b-ing';
+  else if(s==='Asignado a técnico') cls='b-ing';
+  else if(s==='En ejecución') cls='b-ejec';
+  else if(s==='Trabajo completado') cls='b-done';
+  else if(s==='Requiere revisión (auto-cierre)') cls='b-ing-rej';
+  return `<span class="badge ${cls}">${statusLabel(s)}</span>`;
 };
 
 function renderSolicitudes() {
@@ -3004,7 +3368,7 @@ function renderSolicitudes() {
 
   const tbody=$('sol-tbody');
   if(!list.length){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin resultados</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>'+uiText('Sin resultados')+'</td></tr>';
     return;
   }
   tbody.innerHTML=list.map(r=>`
@@ -3015,7 +3379,7 @@ function renderSolicitudes() {
       <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${r.departamento||'—'}</span></td>
       <td style="color:#64748B;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.tipoSolicitud||'').startsWith('Espontánea')?'<i class="fas fa-bolt" style="color:#7C3AED;margin-right:4px" title="Actividad espontánea"></i>':''}${r.tipoSolicitud||'—'}</td>
       <td>${estatusBadge(r.estatus)}</td>
-      <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">Sin asignar</span>'}</td>
+      <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">'+uiText('Sin asignar')+'</span>'}</td>
       <td style="text-align:center">
         <button onclick="event.stopPropagation();openSolicitudModal('${r.id}')"
           style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB">
@@ -3037,7 +3401,7 @@ const compraBadge = s => {
     'Recibida':                'b-done',
     'Cancelada':               'b-ing-rej',
   };
-  return `<span class="badge ${map[s]||'b-pend'}">${s||'—'}</span>`;
+  return `<span class="badge ${map[s]||'b-pend'}">${statusLabel(s)||'—'}</span>`;
 };
 
 function renderCompras() {
@@ -3052,7 +3416,7 @@ function renderCompras() {
 
   const tbody=$('compra-tbody');
   if(!list.length){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-cart-shopping" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin resultados</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-cart-shopping" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>'+uiText('Sin resultados')+'</td></tr>';
     return;
   }
   tbody.innerHTML=list.map(r=>`
@@ -3168,11 +3532,11 @@ function openSolicitudModal(id) {
     (r.estatus==='Aprobado por Manager — Pendiente de asignación' || r.estatus==='Asignado a técnico' || r.estatus==='En ejecución');
   $('sec-asignar-tecnico').style.display = puedeAsignar ? '' : 'none';
 
-  $('ms-tecnico').innerHTML='<option value="">— Sin asignar —</option>'+
+  $('ms-tecnico').innerHTML='<option value="">— '+uiText('Sin asignar')+' —</option>'+
     TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
 
   // Estatus manual
-  $('ms-estatus').innerHTML='<option value="">— Sin cambio —</option>'+
+  $('ms-estatus').innerHTML='<option value="">— '+uiText('Sin cambio')+' —</option>'+
     ESTATUS_MANUAL.map(s=>`<option value="${s}">${s}</option>`).join('');
 
   $('ms-ing-comentario').value='';
@@ -3194,7 +3558,7 @@ function renderHistorial(r) {
         <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
         <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
       </div>
-    </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">Sin historial</p>';
+    </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">'+uiText('Sin historial')+'</p>';
 }
 
 async function authAction(action) {
@@ -3207,7 +3571,12 @@ async function authAction(action) {
   if(btn){btn.disabled=true;}
   try {
     const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,authAction:action,comentario});
-    if(res.success){toast('Actualizado correctamente');closeModal('modal-sol');loadSolicitudes();}
+    if(res.success){
+      if(action==='ing_autoriza') toast(LANG==='en'?'Approved by Engineering. Status: Pending Manager Approval.':'Aprobado por Ingeniería. Estatus: Pendiente de Manager.');
+      else toast('Actualizado correctamente');
+      closeModal('modal-sol');
+      await loadSolicitudes();
+    }
     else toast(res.error||'Error','err');
   } catch(e){toast('Error de conexión','err');}
   if(btn){btn.disabled=false;}
@@ -3276,7 +3645,8 @@ async function compraAuthAction(action) {
   try {
     const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMPRA.id,authAction:action,comentario});
     if(res.success){
-      toast('Solicitud de compra actualizada correctamente','ok');
+      if(action==='ing_aprueba') toast(LANG==='en'?'Approved by Engineering. Status: Pending Manager Approval.':'Aprobado por Ingeniería. Estatus: Pendiente de Manager.','ok');
+      else toast('Solicitud de compra actualizada correctamente','ok');
       closeModal('modal-compra');
       if(SESSION.user.rol==='compras') loadComprasRol(); else loadCompras();
     } else toast(res.error||'No fue posible actualizar la solicitud','err');
@@ -3545,6 +3915,7 @@ function init() {
   }
 
   showView('home');
+  setTimeout(()=>applyLanguage(),0);
 }
 
 // Persist session in sessionStorage
