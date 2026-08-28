@@ -1568,8 +1568,16 @@ let ACC_DATA    = [];     // cached plan acciones
 let CUR_SOL     = null;   // request open in modal
 let CUR_COMPRA  = null;   // compra open in modal
 
-let LANG = localStorage.getItem('ktmex_lang') || 'es';
+let LANG = localStorage.getItem('ktmex_lang');
+if(!['es','en'].includes(LANG)){LANG='es';localStorage.setItem('ktmex_lang','es');}
 
+try{
+  const forcedLang=new URLSearchParams(location.search).get('lang');
+  if(['es','en'].includes(forcedLang)){
+    LANG=forcedLang;
+    localStorage.setItem('ktmex_lang',LANG);
+  }
+}catch(e){}
 const ADMIN_PRIVILEGED_USERS = ['jpatlan'];
 function hasAdminPrivilege(){
   return !!SESSION && ADMIN_PRIVILEGED_USERS.includes(String(SESSION.user?.username||'').toLowerCase());
@@ -1938,36 +1946,38 @@ function translateDynamicMessage(msg){
 }
 
 function applyLanguage(root=document) {
+  const scope = root===document ? document.body : root;
+  if(!scope) return;
   const skip=new Set(['SCRIPT','STYLE','NOSCRIPT','IFRAME','CANVAS']);
-  const walker=document.createTreeWalker(root===document?document.body:root,NodeFilter.SHOW_TEXT);
+  const walker=document.createTreeWalker(scope,NodeFilter.SHOW_TEXT);
   let node;
   while(node=walker.nextNode()){
     const p=node.parentElement;
-    if(!p || skip.has(p.tagName)) continue;
+    if(!p || skip.has(p.tagName) || p.tagName==='OPTION') continue;
     if(node.__esOriginal===undefined) node.__esOriginal=node.nodeValue;
     const raw=node.__esOriginal;
     const trimmed=raw.trim();
     if(!trimmed) continue;
-    const translated=uiText(trimmed);
-    if(translated!==trimmed){
-      const lead=raw.match(/^\s*/)?.[0]||'', tail=raw.match(/\s*$/)?.[0]||'';
-      node.nodeValue=lead+translated+tail;
-    } else if(LANG==='es') node.nodeValue=raw;
+    const target=LANG==='en'?uiText(trimmed):trimmed;
+    const lead=raw.match(/^\s*/)?.[0]||'';
+    const tail=raw.match(/\s*$/)?.[0]||'';
+    const desired=lead+target+tail;
+    if(node.nodeValue!==desired) node.nodeValue=desired;
   }
-  document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
+  scope.querySelectorAll?.('input[placeholder],textarea[placeholder]').forEach(el=>{
     if(el.dataset.esPlaceholder===undefined) el.dataset.esPlaceholder=el.getAttribute('placeholder')||'';
-    const es=el.dataset.esPlaceholder;
-    el.setAttribute('placeholder',LANG==='en'?(TEXT_I18N[es]||es):es);
+    const desired=LANG==='en'?uiText(el.dataset.esPlaceholder):el.dataset.esPlaceholder;
+    if(el.getAttribute('placeholder')!==desired) el.setAttribute('placeholder',desired);
   });
-  document.querySelectorAll('[title]').forEach(el=>{
+  scope.querySelectorAll?.('[title]').forEach(el=>{
     if(el.dataset.esTitle===undefined) el.dataset.esTitle=el.getAttribute('title')||'';
-    const es=el.dataset.esTitle;
-    el.setAttribute('title',LANG==='en'?uiText(es):es);
+    const desired=LANG==='en'?uiText(el.dataset.esTitle):el.dataset.esTitle;
+    if(el.getAttribute('title')!==desired) el.setAttribute('title',desired);
   });
-  document.querySelectorAll('option').forEach(el=>{
+  scope.querySelectorAll?.('option').forEach(el=>{
     if(el.dataset.esText===undefined) el.dataset.esText=el.textContent;
-    const es=el.dataset.esText;
-    el.textContent=LANG==='en'?(STATUS_I18N[el.value]||uiText(es)):es;
+    const desired=LANG==='en'?(STATUS_I18N[el.value]||uiText(el.dataset.esText)):el.dataset.esText;
+    if(el.textContent!==desired) el.textContent=desired;
   });
   if($('lang-es')&&$('lang-en')){
     $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
@@ -1977,31 +1987,20 @@ function applyLanguage(root=document) {
   }
 }
 
-
-let I18N_OBSERVER=null;
-function startI18nObserver(){
-  if(I18N_OBSERVER) return;
-  I18N_OBSERVER=new MutationObserver(muts=>{
-    if(LANG!=='en') return;
-    for(const m of muts){
-      m.addedNodes.forEach(n=>{
-        if(n.nodeType===1) applyLanguage(n);
-        else if(n.nodeType===3 && n.parentElement) applyLanguage(n.parentElement);
-      });
-    }
-  });
-  I18N_OBSERVER.observe(document.body,{childList:true,subtree:true});
-}
-
 function setLanguage(lang){
-  LANG=lang==='en'?'en':'es';
+  const next=lang==='en'?'en':'es';
+  if(next===LANG){applyLanguage();return;}
+  LANG=next;
   localStorage.setItem('ktmex_lang',LANG);
   applyLanguage();
-  if(typeof renderSolicitudes==='function' && SOL_DATA) renderSolicitudes();
-  if(typeof renderCompras==='function' && COMPRA_DATA) renderCompras();
-  if(typeof renderComprasRol==='function' && CR_DATA) renderComprasRol();
-  if(typeof renderKPIs==='function' && SESSION && ['ingeniero','manager'].includes(SESSION.user.rol)) renderKPIs();
-  if(ELEC_CURRENT_TOOL) openElectricTool(ELEC_CURRENT_TOOL,true);
+  if(typeof refreshWorkStatusFilterLabels==='function') refreshWorkStatusFilterLabels();
+  if(typeof renderSolicitudes==='function' && Array.isArray(SOL_DATA)) renderSolicitudes();
+  if(typeof renderCompras==='function' && Array.isArray(COMPRA_DATA)) renderCompras();
+  if(typeof renderComprasRol==='function' && Array.isArray(CR_DATA)) renderComprasRol();
+  if(typeof renderKPIs==='function' && SESSION) renderKPIs();
+  if(typeof renderElectricHistory==='function' && $('elec-history')?.style.display!=='none') renderElectricHistory();
+  if(ELEC_CURRENT_TOOL && $('elec-tool-runner')?.style.display!=='none') openElectricTool(ELEC_CURRENT_TOOL,true);
+  requestAnimationFrame(()=>applyLanguage());
 }
 
 
@@ -2105,7 +2104,7 @@ function configureRoleUI() {
     if ($('nav-electricas')) $('nav-electricas').style.display = (role==='tecnico' || role==='ingeniero') ? '' : 'none';
     if (role==='tecnico' && $('nav-admin')) $('nav-admin').style.display = hasAdminPrivilege() ? '' : 'none';
   }
-  setTimeout(()=>{applyLanguage();startI18nObserver();},0);
+  setTimeout(()=>{applyLanguage();},0);
 }
 
 function roleCanView(v) {
