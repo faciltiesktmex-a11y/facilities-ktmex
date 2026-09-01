@@ -72,8 +72,9 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
+console.info('KTMEX Facilities V7.8.1 PRODUCCIÓN — migración segura');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec";
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';;
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -168,6 +169,91 @@ const ESTATUS_ACTIVIDAD_LABELS = {
 };
 
 // Items LPA por área
+const LPA_I18N = {
+  "Cuarto de Compresores": "Compressor Room",
+  "Subestaciones Eléctricas I y II": "Electrical Substations I and II",
+  "Cuarto de Bombas": "Pump Room",
+  "Cuarto de Máquinas": "Machine Room",
+  "Instalaciones Generales y Perímetro": "General Facilities and Perimeter",
+  "Presión de descarga del compresor dentro del rango operativo estándar (marcado en manómetro).": "Compressor discharge pressure within the standard operating range (marked on the pressure gauge).",
+  "Temperatura de operación normal; sin alarmas activas ni indicios de sobrecalentamiento.": "Normal operating temperature; no active alarms or signs of overheating.",
+  "Nivel de aceite entre marcas mín./máx.; sin fugas en conexiones, mangueras o carcasa.": "Oil level between min./max. marks; no leaks at connections, hoses, or housing.",
+  "Secadores de aire en operación; punto de rocío dentro del rango especificado.": "Air dryers operating; dew point within the specified range.",
+  "Purgas automáticas funcionando; sin acumulación de condensado en tanques o líneas.": "Automatic drains functioning; no condensate accumulation in tanks or lines.",
+  "Filtros sin alarma de saturación; diferencial de presión dentro de rango.": "Filters with no saturation alarm; differential pressure within range.",
+  "Sin fugas de aire audibles en la red interna del cuarto.": "No audible air leaks in the room's internal network.",
+  "Bitácora de control diario llena, firmada y al turno vigente.": "Daily control log completed, signed, and current for the shift.",
+  "Área limpia y ordenada (5S); sin herramientas o materiales ajenos a la operación.": "Area clean and orderly (5S); no tools or materials unrelated to the operation.",
+  "Rejillas de ventilación libres; temperatura ambiente del cuarto adecuada.": "Ventilation grilles unobstructed; room ambient temperature adequate.",
+  "Guardas de seguridad instaladas; paros de emergencia accesibles y señalizados.": "Safety guards installed; emergency stops accessible and clearly identified.",
+  "Extintor en sitio, cargado, con recarga vigente y acceso despejado.": "Fire extinguisher in place, charged, inspection/recharge current, and access clear.",
+  "Puerta cerrada con llave; acceso restringido y señalización de riesgo eléctrico visible.": "Door locked; restricted access and visible electrical hazard signage.",
+  "Equipo dieléctrico completo y en buen estado (tapete, guantes, pértiga) en su lugar designado.": "Complete dielectric equipment in good condition (mat, gloves, hot stick) in its designated location.",
+  "Sin alarmas activas en relevadores o medidores; lecturas de voltaje y corriente en rango.": "No active alarms on relays or meters; voltage and current readings within range.",
+  "Nivel y temperatura de aceite del transformador en rango; sin fugas ni manchas en base.": "Transformer oil level and temperature within range; no leaks or stains at the base.",
+  "Sin ruidos anormales (zumbido excesivo, chisporroteo) ni olor a material quemado.": "No abnormal noises (excessive humming, arcing) or smell of burned material.",
+  "Termografía mensual vigente y publicada; sin puntos calientes pendientes de atender.": "Monthly thermography current and posted; no unresolved hot spots.",
+  "Tableros cerrados, identificados y sin tapas o interiores expuestos.": "Panels closed, identified, and with no exposed covers or interiors.",
+  "Diagrama unifilar visible, legible y actualizado.": "Single-line diagram visible, legible, and up to date.",
+  "Iluminación general y lámpara de emergencia funcionando.": "General lighting and emergency light operating.",
+  "Extintor del tipo adecuado (CO2), vigente y con acceso despejado.": "Correct type of fire extinguisher (CO2), current, and with clear access.",
+  "Sin material, refacciones o equipo ajeno almacenado dentro de la subestación.": "No unrelated materials, spare parts, or equipment stored inside the substation.",
+  "Bitácora de lecturas llena y firmada al turno vigente.": "Readings log completed and signed for the current shift.",
+  "Bombas de torre de enfriamiento operando sin vibración, ruido o calentamiento anormal.": "Cooling-tower pumps operating without abnormal vibration, noise, or overheating.",
+  "Bombas de agua de proceso (producción) operando sin vibración, ruido o calentamiento anormal.": "Process-water (production) pumps operating without abnormal vibration, noise, or overheating.",
+  "Presiones de descarga dentro del rango operativo estándar (marcado en manómetro).": "Discharge pressures within the standard operating range (marked on the pressure gauge).",
+  "Sin fugas en sellos mecánicos, bridas o empaques de bombas y tuberías.": "No leaks at mechanical seals, flanges, or gaskets on pumps and piping.",
+  "Manómetros legibles, con calibración vigente y rango operativo marcado.": "Pressure gauges legible, calibration current, and operating range marked.",
+  "Nivel de agua en cárcamo / tanque de succión dentro de rango; sin succión en vacío.": "Water level in sump / suction tank within range; no dry suction.",
+  "Tratamiento químico del agua de torres al día; registros de parámetros (pH, conductividad) llenos.": "Cooling-tower water chemical treatment up to date; parameter records (pH, conductivity) completed.",
+  "Válvulas identificadas y en posición correcta de operación (abierta/cerrada señalizada).": "Valves identified and in the correct operating position (open/closed clearly indicated).",
+  "Drenajes y trincheras libres; sin encharcamientos en piso.": "Drains and trenches clear; no standing water on the floor.",
+  "Bitácora de presiones y niveles llena y firmada al turno vigente.": "Pressure and level log completed and signed for the current shift.",
+  "Área limpia, ordenada (5S), con iluminación funcional y accesos despejados.": "Area clean and orderly (5S), with functional lighting and clear access.",
+  "Guardas de acoplamiento instaladas; paros de emergencia accesibles; extintor vigente.": "Coupling guards installed; emergency stops accessible; fire extinguisher current.",
+  "Bombas de servicios generales operando sin vibración, ruido o calentamiento anormal.": "General-utility pumps operating without abnormal vibration, noise, or overheating.",
+  "Presiones de suministro de servicios generales dentro del rango operativo estándar.": "General-utility supply pressures within the standard operating range.",
+  "Sin fugas en sellos mecánicos, bridas, empaques o conexiones de tubería.": "No leaks at mechanical seals, flanges, gaskets, or piping connections.",
+  "Tanques / sistemas hidroneumáticos sin alarmas; presión de precarga en rango.": "Hydropneumatic tanks/systems with no alarms; precharge pressure within range.",
+  "Tableros de control cerrados, identificados y sin alarmas activas.": "Control panels closed, identified, and with no active alarms.",
+  "Aislamiento de tuberías íntegro; tuberías identificadas por código de color.": "Pipe insulation intact; piping identified by color code.",
+  "Sustancias químicas almacenadas, etiquetadas y con HDS disponible (NOM-018-STPS).": "Chemicals stored and labeled, with SDS available (NOM-018-STPS).",
+  "Bitácora de parámetros llena y firmada al turno vigente.": "Parameter log completed and signed for the current shift.",
+  "Guardas de seguridad y paros de emergencia en su lugar; extintor vigente y despejado.": "Safety guards and emergency stops in place; fire extinguisher current and unobstructed.",
+  "Azoteas, canalones y bajadas pluviales libres de acumulación de agua o material.": "Roofs, gutters, and downspouts free of accumulated water or material.",
+  "Tuberías aéreas identificadas por código de color; sin fugas visibles (agua, aire, gas).": "Overhead piping identified by color code; no visible leaks (water, air, gas).",
+  "Iluminación perimetral y de áreas comunes funcionando.": "Perimeter and common-area lighting operating.",
+  "Tableros eléctricos de distribución cerrados, identificados y sin obstrucciones.": "Electrical distribution panels closed, identified, and unobstructed.",
+  "Equipos de aire acondicionado de áreas críticas sin fallas reportadas pendientes.": "Air-conditioning equipment in critical areas with no unresolved reported failures.",
+  "Señalización de seguridad visible, legible y en buen estado.": "Safety signage visible, legible, and in good condition.",
+  "Rutas de evacuación y puntos de reunión despejados.": "Evacuation routes and assembly points clear.",
+  "Almacén de Facilities ordenado; materiales y refacciones identificados (5S).": "Facilities warehouse orderly; materials and spare parts identified (5S).",
+  "Trabajos de contratistas con permiso de trabajo visible y área delimitada.": "Contractor work with visible work permit and properly barricaded work area.",
+  "Sin reportes abiertos de fugas o desviaciones en el perímetro sin acción asignada.": "No open reports of perimeter leaks or deviations without an assigned action.",
+  "puntos de verificación": "verification points",
+  "Iniciar →": "Start →",
+  "Observación…": "Observation…",
+  "Completa el encabezado (fecha, turno, capa)": "Complete the header (date, shift, layer)",
+  "Todos los puntos deben tener una respuesta (P, NP o N/A)": "All checklist items must have a response (P, NP, or N/A)",
+  "punto(s) NP sin observación. Agrega descripción del hallazgo.": "NP item(s) without an observation. Add a description of the finding.",
+  "Auditoría guardada. Conformidad:": "Audit saved. Compliance:",
+  "NP generaron acciones correctivas": "NP generated corrective actions",
+  "Sin registros": "No records",
+  "Capa": "Layer",
+  "Sin acciones registradas": "No corrective actions recorded",
+  "Abierto": "Open",
+  "En proceso": "In Progress",
+  "Cerrado": "Closed",
+  "Pendiente": "Pending"
+};
+function lpaText(es){
+  return LANG==='en' ? (LPA_I18N[es] || TEXT_I18N[es] || es) : es;
+}
+function lpaTurnoText(v){
+  const m={'Turno Verde':'Green Shift','Turno Azul':'Blue Shift','Turno Mixto':'Mixed Shift'};
+  return LANG==='en'?(m[v]||v):v;
+}
+
 const LPA_AREAS = {
   compresores: {
     label:"Cuarto de Compresores",
@@ -371,7 +457,7 @@ const LPA_AREAS = {
 </div>
 
 <!-- ══════════════════════════ VIEW: SOLICITUD FORM ══ -->
-<div id="view-solicitud" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade">
+<div id="view-solicitud" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px"><button id="sol-tab-new" class="btn-p" onclick="showSolicitudTab('new')">Nueva solicitud</button><button id="sol-tab-status" class="btn-g" onclick="showSolicitudTab('status')">Consultar estatus</button></div><div id="sol-status-panel" style="display:none"><div class="card" style="padding:18px;margin-bottom:14px"><h3 style="margin:0 0 8px;font-size:1rem">Consultar estatus por folio</h3><p style="font-size:.8rem;color:#64748B">Escribe el folio para conocer el estatus, técnico asignado y motivo del rechazo.</p><div style="display:flex;gap:8px"><input id="sol-status-folio" class="inp" style="flex:1" placeholder="FAC-2026-00025"><button class="btn-p" onclick="consultarSolicitudFolio()">Consultar</button></div></div><div id="sol-status-result"></div></div><div id="sol-new-panel">
   <div style="text-align:center;margin-bottom:24px">
     <div style="width:56px;height:56px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(37,99,235,.28)">
       <i class="fas fa-clipboard-list" style="color:#fff;font-size:20px"></i>
@@ -470,8 +556,9 @@ const LPA_AREAS = {
   </div>
 </div>
 
+</div><!-- /sol-new-panel -->
 <!-- ══════════════════════ VIEW: SOLICITUD DE COMPRA ══ -->
-<div id="view-compra" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade">
+<div id="view-compra" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
   <div style="text-align:center;margin-bottom:24px">
     <div style="width:56px;height:56px;background:linear-gradient(135deg,#D97706,#B45309);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(217,119,6,.28)">
       <i class="fas fa-cart-shopping" style="color:#fff;font-size:20px"></i>
@@ -480,6 +567,23 @@ const LPA_AREAS = {
     <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
   </div>
 
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <button id="compra-tab-new" class="btn-p" onclick="showCompraTab('new')"><i class="fas fa-cart-plus" style="margin-right:6px"></i>Nueva solicitud</button>
+    <button id="compra-tab-status" class="btn-g" onclick="showCompraTab('status')"><i class="fas fa-list-check" style="margin-right:6px"></i>Mis solicitudes</button>
+  </div>
+  <div id="compra-status-panel" style="display:none">
+    <div class="card" style="padding:18px;margin-bottom:14px">
+      <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div><h3 style="font-size:1rem;margin:0">Estatus de mis solicitudes de compra</h3><p style="font-size:.76rem;color:#64748B;margin:4px 0 0">Consulta aprobaciones, rechazos y motivo.</p></div>
+        <select id="compra-status-filter" class="inp" style="width:auto;min-width:170px" onchange="renderMisCompras()">
+          <option value="">Todas</option><option value="Pendiente">Pendientes</option><option value="Aprobada">Aprobadas</option><option value="Rechazada">Rechazadas</option><option value="Compra">En compra</option><option value="Recibida">Recibidas</option>
+        </select>
+      </div>
+    </div>
+    <div id="compra-notice"></div>
+    <div id="compra-status-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div id="compra-new-panel">
   <div class="card" style="padding:24px">
     <div id="compra-form">
       <!-- Fecha de solicitud -->
@@ -493,19 +597,24 @@ const LPA_AREAS = {
         <div id="c-nombre-display" class="inp" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E;font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-circle-check" style="font-size:.8rem"></i><span></span></div>
         <input type="hidden" id="c-nombre">
       </div>
-      <!-- Prioridad -->
-      <div style="margin-bottom:18px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:9px"><i class="fas fa-exclamation-circle" style="color:#D97706;margin-right:5px"></i>Prioridad *</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <button type="button" class="prio-btn" data-p="Alta"  onclick="selectPrioCompra('Alta')"><i class="fas fa-fire" style="color:#EF4444;margin-right:4px"></i>Alta</button>
-          <button type="button" class="prio-btn" data-p="Media" onclick="selectPrioCompra('Media')"><i class="fas fa-equals" style="color:#F59E0B;margin-right:4px"></i>Media</button>
-          <button type="button" class="prio-btn" data-p="Baja"  onclick="selectPrioCompra('Baja')"><i class="fas fa-arrow-down" style="color:#22C55E;margin-right:4px"></i>Baja</button>
-        </div>
-        <input type="hidden" id="c-prioridad">
-      </div>
-      <!-- Descripción del material -->
+      <!-- Material desde inventario -->
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#D97706;margin-right:5px"></i>Descripción del material requerido *</label>
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-boxes-stacked" style="color:#D97706;margin-right:5px"></i>Material / refacción *</label>
+        <select id="c-inventario" class="inp" onchange="compraInventarioChange()">
+          <option value="">— Selecciona del inventario —</option>
+          <option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>
+        </select>
+        <div id="c-inventario-info" style="display:none;margin-top:8px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;font-size:.76rem;color:#475569"></div>
+      </div>
+      <div id="c-material-nuevo-wrap" style="display:none;margin-bottom:16px;padding:12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#92400E;margin-bottom:6px">Nombre provisional del material *</label>
+        <input id="c-material-nuevo" class="inp" placeholder="Nombre del material o refacción">
+        <p style="font-size:.72rem;color:#92400E;margin:7px 0 0">Se registrará como <b>Pendiente de alta</b>. Ingeniería / Facilities deberá definir el nombre estándar y ubicación antes de incorporarlo al inventario.</p>
+      </div>
+      <!-- Descripción complementaria -->
+
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#D97706;margin-right:5px"></i>Descripción complementaria / especificaciones *</label>
         <textarea id="c-desc" class="inp" rows="3" placeholder="De ser posible añadir: Marca / Modelo / Cantidad…"></textarea>
       </div>
       <!-- Cantidad y Unidades -->
@@ -557,13 +666,18 @@ const LPA_AREAS = {
   </div>
 </div>
 
+</div><!-- /compra-new-panel -->
 <!-- ══════════════════════ VIEW: LPA SELECT AREA ══ -->
 <div id="view-lpa-select" style="display:none;max-width:700px;margin:0 auto;padding:28px 16px" class="fade">
   <div style="text-align:center;margin-bottom:28px">
     <div style="width:56px;height:56px;background:linear-gradient(135deg,#16A34A,#15803D);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(22,163,74,.28)">
       <i class="fas fa-clipboard-check" style="color:#fff;font-size:20px"></i>
     </div>
-    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Auditoría LPA</h2>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Auditorías LPA</h2>
+    <div id="lpa-module-selector" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-p" onclick="showFacilitiesLpaCards()" style="width:auto;padding:9px 16px"><i class="fas fa-screwdriver-wrench" style="margin-right:6px"></i><span>Facilities LPA</span></button>
+      <button class="btn-g" onclick="goLpaQuality()" style="width:auto;padding:9px 16px"><i class="fas fa-award" style="margin-right:6px"></i><span>Quality LPA</span></button>
+    </div>
     <p style="color:#64748B;font-size:.82rem;margin:0">FT-FAC-LPA-01 · Facilities & Utilities · KTMEX</p>
   </div>
 
@@ -571,10 +685,12 @@ const LPA_AREAS = {
     <p style="font-size:.82rem;color:#92400E;margin:0"><i class="fas fa-triangle-exclamation" style="margin-right:6px"></i><strong>Recordatorio:</strong> La auditoría se realiza 100% en piso (Gemba). EPP completo requerido antes de iniciar.</p>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-    <div id="lpa-area-cards"></div>
+  <div id="lpa-facilities-wrap">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <div id="lpa-area-cards"></div>
+    </div>
+    <div id="lpa-area-cards-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"></div>
   </div>
-  <div id="lpa-area-cards-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: LPA FORM ══ -->
@@ -675,6 +791,115 @@ const LPA_AREAS = {
   </button>
 </div>
 
+
+<!-- ══════════════════════ VIEW: LPA QUALITY ══════════════════════ -->
+<div id="view-lpa-quality" style="display:none;max-width:1050px;margin:0 auto;padding:22px 16px" class="fade">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-g" onclick="goLpaSelect()" style="padding:7px 12px"><i class="fas fa-arrow-left"></i></button>
+      <div><h2 style="font-size:1.2rem;margin:0;color:var(--navy)">LPA Quality</h2>
+      <p style="font-size:.75rem;color:#64748B;margin:2px 0 0">Layered Process Audit · Pilot V7</p></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-g" onclick="loadLpaQDashboard()" style="padding:8px 12px"><i class="fas fa-chart-line" style="margin-right:5px"></i><span>Dashboard</span></button>
+      <button id="lpaq-btn-new" class="btn-p" onclick="openLpaQNew()" style="padding:8px 12px"><i class="fas fa-plus" style="margin-right:5px"></i><span>New Audit</span></button>
+    </div>
+  </div>
+
+  <div id="lpaq-access-note" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:.8rem;color:#1E40AF"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+    <div class="card" style="padding:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-clipboard-check" style="color:#2563EB"></i><strong style="font-size:.9rem">Cumplimiento de auditorías / Audit Compliance</strong></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
+        <div><div style="font-size:.66rem;color:#64748B">Compliance</div><strong id="lpaq-kpi-program" class="mono" style="font-size:1.35rem">—</strong><div style="font-size:.62rem;color:#94A3B8">Target ≥90%</div></div>
+        <div><div style="font-size:.66rem;color:#64748B">Grace Period</div><strong id="lpaq-kpi-grace" class="mono" style="font-size:1.35rem;color:#D97706">0</strong></div>
+        <div><div style="font-size:.66rem;color:#64748B">Overdue</div><strong id="lpaq-kpi-overdue" class="mono" style="font-size:1.35rem;color:#DC2626">0</strong></div>
+      </div>
+    </div>
+    <div class="card" style="padding:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-list-check" style="color:#16A34A"></i><strong style="font-size:.9rem">Cierre de acciones / Action Closure</strong></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
+        <div><div style="font-size:.66rem;color:#64748B">On-time Closure</div><strong id="lpaq-kpi-close" class="mono" style="font-size:1.35rem">—</strong><div style="font-size:.62rem;color:#94A3B8">Target ≥90%</div></div>
+        <div><div style="font-size:.66rem;color:#64748B">Open NC</div><strong id="lpaq-kpi-open" class="mono" style="font-size:1.35rem">0</strong></div>
+        <div><div style="font-size:.66rem;color:#64748B">Pending Validation</div><strong id="lpaq-kpi-validation" class="mono" style="font-size:1.35rem">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:16px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div><strong style="font-size:.9rem">Pilot schedule / Programa piloto</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly</div></div>
+      <button class="btn-g" onclick="generateLpaQPilotProgram()" style="padding:7px 11px"><i class="fas fa-calendar-plus" style="margin-right:5px"></i><span>Generate current month</span></button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(230px,1fr) minmax(170px,.55fr);gap:10px;margin-top:14px;align-items:end">
+      <div>
+        <label style="font-size:.7rem;color:#64748B;font-weight:650">Auditor / Auditor</label>
+        <select id="lpaq-auditor-filter" class="inp" onchange="renderLpaQProgram()">
+          <option value="">— Select auditor / Selecciona auditor —</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.7rem;color:#64748B;font-weight:650">Status / Estatus</label>
+        <select id="lpaq-program-status-filter" class="inp" onchange="renderLpaQProgram()">
+          <option value="">All / Todos</option>
+          <option value="Programada">Scheduled / Programada</option>
+          <option value="En tolerancia">Grace Period / En tolerancia</option>
+          <option value="Vencida">Overdue / Vencida</option>
+          <option value="Realizada">Completed / Realizada</option>
+          <option value="Vencida realizada">Completed Late / Vencida realizada</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="lpaq-program-table" style="margin-top:12px;overflow-x:auto"></div>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <strong style="font-size:.9rem">Nonconformities / No conformidades</strong>
+    <div id="lpaq-nc-table" style="margin-top:12px;overflow-x:auto"></div>
+  </div>
+</div>
+
+<div id="view-lpa-quality-form" style="display:none;max-width:1000px;margin:0 auto;padding:20px 16px" class="fade">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <button class="btn-g" onclick="goLpaQuality()" style="padding:7px 12px"><i class="fas fa-arrow-left"></i></button>
+    <div><h2 style="font-size:1.1rem;margin:0;color:var(--navy)">LPA Quality · <span id="lpaq-form-level">N4</span></h2><p style="font-size:.72rem;color:#64748B;margin:2px 0 0">OK / NOK / N/A</p></div>
+  </div>
+  <div class="card" style="padding:16px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+      <div><label>Area *</label><select id="lpaq-area" class="inp"></select></div>
+      <div><label>Level *</label><select id="lpaq-level" class="inp" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
+      <div><label>Date *</label><input id="lpaq-date" type="date" class="inp"></div>
+      <div><label>Shift</label><select id="lpaq-shift" class="inp"><option value="">—</option><option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option></select></div>
+      <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"></div>
+      <div><label>Part Number</label><input id="lpaq-part" class="inp" placeholder="Part No."></div>
+    </div>
+  </div>
+  <div id="lpaq-checklist"></div>
+  <button id="lpaq-submit-btn" class="btn-p" onclick="submitLpaQuality()" style="width:100%;margin-top:14px"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Save Quality LPA</button>
+</div>
+
+<div id="modal-lpaq-nc" class="modal-bg" style="display:none">
+ <div class="modal" style="max-width:620px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong id="lpaqn-title">Nonconformity</strong><button class="btn-g" onclick="$('modal-lpaq-nc').style.display='none'" style="padding:5px 9px">×</button></div>
+  <input type="hidden" id="lpaqn-id">
+  <div id="lpaqn-info" style="font-size:.78rem;background:#F8FAFC;border-radius:10px;padding:10px;margin-bottom:10px"></div>
+  <label>Action / Acción</label><textarea id="lpaqn-action" class="inp" rows="3"></textarea>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+    <div><label>Responsible / Responsable</label><input id="lpaqn-owner" class="inp"></div>
+    <div><label>Due Date / Fecha compromiso</label><input id="lpaqn-due" type="date" class="inp"></div>
+  </div>
+  <label style="margin-top:10px">Closure evidence / Evidencia de cierre</label><input id="lpaqn-photo" type="file" accept="image/*" class="inp">
+  <label style="margin-top:10px">Comment / Comentario</label><textarea id="lpaqn-comment" class="inp" rows="2"></textarea>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button class="btn-p" onclick="saveLpaQNC('evidence')">Submit Evidence</button>
+    <button class="btn-g" onclick="saveLpaQNC('validate')">Validate & Close</button>
+  </div>
+ </div>
+</div>
+
 <!-- ══════════════════════════ VIEW: MIS ACTIVIDADES ══ -->
 <div id="view-actividades" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
   <div style="text-align:center;margin-bottom:24px">
@@ -692,7 +917,7 @@ const LPA_AREAS = {
     <button onclick="loadMisActividades()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
   </div>
 
-  <div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
+  <div class="card" style="padding:14px;margin-bottom:14px"><label style="font-size:.75rem;font-weight:700;color:#475569">Filtrar mis actividades</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:6px"><option value="TODAS">Todas</option><option value="PENDIENTE">Abiertas por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="MATERIAL">Abiertas por falta de material</option><option value="CONFIRMACION">Abiertas por confirmación del usuario</option><option value="CERRADA">Cerradas</option><option value="INCONFORMIDAD">Devueltas por inconformidad</option></select></div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: INVENTARIO ══ -->
@@ -731,22 +956,15 @@ const LPA_AREAS = {
     </button>
   </div>
 
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0">Catálogo de gavetas</h4>
-    <button onclick="loadInventarioTec()" class="btn-g" style="padding:7px 12px;font-size:.75rem"><i class="fas fa-rotate-right" style="margin-right:5px"></i>Actualizar</button>
+  <div class="card" style="padding:18px">
+    <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
+    <select id="inv-catalog-select" class="inp" onchange="renderInventarioSeleccionado()"><option value="">— Selecciona material / refacción —</option></select>
+    <div id="inv-catalog-detail" style="display:none;margin-top:12px"></div>
   </div>
-  <div class="card" style="overflow:hidden">
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;min-width:600px">
-        <thead>
-          <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock</th><th>Mínimo</th><th>QR</th></tr>
-        </thead>
-        <tbody id="inv-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
+
+
+</div><!-- /view-inventario -->
 
 <!-- ══════════════════════════ VIEW: RECEPCIÓN DE MATERIAL QR ══ -->
 <div id="view-recepcion-qr" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
@@ -1046,7 +1264,7 @@ const LPA_AREAS = {
         <p style="color:#64748B;font-size:.78rem;margin:0">Ingenieros y Manager — Facilities KTMEX</p>
       </div>
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Usuario</label>
-      <input id="log-user" type="text" class="inp" placeholder="aramirez" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')login()">
+      <input id="log-user" type="text" class="inp" placeholder="" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')login()">
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Contraseña</label>
       <input id="log-pwd" type="password" class="inp" placeholder="••••••••" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')login()">
       <div id="log-err" style="display:none;color:#EF4444;font-size:.78rem;text-align:center;margin-bottom:8px">
@@ -1085,6 +1303,30 @@ const LPA_AREAS = {
         <button class="btn-red" style="padding:7px 12px" onclick="switchTab('inv')">
           <i class="fas fa-boxes-stacked" style="margin-right:6px"></i>Ver inventario
         </button>
+      </div>
+    </div>
+
+    <!-- MANAGER: cola persistente de aprobaciones (fuera de las pestañas) -->
+    <div id="manager-approval-box" style="display:none;margin-bottom:18px">
+      <div class="card" style="padding:16px 18px;margin-bottom:10px;background:#FFF7ED;border:1.5px solid #FED7AA">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <h3 style="font-size:.95rem;color:#9A3412;margin:0 0 3px"><i class="fas fa-user-check" style="margin-right:7px"></i>Aprobaciones pendientes del Manager</h3>
+            <p style="font-size:.76rem;color:#9A3412;margin:0">Esta cola permanece visible aunque se actualicen Compras, LPA o Plan de Acciones.</p>
+          </div>
+          <span id="manager-approval-count" class="badge b-mgr">0 pendientes</span>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:800px">
+            <thead><tr>
+              <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Departamento</th>
+              <th>Tipo</th><th>Estatus</th><th style="text-align:center">Revisar</th>
+            </tr></thead>
+            <tbody id="manager-approval-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1171,10 +1413,7 @@ const LPA_AREAS = {
           <select id="fc-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderCompras()">
             <option value="">Todos los estatus</option>
           </select>
-          <select id="fc-prio" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderCompras()">
-            <option value="">Todas las prioridades</option>
-            <option>Alta</option><option>Media</option><option>Baja</option>
-          </select>
+
         </div>
       </div>
       <div class="card" style="overflow:hidden">
@@ -1182,7 +1421,7 @@ const LPA_AREAS = {
           <table style="width:100%;border-collapse:collapse;min-width:800px">
             <thead>
               <tr>
-                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Prioridad</th>
+                <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Material</th>
                 <th>Cantidad</th><th>F. Requerida</th><th>Estatus</th><th style="text-align:center">Acción</th>
               </tr>
             </thead>
@@ -1244,22 +1483,19 @@ const LPA_AREAS = {
       <div id="inv-summary-banner" style="display:none;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px;padding:14px 18px;margin-bottom:14px">
         <p style="font-size:.85rem;color:#B91C1C;margin:0;font-weight:600"><i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><span id="inv-summary-text"></span></p>
       </div>
-      <div class="card" style="overflow:hidden">
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;min-width:680px">
-            <thead>
-              <tr><th>Código</th><th style="text-align:left">Descripción</th><th>Gaveta</th><th>Stock actual</th><th>Mínimo</th><th>Máximo</th><th>Estatus</th><th>QR</th></tr>
-            </thead>
-            <tbody id="admin-inv-tbody"></tbody>
-          </table>
-        </div>
+      <div class="card" style="padding:18px">
+        <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
+        <select id="admin-inv-select" class="inp" onchange="renderAdminInventarioSeleccionado()">
+          <option value="">— Selecciona material / refacción —</option>
+        </select>
+        <div id="admin-inv-detail" style="display:none;margin-top:14px"></div>
       </div>
     </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════ MODAL: ETIQUETA QR INVENTARIO ══ -->
+<!-- ESPERA DE MATERIAL --><div id="modal-material" class="modal" style="display:none"><div class="modal-box" style="max-width:520px"><div class="modal-header"><h3>En espera de material</h3><button onclick="closeModal('modal-material')" class="modal-x">×</button></div><div class="modal-body"><label class="lbl">Folio</label><input id="mat-folio" class="inp" disabled><label class="lbl">Material requerido *</label><input id="mat-material" class="inp"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label class="lbl">Cantidad *</label><input id="mat-cantidad" type="number" min="1" class="inp"></div><div><label class="lbl">Fecha solicitud *</label><input id="mat-fecha" type="date" class="inp"></div></div><label class="lbl">Comentario</label><textarea id="mat-comentario" class="inp" rows="3"></textarea></div><div class="modal-footer"><button class="btn-g" onclick="closeModal('modal-material')">Cancelar</button><button class="btn-p" onclick="confirmarEsperaMaterial()">Guardar</button></div></div></div><!-- ══════════════════════ MODAL: ETIQUETA QR INVENTARIO ══ -->
 <div id="modal-inv-qr" class="modal-bg" style="display:none">
   <div class="modal-box slide" style="max-width:420px">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
@@ -1507,7 +1743,16 @@ const LPA_AREAS = {
     </div>
     <p style="font-size:.78rem;color:#64748B;margin:0 0 16px">Para trabajo que surge en el momento, sin una solicitud previa. Se inicia de inmediato y queda visible para Ingeniería.</p>
 
-    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#7C3AED;margin-right:5px"></i>¿Qué vas a hacer? *</label>
+    <div style="margin-bottom:12px">
+        <label style="display:block;font-size:.78rem;font-weight:700;color:#334155;margin-bottom:7px">¿La actividad está relacionada con un folio existente? *</label>
+        <div style="display:flex;gap:10px"><label><input type="radio" name="act-folio-mode" value="SI" onchange="toggleActividadFolio()"> Sí, con folio</label><label><input type="radio" name="act-folio-mode" value="NO" onchange="toggleActividadFolio()"> No, sin folio</label></div>
+      </div>
+      <div id="act-folio-wrap" style="display:none;margin-bottom:12px">
+        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Folio de la solicitud *</label>
+        <input id="act-nueva-folio" class="inp" placeholder="FAC-2026-00025">
+        <div id="act-folio-info" style="font-size:.72rem;color:#64748B;margin-top:5px">Se validará contra la base de datos. El apoyo quedará asociado al mismo folio.</div>
+      </div>
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#7C3AED;margin-right:5px"></i>¿Qué vas a hacer? *</label>
     <textarea id="act-nueva-desc" class="inp" rows="3" placeholder="Describe la actividad…" style="margin-bottom:12px"></textarea>
 
     <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-tag" style="color:#7C3AED;margin-right:5px"></i>Tipo (opcional)</label>
@@ -1877,6 +2122,12 @@ const TEXT_I18N_EXTRA = {
   "Ver inventario": "View Inventory"
 };
 Object.assign(TEXT_I18N, TEXT_I18N_EXTRA);
+Object.assign(TEXT_I18N,{
+  'Ver fotografía de la solicitud':'View Request Photo',
+  'Administrador LPA Quality':'LPA Quality Administrator',
+  'Acceso administrativo LPA Quality':'LPA Quality Administrative Access'
+});
+Object.assign(TEXT_I18N, {"Selecciona el área a auditar": "Select the Area to Audit", "5 áreas críticas · Checklist específico por área": "5 Critical Areas · Area-specific Checklist", "Datos de Auditoría": "Audit Information", "Puesto": "Position", "Acompañante (opcional)": "Accompanying Person (optional)", "Resultado en tiempo real": "Real-time Result", "Conformidad": "Compliance", "P = Cumple · NP = No cumple · N/A = No aplica": "P = Pass · NP = Fail · N/A = Not Applicable", "Punto a verificar / Estándar esperado": "Verification Point / Expected Standard", "Observaciones / Hallazgo": "Observations / Finding", "Resultados LPA": "LPA Results", "Plan de Acciones": "Action Plan", "Buscar por auditor…": "Search by auditor…", "Fecha compromiso": "Due Date", "Fecha cierre": "Close Date"});
 
 const STATUS_I18N = {
   'Pendiente de Ingeniería':'Pending Engineering Approval',
@@ -1989,15 +2240,60 @@ function applyLanguage(root=document) {
 
 function setLanguage(lang){
   const next=lang==='en'?'en':'es';
-  if(next===LANG){applyLanguage();return;}
+  if(next===LANG){
+    if($('view-lpa-quality-form')?.style.display!=='none') updateLpaQAuditLanguageFast();
+    else applyLanguage();
+    return;
+  }
   LANG=next;
   localStorage.setItem('ktmex_lang',LANG);
+
+  // LPA Quality audit: translate only the visible form and question/criteria nodes.
+  // This avoids rebuilding the full app and makes ES/EN effectively immediate.
+  if($('view-lpa-quality-form')?.style.display!=='none'){
+    applyLanguage($('view-lpa-quality-form'));
+    updateLpaQAuditLanguageFast();
+    if($('lpaq-auditor-filter')) populateLpaQAuditorFilter();
+    if($('lang-es')&&$('lang-en')){
+      $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
+      $('lang-es').style.color=LANG==='es'?'#fff':'#94A3B8';
+      $('lang-en').style.background=LANG==='en'?'#2563EB':'transparent';
+      $('lang-en').style.color=LANG==='en'?'#fff':'#94A3B8';
+    }
+    return;
+  }
+
   applyLanguage();
   if(typeof refreshWorkStatusFilterLabels==='function') refreshWorkStatusFilterLabels();
   if(typeof renderSolicitudes==='function' && Array.isArray(SOL_DATA)) renderSolicitudes();
+  if(typeof renderManagerApprovalQueue==='function') renderManagerApprovalQueue();
   if(typeof renderCompras==='function' && Array.isArray(COMPRA_DATA)) renderCompras();
   if(typeof renderComprasRol==='function' && Array.isArray(CR_DATA)) renderComprasRol();
   if(typeof renderKPIs==='function' && SESSION) renderKPIs();
+  if(typeof initLpaAreaCards==='function' && $('lpa-area-cards-wrap')) initLpaAreaCards();
+
+  if(curLpaArea && $('view-lpa-form')?.style.display!=='none') {
+    const saved={fecha:$('lpa-fecha')?.value,turno:$('lpa-turno')?.value,capa:$('lpa-capa')?.value,acomp:$('lpa-acomp')?.value};
+    const responses=LPA_AREAS[curLpaArea].items.map((_,i)=>({
+      v:document.querySelector(`input[name="item${i}"]:checked`)?.value||'',
+      obs:$('obs'+i)?.value||''
+    }));
+    openLpaArea(curLpaArea);
+    if(saved.fecha)$('lpa-fecha').value=saved.fecha;
+    if(saved.turno)$('lpa-turno').value=saved.turno;
+    if(saved.capa)$('lpa-capa').value=saved.capa;
+    if($('lpa-acomp'))$('lpa-acomp').value=saved.acomp||'';
+    responses.forEach((r,i)=>{
+      if(r.v){const el=document.querySelector(`input[name="item${i}"][value="${r.v}"]`);if(el)el.checked=true;}
+      if($('obs'+i))$('obs'+i).value=r.obs;
+    });
+    calcLPA();
+  }
+
+  if(typeof populateLpaQAuditorFilter==='function' && $('lpaq-auditor-filter')) populateLpaQAuditorFilter();
+  if(typeof renderLpaQProgram==='function' && $('view-lpa-quality')?.style.display!=='none') renderLpaQProgram();
+  if(typeof renderLPA==='function' && LPA_DATA) renderLPA();
+  if(typeof renderAcciones==='function' && Array.isArray(ACC_DATA)) renderAcciones();
   if(typeof renderElectricHistory==='function' && $('elec-history')?.style.display!=='none') renderElectricHistory();
   if(ELEC_CURRENT_TOOL && $('elec-tool-runner')?.style.display!=='none') openElectricTool(ELEC_CURRENT_TOOL,true);
   requestAnimationFrame(()=>applyLanguage());
@@ -2088,55 +2384,64 @@ function toast(msg, type='ok') {
 let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
 
 function configureRoleUI() {
-  const role = SESSION?.user?.rol || '';
-  const ids = ['nav-sol','nav-lpa','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
-  ids.forEach(id => { if ($(id)) $(id).style.display=''; });
+  const role=SESSION?.user?.rol||'';
+  const ids=['nav-sol','nav-lpa','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
+  ids.forEach(id=>{if($(id))$(id).style.display='';});
 
-  if (role === 'compras') {
-    // Compras: únicamente Solicitudes de Trabajo + Panel de Compras.
-    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id => { if($(id)) $(id).style.display='none'; });
-    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
-  } else {
-    if ($('nav-compra')) $('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
-    if ($('nav-compra')) $('nav-compra').style.display = (role==='tecnico' || role==='ingeniero' || !SESSION) ? '' : 'none';
-    if (role !== 'tecnico' && $('nav-recepcion')) $('nav-recepcion').style.display='none';
-    if (!SESSION && $('nav-recepcion')) $('nav-recepcion').style.display='none';
-    if ($('nav-electricas')) $('nav-electricas').style.display = (role==='tecnico' || role==='ingeniero') ? '' : 'none';
-    if (role==='tecnico' && $('nav-admin')) $('nav-admin').style.display = hasAdminPrivilege() ? '' : 'none';
+  if(role==='manager'){
+    if($('manager-approval-box'))$('manager-approval-box').style.display='';
+    // Manager: Dashboard + Auditorías LPA. El resto se gestiona desde Dashboard.
+    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
+    if($('nav-lpa'))$('nav-lpa').style.display='';
+    if($('nav-admin')){
+      $('nav-admin').style.display='';
+      $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+    }
+  }else if(role==='lpa'){
+    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id=>{if($(id))$(id).style.display='none';});
+    if($('nav-lpa'))$('nav-lpa').style.display='';
+  }else if(role==='compras'){
+    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id=>{if($(id))$(id).style.display='none';});
+    if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
+  }else{
+    if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
+    if($('nav-compra'))$('nav-compra').style.display=(role==='tecnico'||role==='ingeniero'||!SESSION)?'':'none';
+    if(role!=='tecnico'&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
+    if(!SESSION&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
+    if($('nav-electricas'))$('nav-electricas').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
+    if(role==='tecnico'&&$('nav-admin'))$('nav-admin').style.display=hasAdminPrivilege()?'':'none';
   }
+  configureManagerDashboardTabs();
   setTimeout(()=>{applyLanguage();},0);
 }
 
 function roleCanView(v) {
-  if (!SESSION) return true;
-  const role = SESSION.user.rol;
-
-  if (role === 'compras') {
-    return ['home','solicitud','compras-rol','login'].includes(v);
+  if(!SESSION)return true;
+  const role=SESSION.user.rol;
+  if(role==='manager'){
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','login'].includes(v);
   }
-
-  if (v === 'electricas' && !['tecnico','ingeniero'].includes(role)) return false;
-
-  if (role === 'tecnico') {
-    if (v === 'admin') return hasAdminPrivilege();
-    return v !== 'compras-rol';
+  if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','login'].includes(v);
+  if(role==='compras')return ['home','solicitud','compras-rol','login'].includes(v);
+  if(v==='electricas'&&!['tecnico','ingeniero'].includes(role))return false;
+  if(role==='tecnico'){
+    if(v==='admin')return hasAdminPrivilege();
+    return v!=='compras-rol';
   }
-
   return true;
 }
 
 function showView(v) {
-  if (!roleCanView(v)) {
+  if(!roleCanView(v)){
     toast('Tu usuario no tiene permiso para acceder a esta sección.','err');
-    v = SESSION?.user?.rol === 'compras' ? 'compras-rol' : 'home';
+    if(SESSION?.user?.rol==='manager')v='admin';
+    else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-
-  ['home','solicitud','compra','lpa-select','lpa-form','actividades','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
-    const el=$('view-'+x); if(el) el.style.display='none';
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','actividades','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
+    const el=$('view-'+x);if(el)el.style.display='none';
   });
-  const target=$('view-'+v);
-  if(target) target.style.display='';
-  $('btn-logout').style.display = SESSION?'':'none';
+  const target=$('view-'+v);if(target)target.style.display='';
+  $('btn-logout').style.display=SESSION?'':'none';
   configureRoleUI();
 }
 
@@ -2165,6 +2470,7 @@ function goCompra() {
 function goLpaSelect() {
   if (!requireLogin('lpa-select')) return;
   if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a Auditoría LPA.','err'); goComprasRol(); return; }
+  if (SESSION.user.rol === 'lpa') { goLpaQuality(); return; }
   showView('lpa-select');
 }
 function goActividades() {
@@ -2209,16 +2515,33 @@ function goAdmin() {
 
 
 async function notifyTechnicianAssignments() {
-  if(!SESSION || SESSION.user.rol!=='tecnico') return;
-  try {
-    const res=await api({action:'getMisActividades',token:SESSION.token});
-    if(res.success && Array.isArray(res.solicitudes) && res.solicitudes.length>0) {
-      const n=res.solicitudes.length;
-      $('tech-notice-text').textContent =
-        `Tienes ${n} solicitud${n===1?'':'es'} de trabajo pendiente${n===1?'':'s'} de atender. Revisa Mis Actividades para iniciar el trabajo y registrar la evidencia.`;
+  if(!SESSION||SESSION.user.rol!=='tecnico')return;
+  try{
+    const [actRes,buyRes]=await Promise.all([
+      api({action:'getMisActividades',token:SESSION.token}),
+      api({action:'getMisCompras',token:SESSION.token})
+    ]);
+    const solicitudes=actRes.success?(actRes.solicitudes||[]):[];
+    const actividades=actRes.success?(actRes.actividades||[]):[];
+    const latest={};actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});
+    const workPending=solicitudes.filter(s=>{
+      const a=latest[s.id];
+      return ['Asignado a técnico','En ejecución','En espera de material','Pendiente de encuesta de satisfacción'].includes(s.estatus) ||
+             ['En curso','En espera de material','Pendiente de encuesta de satisfacción'].includes(a?.estatusActividad);
+    }).length;
+    const compras=buyRes.success?(buyRes.compras||[]):[];
+    const purchaseOpen=compras.filter(c=>!['Recibida','Cancelada','Rechazada por Ingeniería','Rechazada por Manager'].includes(c.estatus)).length;
+    const purchaseRejected=compras.filter(c=>String(c.estatus||'').includes('Rechazada')&&String(c.notificacionLeida||'').toUpperCase()!=='TRUE').length;
+
+    if(workPending||purchaseOpen||purchaseRejected){
+      const parts=[];
+      if(workPending)parts.push(`<b>${workPending}</b> actividad${workPending===1?'':'es'} de trabajo asignada${workPending===1?'':'s'}`);
+      if(purchaseOpen)parts.push(`<b>${purchaseOpen}</b> solicitud${purchaseOpen===1?'':'es'} de compra en seguimiento`);
+      if(purchaseRejected)parts.push(`<b>${purchaseRejected}</b> solicitud${purchaseRejected===1?'':'es'} de compra rechazada${purchaseRejected===1?'':'s'} pendiente${purchaseRejected===1?'':'s'} de revisar`);
+      $('tech-notice-text').innerHTML='Al iniciar sesión tienes:<br>• '+parts.join('<br>• ')+'<br><br>Revisa <b>Mis Actividades</b> y <b>Compras → Mis solicitudes</b>.';
       $('modal-tech-notice').style.display='flex';
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
 
@@ -2533,96 +2856,91 @@ function renderElectricHistory() {
 async function performLogin() {
   const u=$('log-user').value.trim(), p=$('log-pwd').value;
   if (!u||!p){toast('Completa usuario y contraseña','err');return;}
-
-  // Nunca reutilizar un token anterior durante un inicio de sesión nuevo.
-  SESSION = null;
+  SESSION=null;
   sessionStorage.removeItem('ktmex_session');
 
   const btn=document.querySelector('#view-login .btn-p');
-  btn.disabled=true; btn.textContent=LANG==='en'?'Verifying…':'Verificando…';
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>'+(LANG==='en'?'Signing in…':'Ingresando…');
 
   try {
-    // Primero verifica que la URL /exec sea la versión nueva del backend.
-    const backend = await verifyBackendVersion();
-    if (!backend.ok) {
+    // V7.7: authenticate directly. Backend version check is no longer placed
+    // in front of every login because it doubled the network wait.
+    const res=await api({action:'login',username:u,password:p});
+    if(!res.success){
       $('log-err').style.display='';
-      toast(backend.error,'err');
-      btn.disabled=false;
-      btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+      toast(res.error||'Usuario o contraseña incorrectos','err');
       return;
     }
 
-    const res = await api({action:'login',username:u,password:p});
-
-    if (res.success) {
-      SESSION = { token:String(res.token), user:res.user };
-      saveSession(); // guardar ANTES de cargar módulos protegidos
-
-      $('log-err').style.display='none';
-      $('log-pwd').value='';
-      $('btn-logout').style.display='';
-      $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
-      configureRoleUI();
-
-      const dest = PENDING_VIEW || 'admin';
-      PENDING_VIEW = null;
-
-      if (dest === 'admin') {
-        if (SESSION.user.rol === 'tecnico' && !hasAdminPrivilege()) {
-          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
-          showView('home');
-          await notifyTechnicianAssignments();
-        } else if (SESSION.user.rol === 'tecnico' && hasAdminPrivilege()) {
-          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
-          showView('admin');
-          $('admin-rol-label').textContent = res.user.nombre + ' · Técnico Facilities · Admin';
-          await refreshAdmin();
-          await notifyTechnicianAssignments();
-        } else if (SESSION.user.rol === 'compras') {
-          toast('Bienvenido, ' + SESSION.user.nombre,'ok');
-          goComprasRol();
-        } else {
-          showView('admin');
-          $('admin-rol-label').textContent = res.user.nombre + ' · ' + res.user.rol;
-          await refreshAdmin();
-        }
-      } else if (dest === 'compra') {
-        if (SESSION.user.rol === 'compras') {
-          goComprasRol();
-        } else {
-          initCompraForm(); showView('compra');
-        }
-      } else if (dest === 'actividades') {
-        showView('actividades'); await loadMisActividades();
-      } else if (dest === 'inventario') {
-        showView('inventario'); await loadInventarioTec();
-      } else {
-        showView(dest);
-      }
-    } else {
-      SESSION=null;
-      saveSession();
-      $('log-err').style.display='';
-      toast(res.error||'Usuario o contraseña incorrectos','err');
+    SESSION={token:String(res.token),user:res.user};
+    if(SESSION.user.rol==='manager'){
+      LANG='en';
+      localStorage.setItem('ktmex_lang','en');
     }
-  } catch(e) {
-    SESSION=null;
     saveSession();
-    toast('Error de conexión: '+e.message,'err');
-  }
+    $('log-err').style.display='none';
+    $('log-pwd').value='';
+    $('btn-logout').style.display='';
+    $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
+    configureRoleUI();
+    if(SESSION.user.rol==='manager') applyLanguage();
 
-  btn.disabled=false;
-  btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+    const dest=PENDING_VIEW||'admin';
+    PENDING_VIEW=null;
+    toast('Bienvenido, '+SESSION.user.nombre,'ok');
+
+    // Show destination immediately; load protected data afterwards.
+    if(dest==='admin'){
+      if(SESSION.user.rol==='lpa'){
+        showView('lpa-quality');
+        setTimeout(()=>goLpaQuality(),0);
+      }else if(SESSION.user.rol==='tecnico'&&!hasAdminPrivilege()){
+        showView('home');
+        setTimeout(()=>notifyTechnicianAssignments(),0);
+      }else if(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()){
+        showView('admin');
+        $('admin-rol-label').textContent=res.user.nombre+' · Técnico Facilities · Admin';
+        setTimeout(()=>refreshAdmin(),0);
+        setTimeout(()=>notifyTechnicianAssignments(),100);
+      }else if(SESSION.user.rol==='compras'){
+        showView('compras-rol');
+        setTimeout(()=>loadComprasRol(),0);
+      }else{
+        showView('admin');
+        $('admin-rol-label').textContent=res.user.nombre+' · '+res.user.rol;
+        setTimeout(()=>refreshAdmin(),0);
+      }
+    }else if(dest==='compra'){
+      if(SESSION.user.rol==='compras'){showView('compras-rol');setTimeout(()=>loadComprasRol(),0);}
+      else{showView('compra');setTimeout(()=>initCompraForm(),0);}
+    }else if(dest==='actividades'){
+      showView('actividades');setTimeout(()=>loadMisActividades(),0);
+    }else if(dest==='inventario'){
+      showView('inventario');setTimeout(()=>loadInventarioTec(),0);
+    }else if(dest==='lpa-select'){
+      showView('lpa-select');
+    }else{
+      showView(dest);
+    }
+  }catch(e){
+    SESSION=null;saveSession();toast('Error de conexión: '+e.message,'err');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Ingresar';
+  }
 }
 
 async function performLogout() {
   stopQRScanner();
-  if (SESSION) await api({action:'logout',token:SESSION.token}).catch(()=>{});
+  const token=SESSION?.token||'';
+  // V7.7: close UI immediately. Server invalidation runs without blocking.
   SESSION=null;
+  saveSession();
   $('btn-logout').style.display='none';
   $('nav-admin').innerHTML='<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
   showView('home');
   toast('Sesión cerrada','info');
+  if(token) api({action:'logout',token}).catch(()=>{});
 }
 
 // ── Solicitud Form ───────────────────────────────────────────
@@ -2700,6 +3018,45 @@ async function submitSolicitud() {
   btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud';
 }
 
+
+function showSolicitudTab(tab){const n=tab==='new';$('sol-new-panel').style.display=n?'':'none';$('sol-status-panel').style.display=n?'none':'';$('sol-tab-new').className=n?'btn-p':'btn-g';$('sol-tab-status').className=n?'btn-g':'btn-p';}
+async function consultarSolicitudFolio(){
+  const folio=$('sol-status-folio').value.trim();
+  if(!folio){toast('Ingresa el folio','err');return;}
+  const box=$('sol-status-result');box.innerHTML='<div class="card" style="padding:18px;text-align:center">Consultando…</div>';
+  try{
+    const r=await api({action:'getRequestStatusByFolio',folio});
+    if(!r.success){box.innerHTML=`<div class="card" style="padding:18px;color:#B91C1C">${r.error}</div>`;return;}
+    const s=r.request,rej=String(s.estatus||'').includes('Rechazado'),survey=s.estatus==='Pendiente de encuesta de satisfacción';
+    box.innerHTML=`<div class="card" style="padding:18px">
+      <div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${s.folio}</b>${estatusBadge(s.estatus)}</div>
+      <div style="font-size:.82rem;line-height:1.7;margin-top:10px"><div><b>Técnico:</b> ${s.tecnico||'Pendiente de asignación'}</div><div><b>Tipo:</b> ${s.tipoSolicitud||'—'}</div></div>
+      ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo</b><br>${s.motivoRechazo||'Sin comentario'}</div>`:''}
+      ${survey?renderSatisfactionSurvey(s.folio):''}
+      ${s.estatus==='Cerrada sin encuesta de satisfacción'?'<div style="padding:10px;background:#F8FAFC;border-radius:8px;margin-top:12px">Cerrada automáticamente sin encuesta de satisfacción.</div>':''}
+      ${s.promedioSatisfaccion?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px"><b>Encuesta registrada:</b> ${Number(s.promedioSatisfaccion).toFixed(2)} / 5</div>`:''}
+    </div>`;
+  }catch(e){box.innerHTML=`<div class="card" style="padding:18px;color:#B91C1C">${e.message}</div>`;}
+}
+function renderSatisfactionSurvey(folio){
+  const row=(id,label)=>`<div style="margin:12px 0"><div style="font-size:.78rem;font-weight:700;margin-bottom:6px">${label}</div><div id="${id}" style="display:flex;gap:5px">${[1,2,3,4,5].map(n=>`<button type="button" class="btn-g sat-star" data-group="${id}" data-value="${n}" onclick="selectSatisfaction('${id}',${n})" style="padding:7px 10px">★ ${n}</button>`).join('')}</div><input type="hidden" id="${id}-value"></div>`;
+  return `<div style="margin-top:14px;padding:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px"><h4 style="margin:0 0 6px">Encuesta de satisfacción</h4><p style="font-size:.74rem;color:#64748B;margin:0">Califica de 1 a 5. Si alguna respuesta es 1 o 2, el comentario será obligatorio y la solicitud regresará a Ingeniería.</p>${row('sat-tiempo','Tiempo de ejecución')}${row('sat-calidad','Calidad del trabajo')}${row('sat-actitud','Actitud del servicio')}<textarea id="sat-comentario" class="inp" rows="3" placeholder="Comentarios / observaciones"></textarea><button class="btn-p" style="margin-top:10px" onclick="submitSatisfaction('${folio}')">Enviar encuesta</button></div>`;
+}
+function selectSatisfaction(group,value){
+  $(group+'-value').value=value;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(b=>{b.style.background=Number(b.dataset.value)<=value?'#FEF3C7':'';b.style.borderColor=Number(b.dataset.value)<=value?'#F59E0B':'';});
+}
+async function submitSatisfaction(folio){
+  const tiempo=Number($('sat-tiempo-value').value),calidad=Number($('sat-calidad-value').value),actitud=Number($('sat-actitud-value').value),comentario=$('sat-comentario').value.trim();
+  if(!tiempo||!calidad||!actitud){toast('Califica los tres criterios','err');return;}
+  if(Math.min(tiempo,calidad,actitud)<=2&&!comentario){toast('Con una calificación de 1 o 2 el comentario es obligatorio','err');return;}
+  const r=await api({action:'submitSatisfactionSurvey',folio,tiempo,calidad,actitud,comentario});
+  if(r.success){toast(r.requiereRevision?'Encuesta registrada. Se envió a Ingeniería para revisión.':'Encuesta registrada. Gracias.');consultarSolicitudFolio();}else toast(r.error||'Error','err');
+}
+async function confirmarSolicitudUsuario(folio){const r=await api({action:'confirmRequestByFolio',folio});if(r.success){toast('Trabajo confirmado');consultarSolicitudFolio();}else toast(r.error,'err');}
+function mostrarInconformidadSolicitud(folio){$('sol-confirm-extra').innerHTML=`<textarea id="sol-inconformidad-coment" class="inp" rows="3" placeholder="Describe la inconformidad"></textarea><button class="btn-g" style="margin-top:8px" onclick="enviarInconformidadSolicitud('${folio}')">Enviar a Ingeniería</button>`;}
+async function enviarInconformidadSolicitud(folio){const comentario=$('sol-inconformidad-coment').value.trim();if(!comentario){toast('Describe la inconformidad','err');return;}const r=await api({action:'reportRequestIssueByFolio',folio,comentario});if(r.success){toast('Enviado a Ingeniería');consultarSolicitudFolio();}else toast(r.error,'err');}
+
 function resetSolicitud() {
   $('sol-form').style.display=''; $('sol-success').style.display='none';
   ['s-nombre','s-email','s-desc','s-presupuesto-num','s-presupuesto-monto'].forEach(id=>$(id).value='');
@@ -2711,14 +3068,51 @@ function resetSolicitud() {
 }
 
 // ── Solicitud de Compra ──────────────────────────────────────
-function initCompraForm() {
-  const today = new Date().toISOString().slice(0,10);
-  $('c-fecha').value = today;
-  if (SESSION) {
-    $('c-nombre').value = SESSION.user.nombre;
-    $('c-nombre-display').querySelector('span').textContent = SESSION.user.nombre + ' (' + (ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol) + ')';
+let COMPRA_INV_DATA=[], MIS_COMPRAS=[];
+async function initCompraForm() {
+  const today=new Date().toISOString().slice(0,10);
+  $('c-fecha').value=today;
+  if(SESSION){
+    $('c-nombre').value=SESSION.user.nombre;
+    $('c-nombre-display').querySelector('span').textContent=SESSION.user.nombre+' ('+(ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol)+')';
   }
   $('c-unidad').innerHTML='<option value="">— Selecciona —</option>'+UNIDADES_COMPRA.map(u=>`<option>${u}</option>`).join('');
+  await loadCompraInventory();
+}
+async function loadCompraInventory(){
+  try{
+    const r=await api({action:'getInventario',token:SESSION.token});
+    if(!r.success)return;
+    COMPRA_INV_DATA=r.items||[];
+    $('c-inventario').innerHTML='<option value="">— Selecciona del inventario —</option>'+COMPRA_INV_DATA.map(x=>`<option value="${x.id}">${x.codigo||''} — ${x.descripcion||''}</option>`).join('')+'<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
+  }catch(e){}
+}
+function compraInventarioChange(){
+  const id=$('c-inventario').value,isNew=id==='__NUEVO__',item=COMPRA_INV_DATA.find(x=>String(x.id)===String(id));
+  $('c-material-nuevo-wrap').style.display=isNew?'':'none';
+  $('c-inventario-info').style.display=item?'':'none';
+  if(item){
+    $('c-inventario-info').innerHTML=`<b>${item.descripcion}</b><br>Código: ${item.codigo||'—'} · Ubicación: ${item.ubicacionGaveta||'—'} · Stock: ${item.stockActual??'—'} ${item.unidad||''}`;
+    $('c-desc').value=item.descripcion||'';
+    if(item.unidad) $('c-unidad').value=item.unidad;
+  }else if(!isNew){$('c-desc').value='';}
+}
+function showCompraTab(tab){
+  const n=tab==='new';$('compra-new-panel').style.display=n?'':'none';$('compra-status-panel').style.display=n?'none':'';$('compra-tab-new').className=n?'btn-p':'btn-g';$('compra-tab-status').className=n?'btn-g':'btn-p';
+  if(!n) loadMisCompras();
+}
+async function loadMisCompras(){
+  const r=await api({action:'getMisCompras',token:SESSION.token});
+  if(!r.success){toast(r.error||'No se pudieron cargar las compras','err');return;}
+  MIS_COMPRAS=r.compras||[];renderMisCompras();
+  const unread=MIS_COMPRAS.filter(x=>String(x.notificacionLeida||'').toUpperCase()!=='TRUE'&&x.notificacionSolicitante);
+  $('compra-notice').innerHTML=unread.length?`<div style="padding:12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;margin-bottom:10px"><b>Tienes ${unread.length} notificación(es)</b><br>${unread.map(x=>`${x.folio}: ${x.notificacionSolicitante}`).join('<br>')}</div>`:'';
+  if(unread.length) api({action:'markCompraNotificationsRead',token:SESSION.token}).catch(()=>{});
+}
+function renderMisCompras(){
+  const f=$('compra-status-filter')?.value||'';
+  const rows=MIS_COMPRAS.filter(r=>!f||(f==='Pendiente'&&String(r.estatus).includes('Pendiente'))||(f==='Aprobada'&&String(r.estatus).includes('Autorizada'))||(f==='Rechazada'&&String(r.estatus).includes('Rechazada'))||(f==='Compra'&&['En cotización','Ordenada'].includes(r.estatus))||(f==='Recibida'&&r.estatus==='Recibida'));
+  $('compra-status-list').innerHTML=rows.length?rows.map(r=>`<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${r.folio}</b>${estatusBadge(r.estatus)}</div><div style="font-size:.8rem;margin-top:8px"><b>${r.descripcion||r.materialNuevoNombre||'—'}</b><br>Cantidad: ${r.cantidad||'—'} ${r.unidad||''}</div>${String(r.estatus).includes('Rechazada')?`<div style="margin-top:10px;padding:9px;background:#FEF2F2;border-radius:8px"><b>Motivo:</b> ${r.motivoRechazo||r.notificacionSolicitante||'Sin comentario'}</div>`:''}${r.altaInventarioEstatus==='Pendiente alta'?'<div style="margin-top:8px;font-size:.73rem;color:#92400E">Material nuevo: Pendiente de alta en inventario</div>':''}</div>`).join(''):'<div class="card" style="padding:22px;text-align:center;color:#94A3B8">No hay solicitudes para este filtro.</div>';
 }
 
 let selPrioCompra = '';
@@ -2731,55 +3125,27 @@ function selectPrioCompra(p) {
 }
 
 async function submitCompra() {
-  if (!SESSION) { toast('Tu sesión expiró. Inicia sesión de nuevo.','err'); showView('login'); return; }
-  if (!['tecnico','ingeniero'].includes(SESSION.user.rol)) {
-    toast('Solo técnicos e ingenieros Facilities pueden generar solicitudes de compra.','err'); return;
-  }
-  const fecha     = $('c-fecha').value;
-  const prioridad = $('c-prioridad').value;
-  const desc      = $('c-desc').value.trim();
-  const cantidad  = $('c-cantidad').value;
-  const unidad    = $('c-unidad').value;
-  const fechaReq  = $('c-fecha-req').value;
-  const proposito = $('c-proposito').value.trim();
-  const fotoFile  = $('c-foto').files[0];
-
-  if (!fecha||!prioridad||!desc||!cantidad||!unidad||!fechaReq||!proposito) {
-    toast('Completa todos los campos obligatorios','err'); return;
-  }
-  if (!fotoFile) { toast('Adjunta una fotografía de referencia','err'); return; }
-
-  const btn=$('btn-compra-submit');
-  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
-
-  let fotoBase64='', fotoName='';
-  if (fotoFile.size > 5*1024*1024) {
-    toast('La foto supera 5 MB. Comprime la imagen.','err');
-    btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';
-    return;
-  }
-  fotoBase64 = await fileToBase64(fotoFile);
-  fotoName   = fotoFile.name;
-
-  try {
-    const res = await api({action:'submitCompra', token:SESSION.token, fecha, prioridad,
-      descripcion:desc, cantidad, unidad, fechaRequerida:fechaReq, proposito, fotoBase64, fotoName});
-    if (res.success) {
-      $('compra-folio').textContent=res.folio;
-      $('compra-form').style.display='none';
-      $('compra-success').style.display='';
-    } else toast(res.error||'Error al enviar','err');
-  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
-
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';
+  if(!SESSION){toast('Tu sesión expiró.','err');showView('login');return;}
+  if(!['tecnico','ingeniero'].includes(SESSION.user.rol)){toast('Solo técnicos e ingenieros Facilities pueden generar solicitudes de compra.','err');return;}
+  const fecha=$('c-fecha').value,invId=$('c-inventario').value,materialNuevo=$('c-material-nuevo').value.trim(),desc=$('c-desc').value.trim(),cantidad=$('c-cantidad').value,unidad=$('c-unidad').value,fechaReq=$('c-fecha-req').value,proposito=$('c-proposito').value.trim(),fotoFile=$('c-foto').files[0];
+  if(!fecha||!invId||!desc||!cantidad||!unidad||!fechaReq||!proposito){toast('Completa todos los campos obligatorios','err');return;}
+  if(invId==='__NUEVO__'&&!materialNuevo){toast('Indica el nombre provisional del material nuevo','err');return;}
+  if(!fotoFile){toast('Adjunta una fotografía de referencia','err');return;}
+  if(fotoFile.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
+  const btn=$('btn-compra-submit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Enviando…';
+  try{
+    const fotoBase64=await fileToBase64(fotoFile);
+    const res=await api({action:'submitCompra',token:SESSION.token,fecha,inventarioId:invId==='__NUEVO__'?'':invId,materialOrigen:invId==='__NUEVO__'?'NUEVO':'INVENTARIO',materialNuevoNombre:materialNuevo,descripcion:desc,cantidad,unidad,fechaRequerida:fechaReq,proposito,fotoBase64,fotoName:fotoFile.name});
+    if(res.success){$('compra-folio').textContent=res.folio;$('compra-form').style.display='none';$('compra-success').style.display='';}else toast(res.error||'Error','err');
+  }catch(e){toast('Error de conexión: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra';}
 }
 
 function resetCompra() {
-  $('compra-form').style.display=''; $('compra-success').style.display='none';
-  ['c-desc','c-cantidad','c-fecha-req','c-proposito'].forEach(id=>$(id).value='');
-  $('c-nombre').value=''; $('c-unidad').value=''; $('c-prioridad').value=''; selPrioCompra='';
-  $('c-foto').value='';
-  document.querySelectorAll('#view-compra .prio-btn').forEach(b=>b.className='prio-btn');
+  $('compra-form').style.display='';$('compra-success').style.display='none';
+  ['c-desc','c-cantidad','c-fecha-req','c-proposito','c-material-nuevo'].forEach(id=>{if($(id))$(id).value='';});
+  $('c-inventario').value='';$('c-unidad').value='';$('c-foto').value='';
+  $('c-material-nuevo-wrap').style.display='none';$('c-inventario-info').style.display='none';
   $('c-fecha').value=new Date().toISOString().slice(0,10);
 }
 
@@ -2790,6 +3156,258 @@ function fileToBase64(file) {
     r.onerror=rej;
     r.readAsDataURL(file);
   });
+}
+
+const LPAQ_CATALOG = [{"id":"Q001","category":"4S+S","owner":"Visual","levels":["N1","N4"],"reaction":"C","active":true,"es":"¿El espacio se encuentra delimitado?","en":"Is the area properly identified and delimited?","criteria_es":"Considerar cintas en buen estado y área limpia de acuerdo con estandar de operación","criteria_en":"Verify that area markings are in good condition and that the area is clean according to the established operating standard."},{"id":"Q002","category":"4S+S","owner":"Visual","levels":["N4"],"reaction":"B","active":true,"es":"¿La estación se encuentra libre de objetos externos incluyendo comida o bebidas?","en":"Is the workstation free from foreign objects, including food and beverages?","criteria_es":"Verificar que únicamente existan materiales, herramientas y documentos autorizados para la operación.","criteria_en":"Verify that only materials, tools, and documents authorized for the operation are present at the workstation."},{"id":"Q003","category":"4S+S","owner":"Visual","levels":["N1"],"reaction":"B","active":true,"es":"¿El espacio se encuentra libre de piezas?","en":"Is the area free of loose or unnecessary parts?","criteria_es":"Verificar ausencia de material NOK, material sospechoso o sin identificación","criteria_en":"Verify the absence of NOK material, suspect material, or material without proper identification."},{"id":"Q004","category":"4S+S","owner":"Visual","levels":["N2"],"reaction":"B","active":true,"es":"¿Los contenedores de scrap se encuentran dentro de su capacidad?","en":"Are the scrap containers within their defined capacity limits?","criteria_es":"Verificar que el scrap no exceda la capacidad definida y que exista control de registro cuando aplique","criteria_en":"Verify that scrap does not exceed the defined container capacity and that disposal records are maintained when applicable."},{"id":"Q005","category":"Standar Operation","owner":"Visual","levels":["N1","N4"],"reaction":"A","active":true,"es":"¿Se cuenta con MOE en la operación?","en":"Is the MOE available at the operation?","criteria_es":"Verificar que el MOE se encuentre disponible, legible, limpio, vigente y accesible para el TM","criteria_en":"Verify that the MOE is available, legible, clean, current, and accessible to the Team Member."},{"id":"Q006","category":"Standar Operation","owner":"Visual","levels":["N2"],"reaction":"A","active":true,"es":"¿El TM se encuentra en la lista de difusión de la MOE?","en":"Is the Team Member included in the MOE distribution list?","criteria_es":"Verificar que el Team Member se encuentre incluido en el listado de difusión de la versión vigente del MOE.","criteria_en":"Verify that the Team Member is included in the distribution list of the current MOE revision."},{"id":"Q007","category":"Standar Operation","owner":"Visual","levels":["N1","N4"],"reaction":"A","active":true,"es":"¿El TM realiza la operación de acuerdo con la MOE?","en":"Is the Team Member performing the operation according to the MOE?","criteria_es":"Observar el ciclo de trabajo completo y comparar contra la secuencia definida en el MOE","criteria_en":"Observe the complete work cycle and compare it against the sequence defined in the MOE."},{"id":"Q008","category":"Standar Operation","owner":"Visual","levels":["N2"],"reaction":"C","active":true,"es":"¿La MOE se encuentra actualizada?","en":"Is the MOE updated?","criteria_es":"Verificar que la fecha de revisión sea menor a un año","criteria_en":"Verify that the MOE revision date is less than one year."},{"id":"Q009","category":"Standar Operation","owner":"TM","levels":["N3","N4"],"reaction":"B","active":true,"es":"¿El TM sabe como llenar su checklist de preoperación?","en":"Does the Team Member know how to complete the pre-operation checklist?","criteria_es":"Solicitar al Team Member que explique el método de llenado del checklist correspondiente","criteria_en":"Ask the Team Member to explain the method for completing the corresponding pre-operation checklist."},{"id":"Q010","category":"Standar Operation","owner":"Visual","levels":["N3","N4"],"reaction":"A","active":true,"es":"¿El checklist de preoperación se encuentra lleno por parte del TM?","en":"Has the Team Member properly completed the pre-operation checklist?","criteria_es":"Verificar que el Team Member haya completado correctamente el checklist aplicable antes del inicio de producción.","criteria_en":"Verify that the Team Member has properly completed the applicable checklist before the start of production.\n\nWelding: Checklist de Pre-operación.\nStamping: Checklist de Prensa y Dandori.\nBlanking: No aplica. / Not Applicable"},{"id":"Q011","category":"Standar Operation","owner":"Visual","levels":["N2","N3"],"reaction":"A","active":true,"es":"¿El checklist de preoperación se encuentra validado por parte de TL & GL?","en":"Has the pre-operation checklist been validated by the TL and GL?","criteria_es":"Confirmar que existan firmas de validación en el checklist de preoperación por parte de TL o GL","criteria_en":"Confirm that validation signatures from the TL and GL are present on the pre-operation checklist."},{"id":"Q012","category":"Standar Operation","owner":"TM","levels":["N2"],"reaction":"B","active":true,"es":"¿El TM conoce el plan de reacción y entiende cuando aplicarlo?","en":"Does the Team Member understand the reaction plan and know when to apply it?","criteria_es":"Solicitar al TM describir proceso \"Stop, Call and Wait\" y la piramide de escalación","criteria_en":"Ask the Team Member to describe the \"Stop, Call and Wait\" process and the escalation pyramid."},{"id":"Q013","category":"Standar Operation","owner":"TM","levels":["N3","N4"],"reaction":"A","active":true,"es":"¿Se entrego primera pieza para validación por parte de calidad de acuerdo con la frecuencia establecida?","en":"Was the first piece submitted for Quality validation according to the established frequency?","criteria_es":"Verificar evidencia de liberación de primera pieza según la frecuencia establecida","criteria_en":"Verify evidence of first-piece release according to the established frequency."},{"id":"Q014","category":"Standar Operation","owner":"Visual","levels":["N1","N4"],"reaction":"A","active":true,"es":"¿Se sigue el flujo de una sola pieza en la operación?","en":"Is one-piece flow being followed in the operation?","criteria_es":"Confirmar que no existan acumulaciones innecesarias de producto en proceso, sobreproducción o material retenido entre estaciones que comprometa el flujo establecido.","criteria_en":"Confirm that no unnecessary product accumulation, overproduction, or material retention exists between workstations that could compromise the established flow."},{"id":"Q015","category":"Standar Operation","owner":"QC","levels":["N2","N3"],"reaction":"C","active":true,"es":"¿La operación cuenta con Plan de Control impreso?","en":"Is the Control Plan available in printed form at the operation?","criteria_es":"Verificar disponibilidad del documento en la operación, la información del CP debe coincidir con el número de parte producido en la operación","criteria_en":"Verify that the document is available at the operation and that the information in the Control Plan matches the part number being produced."},{"id":"Q016","category":"Standar Operation","owner":"TL","levels":["N2","N3"],"reaction":"C","active":true,"es":"¿La operación cuenta con PFMEA impreso?","en":"Is the PFMEA available in printed form at the operation?","criteria_es":"Verificar disponibilidad del documento en la operación, la información del PFMEA debe coincidir con el número de parte producido en la operación","criteria_en":"Verify that the document is available at the operation and that the information in the PFMEA matches the part number being produced."},{"id":"Q017","category":"Quality","owner":"Visual","levels":["N2","N4"],"reaction":"A","active":true,"es":"¿La operación cuenta con su respectivo QCPS?","en":"Does the operation have the corresponding QCPS available?","criteria_es":"Verificar que exista QCPS vigente y aplica al producto en producción\nNota 1: Blanking no requiere CQPS","criteria_en":"Verify that a valid QCPS is available and applicable to the product being manufactured.\nNote 1: BL does not requiere QCPS"},{"id":"Q018","category":"Quality","owner":"QC","levels":["N3"],"reaction":"C","active":true,"es":"¿Se cuenta con carpeta de calidad en la operación? (Revisar listado STD)","en":"Is the Quality Folder available at the operation? (Refer to the STD list)","criteria_es":"Verificar que la carpeta de calidad se encuentre disponible en el área y que contenga la documentación requerida conforme al listado estándar aplicable.","criteria_en":"Verify that the Quality Folder is available in the work area and contains the required documentation according to the applicable standard list."},{"id":"Q019","category":"Quality","owner":"Visual","levels":["N2","N4"],"reaction":"C","active":true,"es":"¿El QCPS se encuntra actualizado?","en":"Is the QCPS updated?","criteria_es":"Verificar la fecha de revisión del QCPS y confirmar que sea menor a un año","criteria_en":"Verify the QCPS revision date and confirm that it is less than one year"},{"id":"Q020","category":"Quality","owner":"Visual","levels":["N3","N4"],"reaction":"A","active":true,"es":"¿El TM realiza las inspecciones de acuerdo con el QCPS?","en":"Does the Team Member perform inspections according to the QCPS requirements?","criteria_es":"Observar al Team Member realizando las verificaciones requeridas y confirmar que se ejecutan con la frecuencia, método y criterios establecidos en el QCPS.","criteria_en":"Observe the Team Member performing the required inspections and confirm that they are carried out according to the frequency, method, and criteria established in the QCPS."},{"id":"Q021","category":"Quality","owner":"TM","levels":["N3"],"reaction":"A","active":true,"es":"¿El TM cuenta con los gauges y equipos de medición mencionados en el QCPS?","en":"Does the Team Member have the gauges and measuring equipment specified in the QCPS?","criteria_es":"Verificar físicamente que los dispositivos de medición requeridos por el QCPS (Y/O MOE)  estén disponibles en la operación y correspondan a los especificados en el documento.","criteria_en":"Verify physically that the gauges and measuring devices required by the QCPS and/or MOE are available at the operation and correspond to those specified in the document."},{"id":"Q022","category":"Quality","owner":"Visual","levels":["N3"],"reaction":"A","active":true,"es":"En caso de que el QCPS mencione gauge o equipo de medición ¿Cuenta con calibración vigente?","en":"If the QCPS specifies a gauge or measuring device, does it have a valid calibration?","criteria_es":"Verificar que el equipo de medición cuente con identificación de calibración vigente y que no haya excedido su fecha de vencimiento","criteria_en":"Verify that the measuring device has a valid calibration identification and that its calibration due date has not expired."},{"id":"Q023","category":"Quality","owner":"Visual","levels":["N3"],"reaction":"C","active":true,"es":"¿La operación cuenta con su respectivo Inspection Standar?","en":"Does the operation have the corresponding Inspection Standard available?","criteria_es":"Verificar que el Inspection Standard se encuentre disponible y corresponda al producto actualmente procesado","criteria_en":"Verify that the Inspection Standard is available and corresponds to the product currently being processed."},{"id":"Q024","category":"Quality","owner":"Visual","levels":["N3"],"reaction":"A","active":true,"es":"¿Los registros de medición / validación están correctamente llenados?","en":"Are measurement and validation records completed correctly?","criteria_es":"Verificar que los registros de inspección requeridos por el proceso se encuentren completos, legibles, actualizados y llenados conforme a la frecuencia establecida.","criteria_en":"Verify that the required inspection records are complete, legible, current, and filled out according to the established frequency.\n\nRevisar / Review:\nBlanking: Quality Check.\nStamping: Daily Check.\nWelding: Daily Check."},{"id":"Q025","category":"Quality","owner":"TM","levels":["N4"],"reaction":"B","active":true,"es":"En caso de tener alerta de calidad en la operación, ¿Se encuentra vigente?","en":"If a Quality Alert applies to the operation, is it current and valid?","criteria_es":"Verificar que las alertas de calidad aplicables que estén exhibidas en el área, correspondan al producto auditado y sean conocidas por el Team Member.","criteria_en":"Verify that applicable Quality Alerts are posted in the area, correspond to the audited product, and are known by the Team Member."},{"id":"Q026","category":"Quality","owner":"Visual","levels":["N3"],"reaction":"A","active":true,"es":"En caso de tener alerta de calidad en la operación vigente, ¿Las certificaciones se realizan de acuerdo a la alerta de calidad?","en":"If a Quality Alert is active for the operation, are certifications being performed according to the Quality Alert requirements?","criteria_es":"Verificar evidencia de que las inspecciones, certificaciones o controles especiales establecidos en la alerta de calidad están siendo ejecutados conforme a los requisitos definidos.\nNota 1: BL no cuenta con marcas de certificación","criteria_en":"Verify evidence that inspections, certifications, or special controls established in the Quality Alert are being performed according to the defined requirements.\nNote 1: BL does not use certification marks"},{"id":"Q027","category":"Packaging","owner":"Visual","levels":["N3"],"reaction":"A","active":true,"es":"¿La materia prima se encuentra identificada y libre de contaminación?","en":"Is the raw material properly identified and free from contamination?","criteria_es":"Verificar que la materia prima cuente con identificación correcta y trazable. Confirmar que no presente contaminación, daño físico o mezcla con otros materiales.","criteria_en":"Verify that the raw material is properly identified and traceable. Confirm that it is free from contamination, physical damage, or mixing with other materials."},{"id":"Q028","category":"Packaging","owner":"Visual","levels":["N1","N3"],"reaction":"A","active":true,"es":"¿La identificación del producto y su trazabilidad corresponden al producto contenido? (Número de parte, fecha, turno, lote)","en":"Does the product identification and traceability match the contained product? (Part number, date, shift, lot number)","criteria_es":"Verificar que la información de identificación coincida con el material contenido y permita la trazabilidad completa del producto.","criteria_en":"Verify that the identification information matches the contained material and ensures full product traceability."},{"id":"Q029","category":"Packaging","owner":"Visual","levels":["N4"],"reaction":"A","active":true,"es":"¿El empaque se encuentra libre de contaminación, seca y en óptimas condiciones?","en":"Is the packaging free from contamination, dry, and in good condition?","criteria_es":"Verificar que el empaque se encuentre limpio, seco, sin deformaciones, fracturas o daños que puedan comprometer la calidad del producto.","criteria_en":"Verify that the packaging is clean, dry, and free from deformation, cracks, or damage that could compromise product quality."},{"id":"Q030","category":"Packaging","owner":"Visual","levels":["N4"],"reaction":"A","active":true,"es":"¿La última pieza se esta marcando con nombre y fecha?","en":"Is the last piece being identified with name and date?","criteria_es":"Verificar que la identificación de última pieza se realice de acuerdo con el estándar incluyendo nombre y fecha.","criteria_en":"Verify that last-piece identification is performed according to the standard, including name and date"},{"id":"Q031","category":"Training","owner":"TL","levels":["N3"],"reaction":"A","active":true,"es":"¿El TM de la operación es el titular?","en":"Is the Team Member the assigned operator for the workstation?","criteria_es":"Verificar mediante matriz de habilidades que el Team Member corresponde al operador titular de la estación.","criteria_en":"Verify through the skills matrix that the Team Member is the assigned operator for the workstation."},{"id":"Q032","category":"Training","owner":"TL","levels":["N2","N3"],"reaction":"A","active":true,"es":"En caso de operador nivel l o ll, ¿Se cuenta con apoyo de personal sombra?","en":"For a Level I or Level II operator, is shadow support available?","criteria_es":"Verificar que el operador nivel l o ll cuente con acompañamiento de personal autorizado conforme al proceso de entrenamiento establecido.","criteria_en":"Verify that the Level l o ll operator has support from authorized personnel according to the established training process."},{"id":"Q033","category":"Training","owner":"TL","levels":["N4"],"reaction":"A","active":true,"es":"Si el TM no es titular , ¿el TM fue entrenado al inicio de turno y se notificó a calidad para realizar auditorías en la operación?","en":"If the Team Member is not the assigned operator, was the Team Member trained at the beginning of the shift and was Quality notified to perform audits in the operation?","criteria_es":"Verificar evidencia del entrenamiento al inicio del turno y confirmar que Calidad fue notificada conforme al procedimiento aplicable.","criteria_en":"Verify evidence of training at the beginning of the shift and confirm that Quality was notified according to the applicable procedure."},{"id":"Q034","category":"Maintenance","owner":"M TC","levels":["N4"],"reaction":"A","active":true,"es":"¿Se cuenta con checklist de preoperación por parte de mantenimiento?","en":"Has the Maintenance Team completed the pre-operation checklist?","criteria_es":"Verificar que mantenimiento haya completado el checklist de preparación correspondiente y que existan registros de la revisión previa al arranque.","criteria_en":"Verify that Maintenance has completed the corresponding pre-operation checklist and that records of the pre-startup inspection are available."},{"id":"Q035","category":"Maintenance","owner":"M TC","levels":["N2"],"reaction":"C","active":true,"es":"¿El mantenimiento preventivo está acorde con la programación de la operación? (Consultar S-Vision)","en":"Is preventive maintenance being performed according to the operation schedule? (Refer to S-Vision)","criteria_es":"Verificar en S-Vision que los mantenimientos preventivos programados se encuentren ejecutados dentro de la frecuencia establecida y sin atrasos que comprometan la operación.","criteria_en":"Verify in S-Vision that scheduled preventive maintenance activities have been completed within the established frequency and without delays that could affect the operation."}];
+
+
+const LPAQ_AREAS = ['Blanking','Stamping','Welding','Facilities'];
+let LPAQ_ACCESS=null, LPAQ_DASH={program:[],nc:[],audits:[],kpis:{}};
+let LPAQ_PROGRAM_ID='';
+let LPAQ_NC_DRAFT={};
+
+function showFacilitiesLpaCards(){ if($('lpa-facilities-wrap')) $('lpa-facilities-wrap').style.display=''; }
+async function goLpaQuality(){
+  if(!requireLogin('lpa-quality')) return;
+  showView('lpa-quality');
+  await loadLpaQDashboard();
+}
+async function loadLpaQDashboard(){
+  try{
+    const r=await api({action:'getLpaQualityDashboard',token:SESSION.token});
+    if(!r.success){toast(r.error||'LPA Quality error','err');return;}
+    LPAQ_ACCESS=r.access; LPAQ_DASH=r;
+    if($('lpaq-btn-new')) $('lpaq-btn-new').style.display=r.access.qadmin?'none':((SESSION.user.rol==='lpa' && !r.access.validator)?'none':'');
+    $('lpaq-access-note').innerHTML=(LANG==='en'?'Assigned areas: ':'Áreas asignadas: ')+
+      `<strong>${(r.access.areas||[]).join(', ')||'—'}</strong> · ${r.access.level||'—'} · ${r.access.position||''}`+
+      (r.access.qadmin?` <span class="badge b-done">${LANG==='en'?'LPA QUALITY ADMIN':'ADMIN LPA QUALITY'}</span>`:'')+
+      (r.access.pilot?` <span class="badge b-pend">PILOT</span>`:'');
+    const k=r.kpis||{};
+    $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
+    $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
+    $('lpaq-kpi-open').textContent=k.openNC||0;
+    $('lpaq-kpi-validation').textContent=k.pendingValidation||0;
+    if($('lpaq-kpi-grace')) $('lpaq-kpi-grace').textContent=k.gracePeriod||0;
+    if($('lpaq-kpi-overdue')) $('lpaq-kpi-overdue').textContent=k.overdueAudits||0;
+    populateLpaQAuditorFilter();
+    renderLpaQProgram(); renderLpaQNC();
+    requestAnimationFrame(()=>applyLanguage($('view-lpa-quality')));
+  }catch(e){toast('LPA Quality: '+e.message,'err');}
+}
+
+function populateLpaQAuditorFilter(){
+  const sel=$('lpaq-auditor-filter'); if(!sel) return;
+  const previous=sel.value;
+  const map=new Map();
+  (LPAQ_DASH.program||[]).forEach(r=>{
+    const key=String(r.auditorUsername||r.auditorNombre||'').trim();
+    if(key) map.set(key,String(r.auditorNombre||r.auditorUsername||key).trim());
+  });
+  const auditors=[...map.entries()].sort((a,b)=>a[1].localeCompare(b[1],'es'));
+  sel.innerHTML='<option value="">— '+(LANG==='en'?'Select auditor':'Selecciona auditor')+' —</option>'+
+    auditors.map(([user,name])=>`<option value="${user}">${name}</option>`).join('');
+
+  // Normal auditors default to themselves. LPA Quality admin chooses whom to review.
+  const own=String(SESSION?.user?.username||'');
+  if(previous && auditors.some(([u])=>u===previous)) sel.value=previous;
+  else if(!LPAQ_ACCESS?.qadmin && auditors.some(([u])=>u.toLowerCase()===own.toLowerCase())) sel.value=auditors.find(([u])=>u.toLowerCase()===own.toLowerCase())[0];
+}
+
+function renderLpaQProgram(){
+  let rows=[...(LPAQ_DASH.program||[])];
+  const auditor=$('lpaq-auditor-filter')?.value||'';
+  const status=$('lpaq-program-status-filter')?.value||'';
+  if(auditor) rows=rows.filter(r=>String(r.auditorUsername||r.auditorNombre||'')===auditor);
+  else if(LPAQ_ACCESS?.qadmin){
+    $('lpaq-program-table').innerHTML='<div style="font-size:.8rem;color:#64748B;padding:18px 4px">'+(LANG==='en'?'Select an auditor to display the assigned audit schedule.':'Selecciona un auditor para mostrar su programa de auditorías asignadas.')+'</div>'; return;
+  }
+  if(status) rows=rows.filter(r=>String(r.estatus||'')===status);
+  rows.sort((a,b)=>String(a.fechaProgramada||'').localeCompare(String(b.fechaProgramada||'')));
+  if(!rows.length){$('lpaq-program-table').innerHTML='<div style="font-size:.78rem;color:#94A3B8">'+(LANG==='en'?'No audits found for this filter.':'No se encontraron auditorías para este filtro.')+'</div>';return;}
+  const stEN={'Programada':'Scheduled','En tolerancia':'Grace Period','Vencida':'Overdue','Realizada':'Completed','Vencida realizada':'Completed Late'};
+  $('lpaq-program-table').innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:900px"><thead><tr><th>Date</th><th>Auditor</th><th>Area</th><th>Machine</th><th>Level</th><th>Status</th><th></th></tr></thead><tbody>`+
+  rows.map(r=>{
+    const st=LANG==='en'?(stEN[r.estatus]||r.estatus):r.estatus;
+    const cls=r.estatus==='Vencida'?'b-ing-rej':r.estatus==='En tolerancia'?'b-media':r.estatus==='Vencida realizada'?'b-media':r.estatus==='Realizada'?'b-done':'b-pend';
+    let action=r.canStart?`<button class="btn-p" onclick="openLpaQProgramAudit('${r.id}')" style="padding:5px 9px">${LANG==='en'?'Start':'Comenzar'}</button>`:
+      r.lockedFuture?`<span style="font-size:.7rem;color:#64748B"><i class="fas fa-lock" style="margin-right:4px"></i>${LANG==='en'?'Available on':'Disponible el'} ${r.fechaProgramada}</span>`:
+      `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
+    return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${r.machine||'—'}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td>${action}</td></tr>`;
+  }).join('')+'</tbody></table>';
+}
+function renderLpaQNC(){
+  const rows=LPAQ_DASH.nc||[];
+  if(!rows.length){$('lpaq-nc-table').innerHTML='<div style="font-size:.78rem;color:#94A3B8">No nonconformities / Sin no conformidades.</div>';return;}
+  $('lpaq-nc-table').innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:900px"><thead><tr><th>NC</th><th>Area</th><th>Question</th><th>Reaction</th><th>Responsible</th><th>Status</th><th></th></tr></thead><tbody>`+
+  rows.map(r=>`<tr><td class="mono">${r.id||''}</td><td>${r.area||''}</td><td>${r.questionId||''}</td><td><span class="badge ${r.reactionLevel==='A'?'b-ing-rej':r.reactionLevel==='B'?'b-media':'b-pend'}">${r.reactionLevel||''}</span></td><td>${r.responsable||'—'}</td><td>${r.estatus||''}</td><td><button class="btn-g" onclick="openLpaQNC('${r.id}')" style="padding:5px 8px">Open</button></td></tr>`).join('')+'</tbody></table>';
+}
+async function generateLpaQPilotProgram(){
+  const r=await api({action:'generateLpaQualityProgram',token:SESSION.token});
+  if(r.success){toast((LANG==='en'?'Program generated: ':'Programa generado: ')+r.created,'ok');loadLpaQDashboard();}
+  else toast(r.error||'Error','err');
+}
+function openLpaQNew(){
+  LPAQ_PROGRAM_ID='';
+  if(!LPAQ_ACCESS){toast('Load LPA Quality first','err');return;}
+  if(LPAQ_ACCESS.qadmin){
+    toast(LANG==='en'?'LPA Quality administrators may only perform audits assigned to themselves in the official schedule.':'Los administradores de LPA Quality solo pueden realizar las auditorías que tengan asignadas a su propio nombre en el calendario oficial.','err');
+    return;
+  }
+  $('lpaq-area').innerHTML=(LPAQ_ACCESS.areas||[]).map(a=>`<option>${a}</option>`).join('');
+  $('lpaq-level').value=LPAQ_ACCESS.level||'N4';
+  $('lpaq-date').value=new Date().toISOString().slice(0,10);
+  $('lpaq-form-level').textContent=$('lpaq-level').value;
+  renderLpaQChecklist(); showView('lpa-quality-form');
+}
+function openLpaQProgramAudit(id){
+  const r=(LPAQ_DASH.program||[]).find(x=>x.id===id); if(!r)return;
+  if(String(r.auditorUsername||'').toLowerCase()!==String(SESSION?.user?.username||'').toLowerCase()){
+    toast(LANG==='en'?'This audit is assigned to another auditor. You can review it, but you cannot perform it.':'Esta auditoría está asignada a otro auditor. Puedes consultarla, pero no realizarla.','err');
+    return;
+  }
+  if(r.lockedFuture || !r.canStart){
+    toast(LANG==='en'?'This audit is not available yet. It will unlock on its scheduled date.':'Esta auditoría todavía está bloqueada. Se habilitará el día de su fecha programada.','err');
+    return;
+  }
+  LPAQ_PROGRAM_ID=id;
+  $('lpaq-area').innerHTML=`<option>${r.area}</option>`;
+  $('lpaq-level').value=r.nivel;
+  $('lpaq-date').value=new Date().toISOString().slice(0,10);
+  $('lpaq-line').value=r.machine||'';
+  $('lpaq-part').value='';
+  $('lpaq-form-level').textContent=r.nivel;
+  renderLpaQChecklist();
+  showView('lpa-quality-form');
+  requestAnimationFrame(()=>{applyLanguage($('view-lpa-quality-form'));updateLpaQAuditLanguageFast();});
+}
+function qText(q){return LANG==='en'?q.en:q.es}
+function qCriteria(q){return LANG==='en'?q.criteria_en:q.criteria_es}
+
+function updateLpaQAuditLanguageFast(){
+  if(!$('view-lpa-quality-form') || $('view-lpa-quality-form').style.display==='none') return;
+  const byId=Object.fromEntries(LPAQ_CATALOG.map(q=>[q.id,q]));
+  document.querySelectorAll('#lpaq-checklist .lpaq-question-text').forEach(el=>{
+    const q=byId[el.dataset.qid]; if(q) el.textContent=qText(q);
+  });
+  document.querySelectorAll('#lpaq-checklist .lpaq-criteria-text').forEach(el=>{
+    const q=byId[el.dataset.qid]; if(q) el.textContent=qCriteria(q);
+  });
+  document.querySelectorAll('#lpaq-checklist .lpaq-finding').forEach(el=>{
+    el.placeholder=LANG==='en'?'Finding *':'Hallazgo *';
+  });
+  document.querySelectorAll('#lpaq-checklist .lpaq-owner').forEach(el=>{
+    el.placeholder=LANG==='en'?'Responsible *':'Responsable *';
+  });
+  document.querySelectorAll('#lpaq-checklist .lpaq-just').forEach(el=>{
+    el.placeholder=LANG==='en'?'Technical justification *':'Justificación técnica *';
+  });
+  if($('lpaq-submit-btn')){
+    $('lpaq-submit-btn').innerHTML='<i class="fas fa-paper-plane" style="margin-right:6px"></i>'+
+      (LANG==='en'?'Save Quality LPA':'Guardar LPA Quality');
+  }
+}
+
+function renderLpaQChecklist(){
+  const level=$('lpaq-level').value||'N4'; $('lpaq-form-level').textContent=level;
+  const qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
+  $('lpaq-checklist').innerHTML=qs.map((q,i)=>`
+   <div class="card lpaq-item" data-qid="${q.id}" style="padding:15px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <div><div style="font-size:.7rem;color:#64748B">${q.id} · ${q.category} · ${q.owner}</div><strong class="lpaq-question-text" data-qid="${q.id}" style="font-size:.86rem">${qText(q)}</strong>
+      <div class="lpaq-criteria-text" data-qid="${q.id}" style="font-size:.73rem;color:#64748B;margin-top:6px">${qCriteria(q)}</div></div>
+      <span class="badge ${q.reaction==='A'?'b-ing-rej':q.reaction==='B'?'b-media':'b-pend'}">${q.reaction}</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <label><input type="radio" name="lpaq-${q.id}" value="OK" onchange="toggleLpaQNC('${q.id}',false,true)"> OK</label>
+      <label><input type="radio" name="lpaq-${q.id}" value="NOK" onchange="toggleLpaQNC('${q.id}',true,false)"> NOK</label>
+      <label><input type="radio" name="lpaq-${q.id}" value="N/A" onchange="toggleLpaQNC('${q.id}',false,true)"> N/A</label>
+    </div>
+    <div id="lpaq-nc-${q.id}" style="display:none;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px;margin-top:10px">
+      <div style="font-size:.75rem;font-weight:700;color:#9A3412;margin-bottom:7px">NC · Reaction ${q.reaction}</div>
+      <textarea class="inp lpaq-finding" rows="2" placeholder="Finding / Hallazgo *"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <select class="inp lpaq-resp-area">
+          <option value="">Responsible Area / Área responsable *</option>
+          <option value="Maintenance">Maintenance / Mantenimiento</option><option value="W">Welding</option><option value="QC">Quality / Calidad</option>
+          <option value="ST">Stamping</option><option value="BL">Blanking</option><option value="DM">Die Maintenance</option>
+          <option value="PC">Production Control</option><option value="IL">Internal Logistics</option><option value="TPS">TPS / Project</option>
+          <option value="Facilities">Facilities</option><option value="Other">Other / Otro</option>
+        </select>
+        <input class="inp lpaq-owner" placeholder="Responsible / Responsable *">
+      </div>
+      <input class="inp lpaq-due" type="date" style="margin-top:8px">
+      <input class="inp lpaq-photo" type="file" accept="image/*" capture="environment" style="margin-top:8px">
+      ${q.reaction==='D'?'<textarea class="inp lpaq-just" rows="2" placeholder="Technical justification / Justificación técnica *" style="margin-top:8px"></textarea>':''}
+    </div>
+   </div>`).join('');
+}
+function toggleLpaQNC(qid,on,clearWhenHidden=false){
+  const el=$('lpaq-nc-'+qid); if(!el) return;
+  el.style.display=on?'':'none';
+
+  if(!on && clearWhenHidden){
+    const finding=el.querySelector('.lpaq-finding');
+    const owner=el.querySelector('.lpaq-owner');
+    const respArea=el.querySelector('.lpaq-resp-area');
+    const due=el.querySelector('.lpaq-due');
+    const photo=el.querySelector('.lpaq-photo');
+    const just=el.querySelector('.lpaq-just');
+    if(finding) finding.value='';
+    if(owner) owner.value='';
+    if(respArea) respArea.value='';
+    if(due) due.value='';
+    if(photo) photo.value='';
+    if(just) just.value='';
+  }
+}
+async function submitLpaQuality(){
+  const area=$('lpaq-area').value, level=$('lpaq-level').value, fecha=$('lpaq-date').value;
+  if(!area||!level||!fecha){toast('Complete required fields / Completa los campos obligatorios','err');return;}
+  const qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
+  const responses=[]; let invalid=false;
+  for(const q of qs){
+    const card=document.querySelector(`.lpaq-item[data-qid="${q.id}"]`);
+    const result=document.querySelector(`input[name="lpaq-${q.id}"]:checked`)?.value||'';
+    if(!result){invalid=true;break;}
+    const resp={questionId:q.id,result,reactionLevel:q.reaction};
+    if(result==='NOK'){
+      const finding=card.querySelector('.lpaq-finding')?.value.trim()||'';
+      const owner=card.querySelector('.lpaq-owner')?.value.trim()||'';
+      const respArea=card.querySelector('.lpaq-resp-area')?.value||'';
+      const due=card.querySelector('.lpaq-due')?.value||'';
+      const file=card.querySelector('.lpaq-photo')?.files?.[0];
+      if(!finding||!respArea||!owner||!file){toast(`${q.id}: Finding, responsible area, responsible person and photo are required / Hallazgo, área responsable, responsable y foto son obligatorios`,'err');return;}
+      if(q.reaction==='D' && !(card.querySelector('.lpaq-just')?.value.trim())){toast(`${q.id}: Technical justification required`,'err');return;}
+      if(file.size>5*1024*1024){toast(`${q.id}: Photo exceeds 5 MB`,'err');return;}
+      resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;resp.fechaCompromiso=due;
+      resp.justificacion=card.querySelector('.lpaq-just')?.value.trim()||'';
+      resp.fotoName=file.name;resp.fotoBase64=await fileToBase64(file);
+    }
+    responses.push(resp);
+  }
+  if(invalid){toast('All questions require OK, NOK or N/A / Todas las preguntas requieren respuesta','err');return;}
+  const btn=$('lpaq-submit-btn');btn.disabled=true;
+  try{
+    const r=await api({action:'submitLpaQuality',token:SESSION.token,programId:LPAQ_PROGRAM_ID,area,level,fecha,turno:$('lpaq-shift').value,linea:$('lpaq-line').value,parte:$('lpaq-part').value,responses});
+    if(r.success){toast(`LPA Quality saved · ${r.folio} · NC: ${r.ncCount}`,'ok');goLpaQuality();}
+    else toast(r.error||'Error','err');
+  }finally{btn.disabled=false;}
+}
+function openLpaQNC(id){
+  const r=(LPAQ_DASH.nc||[]).find(x=>x.id===id);if(!r)return;
+  $('lpaqn-id').value=id;$('lpaqn-title').textContent=id+' · '+r.questionId;
+  $('lpaqn-info').innerHTML=`<strong>${r.area}</strong> · Reaction ${r.reactionLevel}<br>`+
+    `${r.machine?'<b>Machine:</b> '+r.machine+'<br>':''}`+
+    `${r.areaResponsable?'<b>Responsible Area:</b> '+r.areaResponsable+'<br>':''}`+
+    `${r.hallazgo||''}`;
+  $('lpaqn-action').value=r.accion||'';$('lpaqn-owner').value=r.responsable||'';$('lpaqn-due').value=r.fechaCompromiso||'';$('lpaqn-comment').value='';
+  $('lpaqn-photo').value='';$('modal-lpaq-nc').style.display='flex';
+}
+async function saveLpaQNC(mode){
+  const id=$('lpaqn-id').value,file=$('lpaqn-photo').files?.[0];let fotoBase64='',fotoName='';
+  if(file){if(file.size>5*1024*1024){toast('Photo exceeds 5 MB','err');return;}fotoBase64=await fileToBase64(file);fotoName=file.name;}
+  const r=await api({action:'updateLpaQualityNC',token:SESSION.token,id,mode,accion:$('lpaqn-action').value,responsable:$('lpaqn-owner').value,fechaCompromiso:$('lpaqn-due').value,comentario:$('lpaqn-comment').value,fotoBase64,fotoName});
+  if(r.success){$('modal-lpaq-nc').style.display='none';toast(r.status,'ok');loadLpaQDashboard();}else toast(r.error||'Error','err');
 }
 
 // ── LPA ─────────────────────────────────────────────────────
@@ -2805,16 +3423,16 @@ function initLpaAreaCards() {
       <div style="width:40px;height:40px;background:#F0FDF4;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
         <i class="fas fa-clipboard-check" style="color:#16A34A;font-size:16px"></i>
       </div>
-      <h4 style="font-size:.88rem;font-weight:700;color:var(--navy);margin:0 0 4px">${area.label}</h4>
-      <p style="color:#64748B;font-size:.75rem;margin:0 0 12px">${area.items.length} puntos de verificación</p>
-      <span style="color:#16A34A;font-size:.75rem;font-weight:600">Iniciar →</span>
+      <h4 style="font-size:.88rem;font-weight:700;color:var(--navy);margin:0 0 4px">${lpaText(area.label)}</h4>
+      <p style="color:#64748B;font-size:.75rem;margin:0 0 12px">${area.items.length} ${lpaText('puntos de verificación')}</p>
+      <span style="color:#16A34A;font-size:.75rem;font-weight:600">${lpaText('Iniciar →')}</span>
     </div>`).join('');
 }
 
 function openLpaArea(area) {
   curLpaArea = area;
   const areaData = LPA_AREAS[area];
-  $('lpa-area-title').textContent = areaData.label;
+  $('lpa-area-title').textContent = lpaText(areaData.label);
   $('lpa-fecha').value = new Date().toISOString().slice(0,10);
   $('lpa-turno').value=''; $('lpa-capa').value='';
 
@@ -2830,7 +3448,7 @@ function openLpaArea(area) {
   tbody.innerHTML=areaData.items.map((item,i)=>`
     <tr style="border-bottom:1px solid #F1F5F9">
       <td style="text-align:center;font-size:.78rem;font-weight:700;color:#64748B;padding:10px">${i+1}</td>
-      <td style="padding:10px;font-size:.8rem;color:#334155;line-height:1.45">${item}</td>
+      <td style="padding:10px;font-size:.8rem;color:#334155;line-height:1.45">${lpaText(item)}</td>
       <td style="padding:10px;text-align:center">
         <div class="lpa-radio">
           <input type="radio" name="item${i}" id="p${i}" value="p" onchange="calcLPA()">
@@ -2850,7 +3468,7 @@ function openLpaArea(area) {
         </div>
       </td>
       <td style="padding:8px">
-        <input type="text" id="obs${i}" class="inp" style="padding:6px 9px;font-size:.77rem" placeholder="Observación…">
+        <input type="text" id="obs${i}" class="inp" style="padding:6px 9px;font-size:.77rem" placeholder="${lpaText('Observación…')}">
       </td>
     </tr>`).join('');
 
@@ -2874,7 +3492,7 @@ function calcLPA() {
 async function submitLPA() {
   if (!SESSION) { toast('Tu sesión expiró. Inicia sesión de nuevo.','err'); showView('login'); return; }
   const fecha=$('lpa-fecha').value, turno=$('lpa-turno').value, capa=$('lpa-capa').value;
-  if(!fecha||!turno||!capa){toast('Completa el encabezado (fecha, turno, capa)','err');return;}
+  if(!fecha||!turno||!capa){toast(lpaText('Completa el encabezado (fecha, turno, capa)'),'err');return;}
 
   const n=LPA_AREAS[curLpaArea].items.length;
   let allAnswered=true;
@@ -2884,11 +3502,16 @@ async function submitLPA() {
     if(!v) allAnswered=false;
     items.push({numero:i+1, p:v==='p', np:v==='np', na:v==='na', obs:$('obs'+i).value.trim()});
   }
-  if(!allAnswered){toast('Todos los puntos deben tener una respuesta (P, NP o N/A)','err');return;}
+  if(!allAnswered){toast(lpaText('Todos los puntos deben tener una respuesta (P, NP o N/A)'),'err');return;}
 
   // Warn if NP without observation
   const npNoObs=items.filter(it=>it.np&&!it.obs);
-  if(npNoObs.length>0){toast(`${npNoObs.length} punto(s) NP sin observación. Agrega descripción del hallazgo.`,'err');return;}
+  if(npNoObs.length>0){
+    toast(LANG==='en'
+      ? `${npNoObs.length} ${lpaText('punto(s) NP sin observación. Agrega descripción del hallazgo.')}`
+      : `${npNoObs.length} punto(s) NP sin observación. Agrega descripción del hallazgo.`,'err');
+    return;
+  }
 
   const btn=$('btn-lpa-submit');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Guardando…';
@@ -2897,7 +3520,9 @@ async function submitLPA() {
     const res=await api({action:'submitLPA', token:SESSION.token, area:curLpaArea, fecha, turno, capa,
       acompañante:$('lpa-acomp').value, items});
     if(res.success){
-      toast(`Auditoría guardada. Conformidad: ${res.porcentaje}%${res.totalNP>0?' — '+res.totalNP+' NP generaron acciones correctivas':''}`,'ok');
+      toast(LANG==='en'
+        ? `Audit saved. Compliance: ${res.porcentaje}%${res.totalNP>0?' — '+res.totalNP+' NP generated corrective actions':''}`
+        : `Auditoría guardada. Conformidad: ${res.porcentaje}%${res.totalNP>0?' — '+res.totalNP+' NP generaron acciones correctivas':''}`,'ok');
       showView('lpa-select');
     } else toast(res.error||'Error al guardar','err');
   } catch(e){toast('Error de conexión','err');}
@@ -2919,54 +3544,7 @@ async function loadMisActividades() {
   } catch(e) { toast('Error de conexión','err'); }
 }
 
-function renderMisActividades() {
-  const list = $('act-list');
-  const { solicitudes, actividades } = ACT_DATA;
-
-  if (!solicitudes.length) {
-    list.innerHTML = `<div class="card" style="padding:36px;text-align:center;color:#94A3B8">
-      <i class="fas fa-clipboard-check" style="font-size:1.8rem;display:block;margin-bottom:10px"></i>
-      No tienes actividades asignadas en este momento.
-    </div>`;
-    return;
-  }
-
-  list.innerHTML = solicitudes.map(s => {
-    const act = actividades.find(a => a.solicitudId === s.id && a.estatusActividad === 'En curso');
-    const cerradaPrevia = actividades.filter(a => a.solicitudId === s.id && a.estatusActividad !== 'En curso').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
-
-    let accionHtml = '';
-    if (act) {
-      accionHtml = `
-        <div style="background:#EDE9FE;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px 14px;margin-bottom:10px">
-          <p style="font-size:.78rem;color:#5B21B6;margin:0"><i class="fas fa-play" style="margin-right:5px"></i>Actividad en curso desde ${fmtDateTime(act.horaInicio)}</p>
-        </div>
-        <button class="btn-p" style="background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'" onclick="openCerrarModal('${act.id}','${s.folio}')">
-          <i class="fas fa-stop" style="margin-right:7px"></i>Cerrar Actividad
-        </button>`;
-    } else if (cerradaPrevia && cerradaPrevia.estatusActividad === 'Cerrada automáticamente — sin evidencia de cierre') {
-      accionHtml = `
-        <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:10px">
-          <p style="font-size:.78rem;color:#B91C1C;margin:0"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>La actividad anterior se cerró automáticamente sin evidencia. Será revisada por Ingeniería.</p>
-        </div>`;
-    } else {
-      accionHtml = `
-        <button class="btn-p" style="background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'" onclick="openIniciarModal('${s.id}','${s.folio}')">
-          <i class="fas fa-play" style="margin-right:7px"></i>Iniciar Actividad
-        </button>`;
-    }
-
-    return `<div class="card" style="padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <span class="mono" style="font-size:.85rem;font-weight:700;color:#7C3AED">${s.folio}</span>
-        ${estatusBadge(s.estatus)}
-      </div>
-      <p style="font-size:.85rem;font-weight:600;color:var(--navy);margin:0 0 4px">${s.tipoSolicitud||'—'}</p>
-      <p style="font-size:.8rem;color:#64748B;margin:0 0 12px;line-height:1.5">${s.descripcion||'—'}</p>
-      ${accionHtml}
-    </div>`;
-  }).join('');
-}
+function renderMisActividades(){const list=$('act-list'),filter=$('act-status-filter')?.value||'TODAS',{solicitudes,actividades}=ACT_DATA,latest={};actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});const data=solicitudes.map(s=>{const a=latest[s.id];let b='PENDIENTE',t='Abierta por iniciar';if(s.estatus==='En espera de material'||a?.estatusActividad==='En espera de material'){b='MATERIAL';t='Abierta por falta de material';}else if(s.estatus==='Pendiente de confirmación del solicitante'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}return{s,a,b,t};});const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0};data.forEach(x=>c[x.b]++);$('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');const shown=data.filter(x=>filter==='TODAS'||x.b===filter);list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{let act='';if(b==='PENDIENTE')act=`<button class="btn-p" onclick="openIniciarModal('${s.id}','${s.folio}')">Iniciar actividad</button>`;if(b==='EN_CURSO')act=`<button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')">Terminar</button> <button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button>`;if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${a.materialPendiente||'Material pendiente'}</b><br>Cantidad: ${a.cantidadMaterial||'—'}<br><small>${a.comentarioMaterial||''}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin-bottom:8px">Ver fotografía</a>`:''}<div>${act}</div></div>`;}).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';}
 
 function openIniciarModal(solicitudId, folio) {
   ACT_FOTO_MODE = 'iniciar'; ACT_FOTO_TARGET = solicitudId;
@@ -3016,39 +3594,52 @@ async function confirmActividadFoto() {
   btn.disabled = false; btn.innerHTML = '<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';
 }
 
+
+let ACT_MATERIAL_TARGET='';
+function openEsperaMaterialModal(id,folio){ACT_MATERIAL_TARGET=id;$('mat-folio').value=folio;$('mat-material').value='';$('mat-cantidad').value='';$('mat-fecha').value=new Date().toISOString().slice(0,10);$('mat-comentario').value='';$('modal-material').style.display='flex';}
+async function confirmarEsperaMaterial(){const material=$('mat-material').value.trim(),cantidad=$('mat-cantidad').value,fecha=$('mat-fecha').value,comentario=$('mat-comentario').value.trim();if(!material||!cantidad||!fecha){toast('Completa los campos obligatorios','err');return;}const r=await api({action:'marcarEsperaMaterial',token:SESSION.token,actividadId:ACT_MATERIAL_TARGET,material,cantidad,fechaSolicitudMaterial:fecha,comentario});if(r.success){closeModal('modal-material');toast('Actividad en espera de material');loadMisActividades();}else toast(r.error,'err');}
+async function reanudarActividad(id){const r=await api({action:'reanudarActividadMaterial',token:SESSION.token,actividadId:id});if(r.success){toast('Actividad reanudada');loadMisActividades();}else toast(r.error,'err');}
+
 function openActividadEspontaneaModal() {
   if (!SESSION) { showView('login'); return; }
-  $('act-nueva-desc').value = '';
-  $('act-nueva-tipo').value = '';
-  $('act-nueva-foto').value = '';
-  $('modal-act-nueva').style.display = 'flex';
+  $('act-nueva-desc').value='';
+  $('act-nueva-tipo').value='';
+  $('act-nueva-foto').value='';
+  if($('act-nueva-folio')) $('act-nueva-folio').value='';
+  document.querySelectorAll('input[name="act-folio-mode"]').forEach(r=>r.checked=false);
+  if($('act-folio-wrap')) $('act-folio-wrap').style.display='none';
+  $('modal-act-nueva').style.display='flex';
+}
+function toggleActividadFolio(){
+  const mode=document.querySelector('input[name="act-folio-mode"]:checked')?.value||'';
+  $('act-folio-wrap').style.display=mode==='SI'?'':'none';
+  if(mode!=='SI') $('act-nueva-folio').value='';
 }
 
 async function confirmActividadEspontanea() {
-  const descripcion = $('act-nueva-desc').value.trim();
-  const tipo = $('act-nueva-tipo').value.trim();
-  const fotoFile = $('act-nueva-foto').files[0];
+  const descripcion=$('act-nueva-desc').value.trim();
+  const tipo=$('act-nueva-tipo').value.trim();
+  const fotoFile=$('act-nueva-foto').files[0];
+  const folioMode=document.querySelector('input[name="act-folio-mode"]:checked')?.value||'';
+  const folio=folioMode==='SI'?$('act-nueva-folio').value.trim():'';
 
-  if (!descripcion) { toast('Describe la actividad que vas a realizar','err'); return; }
-  if (!fotoFile) { toast('Adjunta la evidencia fotográfica','err'); return; }
-  if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); return; }
+  if(!folioMode){toast('Indica si la actividad es con folio o sin folio','err');return;}
+  if(folioMode==='SI'&&!folio){toast('Captura el número de folio','err');return;}
+  if(!descripcion){toast('Describe la actividad que vas a realizar','err');return;}
+  if(!fotoFile){toast('Adjunta la evidencia fotográfica','err');return;}
+  if(fotoFile.size>5*1024*1024){toast('La foto supera 5 MB. Comprime la imagen.','err');return;}
 
-  const btn = $('btn-act-nueva-confirm');
-  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
-
-  const fotoBase64 = await fileToBase64(fotoFile);
-  const fotoName   = fotoFile.name;
-
-  try {
-    const res = await api({action:'crearActividadEspontanea', token:SESSION.token, descripcion, tipo, fotoBase64, fotoName});
-    if (res.success) {
-      toast('Actividad espontánea iniciada — folio ' + res.folio);
-      closeModal('modal-act-nueva');
-      loadMisActividades();
-    } else toast(res.error||'Error','err');
-  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
-
-  btn.disabled = false; btn.innerHTML = '<i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora';
+  const btn=$('btn-act-nueva-confirm');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
+  try{
+    const fotoBase64=await fileToBase64(fotoFile),fotoName=fotoFile.name;
+    const res=await api({action:'crearActividadEspontanea',token:SESSION.token,descripcion,tipo,folioMode,folio,fotoBase64,fotoName});
+    if(res.success){
+      toast(res.esApoyo?'Apoyo registrado en folio '+res.folio:'Actividad espontánea iniciada — folio '+res.folio);
+      closeModal('modal-act-nueva');loadMisActividades();
+    }else toast(res.error||'Error','err');
+  }catch(e){toast('Error de conexión: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora';}
 }
 
 function fmtDateTime(iso) {
@@ -3084,20 +3675,16 @@ async function loadInventarioTec() {
 }
 
 function renderInventarioCatalog() {
-  const tbody = $('inv-tbody');
-  if (!INV_DATA.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#94A3B8">El catálogo de inventario está vacío. Pide a Facilities que lo configure en Google Sheets.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = INV_DATA.map(it => `
-    <tr style="${it.bajoMinimo?'background:#FEF2F2':it.sobreMaximo?'background:#FFFBEB':''}">
-      <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
-      <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
-      <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
-      <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':it.sobreMaximo?'#92400E':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
-      <td style="text-align:center;color:#94A3B8">${it.stockMinimoValido?it.stockMinimo:'—'}</td>
-      <td style="text-align:center"><button class="btn-g" style="padding:5px 9px" onclick='openInventoryQR(${JSON.stringify(it)})'><i class="fas fa-qrcode"></i></button></td>
-    </tr>`).join('');
+  const sel=$('inv-catalog-select');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
+  if($('inv-catalog-detail')){$('inv-catalog-detail').style.display='none';$('inv-catalog-detail').innerHTML='';}
+}
+function renderInventarioSeleccionado(){
+  const id=$('inv-catalog-select').value,item=INV_DATA.find(x=>String(x.id)===String(id)),box=$('inv-catalog-detail');
+  if(!item){box.style.display='none';return;}
+  box.style.display='';
+  box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:.8rem"><div><b>Código</b><br>${item.codigo||'—'}</div><div><b>Descripción</b><br>${item.descripcion||'—'}</div><div><b>Ubicación</b><br>${item.ubicacionGaveta||'—'}</div><div><b>Stock</b><br>${item.stockActual??'—'} ${item.unidad||''}</div><div><b>Mínimo</b><br>${item.stockMinimo??'—'}</div><div><b>Máximo</b><br>${item.stockMaximo??'—'}</div></div><button class="btn-g" style="margin-top:10px" onclick='openInventoryQR(${JSON.stringify(item)})'><i class="fas fa-qrcode" style="margin-right:5px"></i>Ver QR</button>`;
 }
 function invRefaccionChange() {
   const id = $('inv-refaccion').value;
@@ -3385,82 +3972,96 @@ async function registrarEntradaQR() {
 }
 
 // ── Admin ────────────────────────────────────────────────────
+function configureManagerDashboardTabs(){
+  if(SESSION?.user?.rol!=='manager')return;
+  if($('tab-inv'))$('tab-inv').style.display='none';
+  ['tab-sol','tab-compra','tab-lpa','tab-acc'].forEach(id=>{if($(id))$(id).style.display='';});
+}
 function switchTab(tab) {
+  if(SESSION?.user?.rol==='manager' && tab==='inv'){
+    toast('El inventario no está disponible para Manager en este panel.','err');
+    tab='sol';
+  }
   ['sol','compra','lpa','acc','inv'].forEach(t=>{
-    $('tab-'+t).classList.toggle('active',t===tab);
-    $('panel-'+t).style.display=t===tab?'':'none';
+    const tb=$('tab-'+t),pn=$('panel-'+t);
+    if(tb)tb.classList.toggle('active',t===tab);
+    if(pn)pn.style.display=t===tab?'':'none';
   });
-  if(tab==='compra' && COMPRA_DATA.length===0) loadCompras();
-  if(tab==='lpa' && Object.keys(LPA_DATA).length===0) loadLPA();
-  if(tab==='acc' && ACC_DATA.length===0) loadAcciones();
-  if(tab==='inv') loadAdminInventario();
+  if(tab==='compra'&&COMPRA_DATA.length===0)loadCompras();
+  if(tab==='lpa'&&Object.keys(LPA_DATA).length===0)loadLPA();
+  if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
+  if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
 }
 
 async function refreshAdmin() {
   if(!SESSION){showView('login');return;}
-  loadSolicitudes();
-  loadCompras();
-  loadAdminInventario();
+  const role=SESSION.user.rol;
+  if(role==='manager'){
+    if($('fs-est'))$('fs-est').value='';
+    if($('fs-search'))$('fs-search').value='';
+    if($('fs-depto'))$('fs-depto').value='';
+    if($('manager-approval-box'))$('manager-approval-box').style.display='';
+    await Promise.allSettled([loadSolicitudes(),loadCompras(),loadLPA(),loadAcciones()]);
+    renderManagerApprovalQueue();
+    switchTab('sol');
+    renderSolicitudes();
+    return;
+  }
+  await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
 }
 
+let ADMIN_INV_DATA=[];
 async function loadAdminInventario() {
   try {
-    const res = await api({action:'getInventario', token:SESSION.token});
-    if (!res.success) return;
-    const items = res.items;
+    const res=await api({action:'getInventario',token:SESSION.token});
+    if(!res.success)return;
+    ADMIN_INV_DATA=res.items||[];
 
-    const dot = $('inv-alert-dot');
-    if (res.bajoMinimoCount > 0) {
-      dot.style.display=''; dot.textContent = res.bajoMinimoCount;
-    } else { dot.style.display='none'; }
-
-    // Alerta global visible inmediatamente al abrir el Panel Administrativo.
+    const dot=$('inv-alert-dot');
+    if(dot){
+      if(res.bajoMinimoCount>0){dot.style.display='';dot.textContent=res.bajoMinimoCount;}
+      else dot.style.display='none';
+    }
     const globalAlert=$('admin-stock-alert');
     if(globalAlert){
       if(res.bajoMinimoCount>0){
         globalAlert.style.display='';
         const examples=(res.bajoMinimoItems||[]).slice(0,5).map(x=>x.codigo).join(', ');
-        $('admin-stock-alert-text').innerHTML=
-          `<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i>`+
-          (LANG==='en'
-            ? `<strong>${res.bajoMinimoCount} material(s)</strong> are at or below minimum stock`+
-              (examples?` · E.g.: ${examples}`:'')+`. Replenishment review is required.`
-            : `<strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo`+
-              (examples?` · Ej.: ${examples}`:'')+`. Requieren revisión para reabastecimiento.`);
+        $('admin-stock-alert-text').innerHTML=`<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo${examples?' · Ej.: '+examples:''}.`;
       }else globalAlert.style.display='none';
     }
-
-    const banner = $('inv-summary-banner');
-    if (res.bajoMinimoCount > 0 || res.sobreMaximoCount > 0) {
-      banner.style.display='';
-      let txt = `${res.bajoMinimoCount} material(es) en mínimo o por debajo`;
-      if(res.sobreMaximoCount>0) txt += ` · ${res.sobreMaximoCount} sobre el máximo definido`;
-      if(res.sinMinimoCount>0) txt += ` · ${res.sinMinimoCount} sin mínimo válido`;
-      $('inv-summary-text').textContent = txt + '.';
-    } else banner.style.display='none';
-
-    const tbody = $('admin-inv-tbody');
-    if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#94A3B8">Catálogo de inventario vacío. Configúralo en la hoja "Inventario" de Google Sheets.</td></tr>';
-      return;
+    const banner=$('inv-summary-banner');
+    if(banner){
+      if(res.bajoMinimoCount>0||res.sobreMaximoCount>0){
+        banner.style.display='';
+        let txt=`${res.bajoMinimoCount} material(es) en mínimo o por debajo`;
+        if(res.sobreMaximoCount>0)txt+=` · ${res.sobreMaximoCount} sobre máximo`;
+        $('inv-summary-text').textContent=txt+'.';
+      }else banner.style.display='none';
     }
-    tbody.innerHTML = items.map(it=>`
-      <tr style="${it.bajoMinimo?'background:#FEF2F2':it.sobreMaximo?'background:#FFFBEB':''}">
-        <td class="mono" style="font-size:.78rem;font-weight:700;color:${it.bajoMinimo?'#B91C1C':'#0284C7'}">${it.codigo||'—'}</td>
-        <td style="font-size:.82rem;color:#334155">${it.descripcion||'—'}</td>
-        <td style="font-size:.78rem;color:#64748B">${it.ubicacionGaveta||'—'}</td>
-        <td style="text-align:center;font-weight:700;color:${it.bajoMinimo?'#B91C1C':it.sobreMaximo?'#92400E':'var(--navy)'}">${it.stockActual} ${it.unidad||''}</td>
-        <td style="text-align:center;color:#64748B">${it.stockMinimoValido?it.stockMinimo:'—'}</td>
-        <td style="text-align:center;color:#64748B">${it.stockMaximoValido?it.stockMaximo:'—'}</td>
-        <td style="text-align:center">${
-          it.bajoMinimo?'<span class="badge b-ing-rej">'+uiText('Bajo mínimo')+'</span>':
-          it.sobreMaximo?'<span class="badge b-media">'+uiText('Sobre máximo')+'</span>':
-          !it.stockMinimoValido?'<span class="badge b-pend">'+uiText('Revisar mínimo')+'</span>':
-          '<span class="badge b-done">OK</span>'
-        }</td>
-        <td style="text-align:center"><button class="btn-g" style="padding:5px 9px" onclick='openInventoryQR(${JSON.stringify(it)})' title="Ver / imprimir QR"><i class="fas fa-qrcode"></i></button></td>
-      </tr>`).join('');
-  } catch(e) {}
+
+    const sel=$('admin-inv-select');
+    if(sel){
+      sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+ADMIN_INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
+    }
+    if($('admin-inv-detail')){$('admin-inv-detail').style.display='none';$('admin-inv-detail').innerHTML='';}
+  }catch(e){toast('Error al cargar inventario','err');}
+}
+function renderAdminInventarioSeleccionado(){
+  const id=$('admin-inv-select')?.value||'',it=ADMIN_INV_DATA.find(x=>String(x.id)===String(id)),box=$('admin-inv-detail');
+  if(!box)return;
+  if(!it){box.style.display='none';box.innerHTML='';return;}
+  const state=it.bajoMinimo?'MÍNIMO / CRÍTICO':it.sobreMaximo?'SOBRESTOCK':it.estadoStock||'OK';
+  box.style.display='';
+  box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+    <div class="card-sm" style="padding:11px"><b>Código</b><br><span class="mono">${it.codigo||'—'}</span></div>
+    <div class="card-sm" style="padding:11px"><b>Descripción</b><br>${it.descripcion||'—'}</div>
+    <div class="card-sm" style="padding:11px"><b>Ubicación</b><br>${it.ubicacionGaveta||'—'}</div>
+    <div class="card-sm" style="padding:11px"><b>Stock actual</b><br>${it.stockActual??'—'} ${it.unidad||''}</div>
+    <div class="card-sm" style="padding:11px"><b>Mínimo</b><br>${it.stockMinimo??'—'}</div>
+    <div class="card-sm" style="padding:11px"><b>Máximo</b><br>${it.stockMaximo??'—'}</div>
+    <div class="card-sm" style="padding:11px"><b>Estatus</b><br>${state}</div>
+  </div><button class="btn-g" style="margin-top:12px" onclick='openInventoryQR(${JSON.stringify(it)})'><i class="fas fa-qrcode" style="margin-right:5px"></i>Ver / imprimir QR</button>`;
 }
 
 function openInventoryQR(item) {
@@ -3515,9 +4116,14 @@ function refreshWorkStatusFilterLabels(){
 async function loadSolicitudes() {
   try {
     const res=await api({action:'getRequests',token:SESSION.token});
-    if(res.success){ SOL_DATA=res.requests; refreshWorkStatusFilterLabels(); renderSolicitudes(); renderKPIs(); }
-    else toast(res.error,'err');
-  } catch(e){ toast('Error al cargar solicitudes','err'); }
+    if(res.success){
+      SOL_DATA=res.requests||[];
+      refreshWorkStatusFilterLabels();
+      renderSolicitudes();
+      renderManagerApprovalQueue();
+      renderKPIs();
+    }else toast(res.error,'err');
+  }catch(e){toast('Error al cargar solicitudes','err');}
 }
 
 async function loadCompras() {
@@ -3572,11 +4178,37 @@ const estatusBadge = s => {
   return `<span class="badge ${cls}">${statusLabel(s)}</span>`;
 };
 
+function renderManagerApprovalQueue(){
+  const box=$('manager-approval-box'),tbody=$('manager-approval-tbody'),count=$('manager-approval-count');
+  if(!box||!tbody)return;
+  if(SESSION?.user?.rol!=='manager'){box.style.display='none';return;}
+  box.style.display='';
+  const rows=(Array.isArray(SOL_DATA)?SOL_DATA:[])
+    .filter(r=>String(r.estatus||'').trim()==='Pendiente de Manager')
+    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  if(count)count.textContent=rows.length+' pendiente'+(rows.length===1?'':'s');
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:#64748B"><i class="fas fa-circle-check" style="color:#16A34A;margin-right:7px"></i>'+ (LANG==='en'?'No work requests pending Manager approval.':'No hay solicitudes de trabajo pendientes de aprobación del Manager.') +'</td></tr>';
+    return;
+  }
+  tbody.innerHTML=rows.map(r=>`<tr class="tbl-row" onclick="openSolicitudModal('${r.id}')">
+    <td><span class="mono" style="font-size:.76rem;font-weight:700;color:#2563EB">${r.folio||'—'}</span></td>
+    <td style="white-space:nowrap;color:#64748B">${fmtDate(r.fecha)}</td>
+    <td style="font-weight:600;color:var(--navy)">${r.nombre||'—'}</td>
+    <td>${r.departamento||'—'}</td><td>${r.tipoSolicitud||'—'}</td>
+    <td>${estatusBadge(r.estatus)}</td>
+    <td style="text-align:center"><button class="btn-p" style="padding:6px 10px" onclick="event.stopPropagation();openSolicitudModal('${r.id}')"><i class="fas fa-eye" style="margin-right:5px"></i>${LANG==='en'?'Review':'Revisar'}</button></td>
+  </tr>`).join('');
+}
 function renderSolicitudes() {
-  const q=$('fs-search').value.toLowerCase(), fe=$('fs-est').value, fd=$('fs-depto').value;
-  const list=SOL_DATA.filter(r=>
+  const q=($('fs-search')?.value||'').toLowerCase();
+  const fe=$('fs-est')?.value||'';
+  const fd=$('fs-depto')?.value||'';
+  const source=Array.isArray(SOL_DATA)?SOL_DATA:[];
+  const list=source.filter(r=>
     (!q||[r.folio,r.nombre,r.departamento,r.tipoSolicitud].some(v=>(v||'').toLowerCase().includes(q)))&&
-    (!fe||r.estatus===fe)&&(!fd||r.departamento===fd)
+    (!fe||r.estatus===fe)&&
+    (!fd||r.departamento===fd)
   ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
   const tbody=$('sol-tbody');
@@ -3590,15 +4222,10 @@ function renderSolicitudes() {
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
       <td style="font-weight:500;color:var(--navy)">${r.nombre||'—'}</td>
       <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${r.departamento||'—'}</span></td>
-      <td style="color:#64748B;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.tipoSolicitud||'').startsWith('Espontánea')?'<i class="fas fa-bolt" style="color:#7C3AED;margin-right:4px" title="Actividad espontánea"></i>':''}${r.tipoSolicitud||'—'}</td>
+      <td style="color:#64748B">${r.tipoSolicitud||'—'}</td>
       <td>${estatusBadge(r.estatus)}</td>
       <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">'+uiText('Sin asignar')+'</span>'}</td>
-      <td style="text-align:center">
-        <button onclick="event.stopPropagation();openSolicitudModal('${r.id}')"
-          style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB">
-          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
-        </button>
-      </td>
+      <td style="text-align:center"><button onclick="event.stopPropagation();openSolicitudModal('${r.id}')" style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
     </tr>`).join('');
 }
 
@@ -3618,14 +4245,11 @@ const compraBadge = s => {
 };
 
 function renderCompras() {
-  const q=$('fc-search').value.toLowerCase(), fe=$('fc-est').value, fp=$('fc-prio').value;
+  const q=$('fc-search').value.toLowerCase(),fe=$('fc-est').value;
   const list=COMPRA_DATA.filter(r=>
-    (!q||[r.folio,r.nombre].some(v=>(v||'').toLowerCase().includes(q)))&&
-    (!fe||r.estatus===fe)&&(!fp||r.prioridad===fp)
-  ).sort((a,b)=>{
-    const pd=(prioOrder[a.prioridad]??3)-(prioOrder[b.prioridad]??3);
-    return pd!==0?pd:new Date(b.fecha)-new Date(a.fecha);
-  });
+    (!q||[r.folio,r.nombre,r.descripcion,r.materialNuevoNombre].some(v=>(v||'').toLowerCase().includes(q)))&&
+    (!fe||r.estatus===fe)
+  ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
   const tbody=$('compra-tbody');
   if(!list.length){
@@ -3637,16 +4261,11 @@ function renderCompras() {
       <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#D97706">${r.folio||'—'}</span></td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
       <td style="font-weight:500;color:var(--navy)">${r.nombre||'—'}</td>
-      <td><span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad||'—'}</span></td>
+      <td style="font-size:.78rem;color:#475569">${r.materialNuevoNombre||r.descripcion||'—'}${r.altaInventarioEstatus==='Pendiente alta'?'<br><span style="font-size:.68rem;color:#92400E">Pendiente de alta</span>':''}</td>
       <td style="color:#64748B">${r.cantidad||'—'} ${r.unidad||''}</td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
       <td>${compraBadge(r.estatus)}</td>
-      <td style="text-align:center">
-        <button onclick="event.stopPropagation();openCompraModal('${r.id}')"
-          style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706">
-          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
-        </button>
-      </td>
+      <td style="text-align:center"><button onclick="event.stopPropagation();openCompraModal('${r.id}')" style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
     </tr>`).join('');
 }
 
@@ -3661,16 +4280,16 @@ function renderLPA() {
            .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
   const tbody=$('lpa-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:#94A3B8">Sin registros</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:#94A3B8">${lpaText('Sin registros')}</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>{
     const pct=Number(r.porcentaje)||0;
     const pctColor=pct>=90?'#16A34A':pct>=70?'#D97706':'#DC2626';
     return`<tr>
       <td style="white-space:nowrap;color:#64748B">${fmtDate(r.fecha)}</td>
-      <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${LPA_AREAS[r._area]?.label||r._area}</span></td>
+      <td><span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${lpaText(LPA_AREAS[r._area]?.label||r._area)}</span></td>
       <td style="font-weight:500;color:var(--navy)">${r.auditor||'—'}</td>
-      <td style="color:#64748B">${r.turno||'—'}</td>
-      <td style="text-align:center"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">Capa ${r.capa}</span></td>
+      <td style="color:#64748B">${r.turno?lpaTurnoText(r.turno):'—'}</td>
+      <td style="text-align:center"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600">${lpaText('Capa')} ${r.capa}</span></td>
       <td style="text-align:center"><span class="badge-p">${r.totalP||0}</span></td>
       <td style="text-align:center"><span class="badge-np">${r.totalNP||0}</span></td>
       <td style="text-align:center"><span class="badge-na">${r.totalNA||0}</span></td>
@@ -3681,7 +4300,7 @@ function renderLPA() {
 
 function renderAcciones() {
   const tbody=$('acc-tbody');
-  if(!ACC_DATA.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:#94A3B8">Sin acciones registradas</td></tr>';return;}
+  if(!ACC_DATA.length){tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:32px;color:#94A3B8">${lpaText('Sin acciones registradas')}</td></tr>`;return;}
   const estColor={Abierto:'b-ing-rej',  'En proceso':'b-ejec', Cerrado:'b-done'};
   tbody.innerHTML=ACC_DATA.map(a=>`
     <tr style="border-bottom:1px solid #F1F5F9">
@@ -3689,11 +4308,11 @@ function renderAcciones() {
       <td><span style="background:#F1F5F9;color:#475569;padding:2px 7px;border-radius:6px;font-size:.72rem;font-weight:600">${a.area||'—'}</span></td>
       <td style="text-align:center;font-weight:700;color:#2563EB">${a.puntoNo||'—'}</td>
       <td style="font-size:.8rem;color:#334155;max-width:160px">${a.hallazgo||'—'}</td>
-      <td style="font-size:.78rem;color:#64748B;max-width:160px">${a.accionCorrectiva||'<span style="color:#CBD5E1">Pendiente</span>'}</td>
+      <td style="font-size:.78rem;color:#64748B;max-width:160px">${a.accionCorrectiva||'<span style="color:#CBD5E1">'+lpaText('Pendiente')+'</span>'}</td>
       <td style="font-size:.78rem;color:#64748B">${a.responsable||'—'}</td>
       <td style="font-size:.75rem;color:#64748B;white-space:nowrap">${a.fechaCompromiso||'—'}</td>
       <td style="font-size:.75rem;color:#64748B;white-space:nowrap">${a.fechaCierre||'—'}</td>
-      <td><span class="badge ${estColor[a.estatus]||'b-pend'}">${a.estatus||'—'}</span></td>
+      <td><span class="badge ${estColor[a.estatus]||'b-pend'}">${a.estatus?lpaText(a.estatus):'—'}</span></td>
       <td style="text-align:center">
         <button onclick="openAccModal('${a.id}')"
           style="width:26px;height:26px;background:#EFF6FF;border:none;border-radius:6px;cursor:pointer;color:#2563EB">
@@ -3705,9 +4324,9 @@ function renderAcciones() {
 
 // ── Solicitud Modal ───────────────────────────────────────────
 function openSolicitudModal(id) {
-  CUR_SOL = SOL_DATA.find(r=>r.id===id);
-  if(!CUR_SOL) return;
-  const r=CUR_SOL;
+  CUR_SOL=SOL_DATA.find(r=>r.id===id);
+  if(!CUR_SOL)return;
+  const r=CUR_SOL,rol=SESSION?.user?.rol||'';
 
   $('ms-folio').textContent=r.folio||'—';
   $('ms-fecha').textContent=fmtDate(r.fecha);
@@ -3717,48 +4336,64 @@ function openSolicitudModal(id) {
   $('ms-gerente').textContent=r.gerente||'—';
   $('ms-tipo').textContent=r.tipoSolicitud||'—';
   $('ms-nueva').textContent=r.esNueva||'—';
-  const mostrarPresupuesto = r.esNueva === 'Si';
-  $('ms-presupuesto-num-wrap').style.display = mostrarPresupuesto ? '' : 'none';
-  $('ms-presupuesto-monto-wrap').style.display = mostrarPresupuesto ? '' : 'none';
-  $('ms-presupuesto-num').textContent = r.presupuestoNumero || '—';
-  const montoPresupuesto = Number(r.presupuestoMonto);
-  $('ms-presupuesto-monto').textContent = r.presupuestoMonto !== '' && r.presupuestoMonto != null && Number.isFinite(montoPresupuesto)
-    ? montoPresupuesto.toLocaleString('es-MX',{style:'currency',currency:'MXN'})
-    : '—';
+  const mostrarPresupuesto=r.esNueva==='Si';
+  $('ms-presupuesto-num-wrap').style.display=mostrarPresupuesto?'':'none';
+  $('ms-presupuesto-monto-wrap').style.display=mostrarPresupuesto?'':'none';
+  $('ms-presupuesto-num').textContent=r.presupuestoNumero||'—';
+  const monto=Number(r.presupuestoMonto);
+  $('ms-presupuesto-monto').textContent=r.presupuestoMonto!==''&&r.presupuestoMonto!=null&&Number.isFinite(monto)
+    ?monto.toLocaleString('es-MX',{style:'currency',currency:'MXN'}):'—';
   $('ms-desc').textContent=r.descripcion||'—';
 
-  // Foto
-  if(r.fotoURL&&r.fotoURL.startsWith('http')){
-    $('ms-foto').href=r.fotoURL; $('ms-foto-wrap').style.display='';
-  } else $('ms-foto-wrap').style.display='none';
-
-  // Badges
+  if(r.fotoURL&&r.fotoURL.startsWith('http')){$('ms-foto').href=r.fotoURL;$('ms-foto-wrap').style.display='';}
+  else $('ms-foto-wrap').style.display='none';
   $('ms-badges').innerHTML=estatusBadge(r.estatus);
 
-  // Auth sections visibility
-  const rol=SESSION?.user?.rol;
-  $('sec-auth-ing').style.display=(rol==='ingeniero'&&r.estatus==='Pendiente de Ingeniería')?'':'none';
-  $('sec-auth-mgr').style.display=(rol==='manager'&&r.estatus==='Pendiente de Manager')?'':'none';
+  // Flujo estricto:
+  // 1) Ingeniería: solo Aprobar / Rechazar.
+  // 2) Manager: solo Aprobar / Rechazar.
+  // 3) Ingeniería nuevamente: técnico + estatus operativo.
+  const engApproval=rol==='ingeniero'&&r.estatus==='Pendiente de Ingeniería';
+  const mgrApproval=rol==='manager'&&r.estatus==='Pendiente de Manager';
+  const engExecution=rol==='ingeniero'&&[
+    'Aprobado por Manager — Pendiente de asignación',
+    'Asignado a técnico','En ejecución','En espera de refacciones',
+    'Trabajo completado','Pendiente de encuesta de satisfacción'
+  ].includes(r.estatus);
+  const adminExecution=hasAdminPrivilege()&&[
+    'Aprobado por Manager — Pendiente de asignación',
+    'Asignado a técnico','En ejecución','En espera de refacciones',
+    'Trabajo completado','Pendiente de encuesta de satisfacción'
+  ].includes(r.estatus);
 
-  // El técnico solo puede asignarse después de aprobación del Manager y únicamente por Ingeniería.
-  const puedeAsignar = (rol==='ingeniero' || hasAdminPrivilege()) &&
-    (r.estatus==='Aprobado por Manager — Pendiente de asignación' || r.estatus==='Asignado a técnico' || r.estatus==='En ejecución');
-  $('sec-asignar-tecnico').style.display = puedeAsignar ? '' : 'none';
+  $('sec-auth-ing').style.display=engApproval?'':'none';
+  $('sec-auth-mgr').style.display=mgrApproval?'':'none';
+  $('sec-asignar-tecnico').style.display=(engExecution||adminExecution)?'':'none';
+
+  // Manual status is only available after Manager approval, and only to Engineering/admin.
+  const statusWrap=$('ms-estatus')?.closest('div');
+  if(statusWrap)statusWrap.style.display=(engExecution||adminExecution)?'':'none';
+
+  // Facilities comments remain available to Engineering/admin/Manager for traceability.
+  const commentInput=$('ms-comment');
+  if(commentInput)commentInput.disabled=false;
 
   $('ms-tecnico').innerHTML='<option value="">— '+uiText('Sin asignar')+' —</option>'+
     TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
 
-  // Estatus manual
   $('ms-estatus').innerHTML='<option value="">— '+uiText('Sin cambio')+' —</option>'+
-    ESTATUS_MANUAL.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
+    ESTATUS_MANUAL.map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('');
+
+  // Save button only exists during post-manager execution management.
+  $('btn-ms-save').style.display=(engExecution||adminExecution)?'':'none';
 
   $('ms-ing-comentario').value='';
   $('ms-mgr-comentario').value='';
   $('ms-comment').value='';
 
-  // Historial
   renderHistorial(r);
   $('modal-sol').style.display='flex';
+  if(rol==='manager')applyLanguage($('modal-sol'));
 }
 
 
@@ -3812,7 +4447,7 @@ async function authAction(action) {
     const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,authAction:action,comentario});
     if(res.success){
       if(action==='ing_autoriza') toast(LANG==='en'?'Approved by Engineering. Status: Pending Manager Approval.':'Aprobado por Ingeniería. Estatus: Pendiente de Manager.');
-      else toast('Actualizado correctamente');
+      else toast(LANG==='en'?'Updated successfully':'Actualizado correctamente');
       closeModal('modal-sol');
       await loadSolicitudes();
     }
@@ -3848,30 +4483,23 @@ async function saveComment() {
 
 
 function configureCompraWorkflowUI(r) {
-  const rol = SESSION?.user?.rol || '';
-  const authWrap = $('mc-auth-wrap');
-  const statusWrap = $('mc-status-wrap');
-  const saveBtn = $('btn-mc-save');
+  const rol=SESSION?.user?.rol||'';
+  const authWrap=$('mc-auth-wrap'),statusWrap=$('mc-status-wrap'),saveBtn=$('btn-mc-save');
+  authWrap.style.display='none';statusWrap.style.display='none';saveBtn.style.display='none';
 
-  authWrap.style.display='none';
-  statusWrap.style.display='none';
-  saveBtn.style.display='none';
-
-  if (rol==='ingeniero' && r.estatus==='Pendiente de Ingeniería') {
+  if(rol==='ingeniero'&&r.estatus==='Pendiente de Ingeniería'){
     authWrap.style.display='';
-    $('mc-auth-title').textContent='Primer filtro — Autorización de Ingeniería';
+    $('mc-auth-title').textContent=LANG==='en'?'First filter — Engineering approval':'Primer filtro — Autorización de Ingeniería';
     $('mc-auth-ok').onclick=()=>compraAuthAction('ing_aprueba');
     $('mc-auth-reject').onclick=()=>compraAuthAction('ing_rechaza');
-  } else if (rol==='manager' && r.estatus==='Pendiente de Manager') {
+  }else if(rol==='manager'&&r.estatus==='Pendiente de Manager'){
     authWrap.style.display='';
-    $('mc-auth-title').textContent='Segundo filtro — Autorización de Manager';
+    $('mc-auth-title').textContent=LANG==='en'?'Second filter — Manager approval':'Segundo filtro — Autorización de Manager';
     $('mc-auth-ok').onclick=()=>compraAuthAction('mgr_aprueba');
     $('mc-auth-reject').onclick=()=>compraAuthAction('mgr_rechaza');
-  } else if (rol==='compras') {
-    statusWrap.style.display='';
-    saveBtn.style.display='';
-    const permitidos = ESTATUS_COMPRA_GESTION;
-    $('mc-estatus').innerHTML=permitidos.map(s=>`<option value="${s}" ${r.estatus===s?'selected':''}>${s}</option>`).join('');
+  }else if(rol==='compras'){
+    statusWrap.style.display='';saveBtn.style.display='';
+    $('mc-estatus').innerHTML=ESTATUS_COMPRA_GESTION.map(st=>`<option value="${st}" ${r.estatus===st?'selected':''}>${statusLabel(st)}</option>`).join('');
   }
 }
 
@@ -3885,7 +4513,7 @@ async function compraAuthAction(action) {
     const res=await api({action:'updateCompra',token:SESSION.token,id:CUR_COMPRA.id,authAction:action,comentario});
     if(res.success){
       if(action==='ing_aprueba') toast(LANG==='en'?'Approved by Engineering. Status: Pending Manager Approval.':'Aprobado por Ingeniería. Estatus: Pendiente de Manager.','ok');
-      else toast('Solicitud de compra actualizada correctamente','ok');
+      else toast(LANG==='en'?'Purchase request updated successfully':'Solicitud de compra actualizada correctamente','ok');
       closeModal('modal-compra');
       if(SESSION.user.rol==='compras') loadComprasRol(); else loadCompras();
     } else toast(res.error||'No fue posible actualizar la solicitud','err');
@@ -3919,6 +4547,7 @@ function openCompraModal(id) {
 
   renderCompraHistorial(r);
   $('modal-compra').style.display='flex';
+  if(SESSION?.user?.rol==='manager')applyLanguage($('modal-compra'));
 }
 
 function renderCompraHistorial(r) {
