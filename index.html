@@ -72,7 +72,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
-console.info('KTMEX Facilities V7.8.4 PRODUCCIÓN — fix inventario sin sesión');
+console.info('KTMEX Facilities V7.9 PRODUCCIÓN — búsqueda inventario + LPA Champions');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';;
 
@@ -600,7 +600,8 @@ const LPA_AREAS = {
       <!-- Material desde inventario -->
       <div style="margin-bottom:16px">
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-boxes-stacked" style="color:#D97706;margin-right:5px"></i>Material / refacción *</label>
-        <select id="c-inventario" class="inp" onchange="compraInventarioChange()">
+        <input id="c-inventario-search" class="inp" type="search" placeholder="Buscar FAC, material o ubicación..." oninput="filterCompraInventario()" style="margin-bottom:8px">
+          <select id="c-inventario" class="inp" onchange="compraInventarioChange()">
           <option value="">— Selecciona del inventario —</option>
           <option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>
         </select>
@@ -958,6 +959,7 @@ const LPA_AREAS = {
 
   <div class="card" style="padding:18px">
     <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
+    <input id="inv-catalog-search" class="inp" type="search" placeholder="Buscar por código, material o ubicación..." oninput="filterInventarioCatalog()" style="margin-bottom:8px">
     <select id="inv-catalog-select" class="inp" onchange="renderInventarioSeleccionado()"><option value="">— Selecciona material / refacción —</option></select>
     <div id="inv-catalog-detail" style="display:none;margin-top:12px"></div>
   </div>
@@ -1485,6 +1487,7 @@ const LPA_AREAS = {
       </div>
       <div class="card" style="padding:18px">
         <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
+        <input id="admin-inv-search" class="inp" type="search" placeholder="Buscar por código, material o ubicación..." oninput="filterAdminInventario()" style="margin-bottom:8px">
         <select id="admin-inv-select" class="inp" onchange="renderAdminInventarioSeleccionado()">
           <option value="">— Selecciona material / refacción —</option>
         </select>
@@ -3108,11 +3111,8 @@ async function loadCompraInventory(){
     }
 
     COMPRA_INV_DATA=r.items||[];
-    if(sel){
-      sel.innerHTML='<option value="">— Selecciona del inventario —</option>'+
-        COMPRA_INV_DATA.map(x=>`<option value="${x.id}">${x.codigo||''} — ${x.descripcion||''}</option>`).join('')+
-        '<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
-    }
+    if($('c-inventario-search'))$('c-inventario-search').value='';
+    filterCompraInventario();
     if(!COMPRA_INV_DATA.length)toast('No se encontraron materiales en Inventario.','err');
   }catch(e){
     COMPRA_INV_DATA=[];
@@ -3313,6 +3313,23 @@ function openLpaQProgramAudit(id){
   showView('lpa-quality-form');
   requestAnimationFrame(()=>{applyLanguage($('view-lpa-quality-form'));updateLpaQAuditLanguageFast();});
 }
+
+const LPAQ_CHAMPIONS={
+  Quality:'Dulce Rangel',
+  Maintenance:'Guillermina Ledesma',
+  Packaging:'Luz Martinez',
+  Stamping:'Mariana Becerra',
+  Welding:'Juan Pablo Avila',
+  Blanking:'Alvaro Obregon'
+};
+function lpaqChampionForArea(area){return LPAQ_CHAMPIONS[area]||'';}
+function updateLpaQChampion(sel){
+  const wrap=sel?.closest('[id^="lpaq-nc-"]');
+  if(!wrap)return;
+  const champion=wrap.querySelector('.lpaq-champion');
+  if(champion)champion.value=lpaqChampionForArea(sel.value);
+}
+
 function qText(q){return LANG==='en'?q.en:q.es}
 function qCriteria(q){return LANG==='en'?q.criteria_en:q.criteria_es}
 
@@ -3329,7 +3346,10 @@ function updateLpaQAuditLanguageFast(){
     el.placeholder=LANG==='en'?'Finding *':'Hallazgo *';
   });
   document.querySelectorAll('#lpaq-checklist .lpaq-owner').forEach(el=>{
-    el.placeholder=LANG==='en'?'Responsible *':'Responsable *';
+    el.placeholder=LANG==='en'?'Assigned executor (optional)':'Responsable ejecutor (opcional)';
+  });
+  document.querySelectorAll('#lpaq-checklist .lpaq-champion').forEach(el=>{
+    el.placeholder='LPA Champion';
   });
   document.querySelectorAll('#lpaq-checklist .lpaq-just').forEach(el=>{
     el.placeholder=LANG==='en'?'Technical justification *':'Justificación técnica *';
@@ -3359,15 +3379,18 @@ function renderLpaQChecklist(){
       <div style="font-size:.75rem;font-weight:700;color:#9A3412;margin-bottom:7px">NC · Reaction ${q.reaction}</div>
       <textarea class="inp lpaq-finding" rows="2" placeholder="Finding / Hallazgo *"></textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <select class="inp lpaq-resp-area">
+        <select class="inp lpaq-resp-area" onchange="updateLpaQChampion(this)">
           <option value="">Responsible Area / Área responsable *</option>
-          <option value="Maintenance">Maintenance / Mantenimiento</option><option value="W">Welding</option><option value="QC">Quality / Calidad</option>
-          <option value="ST">Stamping</option><option value="BL">Blanking</option><option value="DM">Die Maintenance</option>
-          <option value="PC">Production Control</option><option value="IL">Internal Logistics</option><option value="TPS">TPS / Project</option>
-          <option value="Facilities">Facilities</option><option value="Other">Other / Otro</option>
+          <option value="Quality">Quality / Calidad</option>
+          <option value="Maintenance">Maintenance / Mantenimiento</option>
+          <option value="Packaging">Packaging / Empaque</option>
+          <option value="Stamping">Stamping / Estampado</option>
+          <option value="Welding">Welding</option>
+          <option value="Blanking">Blanking</option>
         </select>
-        <input class="inp lpaq-owner" placeholder="Responsible / Responsable *">
+        <input class="inp lpaq-champion" placeholder="LPA Champion" readonly>
       </div>
+      <input class="inp lpaq-owner" placeholder="Assigned executor / Responsable ejecutor (optional)" style="margin-top:8px">
       <input class="inp lpaq-due" type="date" style="margin-top:8px">
       <input class="inp lpaq-photo" type="file" accept="image/*" capture="environment" style="margin-top:8px">
       ${q.reaction==='D'?'<textarea class="inp lpaq-just" rows="2" placeholder="Technical justification / Justificación técnica *" style="margin-top:8px"></textarea>':''}
@@ -3381,12 +3404,14 @@ function toggleLpaQNC(qid,on,clearWhenHidden=false){
   if(!on && clearWhenHidden){
     const finding=el.querySelector('.lpaq-finding');
     const owner=el.querySelector('.lpaq-owner');
+    const champion=el.querySelector('.lpaq-champion');
     const respArea=el.querySelector('.lpaq-resp-area');
     const due=el.querySelector('.lpaq-due');
     const photo=el.querySelector('.lpaq-photo');
     const just=el.querySelector('.lpaq-just');
     if(finding) finding.value='';
     if(owner) owner.value='';
+    if(champion) champion.value='';
     if(respArea) respArea.value='';
     if(due) due.value='';
     if(photo) photo.value='';
@@ -3406,13 +3431,14 @@ async function submitLpaQuality(){
     if(result==='NOK'){
       const finding=card.querySelector('.lpaq-finding')?.value.trim()||'';
       const owner=card.querySelector('.lpaq-owner')?.value.trim()||'';
+      const champion=card.querySelector('.lpaq-champion')?.value.trim()||'';
       const respArea=card.querySelector('.lpaq-resp-area')?.value||'';
       const due=card.querySelector('.lpaq-due')?.value||'';
       const file=card.querySelector('.lpaq-photo')?.files?.[0];
-      if(!finding||!respArea||!owner||!file){toast(`${q.id}: Finding, responsible area, responsible person and photo are required / Hallazgo, área responsable, responsable y foto son obligatorios`,'err');return;}
+      if(!finding||!respArea||!champion||!file){toast(`${q.id}: Finding, responsible area, LPA Champion and photo are required / Hallazgo, área responsable, Champion LPA y foto son obligatorios`,'err');return;}
       if(q.reaction==='D' && !(card.querySelector('.lpaq-just')?.value.trim())){toast(`${q.id}: Technical justification required`,'err');return;}
       if(file.size>5*1024*1024){toast(`${q.id}: Photo exceeds 5 MB`,'err');return;}
-      resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;resp.fechaCompromiso=due;
+      resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;resp.championNombre=champion;resp.fechaCompromiso=due;
       resp.justificacion=card.querySelector('.lpaq-just')?.value.trim()||'';
       resp.fotoName=file.name;resp.fotoBase64=await fileToBase64(file);
     }
@@ -3432,6 +3458,7 @@ function openLpaQNC(id){
   $('lpaqn-info').innerHTML=`<strong>${r.area}</strong> · Reaction ${r.reactionLevel}<br>`+
     `${r.machine?'<b>Machine:</b> '+r.machine+'<br>':''}`+
     `${r.areaResponsable?'<b>Responsible Area:</b> '+r.areaResponsable+'<br>':''}`+
+    `${r.championNombre?'<b>LPA Champion:</b> '+r.championNombre+'<br>':''}`+
     `${r.hallazgo||''}`;
   $('lpaqn-action').value=r.accion||'';$('lpaqn-owner').value=r.responsable||'';$('lpaqn-due').value=r.fechaCompromiso||'';$('lpaqn-comment').value='';
   $('lpaqn-photo').value='';$('modal-lpaq-nc').style.display='flex';
@@ -3702,6 +3729,7 @@ async function loadInventarioTec() {
       toast(msg,'err');
     }else{
       INV_DATA=res.items||[];
+      if($('inv-catalog-search'))$('inv-catalog-search').value='';
       renderInventarioCatalog();
       if(refSel){
         refSel.innerHTML='<option value="">— Selecciona —</option>'+
@@ -3726,11 +3754,38 @@ async function loadInventarioTec() {
   }catch(e){}
 }
 
-function renderInventarioCatalog() {
-  const sel=$('inv-catalog-select');
+
+function inventorySearchText_(it){
+  return [it.codigo,it.descripcion,it.ubicacionGaveta]
+    .map(v=>String(v||'').toLowerCase()).join(' ');
+}
+function fillInventorySelect_(sel,items,label,allowNew){
   if(!sel)return;
-  sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
-  if($('inv-catalog-detail')){$('inv-catalog-detail').style.display='none';$('inv-catalog-detail').innerHTML='';}
+  sel.innerHTML=`<option value="">${label}</option>`+
+    items.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}${it.ubicacionGaveta?' · '+it.ubicacionGaveta:''}</option>`).join('')+
+    (allowNew?'<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>':'');
+}
+function filterInventarioCatalog(){
+  const q=($('inv-catalog-search')?.value||'').trim().toLowerCase();
+  const rows=q?INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):INV_DATA;
+  fillInventorySelect_($('inv-catalog-select'),rows,'— Selecciona material / refacción —',false);
+}
+function filterAdminInventario(){
+  const q=($('admin-inv-search')?.value||'').trim().toLowerCase();
+  const rows=q?ADMIN_INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):ADMIN_INV_DATA;
+  fillInventorySelect_($('admin-inv-select'),rows,'— Selecciona material / refacción —',false);
+}
+function filterCompraInventario(){
+  const q=($('c-inventario-search')?.value||'').trim().toLowerCase();
+  const rows=q?COMPRA_INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):COMPRA_INV_DATA;
+  fillInventorySelect_($('c-inventario'),rows,'— Selecciona del inventario —',true);
+}
+function renderInventarioCatalog(){
+  filterInventarioCatalog();
+  if($('inv-catalog-detail')){
+    $('inv-catalog-detail').style.display='none';
+    $('inv-catalog-detail').innerHTML='';
+  }
 }
 function renderInventarioSeleccionado(){
   const id=$('inv-catalog-select').value,item=INV_DATA.find(x=>String(x.id)===String(id)),box=$('inv-catalog-detail');
@@ -4074,6 +4129,7 @@ async function loadAdminInventario() {
     }
 
     ADMIN_INV_DATA=res.items||[];
+    if($('admin-inv-search'))$('admin-inv-search').value='';
     const dot=$('inv-alert-dot');
     if(dot){
       if(res.bajoMinimoCount>0){dot.style.display='';dot.textContent=res.bajoMinimoCount;}
@@ -4099,11 +4155,7 @@ async function loadAdminInventario() {
       }else banner.style.display='none';
     }
 
-    const sel=$('admin-inv-select');
-    if(sel){
-      sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+
-        ADMIN_INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
-    }
+    filterAdminInventario();
     if($('admin-inv-detail')){
       $('admin-inv-detail').style.display='none';
       $('admin-inv-detail').innerHTML='';
