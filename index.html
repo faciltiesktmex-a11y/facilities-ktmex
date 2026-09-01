@@ -72,7 +72,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
-console.info('KTMEX Facilities V7.8.3 PRODUCCIÓN — inventario lectura rápida');
+console.info('KTMEX Facilities V7.8.4 PRODUCCIÓN — fix inventario sin sesión');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';;
 
@@ -2500,7 +2500,7 @@ function goRecepcionQR() {
 
 function goAdmin() {
   PENDING_VIEW = 'admin';
-  if (!SESSION) { showView('login'); return; }
+  if (!SESSION || !SESSION.token) { showView('login'); return; }
   if (SESSION.user.rol === 'tecnico' && !hasAdminPrivilege()) {
     toast('Tu cuenta de técnico no tiene acceso al Panel Administrativo.','err');
     showView('home');
@@ -3071,16 +3071,32 @@ function resetSolicitud() {
 let COMPRA_INV_DATA=[], MIS_COMPRAS=[];
 async function initCompraForm() {
   const today=new Date().toISOString().slice(0,10);
-  $('c-fecha').value=today;
-  if(SESSION){
-    $('c-nombre').value=SESSION.user.nombre;
-    $('c-nombre-display').querySelector('span').textContent=SESSION.user.nombre+' ('+(ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol)+')';
+  if($('c-fecha'))$('c-fecha').value=today;
+
+  if(!SESSION){
+    if($('c-nombre'))$('c-nombre').value='';
+    if($('c-inventario'))$('c-inventario').innerHTML='<option value="">Inicia sesión para consultar inventario</option>';
+    return;
   }
-  $('c-unidad').innerHTML='<option value="">— Selecciona —</option>'+UNIDADES_COMPRA.map(u=>`<option>${u}</option>`).join('');
+
+  if($('c-nombre'))$('c-nombre').value=SESSION.user.nombre;
+  if($('c-nombre-display')){
+    const sp=$('c-nombre-display').querySelector('span');
+    if(sp)sp.textContent=SESSION.user.nombre+' ('+(ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol)+')';
+  }
+  if($('c-unidad'))$('c-unidad').innerHTML='<option value="">— Selecciona —</option>'+UNIDADES_COMPRA.map(u=>`<option>${u}</option>`).join('');
   await loadCompraInventory();
 }
 async function loadCompraInventory(){
   const sel=$('c-inventario');
+
+  // Inventory is protected data. Never call the backend before login.
+  if(!SESSION||!SESSION.token){
+    COMPRA_INV_DATA=[];
+    if(sel)sel.innerHTML='<option value="">Inicia sesión para consultar inventario</option>';
+    return;
+  }
+
   if(sel)sel.innerHTML='<option value="">Cargando inventario…</option>';
   try{
     const r=await api({action:'getInventario',token:SESSION.token});
@@ -3090,6 +3106,7 @@ async function loadCompraInventory(){
       toast(r.error||'No se pudo cargar el inventario para Compras.','err');
       return;
     }
+
     COMPRA_INV_DATA=r.items||[];
     if(sel){
       sel.innerHTML='<option value="">— Selecciona del inventario —</option>'+
@@ -4795,8 +4812,8 @@ function init() {
   // Init solicitud dropdowns
   initSolicitudForm();
 
-  // Init compra dropdowns
-  initCompraForm();
+  // Compra: no consultar inventario protegido hasta que exista una sesión.
+  if(SESSION && SESSION.token) initCompraForm();
 
   // Init LPA area cards
   initLpaAreaCards();
