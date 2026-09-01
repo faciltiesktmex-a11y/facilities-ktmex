@@ -72,7 +72,7 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
-console.info('KTMEX Facilities V7.8.1 PRODUCCIÓN — migración segura');
+console.info('KTMEX Facilities V7.8.3 PRODUCCIÓN — inventario lectura rápida');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';;
 
@@ -3080,12 +3080,28 @@ async function initCompraForm() {
   await loadCompraInventory();
 }
 async function loadCompraInventory(){
+  const sel=$('c-inventario');
+  if(sel)sel.innerHTML='<option value="">Cargando inventario…</option>';
   try{
     const r=await api({action:'getInventario',token:SESSION.token});
-    if(!r.success)return;
+    if(!r.success){
+      COMPRA_INV_DATA=[];
+      if(sel)sel.innerHTML='<option value="">Error al cargar inventario</option><option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
+      toast(r.error||'No se pudo cargar el inventario para Compras.','err');
+      return;
+    }
     COMPRA_INV_DATA=r.items||[];
-    $('c-inventario').innerHTML='<option value="">— Selecciona del inventario —</option>'+COMPRA_INV_DATA.map(x=>`<option value="${x.id}">${x.codigo||''} — ${x.descripcion||''}</option>`).join('')+'<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
-  }catch(e){}
+    if(sel){
+      sel.innerHTML='<option value="">— Selecciona del inventario —</option>'+
+        COMPRA_INV_DATA.map(x=>`<option value="${x.id}">${x.codigo||''} — ${x.descripcion||''}</option>`).join('')+
+        '<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
+    }
+    if(!COMPRA_INV_DATA.length)toast('No se encontraron materiales en Inventario.','err');
+  }catch(e){
+    COMPRA_INV_DATA=[];
+    if(sel)sel.innerHTML='<option value="">Error de conexión</option><option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>';
+    toast('Error al cargar inventario para Compras: '+e.message,'err');
+  }
 }
 function compraInventarioChange(){
   const id=$('c-inventario').value,isNew=id==='__NUEVO__',item=COMPRA_INV_DATA.find(x=>String(x.id)===String(id));
@@ -3653,25 +3669,44 @@ function fmtDateTime(iso) {
 let INV_DATA = [];
 
 async function loadInventarioTec() {
-  if (!SESSION) { showView('login'); return; }
-  try {
-    const res = await api({action:'getInventario', token:SESSION.token});
-    if (res.success) {
-      INV_DATA = res.items;
-      renderInventarioCatalog();
-      $('inv-refaccion').innerHTML = '<option value="">— Selecciona —</option>' +
-        INV_DATA.map(it => `<option value="${it.id}">${it.codigo} — ${it.descripcion}</option>`).join('');
-    } else toast(res.error||'Error al cargar inventario','err');
-  } catch(e) { toast('Error de conexión','err'); }
+  if(!SESSION){showView('login');return;}
+  const catalog=$('inv-catalog-select');
+  const refSel=$('inv-refaccion');
+  if(catalog)catalog.innerHTML='<option value="">Cargando inventario…</option>';
+  if(refSel)refSel.innerHTML='<option value="">Cargando inventario…</option>';
 
-  // Cargar solicitudes activas del técnico para ligar la salida
-  try {
-    const res2 = await api({action:'getMisActividades', token:SESSION.token});
-    if (res2.success) {
-      $('inv-solicitud').innerHTML = '<option value="">— Selecciona —</option>' +
-        res2.solicitudes.map(s => `<option value="${s.id}">${s.folio} — ${(s.tipoSolicitud||'').slice(0,30)}</option>`).join('');
+  try{
+    const res=await api({action:'getInventario',token:SESSION.token});
+    if(!res.success){
+      INV_DATA=[];
+      const msg=res.error||'No se pudo cargar el inventario.';
+      if(catalog)catalog.innerHTML='<option value="">Error al cargar inventario</option>';
+      if(refSel)refSel.innerHTML='<option value="">Error al cargar inventario</option>';
+      toast(msg,'err');
+    }else{
+      INV_DATA=res.items||[];
+      renderInventarioCatalog();
+      if(refSel){
+        refSel.innerHTML='<option value="">— Selecciona —</option>'+
+          INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
+      }
+      if(!INV_DATA.length)toast('La hoja Inventario fue encontrada, pero no devolvió materiales.','err');
     }
-  } catch(e) {}
+  }catch(e){
+    INV_DATA=[];
+    if(catalog)catalog.innerHTML='<option value="">Error de conexión</option>';
+    if(refSel)refSel.innerHTML='<option value="">Error de conexión</option>';
+    toast('Error al cargar inventario: '+e.message,'err');
+  }
+
+  // Cargar solicitudes activas del técnico para ligar la salida.
+  try{
+    const res2=await api({action:'getMisActividades',token:SESSION.token});
+    if(res2.success&&$('inv-solicitud')){
+      $('inv-solicitud').innerHTML='<option value="">— Selecciona —</option>'+
+        (res2.solicitudes||[]).map(s=>`<option value="${s.id}">${s.folio} — ${(s.tipoSolicitud||'').slice(0,30)}</option>`).join('');
+    }
+  }catch(e){}
 }
 
 function renderInventarioCatalog() {
@@ -4012,16 +4047,22 @@ async function refreshAdmin() {
 
 let ADMIN_INV_DATA=[];
 async function loadAdminInventario() {
-  try {
+  try{
     const res=await api({action:'getInventario',token:SESSION.token});
-    if(!res.success)return;
-    ADMIN_INV_DATA=res.items||[];
+    if(!res.success){
+      ADMIN_INV_DATA=[];
+      if($('admin-inv-select'))$('admin-inv-select').innerHTML='<option value="">Error al cargar inventario</option>';
+      toast(res.error||'Error al cargar inventario','err');
+      return;
+    }
 
+    ADMIN_INV_DATA=res.items||[];
     const dot=$('inv-alert-dot');
     if(dot){
       if(res.bajoMinimoCount>0){dot.style.display='';dot.textContent=res.bajoMinimoCount;}
       else dot.style.display='none';
     }
+
     const globalAlert=$('admin-stock-alert');
     if(globalAlert){
       if(res.bajoMinimoCount>0){
@@ -4030,6 +4071,7 @@ async function loadAdminInventario() {
         $('admin-stock-alert-text').innerHTML=`<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo${examples?' · Ej.: '+examples:''}.`;
       }else globalAlert.style.display='none';
     }
+
     const banner=$('inv-summary-banner');
     if(banner){
       if(res.bajoMinimoCount>0||res.sobreMaximoCount>0){
@@ -4042,10 +4084,19 @@ async function loadAdminInventario() {
 
     const sel=$('admin-inv-select');
     if(sel){
-      sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+ADMIN_INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
+      sel.innerHTML='<option value="">— Selecciona material / refacción —</option>'+
+        ADMIN_INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
     }
-    if($('admin-inv-detail')){$('admin-inv-detail').style.display='none';$('admin-inv-detail').innerHTML='';}
-  }catch(e){toast('Error al cargar inventario','err');}
+    if($('admin-inv-detail')){
+      $('admin-inv-detail').style.display='none';
+      $('admin-inv-detail').innerHTML='';
+    }
+    if(!ADMIN_INV_DATA.length)toast('Inventario sin materiales disponibles.','err');
+  }catch(e){
+    ADMIN_INV_DATA=[];
+    if($('admin-inv-select'))$('admin-inv-select').innerHTML='<option value="">Error de conexión</option>';
+    toast('Error al cargar inventario: '+e.message,'err');
+  }
 }
 function renderAdminInventarioSeleccionado(){
   const id=$('admin-inv-select')?.value||'',it=ADMIN_INV_DATA.find(x=>String(x.id)===String(id)),box=$('admin-inv-detail');
