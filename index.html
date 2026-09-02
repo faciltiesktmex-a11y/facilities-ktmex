@@ -150,9 +150,7 @@ thead th{background:#F5F8FC;color:#586980}
 <script>
 console.info('KTMEX Facilities V8.1A — Design System visual seguro');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-window.SCRIPT_URL = window.SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec
-';
-const SCRIPT_URL = window.SCRIPT_URL;
+window.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -2477,12 +2475,12 @@ const prioSlug = p => ({Alta:'alta',Media:'media',Baja:'baja'}[p]||'baja');
 
 // ── API ──────────────────────────────────────────────────────
 async function api(data) {
-  if (typeof SCRIPT_URL === 'undefined' || !SCRIPT_URL || SCRIPT_URL.indexOf('REEMPLAZA_CON_')===0) {
+  if (!window.SCRIPT_URL || window.SCRIPT_URL.indexOf('REEMPLAZA_CON_')===0) {
     toast('⚠ Configura SCRIPT_URL con la URL /exec de la implementación activa.','err');
     throw new Error('SCRIPT_URL no configurado');
   }
 
-  const r = await fetch(SCRIPT_URL, {
+  const r = await fetch(window.SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(data),
