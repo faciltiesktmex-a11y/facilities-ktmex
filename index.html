@@ -122,7 +122,7 @@ const TIPOS_SOLICITUD = [
 ];
 
 const ESTATUS_MANUAL = [
-  "En ejecución","Trabajo completado","En espera de refacciones","Cancelado"
+  "En ejecución","Suspendido","Trabajo completado","En espera de refacciones","Cancelado"
 ];
 
 // ── Configuración: Solicitudes de Compra ──
@@ -927,7 +927,7 @@ const LPA_AREAS = {
     <button onclick="loadMisActividades()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
   </div>
 
-  <div class="card" style="padding:14px;margin-bottom:14px"><label style="font-size:.75rem;font-weight:700;color:#475569">Filtrar mis actividades</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:6px"><option value="TODAS">Todas</option><option value="PENDIENTE">Abiertas por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="MATERIAL">Abiertas por falta de material</option><option value="CONFIRMACION">Abiertas por confirmación del usuario</option><option value="CERRADA">Cerradas</option><option value="INCONFORMIDAD">Devueltas por inconformidad</option></select></div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
+  <div class="card" style="padding:14px;margin-bottom:14px"><label style="font-size:.75rem;font-weight:700;color:#475569">Filtrar mis actividades</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:6px"><option value="TODAS">Todas</option><option value="PENDIENTE">Abiertas por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="MATERIAL">Abiertas por falta de material</option><option value="SUSPENDIDA">Suspendidas</option><option value="RECHAZADA">Rechazadas</option><option value="CONFIRMACION">Abiertas por confirmación del usuario</option><option value="CERRADA">Cerradas</option><option value="INCONFORMIDAD">Devueltas por inconformidad</option></select></div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: INVENTARIO ══ -->
@@ -1579,6 +1579,7 @@ const LPA_AREAS = {
           <textarea id="ms-ing-comentario" class="inp" rows="2" placeholder="Comentario de ingeniería (requerido para rechazar)…" style="margin-bottom:8px"></textarea>
           <div style="display:flex;gap:7px">
             <button onclick="authAction('ing_autoriza')" class="btn-ok" style="flex:1;padding:8px"><i class="fas fa-check" style="margin-right:5px"></i>Autorizar</button>
+            <button onclick="authAction('ing_suspende')" class="btn-g" style="flex:1;padding:8px;border-color:#F59E0B;color:#92400E;background:#FFFBEB"><i class="fas fa-pause" style="margin-right:5px"></i>Suspender</button>
             <button onclick="authAction('ing_rechaza')" class="btn-red" style="flex:1;padding:8px"><i class="fas fa-times" style="margin-right:5px"></i>Rechazar</button>
           </div>
         </div>
@@ -2113,6 +2114,8 @@ const TEXT_I18N_EXTRA = {
   "Acceso Administrativo": "Administrative Access",
   "Usuario o contraseña incorrectos": "Incorrect username or password",
   "Rechazado por Ingeniería": "Rejected by Engineering",
+  "Suspendido — Requiere información": "Suspended — More information required",
+  "Suspendido": "Suspended",
   "Rechazado por Manager — Devuelto a Ingeniería": "Rejected by Manager — Returned to Engineering",
   "Asignado a técnico": "Assigned to Technician",
   "Trabajo completado": "Work Completed",
@@ -2168,6 +2171,8 @@ Object.assign(TEXT_I18N, {"Selecciona el área a auditar": "Select the Area to A
 const STATUS_I18N = {
   'Pendiente de Ingeniería':'Pending Engineering Approval',
   'Rechazado por Ingeniería':'Rejected by Engineering',
+  'Suspendido — Requiere información':'Suspended — More information required',
+  'Suspendido':'Suspended',
   'Pendiente de Manager':'Pending Manager Approval',
   'Aprobado por Manager — Pendiente de asignación':'Approved by Manager — Pending Technician Assignment',
   'Rechazado por Manager — Devuelto a Ingeniería':'Rejected by Manager — Returned to Engineering',
@@ -3086,16 +3091,25 @@ async function consultarSolicitudFolio(){
   try{
     const r=await api({action:'getRequestStatusByFolio',folio});
     if(!r.success){box.innerHTML=`<div class="card" style="padding:18px;color:#B91C1C">${r.error}</div>`;return;}
-    const s=r.request,rej=String(s.estatus||'').includes('Rechazado'),survey=s.estatus==='Pendiente de encuesta de satisfacción';
+    const s=r.request,rej=String(s.estatus||'').includes('Rechazado'),susp=String(s.estatus||'').includes('Suspendido'),survey=s.estatus==='Pendiente de encuesta de satisfacción';
     box.innerHTML=`<div class="card" style="padding:18px">
       <div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${s.folio}</b>${estatusBadge(s.estatus)}</div>
       <div style="font-size:.82rem;line-height:1.7;margin-top:10px"><div><b>Técnico:</b> ${s.tecnico||'Pendiente de asignación'}</div><div><b>Tipo:</b> ${s.tipoSolicitud||'—'}</div></div>
-      ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo</b><br>${s.motivoRechazo||'Sin comentario'}</div>`:''}
+      ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo / Comentario de Ingeniería</b><br>${escapeHtml(s.motivoRechazo||s.comentarioIngenieria||'Sin comentario')}</div>`:''}
+      ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
+      ${(!rej&&!susp&&s.comentarioIngenieria)?`<div style="padding:10px;background:#EFF6FF;border-radius:8px;margin-top:12px"><b>Comentario de Ingeniería</b><br>${escapeHtml(s.comentarioIngenieria)}</div>`:''}
       ${survey?renderSatisfactionSurvey(s.folio):''}
       ${s.estatus==='Cerrada sin encuesta de satisfacción'?'<div style="padding:10px;background:#F8FAFC;border-radius:8px;margin-top:12px">Cerrada automáticamente sin encuesta de satisfacción.</div>':''}
       ${s.promedioSatisfaccion?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px"><b>Encuesta registrada:</b> ${Number(s.promedioSatisfaccion).toFixed(2)} / 5</div>`:''}
     </div>`;
   }catch(e){box.innerHTML=`<div class="card" style="padding:18px;color:#B91C1C">${e.message}</div>`;}
+}
+async function enviarInfoAdicionalSolicitud(folio){
+  const el=$('sol-info-adicional'),comentario=el?el.value.trim():'';
+  if(!comentario){toast('Agrega la información solicitada por Ingeniería','err');return;}
+  const r=await api({action:'addRequestInfoByFolio',folio,comentario});
+  if(r.success){toast('Información enviada. La solicitud volvió a Pendiente de Ingeniería.');consultarSolicitudFolio();}
+  else toast(r.error||'No se pudo enviar la información','err');
 }
 function renderSatisfactionSurvey(folio){
   const row=(id,label)=>`<div style="margin:12px 0"><div style="font-size:.78rem;font-weight:700;margin-bottom:6px">${label}</div><div id="${id}" style="display:flex;gap:5px">${[1,2,3,4,5].map(n=>`<button type="button" class="btn-g sat-star" data-group="${id}" data-value="${n}" onclick="selectSatisfaction('${id}',${n})" style="padding:7px 10px">★ ${n}</button>`).join('')}</div><input type="hidden" id="${id}-value"></div>`;
@@ -3660,7 +3674,37 @@ async function loadMisActividades() {
   } catch(e) { toast('Error de conexión','err'); }
 }
 
-function renderMisActividades(){const list=$('act-list'),filter=$('act-status-filter')?.value||'TODAS',{solicitudes,actividades}=ACT_DATA,latest={};actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});const data=solicitudes.map(s=>{const a=latest[s.id];let b='PENDIENTE',t='Abierta por iniciar';if(s.estatus==='En espera de material'||a?.estatusActividad==='En espera de material'){b='MATERIAL';t='Abierta por falta de material';}else if(s.estatus==='Pendiente de confirmación del solicitante'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}return{s,a,b,t};});const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0};data.forEach(x=>c[x.b]++);$('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');const shown=data.filter(x=>filter==='TODAS'||x.b===filter);list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{let act='';if(b==='PENDIENTE')act=`<button class="btn-p" onclick="openIniciarModal('${s.id}','${s.folio}')">Iniciar actividad</button>`;if(b==='EN_CURSO')act=`<button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')">Terminar</button> <button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button>`;if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${a.materialPendiente||'Material pendiente'}</b><br>Cantidad: ${a.cantidadMaterial||'—'}<br><small>${a.comentarioMaterial||''}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin-bottom:8px">Ver fotografía</a>`:''}<div>${act}</div></div>`;}).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';}
+function renderMisActividades(){
+  const list=$('act-list'),filter=$('act-status-filter')?.value||'TODAS',{solicitudes,actividades}=ACT_DATA,latest={};
+  actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});
+  const data=solicitudes.map(s=>{
+    const a=latest[s.id];let b='PENDIENTE',t='Abierta por iniciar';
+    if(String(s.estatus||'').includes('Suspendido')){b='SUSPENDIDA';t='Suspendida';}
+    else if(String(s.estatus||'').includes('Rechazado')){b='RECHAZADA';t='Rechazada';}
+    else if(s.estatus==='En espera de material'||a?.estatusActividad==='En espera de material'){b='MATERIAL';t='Abierta por falta de material';}
+    else if(s.estatus==='Pendiente de confirmación del solicitante'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}
+    else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}
+    else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}
+    else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}
+    return{s,a,b,t};
+  });
+  const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,SUSPENDIDA:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0,RECHAZADA:0};data.forEach(x=>c[x.b]++);
+  $('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',SUSPENDIDA:'Suspendidas',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad',RECHAZADA:'Rechazadas'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');
+  const shown=data.filter(x=>filter==='TODAS'||x.b===filter);
+  list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{
+    let act='';
+    if(b==='PENDIENTE')act=`<button class="btn-p" onclick="openIniciarModal('${s.id}','${s.folio}')">Iniciar actividad</button>`;
+    if(b==='EN_CURSO')act=`<button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')">Terminar</button> <button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button>`;
+    if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${a.materialPendiente||'Material pendiente'}</b><br>Cantidad: ${a.cantidadMaterial||'—'}<br><small>${a.comentarioMaterial||''}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;
+    if(b==='SUSPENDIDA')act=`<div style="padding:10px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px"><b>Actividad suspendida por Ingeniería</b><br><small>${escapeHtml(s.authIngComentario||s.comentarioFacilities||'Consulta el motivo con Ingeniería.')}</small></div>`;
+    if(b==='RECHAZADA')act=`<div style="padding:10px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px"><b>Actividad rechazada</b><br><small>${escapeHtml(s.authMgrComentario||s.authIngComentario||'Sin comentario registrado.')}</small></div>`;
+    if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';
+    if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';
+    if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';
+    const comentarioIng=(s.authIngComentario&&b!=='SUSPENDIDA'&&b!=='RECHAZADA')?`<div style="margin:8px 0;padding:9px;background:#EFF6FF;border-radius:8px"><b style="font-size:.72rem">Comentario de Ingeniería</b><br><span style="font-size:.78rem">${escapeHtml(s.authIngComentario)}</span></div>`:'';
+    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin-bottom:8px">Ver fotografía</a>`:''}<div>${act}</div></div>`;
+  }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';
+}
 
 function openIniciarModal(solicitudId, folio) {
   ACT_FOTO_MODE = 'iniciar'; ACT_FOTO_TARGET = solicitudId;
@@ -4534,12 +4578,12 @@ function openSolicitudModal(id) {
   const engExecution=rol==='ingeniero'&&[
     'Aprobado por Manager — Pendiente de asignación',
     'Asignado a técnico','En ejecución','En espera de refacciones',
-    'Trabajo completado','Pendiente de encuesta de satisfacción'
+    'Trabajo completado','Pendiente de encuesta de satisfacción','Suspendido'
   ].includes(r.estatus);
   const adminExecution=hasAdminPrivilege()&&[
     'Aprobado por Manager — Pendiente de asignación',
     'Asignado a técnico','En ejecución','En espera de refacciones',
-    'Trabajo completado','Pendiente de encuesta de satisfacción'
+    'Trabajo completado','Pendiente de encuesta de satisfacción','Suspendido'
   ].includes(r.estatus);
 
   $('sec-auth-ing').style.display=engApproval?'':'none';
@@ -4579,6 +4623,8 @@ function translateHistoryAction(txt){
   const pairs=[
     ['Aprobado por Ingeniería; enviado a Manager','Approved by Engineering; sent to Manager'],
     ['Rechazado por Ingeniería','Rejected by Engineering'],
+    ['Suspendido por Ingeniería — Requiere información:','Suspended by Engineering — More information required:'],
+    ['Información adicional recibida —','Additional information received —'],
     ['Aprobado por Manager; devuelto a Ingeniería para asignación','Approved by Manager; returned to Engineering for assignment'],
     ['Rechazado por Manager; devuelto a Ingeniería','Rejected by Manager; returned to Engineering'],
     ['Técnico asignado:','Technician assigned:'],
@@ -4614,8 +4660,8 @@ function renderHistorial(r) {
 async function authAction(action) {
   if(!CUR_SOL||!SESSION) return;
   const comentario = action.startsWith('ing') ? $('ms-ing-comentario').value : $('ms-mgr-comentario').value;
-  if((action==='ing_rechaza'||action==='mgr_rechaza')&&!comentario.trim()){
-    toast('El comentario es obligatorio para rechazar','err'); return;
+  if((action==='ing_rechaza'||action==='ing_suspende'||action==='mgr_rechaza')&&!comentario.trim()){
+    toast(action==='ing_suspende'?'Indica qué información adicional se requiere':'El comentario es obligatorio para rechazar','err'); return;
   }
   const btn=document.querySelector(`button[onclick="authAction('${action}')"]`);
   if(btn){btn.disabled=true;}
@@ -4635,12 +4681,14 @@ async function authAction(action) {
 async function saveSolicitudChanges() {
   if(!CUR_SOL||!SESSION) return;
   const tecnico=$('ms-tecnico').value, estatus=$('ms-estatus').value;
+  const comentario=$('ms-comment').value.trim();
   if(!tecnico&&!estatus){toast('Selecciona técnico o estatus para guardar','err');return;}
+  if(estatus==='Suspendido'&&!comentario){toast('Para suspender una actividad indica el motivo o la información requerida en Comentario Facilities.','err');return;}
   const btn=$('btn-ms-save');
   btn.disabled=true; btn.textContent=LANG==='en'?'Saving…':'Guardando…';
   try {
     const res=await api({action:'updateRequest',token:SESSION.token,id:CUR_SOL.id,
-      tecnico:tecnico||undefined, estatus:estatus||undefined});
+      tecnico:tecnico||undefined, estatus:estatus||undefined, comentarioFacilities:comentario||undefined});
     if(res.success){toast('Cambios guardados');closeModal('modal-sol');loadSolicitudes();}
     else toast(res.error||'Error','err');
   } catch(e){toast('Error de conexión','err');}
