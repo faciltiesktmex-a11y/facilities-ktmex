@@ -2264,6 +2264,22 @@ const TEXT_I18N_EXTRA = {
 };
 Object.assign(TEXT_I18N, TEXT_I18N_EXTRA);
 Object.assign(TEXT_I18N,{
+  'Solicita materiales, refacciones o servicios para Facilities.':'Request materials, spare parts, or services for Facilities.',
+  'Abrir formulario →':'Open form →',
+  'Inspecciones Facilities':'Facilities Inspections',
+  'Checklists digitales de subestaciones, bombas, cuarto de máquinas, compresores e inspección general.':'Digital checklists for substations, pumps, machine room, compressors, and general inspections.',
+  'Abrir inspecciones →':'Open inspections →',
+  'Registra una nueva solicitud de instalación o mantenimiento para Facilities.':'Register a new Facilities installation or maintenance request.',
+  'Realiza auditorías por capas en las 5 áreas de Facilities & Utilities.':'Perform layered process audits in the 5 Facilities & Utilities areas.',
+  'Iniciar auditoría →':'Start audit →',
+  'Técnicos: inicia y cierra tus actividades asignadas con evidencia fotográfica.':'Technicians: start and close assigned activities with photographic evidence.',
+  'Ver mis actividades →':'View My Activities →',
+  'Registra la salida de refacciones de las gavetas ligadas a tu actividad.':'Register parts issued from bins linked to your activity.',
+  'Abrir inventario →':'Open Inventory →',
+  'Autorización de solicitudes, asignación de técnicos y resultados LPA.':'Request approvals, technician assignment, and LPA results.',
+  'Acceder →':'Open →'
+});
+Object.assign(TEXT_I18N,{
   'Ver fotografía de la solicitud':'View Request Photo',
   'Administrador LPA Quality':'LPA Quality Administrator',
   'Acceso administrativo LPA Quality':'LPA Quality Administrative Access'
@@ -5260,6 +5276,109 @@ async function loadChkHistory(){
     $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Área</th><th>Turno</th><th>Inspector</th><th>OK</th><th>NG</th><th>Cumplimiento</th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
   }catch(e){}
 }
+</script>
+
+
+<style id="v81b2-sidebar-css">
+:root{--v81-sidebar:236px;--v81-sidebar-mini:76px}
+@media (min-width:1001px){
+  body{padding-left:var(--v81-sidebar)!important;transition:padding-left .2s ease}
+  body.v81-sidebar-collapsed{padding-left:var(--v81-sidebar-mini)!important}
+  nav{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:var(--v81-sidebar)!important;height:100vh!important;z-index:80!important;background:linear-gradient(180deg,#0B1730 0%,#10213D 100%)!important;border-right:1px solid rgba(255,255,255,.08)!important;border-bottom:0!important;box-shadow:8px 0 28px rgba(15,23,42,.10)!important;overflow:hidden!important;transition:width .2s ease}
+  body.v81-sidebar-collapsed nav{width:var(--v81-sidebar-mini)!important}
+  nav>div{height:100%!important;max-width:none!important;margin:0!important;padding:14px 10px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:10px!important;overflow-y:auto!important;overflow-x:hidden!important}
+  nav>div>div:first-child{width:100%!important;min-height:52px!important;padding:3px 8px 13px!important;border-bottom:1px solid rgba(255,255,255,.08)!important;flex:0 0 auto!important;box-sizing:border-box!important}
+  nav>div>div:first-child>div:last-child{min-width:0}
+  nav>div>div:nth-child(2){width:100%!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:2px!important;flex:1 0 auto!important}
+  nav button[id^="nav-"]{width:100%!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:9px!important;padding:9px 10px!important;margin:0!important;color:#AAB8CD!important;background:transparent!important;border:0!important;border-radius:9px!important;font-size:.74rem!important;font-weight:600!important;text-align:left!important;white-space:nowrap!important}
+  nav button[id^="nav-"] i{width:17px!important;text-align:center!important;margin:0!important;color:#8294AF!important;flex:0 0 17px!important}
+  nav button[id^="nav-"]:hover{background:rgba(255,255,255,.07)!important;color:#FFF!important}
+  nav button[id^="nav-"].v81-active{background:#2563EB!important;color:#FFF!important;box-shadow:0 6px 18px rgba(37,99,235,.25)!important}
+  nav button[id^="nav-"].v81-active i{color:#FFF!important}
+  .v81-section{font-size:.60rem;letter-spacing:.13em;text-transform:uppercase;color:#637793;font-weight:800;padding:13px 10px 5px;white-space:nowrap}
+  #v81-role-card{width:100%;padding:9px 10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);border-radius:10px;box-sizing:border-box;margin-top:auto}
+  #v81-role-name{font-size:.70rem;color:#EDF3FC;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #v81-role-meta{font-size:.59rem;color:#778BA8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #v81-bottom-tools{display:flex;align-items:center;gap:6px;width:100%;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap}
+  #v81-bottom-tools #lang-switch{margin-left:0!important}
+  #v81-bottom-tools #btn-logout{margin-left:auto!important;padding:6px 8px!important;font-size:.70rem!important}
+  #v81-collapse{width:32px;height:32px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#9FB0C8;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  #v81-collapse:hover{background:rgba(255,255,255,.10);color:#FFF}
+  #notif-panel{left:248px!important;right:auto!important;top:14px!important}
+  body.v81-sidebar-collapsed #notif-panel{left:88px!important}
+  body.v81-sidebar-collapsed nav>div>div:first-child>div:last-child,
+  body.v81-sidebar-collapsed .v81-section,
+  body.v81-sidebar-collapsed #v81-role-card,
+  body.v81-sidebar-collapsed nav button[id^="nav-"]{font-size:0!important}
+  body.v81-sidebar-collapsed nav button[id^="nav-"]{justify-content:center!important;padding:10px!important}
+  body.v81-sidebar-collapsed nav button[id^="nav-"] i{font-size:.82rem!important;width:18px!important;flex-basis:18px!important}
+  body.v81-sidebar-collapsed #v81-bottom-tools{justify-content:center!important}
+  body.v81-sidebar-collapsed #v81-bottom-tools #lang-switch,
+  body.v81-sidebar-collapsed #v81-bottom-tools #btn-logout{display:none!important}
+  body.v81-sidebar-collapsed #v81-collapse i{transform:rotate(180deg)}
+}
+@media (max-width:1000px){
+  body{padding-left:0!important}
+  .v81-section,#v81-role-card,#v81-collapse{display:none!important}
+  #v81-bottom-tools{display:contents!important}
+  nav{position:sticky!important;top:0!important;width:100%!important;height:auto!important;overflow:visible!important}
+  nav>div{height:54px!important;max-width:1280px!important;margin:0 auto!important;padding:0 12px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;overflow:visible!important}
+  nav>div>div:nth-child(2){display:flex!important;flex-direction:row!important;align-items:center!important;gap:3px!important;overflow-x:auto!important;max-width:calc(100vw - 150px)!important}
+  nav button[id^="nav-"]{flex:0 0 auto!important}
+  #notif-panel{left:auto!important;right:12px!important;top:60px!important}
+}
+</style>
+<script id="v81b2-sidebar-js">
+(function(){
+  function el(id){return document.getElementById(id)}
+  function sec(text){var d=document.createElement('div');d.className='v81-section';d.textContent=text;return d}
+  function move(parent,id){var n=el(id);if(n)parent.appendChild(n)}
+  function syncRole(){
+    var u=(window.SESSION&&SESSION.user)?SESSION.user:null;
+    var n=el('v81-role-name'),m=el('v81-role-meta');
+    if(!n||!m)return;
+    if(u){n.textContent=u.nombre||u.username||'Usuario';m.textContent=(u.rol||'usuario')+' · Facilities'}
+    else{n.textContent='Sesión no iniciada';m.textContent='Facilities KTMEX'}
+  }
+  function active(view){
+    document.querySelectorAll('nav button[id^="nav-"]').forEach(function(b){b.classList.remove('v81-active')});
+    var map={solicitud:'nav-sol',actividades:'nav-act',compra:'nav-compra','compras-rol':'nav-compra',inventario:'nav-inv',recepcion:'nav-recepcion','checklists':'nav-checklists','chk-select':'nav-checklists','chk-form':'nav-checklists','lpa-select':'nav-lpa','lpa-form':'nav-lpa',admin:'nav-admin'};
+    var id=map[view]; if(id&&el(id))el(id).classList.add('v81-active');
+  }
+  function init(){
+    var nav=document.querySelector('nav'); if(!nav)return;
+    var shell=nav.firstElementChild; if(!shell)return;
+    var brand=shell.firstElementChild, menu=shell.children[1]; if(!menu)return;
+    if(menu.dataset.v81built==='1')return; menu.dataset.v81built='1';
+    var frag=document.createDocumentFragment();
+    frag.appendChild(sec('Operación')); move(frag,'nav-sol'); move(frag,'nav-act'); move(frag,'nav-compra');
+    frag.appendChild(sec('Control')); move(frag,'nav-inv'); move(frag,'nav-recepcion'); move(frag,'nav-checklists'); move(frag,'nav-lpa');
+    frag.appendChild(sec('Ingeniería')); move(frag,'nav-electricas');
+    frag.appendChild(sec('Gestión')); move(frag,'nav-admin');
+    menu.insertBefore(frag,menu.firstChild);
+    var role=document.createElement('div');role.id='v81-role-card';role.innerHTML='<div id="v81-role-name">Sesión no iniciada</div><div id="v81-role-meta">Facilities KTMEX</div>';
+    menu.appendChild(role);
+    var tools=document.createElement('div');tools.id='v81-bottom-tools';
+    var collapse=document.createElement('button');collapse.id='v81-collapse';collapse.type='button';collapse.title='Contraer / Expandir menú';collapse.innerHTML='<i class="fas fa-chevron-left"></i>';
+    collapse.onclick=function(){document.body.classList.toggle('v81-sidebar-collapsed');try{localStorage.setItem('ktmexSidebarCollapsed',document.body.classList.contains('v81-sidebar-collapsed')?'1':'0')}catch(e){}};
+    tools.appendChild(collapse); move(tools,'notif-bell'); move(tools,'lang-switch'); move(tools,'btn-logout'); menu.appendChild(tools);
+    try{if(localStorage.getItem('ktmexSidebarCollapsed')==='1')document.body.classList.add('v81-sidebar-collapsed')}catch(e){}
+    syncRole(); active('home');
+    if(typeof window.showView==='function'){
+      var original=window.showView; window.showView=function(v){var r=original.apply(this,arguments);active(v);setTimeout(syncRole,0);return r}
+    }
+    if(typeof window.configureRoleUI==='function'){
+      var origRole=window.configureRoleUI; window.configureRoleUI=function(){var r=origRole.apply(this,arguments);setTimeout(syncRole,0);return r}
+    }
+    if(typeof window.performLogin==='function'){
+      var origLogin=window.performLogin; window.performLogin=async function(){var r=await origLogin.apply(this,arguments);setTimeout(syncRole,0);return r}
+    }
+    if(typeof window.logout==='function'){
+      var origLogout=window.logout; window.logout=function(){var r=origLogout.apply(this,arguments);setTimeout(syncRole,0);return r}
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
 </script>
 
 </body>
