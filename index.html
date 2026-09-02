@@ -368,6 +368,9 @@ const LPA_AREAS = {
       <button onclick="goLpaSelect()" id="nav-lpa" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-clipboard-check" style="margin-right:5px"></i>Auditoría LPA
       </button>
+      <button onclick="goChecklists()" id="nav-checklists" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-list-check" style="margin-right:5px"></i>Inspecciones
+      </button>
       <button onclick="goCompra()" id="nav-compra" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-cart-shopping" style="margin-right:5px"></i>Compras
       </button>
@@ -443,6 +446,15 @@ const LPA_AREAS = {
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Mis Actividades</h3>
       <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Técnicos: inicia y cierra tus actividades asignadas con evidencia fotográfica.</p>
       <span style="color:#7C3AED;font-size:.8rem;font-weight:600">Ver mis actividades →</span>
+    </div>
+    <!-- Inspecciones Facilities Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onclick="goChecklists()" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="width:48px;height:48px;background:#ECFDF5;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-list-check" style="color:#059669;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Inspecciones Facilities</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Checklists digitales de subestaciones, bombas, cuarto de máquinas, compresores e inspección general.</p>
+      <span style="color:#059669;font-size:.8rem;font-weight:600">Abrir inspecciones →</span>
     </div>
     <!-- Inventario Card -->
     <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goInventario()">
@@ -908,6 +920,27 @@ const LPA_AREAS = {
     <button class="btn-g" onclick="saveLpaQNC('validate')">Validate & Close</button>
   </div>
  </div>
+</div>
+
+<!-- ══════════════════════ VIEW: CHECKLISTS FACILITIES V8.0 ══ -->
+<div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+    <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inspecciones Facilities</h2>
+      <p style="color:#64748B;font-size:.82rem;margin:0">V8.0 · Captura digital, evaluación automática y hallazgos</p></div>
+    <button class="btn-g" onclick="loadChkDashboard()" style="width:auto"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
+  </div>
+  <div id="chk-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
+  <div id="chk-area-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px"></div>
+  <div id="chk-form-wrap" class="card" style="display:none;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div><h3 id="chk-title" style="margin:0;color:var(--navy)">Checklist</h3><p id="chk-subtitle" style="margin:3px 0 0;color:#64748B;font-size:.76rem"></p></div>
+      <div style="display:flex;gap:8px"><select id="chk-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option></select><button class="btn-g" onclick="closeChecklistForm()" style="width:auto">Cerrar</button></div>
+    </div>
+    <div id="chk-points"></div>
+    <div style="margin-top:14px"><label style="font-size:.78rem;font-weight:600">Observaciones generales</label><textarea id="chk-general-obs" class="inp" rows="3" placeholder="Observaciones generales de la inspección"></textarea></div>
+    <button id="chk-submit" class="btn-p" onclick="submitChecklistV80()" style="width:100%;margin-top:14px"><i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección</button>
+  </div>
+  <div class="card" style="padding:18px;margin-top:16px"><h3 style="margin:0 0 10px;color:var(--navy);font-size:1rem">Mis inspecciones recientes</h3><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: MIS ACTIVIDADES ══ -->
@@ -2426,7 +2459,7 @@ let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
 
 function configureRoleUI() {
   const role=SESSION?.user?.rol||'';
-  const ids=['nav-sol','nav-lpa','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
+  const ids=['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
   ids.forEach(id=>{if($(id))$(id).style.display='';});
 
   if(role==='manager'){
@@ -2439,10 +2472,10 @@ function configureRoleUI() {
       $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
     }
   }else if(role==='lpa'){
-    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-lpa'))$('nav-lpa').style.display='';
   }else if(role==='compras'){
-    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
   }else{
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
@@ -2450,6 +2483,7 @@ function configureRoleUI() {
     if(role!=='tecnico'&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
     if(!SESSION&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
     if($('nav-electricas'))$('nav-electricas').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
+    if($('nav-checklists'))$('nav-checklists').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
     if(role==='tecnico'&&$('nav-admin'))$('nav-admin').style.display=hasAdminPrivilege()?'':'none';
   }
   configureManagerDashboardTabs();
@@ -2460,7 +2494,7 @@ function roleCanView(v) {
   if(!SESSION)return true;
   const role=SESSION.user.rol;
   if(role==='manager'){
-    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','login'].includes(v);
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','login'].includes(v);
   }
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','login'].includes(v);
   if(role==='compras')return ['home','solicitud','compras-rol','login'].includes(v);
@@ -2478,7 +2512,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','actividades','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -2902,6 +2936,15 @@ function startNotificationPolling(){stopNotificationPolling();if(!SESSION?.token
 function stopNotificationPolling(){if(NOTIF_TIMER){clearInterval(NOTIF_TIMER);NOTIF_TIMER=null;}NOTIF_DATA=[];NOTIF_LAST_UNREAD=0;NOTIF_CURRENT=null;const b=$('notif-bell');if(b)b.style.display='none';const p=$('notif-panel');if(p)p.style.display='none';updateNotificationBadge(0);}
 async function loadNotifications(silent=false){if(!SESSION?.token)return;try{const r=await api({action:'getNotifications',token:SESSION.token,limit:30});if(!r.success)return;const oldUnread=NOTIF_LAST_UNREAD;NOTIF_DATA=Array.isArray(r.notifications)?r.notifications:[];NOTIF_LAST_UNREAD=Number(r.unreadCount||0);updateNotificationBadge(NOTIF_LAST_UNREAD);renderNotificationList();if(silent&&NOTIF_LAST_UNREAD>oldUnread){const fresh=NOTIF_DATA.find(n=>String(n.leida||'').toUpperCase()!=='TRUE');if(fresh)showNotificationPopup(fresh,NOTIF_LAST_UNREAD-oldUnread);}}catch(e){if(!silent)toast('Notificaciones: '+e.message,'err');}}
 function updateNotificationBadge(n){const b=$('notif-badge');if(!b)return;b.textContent=n>99?'99+':String(n);b.style.display=n>0?'flex':'none';}
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function renderNotificationList(){const list=$('notif-list');if($('notif-panel-title'))$('notif-panel-title').textContent=LANG==='en'?'Notifications':'Notificaciones';if($('notif-panel-sub'))$('notif-panel-sub').textContent=LANG==='en'?'Latest system alerts':'Últimos avisos del sistema';if($('notif-mark-all'))$('notif-mark-all').textContent=LANG==='en'?'Mark all as read':'Marcar todas como leídas';if(!list)return;if(!NOTIF_DATA.length){list.innerHTML=`<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.8rem">${LANG==='en'?'No notifications':'Sin notificaciones'}</div>`;return;}list.innerHTML=NOTIF_DATA.map(n=>{const unread=String(n.leida||'').toUpperCase()!=='TRUE';return `<div class="notif-row ${unread?'unread':''}" onclick="selectNotification('${String(n.id).replace(/'/g,"\\'")}')"><span class="notif-dot ${notifPriorityClass(n.prioridad)}"></span><div style="min-width:0;flex:1"><div class="notif-title">${escapeHtml(notifText(n,'titulo'))}</div><div class="notif-msg">${escapeHtml(notifText(n,'mensaje'))}</div><div class="notif-meta">${escapeHtml(n.folio||n.modulo||'')} · ${notifTimeLabel(n.fechaCreacion)}</div></div>${unread?'<span style="font-size:.62rem;font-weight:800;color:#2563EB">NUEVA</span>':''}</div>`}).join('');}
 function toggleNotificationPanel(ev){ev?.stopPropagation();if(!SESSION?.token)return;const p=$('notif-panel');const open=p.style.display==='block';p.style.display=open?'none':'block';if(!open)loadNotifications(false);}
 async function selectNotification(id){const n=NOTIF_DATA.find(x=>String(x.id)===String(id));if(!n)return;NOTIF_CURRENT=n;if(String(n.leida||'').toUpperCase()!=='TRUE'){await api({action:'markNotificationRead',token:SESSION.token,id:n.id}).catch(()=>{});n.leida='TRUE';NOTIF_LAST_UNREAD=Math.max(0,NOTIF_LAST_UNREAD-1);updateNotificationBadge(NOTIF_LAST_UNREAD);renderNotificationList();}openNotificationTarget(n);}
@@ -5030,5 +5073,125 @@ async function logout() {
 
 init();
 </script>
+
+<script>
+// ===== V8.0 CHECKLISTS FACILITIES =====
+let CHK_CATALOG=[], CHK_AREA='', CHK_START=null;
+const CHK_ICONS={'Subestaciones':'fa-bolt','Cuarto de Bombas':'fa-droplet','Cuarto de Máquinas':'fa-gears','Compresores':'fa-gauge-high','Inspección General':'fa-clipboard-check'};
+
+function goChecklists(){
+  if(!requireLogin('checklists'))return;
+  const role=SESSION.user.rol;
+  if(!['tecnico','ingeniero','manager'].includes(role)){toast('Tu usuario no tiene acceso a Inspecciones Facilities.','err');return;}
+  showView('checklists');
+  loadChecklistV80();
+}
+async function loadChecklistV80(){
+  try{
+    const res=await api({action:'getChecklistCatalog',token:SESSION.token});
+    if(!res.success){toast(res.error||'No fue posible cargar los checklists','err');return;}
+    CHK_CATALOG=res.catalogo||[];
+    renderChkAreas();
+    loadChkDashboard();
+    loadChkHistory();
+  }catch(e){toast('Error al cargar Inspecciones Facilities','err');}
+}
+function renderChkAreas(){
+  const areas=['Subestaciones','Cuarto de Bombas','Cuarto de Máquinas','Compresores','Inspección General'];
+  $('chk-area-cards').innerHTML=areas.map(a=>{
+    const n=CHK_CATALOG.filter(x=>x.area===a).length;
+    return `<div class="card" style="padding:16px;cursor:pointer;border:1px solid #E2E8F0" onclick="openChecklistArea('${a.replace(/'/g,"\\'")}')">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:10px;background:#ECFDF5;display:flex;align-items:center;justify-content:center"><i class="fas ${CHK_ICONS[a]||'fa-list-check'}" style="color:#059669"></i></div>
+      <div><b style="font-size:.88rem;color:#0F172A">${a}</b><div style="font-size:.7rem;color:#64748B">${n} puntos de inspección</div></div></div></div>`;
+  }).join('');
+}
+function closeChecklistForm(){ $('chk-form-wrap').style.display='none'; CHK_AREA=''; }
+function chkEsc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function openChecklistArea(area){
+  if(SESSION.user.rol==='manager'){toast('Manager tiene vista de seguimiento; la captura está habilitada para técnicos e ingenieros.','err');return;}
+  CHK_AREA=area; CHK_START=new Date().toISOString();
+  const pts=CHK_CATALOG.filter(x=>x.area===area);
+  $('chk-title').textContent=area;
+  $('chk-subtitle').textContent=pts.length+' puntos · '+(SESSION.user.nombre||SESSION.user.username);
+  const groups={}; pts.forEach(p=>(groups[p.equipo]||(groups[p.equipo]=[])).push(p));
+  $('chk-points').innerHTML=Object.keys(groups).map(eq=>`<div style="margin-bottom:18px"><div style="background:#F8FAFC;border-left:4px solid #059669;padding:9px 11px;font-weight:700;color:#334155;font-size:.86rem">${chkEsc(eq)}</div>${groups[eq].map(renderChkPoint).join('')}</div>`).join('');
+  $('chk-general-obs').value='';
+  $('chk-form-wrap').style.display='';
+  $('chk-form-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderChkPoint(p){
+  let input='';
+  const t=String(p.tipoCaptura||'').toUpperCase(), opts=String(p.opciones||'').split('|').filter(Boolean);
+  if(t==='OK_NG'){
+    input=`<div style="display:flex;gap:6px;flex-wrap:wrap">
+      <label><input type="radio" name="chk-${p.id}" value="OK"> <span class="badge b-ok">OK</span></label>
+      <label><input type="radio" name="chk-${p.id}" value="NG"> <span class="badge b-rej">NG</span></label>
+      <label><input type="radio" name="chk-${p.id}" value="N/A"> N/A</label></div>`;
+  } else if(t==='SELECTOR'||t==='SI_NO'){
+    input=`<select class="inp chk-value" data-id="${p.id}"><option value="">— Selecciona —</option>${opts.map(o=>`<option>${chkEsc(o)}</option>`).join('')}</select>`;
+  } else if(t==='TEXTO'){
+    input=`<input class="inp chk-value" data-id="${p.id}" type="text">`;
+  } else {
+    input=`<div style="display:flex;align-items:center;gap:7px"><input class="inp chk-value" data-id="${p.id}" inputmode="decimal" type="number" step="any"><span style="font-size:.72rem;color:#64748B;min-width:48px">${chkEsc(p.unidad||'')}</span></div>`;
+  }
+  let rango='';
+  if(p.minimo!==''||p.maximo!=='') rango=`<div style="font-size:.68rem;color:#64748B;margin-top:3px">Rango: ${p.minimo||'—'} a ${p.maximo||'—'} ${chkEsc(p.unidad||'')}</div>`;
+  else if(p.objetivo!=='') rango=`<div style="font-size:.68rem;color:#64748B;margin-top:3px">Objetivo: ${p.objetivo} ${chkEsc(p.unidad||'')}</div>`;
+  return `<div class="chk-row" data-id="${p.id}" style="padding:11px;border-bottom:1px solid #E2E8F0;display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(180px,.8fr);gap:10px;align-items:start">
+    <div><div style="font-size:.8rem;font-weight:600;color:#334155">${chkEsc(p.parametro)} ${String(p.critico).toLowerCase()==='sí'?'<span title="Punto crítico" style="color:#DC2626">●</span>':''}</div>${rango}</div>
+    <div>${input}<textarea class="inp chk-obs" data-id="${p.id}" rows="2" placeholder="Observación si aplica" style="margin-top:6px;font-size:.74rem"></textarea>
+      <input class="inp chk-photo" data-id="${p.id}" type="file" accept="image/*" capture="environment" style="margin-top:6px;padding:6px;font-size:.7rem"></div></div>`;
+}
+async function fileToDataUrlChk(f){
+  if(!f)return '';
+  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f);});
+}
+async function submitChecklistV80(){
+  if(!CHK_AREA||!SESSION)return;
+  const pts=CHK_CATALOG.filter(x=>x.area===CHK_AREA), respuestas=[];
+  const btn=$('chk-submit'); btn.disabled=true; btn.textContent='Guardando…';
+  try{
+    for(const p of pts){
+      let valor='';
+      if(String(p.tipoCaptura).toUpperCase()==='OK_NG'){
+        const el=document.querySelector(`input[name="chk-${p.id}"]:checked`); valor=el?el.value:'';
+      }else{
+        const el=document.querySelector(`.chk-value[data-id="${p.id}"]`); valor=el?el.value:'';
+      }
+      if(String(valor).trim()===''){throw new Error('Falta responder: '+p.equipo+' — '+p.parametro);}
+      const obs=(document.querySelector(`.chk-obs[data-id="${p.id}"]`)||{}).value||'';
+      const file=(document.querySelector(`.chk-photo[data-id="${p.id}"]`)||{}).files?.[0]||null;
+      let fotoBase64='',fotoName='';
+      if(file){fotoBase64=await fileToDataUrlChk(file);fotoName=file.name||'evidencia.jpg';}
+      respuestas.push({puntoId:p.id,valor,observacion:obs,fotoBase64,fotoName});
+    }
+    const res=await api({action:'submitFacilitiesChecklist',token:SESSION.token,area:CHK_AREA,turno:$('chk-turno').value,inicio:CHK_START,observaciones:$('chk-general-obs').value,respuestas});
+    if(!res.success)throw new Error(res.error||'No fue posible guardar');
+    toast(`Inspección ${res.id} guardada · NG: ${res.ng}`,'ok');
+    closeChecklistForm(); loadChkDashboard(); loadChkHistory();
+  }catch(e){toast(e.message||'Error al guardar','err');}
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección';
+}
+async function loadChkDashboard(){
+  if(!SESSION)return;
+  try{
+    const r=await api({action:'getChecklistDashboard',token:SESSION.token}); if(!r.success)return;
+    $('chk-kpis').innerHTML=[
+      ['Inspecciones hoy',r.inspeccionesHoy||0,'fa-clipboard-check'],
+      ['Desviaciones NG hoy',r.ngHoy||0,'fa-triangle-exclamation'],
+      ['Hallazgos abiertos',r.hallazgosAbiertos||0,'fa-wrench']
+    ].map(x=>`<div class="card" style="padding:13px"><div style="font-size:.68rem;color:#64748B">${x[0]}</div><div style="font-size:1.35rem;font-weight:800;color:#0F172A">${x[1]}</div></div>`).join('');
+  }catch(e){}
+}
+async function loadChkHistory(){
+  if(!SESSION)return;
+  try{
+    const r=await api({action:'getChecklistHistory',token:SESSION.token}); if(!r.success)return;
+    const a=(r.inspecciones||[]).slice(0,12);
+    $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Área</th><th>Turno</th><th>Inspector</th><th>OK</th><th>NG</th><th>Cumplimiento</th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
+  }catch(e){}
+}
+</script>
+
 </body>
 </html>
