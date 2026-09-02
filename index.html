@@ -66,6 +66,14 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .st-item{display:flex;gap:10px;align-items:flex-start;padding-left:14px;position:relative}
 .st-item::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:#CBD5E1}
 .st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}
+
+/* V7.10 Notification Center */
+#notif-bell{position:relative;width:36px;height:36px;border:none;border-radius:9px;background:transparent;color:#94A3B8;cursor:pointer;display:none;align-items:center;justify-content:center}
+#notif-bell:hover{background:rgba(255,255,255,.08);color:#fff}
+#notif-badge{position:absolute;top:1px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#EF4444;color:white;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid #0A1628}
+#notif-panel{position:fixed;right:16px;top:60px;width:min(390px,calc(100vw - 24px));max-height:70vh;z-index:75;background:#fff;border:1px solid #E2E8F0;border-radius:14px;box-shadow:0 18px 50px rgba(15,23,42,.22);display:none;overflow:hidden}
+.notif-row{padding:12px 14px;border-bottom:1px solid #F1F5F9;cursor:pointer;display:flex;gap:10px;align-items:flex-start}.notif-row:hover{background:#F8FAFC}.notif-row.unread{background:#F8FAFF}.notif-dot{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:0 0 auto}.notif-info{background:#64748B}.notif-normal{background:#2563EB}.notif-important{background:#F59E0B}.notif-critical{background:#EF4444}.notif-title{font-size:.82rem;font-weight:700;color:#0F172A}.notif-msg{font-size:.75rem;color:#64748B;line-height:1.35;margin-top:3px}.notif-meta{font-size:.66rem;color:#94A3B8;margin-top:5px}.notif-popup-icon{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;background:#FEF3C7;color:#D97706}
+@media(max-width:900px){#notif-panel{right:8px;top:58px;width:calc(100vw - 16px)}#notif-bell{width:32px;height:32px;padding:0}}
 </style>
 </head>
 <body>
@@ -378,6 +386,7 @@ const LPA_AREAS = {
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
       </button>
+      <button id="notif-bell" onclick="toggleNotificationPanel(event)" title="Notificaciones / Notifications"><i class="fas fa-bell"></i><span id="notif-badge">0</span></button>
       <div id="lang-switch" style="display:flex;background:#1E293B;border:1px solid #334155;border-radius:8px;padding:2px;margin-left:4px">
         <button id="lang-es" onclick="setLanguage('es')" title="Español" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:#2563EB;color:white">ES</button>
         <button id="lang-en" onclick="setLanguage('en')" title="English" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:transparent;color:#94A3B8">EN</button>
@@ -1785,6 +1794,28 @@ const LPA_AREAS = {
 </div>
 
 
+
+<!-- V7.10 CENTRO DE NOTIFICACIONES -->
+<div id="notif-panel">
+  <div style="padding:13px 14px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div><div style="font-weight:800;color:#0F172A;font-size:.9rem" id="notif-panel-title">Notificaciones</div><div id="notif-panel-sub" style="font-size:.7rem;color:#94A3B8">Últimos avisos del sistema</div></div>
+    <button onclick="markAllNotificationsReadUI()" style="border:none;background:none;color:#2563EB;font-size:.7rem;font-weight:700;cursor:pointer" id="notif-mark-all">Marcar todas como leídas</button>
+  </div>
+  <div id="notif-list" style="overflow:auto;max-height:58vh"><div style="padding:24px;text-align:center;color:#94A3B8;font-size:.8rem">Sin notificaciones</div></div>
+</div>
+
+<div id="modal-notification" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:470px;padding:26px;text-align:center">
+    <div class="notif-popup-icon"><i id="notif-popup-icon" class="fas fa-bell" style="font-size:24px"></i></div>
+    <h3 id="notif-popup-title" style="font-size:1.08rem;font-weight:800;color:var(--navy);margin:0 0 8px">Nueva notificación</h3>
+    <p id="notif-popup-msg" style="font-size:.84rem;color:#64748B;line-height:1.55;margin:0 0 18px"></p>
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" onclick="closeNotificationPopup()" style="flex:1" id="notif-popup-close">Cerrar</button>
+      <button class="btn-p" onclick="openCurrentNotification()" style="flex:1;background:#7C3AED" id="notif-popup-open">Ver</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Aviso de solicitudes asignadas -->
 <div id="modal-tech-notice" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:430px;padding:26px;text-align:center">
@@ -1805,6 +1836,7 @@ const LPA_AREAS = {
 
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
+// V7.10 — Centro de Notificaciones
 // ── State ────────────────────────────────────────────────────
 let SESSION   = null;   // { token, user: { username, nombre, rol } }
 let SOL_DATA    = [];     // cached requests
@@ -1815,6 +1847,7 @@ let LPA_DATA    = {};     // cached LPA results
 let ACC_DATA    = [];     // cached plan acciones
 let CUR_SOL     = null;   // request open in modal
 let CUR_COMPRA  = null;   // compra open in modal
+let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURRENT=null; let NOTIF_SOUND_ENABLED=(localStorage.getItem('ktmex_notif_sound')!=='off');
 
 let LANG = localStorage.getItem('ktmex_lang');
 if(!['es','en'].includes(LANG)){LANG='es';localStorage.setItem('ktmex_lang','es');}
@@ -2320,7 +2353,7 @@ const prioSlug = p => ({Alta:'alta',Media:'media',Baja:'baja'}[p]||'baja');
 
 // ── API ──────────────────────────────────────────────────────
 async function api(data) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'REEMPLAZA_CON_TU_URL_DE_APPS_SCRIPT') {
+  if (!SCRIPT_URL || SCRIPT_URL.indexOf('REEMPLAZA_CON_')===0) {
     toast('⚠ Configura SCRIPT_URL con la URL /exec de la implementación activa.','err');
     throw new Error('SCRIPT_URL no configurado');
   }
@@ -2855,6 +2888,27 @@ function renderElectricHistory() {
   }
 }
 
+
+// ── V7.10 CENTRO DE NOTIFICACIONES ───────────────────────────
+function notifText(n,field){const en=LANG==='en';return String(n[(field+(en?'En':'Es'))]||n[field+'Es']||n[field+'En']||'');}
+function notifPriorityClass(p){p=String(p||'Normal').toLowerCase();if(p.includes('crít')||p.includes('crit'))return 'notif-critical';if(p.includes('import'))return 'notif-important';if(p.includes('info'))return 'notif-info';return 'notif-normal';}
+function notifTimeLabel(v){if(!v)return '';const d=new Date(v),s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return LANG==='en'?'now':'ahora';if(s<3600)return Math.floor(s/60)+(LANG==='en'?' min':' min');if(s<86400)return Math.floor(s/3600)+(LANG==='en'?' h':' h');return d.toLocaleDateString(LANG==='en'?'en-US':'es-MX');}
+function startNotificationPolling(){stopNotificationPolling();if(!SESSION?.token)return;const b=$('notif-bell');if(b)b.style.display='flex';loadNotifications(true);NOTIF_TIMER=setInterval(()=>loadNotifications(true),60000);}
+function stopNotificationPolling(){if(NOTIF_TIMER){clearInterval(NOTIF_TIMER);NOTIF_TIMER=null;}NOTIF_DATA=[];NOTIF_LAST_UNREAD=0;NOTIF_CURRENT=null;const b=$('notif-bell');if(b)b.style.display='none';const p=$('notif-panel');if(p)p.style.display='none';updateNotificationBadge(0);}
+async function loadNotifications(silent=false){if(!SESSION?.token)return;try{const r=await api({action:'getNotifications',token:SESSION.token,limit:30});if(!r.success)return;const oldUnread=NOTIF_LAST_UNREAD;NOTIF_DATA=Array.isArray(r.notifications)?r.notifications:[];NOTIF_LAST_UNREAD=Number(r.unreadCount||0);updateNotificationBadge(NOTIF_LAST_UNREAD);renderNotificationList();if(silent&&NOTIF_LAST_UNREAD>oldUnread){const fresh=NOTIF_DATA.find(n=>String(n.leida||'').toUpperCase()!=='TRUE');if(fresh)showNotificationPopup(fresh,NOTIF_LAST_UNREAD-oldUnread);}}catch(e){if(!silent)toast('Notificaciones: '+e.message,'err');}}
+function updateNotificationBadge(n){const b=$('notif-badge');if(!b)return;b.textContent=n>99?'99+':String(n);b.style.display=n>0?'flex':'none';}
+function renderNotificationList(){const list=$('notif-list');if($('notif-panel-title'))$('notif-panel-title').textContent=LANG==='en'?'Notifications':'Notificaciones';if($('notif-panel-sub'))$('notif-panel-sub').textContent=LANG==='en'?'Latest system alerts':'Últimos avisos del sistema';if($('notif-mark-all'))$('notif-mark-all').textContent=LANG==='en'?'Mark all as read':'Marcar todas como leídas';if(!list)return;if(!NOTIF_DATA.length){list.innerHTML=`<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.8rem">${LANG==='en'?'No notifications':'Sin notificaciones'}</div>`;return;}list.innerHTML=NOTIF_DATA.map(n=>{const unread=String(n.leida||'').toUpperCase()!=='TRUE';return `<div class="notif-row ${unread?'unread':''}" onclick="selectNotification('${String(n.id).replace(/'/g,"\\'")}')"><span class="notif-dot ${notifPriorityClass(n.prioridad)}"></span><div style="min-width:0;flex:1"><div class="notif-title">${escapeHtml(notifText(n,'titulo'))}</div><div class="notif-msg">${escapeHtml(notifText(n,'mensaje'))}</div><div class="notif-meta">${escapeHtml(n.folio||n.modulo||'')} · ${notifTimeLabel(n.fechaCreacion)}</div></div>${unread?'<span style="font-size:.62rem;font-weight:800;color:#2563EB">NUEVA</span>':''}</div>`}).join('');}
+function toggleNotificationPanel(ev){ev?.stopPropagation();if(!SESSION?.token)return;const p=$('notif-panel');const open=p.style.display==='block';p.style.display=open?'none':'block';if(!open)loadNotifications(false);}
+async function selectNotification(id){const n=NOTIF_DATA.find(x=>String(x.id)===String(id));if(!n)return;NOTIF_CURRENT=n;if(String(n.leida||'').toUpperCase()!=='TRUE'){await api({action:'markNotificationRead',token:SESSION.token,id:n.id}).catch(()=>{});n.leida='TRUE';NOTIF_LAST_UNREAD=Math.max(0,NOTIF_LAST_UNREAD-1);updateNotificationBadge(NOTIF_LAST_UNREAD);renderNotificationList();}openNotificationTarget(n);}
+async function markAllNotificationsReadUI(){if(!SESSION?.token)return;const r=await api({action:'markAllNotificationsRead',token:SESSION.token});if(r.success){NOTIF_DATA.forEach(n=>n.leida='TRUE');NOTIF_LAST_UNREAD=0;updateNotificationBadge(0);renderNotificationList();}}
+function showNotificationPopup(n,newCount=1){NOTIF_CURRENT=n;const multi=newCount>1;const title=multi?(LANG==='en'?`You have ${newCount} new notifications`:`Tienes ${newCount} nuevas notificaciones`):notifText(n,'titulo');const msg=multi?(LANG==='en'?'Open the notification center to review the new items.':'Abre el centro de notificaciones para revisar los nuevos avisos.'):notifText(n,'mensaje');$('notif-popup-title').textContent=title;$('notif-popup-msg').textContent=msg;$('notif-popup-open').textContent=multi?(LANG==='en'?'View notifications':'Ver notificaciones'):(LANG==='en'?'View':'Ver');$('modal-notification').style.display='flex';if(NOTIF_SOUND_ENABLED && ['Importante','Crítico','Critico'].includes(String(n.prioridad||'')))playNotificationSound();}
+function closeNotificationPopup(){$('modal-notification').style.display='none';}
+async function openCurrentNotification(){const n=NOTIF_CURRENT;if(!n){closeNotificationPopup();toggleNotificationPanel();return;}if(String(n.leida||'').toUpperCase()!=='TRUE'){await api({action:'markNotificationRead',token:SESSION.token,id:n.id}).catch(()=>{});n.leida='TRUE';NOTIF_LAST_UNREAD=Math.max(0,NOTIF_LAST_UNREAD-1);updateNotificationBadge(NOTIF_LAST_UNREAD);}closeNotificationPopup();openNotificationTarget(n);}
+function openNotificationTarget(n){const p=$('notif-panel');if(p)p.style.display='none';const a=String(n.accion||'');if(a==='compra'){if(SESSION.user.rol==='compras')goComprasRol();else goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='actividad'){goActividades();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='lpa'){goLpaQuality();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='solicitud'){goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}toggleNotificationPanel();}
+function focusNotificationRecord(n){const folio=String(n.folio||'');if(!folio)return;const candidates=[...document.querySelectorAll('tr,.card')].filter(el=>(el.textContent||'').includes(folio));if(candidates[0]){candidates[0].scrollIntoView({behavior:'smooth',block:'center'});candidates[0].style.outline='3px solid #F59E0B';setTimeout(()=>candidates[0].style.outline='',3500);}}
+function playNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.035,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.16);o.start();o.stop(ctx.currentTime+.16);}catch(e){}}
+document.addEventListener('click',e=>{const p=$('notif-panel'),b=$('notif-bell');if(p&&p.style.display==='block'&&!p.contains(e.target)&&!b?.contains(e.target))p.style.display='none';});
+
 // ── Auth ─────────────────────────────────────────────────────
 async function performLogin() {
   const u=$('log-user').value.trim(), p=$('log-pwd').value;
@@ -2891,6 +2945,7 @@ async function performLogin() {
     const dest=PENDING_VIEW||'admin';
     PENDING_VIEW=null;
     toast('Bienvenido, '+SESSION.user.nombre,'ok');
+    startNotificationPolling();
 
     // Show destination immediately; load protected data afterwards.
     if(dest==='admin'){
@@ -2935,6 +2990,7 @@ async function performLogin() {
 
 async function performLogout() {
   stopQRScanner();
+  stopNotificationPolling();
   const token=SESSION?.token||'';
   // V7.7: close UI immediately. Server invalidation runs without blocking.
   SESSION=null;
@@ -4874,7 +4930,7 @@ function init() {
   DEPARTAMENTOS.forEach(d=>{ const o=document.createElement('option'); o.value=o.textContent=d; $('fs-depto').appendChild(o); });
 
   // Close modals on overlay
-  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc','modal-tech-notice'].forEach(id=>{
+  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc','modal-tech-notice','modal-notification'].forEach(id=>{
     $(id).addEventListener('click',e=>{ if(e.target===$(id)) closeModal(id); });
   });
 
@@ -4891,6 +4947,7 @@ function init() {
           $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
           if($('admin-rol-label')) $('admin-rol-label').textContent=res.user.nombre+' · '+res.user.rol;
           configureRoleUI();
+          startNotificationPolling();
         } else {
           sessionStorage.removeItem('ktmex_session');
         }
