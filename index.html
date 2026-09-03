@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- V8.2.3 fix actividad espontánea -> pendiente de cierre por Ingeniería -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema Facilities – KTMEX</title>
@@ -3850,6 +3852,7 @@ function renderMisActividades(){
     else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}
     else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}
     else if(s.estatus==='Pendiente de cierre por Ingeniería'||a?.estatusActividad==='Pendiente de cierre por Ingeniería'){b='PEND_ING';t='Pendiente de cierre por Ingeniería';}
+    else if((String(s.tipoSolicitud||'').toLowerCase().startsWith('espontánea')||String(s.tipoSolicitud||'').toLowerCase().startsWith('espontanea')) && (s.estatus==='Pendiente de encuesta de satisfacción'||a?.estatusActividad==='Pendiente de encuesta de satisfacción')){b='PEND_ING';t='Pendiente de cierre por Ingeniería';}
     else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}
     return{s,a,b,t};
   });
