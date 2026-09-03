@@ -154,7 +154,7 @@ thead th{background:#F5F8FC;color:#586980}
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
-<div id="offline-status" style="position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#064E3B;color:#fff;font-size:.74rem;font-weight:700;box-shadow:0 10px 28px rgba(15,23,42,.22)">
+<div id="offline-status" onclick="openOfflineQueuePanel()" title="Ver pendientes de sincronización" style="cursor:pointer;"position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#064E3B;color:#fff;font-size:.74rem;font-weight:700;box-shadow:0 10px 28px rgba(15,23,42,.22)">
   <i class="fas fa-wifi"></i><span id="offline-status-text">En línea · Todo sincronizado</span>
 </div>
 
@@ -605,11 +605,16 @@ const LPA_AREAS = {
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#2563EB;margin-right:5px"></i>Descripción detallada *</label>
         <textarea id="s-desc" class="inp" rows="4" placeholder="Describe el trabajo requerido con el mayor detalle posible…"></textarea>
       </div>
-      <!-- Foto -->
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#2563EB;margin-right:5px"></i>Fotografía * (máx. 5 MB)</label>
-        <input type="file" id="s-foto" accept="image/*" capture="environment" class="inp" style="padding:8px" required>
-        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG, HEIC. La foto se guardará en Google Drive.</p>
+      <!-- Evidencias V8.2.1 -->
+      <div style="margin-bottom:16px;padding:14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px">
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fas fa-paperclip" style="color:#2563EB;margin-right:5px"></i>Evidencia de la solicitud *</label>
+        <p style="font-size:.72rem;color:#64748B;margin:0 0 10px">Puedes adjuntar hasta <b>3 imágenes + 1 PDF</b>. En celular/tablet puedes tomar una fotografía o seleccionar archivos existentes.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-camera" style="margin-right:5px"></i>Tomar fotografía<input type="file" id="s-foto-camera" accept="image/*" capture="environment" style="display:none" onchange="mergeSolicitudCameraFile(this)"></label>
+          <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images" style="margin-right:5px"></i>Seleccionar imágenes<input type="file" id="s-fotos" accept="image/*" multiple style="display:none" onchange="previewSolicitudFiles()"></label>
+        </div>
+        <label class="btn-g" style="display:block;text-align:center;cursor:pointer;margin-top:8px"><i class="fas fa-file-pdf" style="margin-right:5px;color:#DC2626"></i>Seleccionar PDF<input type="file" id="s-pdf" accept="application/pdf,.pdf" style="display:none" onchange="previewSolicitudFiles()"></label>
+        <div id="s-files-preview" style="font-size:.72rem;color:#475569;margin-top:9px">Sin archivos seleccionados.</div>
       </div>
       <!-- Nueva instalación -->
       <div style="margin-bottom:20px">
@@ -1007,7 +1012,7 @@ const LPA_AREAS = {
 <div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
     <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inspecciones Facilities</h2>
-      <p style="color:#64748B;font-size:.82rem;margin:0">V8.0 · Captura digital, evaluación automática y hallazgos</p></div>
+      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.1 · Offline, historial, reportes y trazabilidad</p></div>
     <button class="btn-g" onclick="loadChkDashboard()" style="width:auto"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
   </div>
   <div id="chk-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -1021,7 +1026,13 @@ const LPA_AREAS = {
     <div style="margin-top:14px"><label style="font-size:.78rem;font-weight:600">Observaciones generales</label><textarea id="chk-general-obs" class="inp" rows="3" placeholder="Observaciones generales de la inspección"></textarea></div>
     <button id="chk-submit" class="btn-p" onclick="submitChecklistV80()" style="width:100%;margin-top:14px"><i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección</button>
   </div>
-  <div class="card" style="padding:18px;margin-top:16px"><h3 style="margin:0 0 10px;color:var(--navy);font-size:1rem">Mis inspecciones recientes</h3><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
+  <div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
+  <div id="chk-report-card" class="card" style="display:none;padding:18px;margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
+    <div id="chk-report-actions" style="display:none;gap:7px;margin-top:12px;flex-wrap:wrap"><button class="btn-g" style="width:auto" onclick="printChecklistMonthlyReport()"><i class="fas fa-file-pdf" style="margin-right:5px"></i>Imprimir / PDF</button><button class="btn-g" style="width:auto" onclick="exportChecklistMonthlyExcel()"><i class="fas fa-file-excel" style="margin-right:5px"></i>Descargar Excel</button></div>
+    <div id="chk-report-content" style="margin-top:12px"></div>
+  </div>
+  <div id="chk-detail-modal" class="modal" style="display:none"><div class="modal-box" style="max-width:980px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h3 style="margin:0">Detalle de inspección</h3><button class="btn-g" style="width:auto" onclick="closeModal('chk-detail-modal')">Cerrar</button></div><div id="chk-detail-content" style="margin-top:12px"></div></div></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: MIS ACTIVIDADES ══ -->
@@ -1681,7 +1692,7 @@ const LPA_AREAS = {
         <a id="ms-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
       </div>
       <div id="ms-fotos-extra-wrap" class="card-sm" style="display:none;padding:12px">
-        <p style="font-size:.68rem;color:#64748B;font-weight:700;text-transform:uppercase;margin:0 0 7px"><i class="fas fa-images" style="margin-right:5px;color:#2563EB"></i>Imágenes adicionales del solicitante</p>
+        <p style="font-size:.68rem;color:#64748B;font-weight:700;text-transform:uppercase;margin:0 0 7px"><i class="fas fa-paperclip" style="margin-right:5px;color:#2563EB"></i>Archivos adjuntos del solicitante</p>
         <div id="ms-fotos-extra" style="display:flex;flex-wrap:wrap;gap:7px"></div>
       </div>
 
@@ -3185,59 +3196,47 @@ function togglePresupuestoFields() {
   }
 }
 
-async function submitSolicitud() {
-  const fecha  = $('s-fecha').value;
-  const nombre = $('s-nombre').value.trim();
-  const email  = $('s-email').value.trim();
-  const gerente= $('s-gerente').value;
-  const depto  = $('s-depto').value;
-  const tipo   = $('s-tipo').value;
-  const desc   = $('s-desc').value.trim();
-  const nueva  = document.querySelector('input[name="s-nueva"]:checked')?.value;
-  const presupuestoNumero = $('s-presupuesto-num').value.trim();
-  const presupuestoMonto  = $('s-presupuesto-monto').value.trim();
-  const fotoFile = $('s-foto').files[0];
-
-  if (!fecha||!nombre||!email||!gerente||!depto||!tipo||!desc||!nueva) {
-    toast('Completa todos los campos obligatorios','err'); return;
-  }
-  if (!fotoFile) {
-    toast('La fotografía es obligatoria para enviar la solicitud de trabajo','err'); return;
-  }
-  if (nueva === 'Si' && (!presupuestoNumero || presupuestoMonto === '')) {
-    toast('Para una instalación nueva, anota el número y el monto del presupuesto asignado','err'); return;
-  }
-  if (nueva === 'Si' && (Number(presupuestoMonto) < 0 || !Number.isFinite(Number(presupuestoMonto)))) {
-    toast('Ingresa un monto de presupuesto válido','err'); return;
-  }
-  if (!/\S+@\S+\.\S+/.test(email)) { toast('Ingresa un email válido','err'); return; }
-
-  const btn=$('btn-sol-submit');
-  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
-
-  // Photo to base64
-  let fotoBase64='', fotoName='';
-  if (fotoFile) {
-    if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud'; return; }
-    fotoBase64 = await fileToBase64(fotoFile);
-    fotoName   = fotoFile.name;
-  }
-
-  try {
-    const res = await api({action:'submitRequest',fecha,nombre,email,gerente,
-      departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,
-      presupuestoNumero:nueva==='Si'?presupuestoNumero:'',
-      presupuestoMonto:nueva==='Si'?presupuestoMonto:'',fotoBase64,fotoName});
-    if (res.success) {
-      $('sol-folio').textContent=res.folio;
-      $('sol-form').style.display='none';
-      $('sol-success').style.display='';
-    } else toast(res.error||'Error al enviar','err');
-  } catch(e){ toast('Error de conexión: '+e.message,'err'); }
-
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud';
+let SOL_CAMERA_FILES=[];
+function mergeSolicitudCameraFile(input){
+  const f=input&&input.files&&input.files[0]; if(!f)return;
+  if(SOL_CAMERA_FILES.length>=3){toast('Se permiten máximo 3 imágenes','err');input.value='';return;}
+  SOL_CAMERA_FILES.push(f); input.value=''; previewSolicitudFiles();
 }
-
+function solicitudImageFiles(){
+  const picked=$('s-fotos')&&$('s-fotos').files?Array.from($('s-fotos').files):[];
+  return SOL_CAMERA_FILES.concat(picked).slice(0,4);
+}
+function previewSolicitudFiles(){
+  const imgs=solicitudImageFiles(),pdf=$('s-pdf')&&$('s-pdf').files?$('s-pdf').files[0]:null,box=$('s-files-preview');
+  if(imgs.length>3){if(box)box.innerHTML='<span style="color:#B91C1C">Máximo 3 imágenes. Quita una selección.</span>';return;}
+  const names=imgs.map(f=>'🖼️ '+escapeHtml(f.name)); if(pdf)names.push('📄 '+escapeHtml(pdf.name));
+  if(box)box.innerHTML=names.length?names.join('<br>'):'Sin archivos seleccionados.';
+}
+async function buildSolicitudAttachments(imageFiles,pdfFile){
+  if(imageFiles.length>3)throw new Error('Se permiten máximo 3 imágenes.');
+  const imagenes=[];
+  for(const f of imageFiles){if(f.size>5*1024*1024)throw new Error('Cada imagen debe ser menor a 5 MB: '+f.name);imagenes.push({name:f.name,base64:await fileToBase64(f)});}
+  let pdf=null;if(pdfFile){if(pdfFile.size>10*1024*1024)throw new Error('El PDF debe ser menor a 10 MB.');pdf={name:pdfFile.name,base64:await fileToBase64(pdfFile)};}
+  return {imagenes,pdf};
+}
+async function submitSolicitud() {
+  const fecha=$('s-fecha').value,nombre=$('s-nombre').value.trim(),email=$('s-email').value.trim(),gerente=$('s-gerente').value,depto=$('s-depto').value,tipo=$('s-tipo').value,desc=$('s-desc').value.trim();
+  const nueva=document.querySelector('input[name="s-nueva"]:checked')?.value,presupuestoNumero=$('s-presupuesto-num').value.trim(),presupuestoMonto=$('s-presupuesto-monto').value.trim();
+  const imageFiles=solicitudImageFiles(),pdfFile=$('s-pdf')&&$('s-pdf').files?$('s-pdf').files[0]:null;
+  if(!fecha||!nombre||!email||!gerente||!depto||!tipo||!desc||!nueva){toast('Completa todos los campos obligatorios','err');return;}
+  if(imageFiles.length>3){toast('Se permiten máximo 3 imágenes','err');return;}
+  if(!imageFiles.length&&!pdfFile){toast('Adjunta al menos una imagen o un archivo PDF','err');return;}
+  if(nueva==='Si'&&(!presupuestoNumero||presupuestoMonto==='')){toast('Para una instalación nueva, anota el número y el monto del presupuesto asignado','err');return;}
+  if(nueva==='Si'&&(Number(presupuestoMonto)<0||!Number.isFinite(Number(presupuestoMonto)))){toast('Ingresa un monto de presupuesto válido','err');return;}
+  if(!/\S+@\S+\.\S+/.test(email)){toast('Ingresa un email válido','err');return;}
+  const btn=$('btn-sol-submit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
+  try{
+    const at=await buildSolicitudAttachments(imageFiles,pdfFile);
+    const res=await api({action:'submitRequest',fecha,nombre,email,gerente,departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,presupuestoNumero:nueva==='Si'?presupuestoNumero:'',presupuestoMonto:nueva==='Si'?presupuestoMonto:'',imagenes:at.imagenes,pdf:at.pdf});
+    if(res.success){$('sol-folio').textContent=res.folio;$('sol-form').style.display='none';$('sol-success').style.display='';}else toast(res.error||'Error al enviar','err');
+  }catch(e){toast('Error: '+e.message,'err');}
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud';
+}
 
 function showSolicitudTab(tab){const n=tab==='new';$('sol-new-panel').style.display=n?'':'none';$('sol-status-panel').style.display=n?'none':'';$('sol-tab-new').className=n?'btn-p':'btn-g';$('sol-tab-status').className=n?'btn-g':'btn-p';}
 async function consultarSolicitudFolio(){
@@ -3252,7 +3251,7 @@ async function consultarSolicitudFolio(){
       <div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${s.folio}</b>${estatusBadge(s.estatus)}</div>
       <div style="font-size:.82rem;line-height:1.7;margin-top:10px"><div><b>Técnico:</b> ${s.tecnico||'Pendiente de asignación'}</div><div><b>Tipo:</b> ${s.tipoSolicitud||'—'}</div></div>
       ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo / Comentario de Ingeniería</b><br>${escapeHtml(s.motivoRechazo||s.comentarioIngenieria||'Sin comentario')}</div>`:''}
-      ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><div style="margin-top:9px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><label style="display:block;font-size:.76rem;font-weight:700;color:#334155;margin-bottom:5px"><i class="fas fa-images" style="margin-right:5px;color:#2563EB"></i>Imágenes adicionales (opcional)</label><input id="sol-info-imagenes" type="file" accept="image/*" multiple class="inp" style="padding:7px"><p style="font-size:.68rem;color:#94A3B8;margin:5px 0 0">Puedes adjuntar nuevas evidencias. No es obligatorio para reenviar la información a Ingeniería.</p></div><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
+      ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><div style="margin-top:9px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><label style="display:block;font-size:.76rem;font-weight:700;color:#334155;margin-bottom:5px"><i class="fas fa-paperclip" style="margin-right:5px;color:#2563EB"></i>Archivos adicionales (opcionales)</label><p style="font-size:.68rem;color:#64748B;margin:0 0 7px">Hasta 3 imágenes + 1 PDF. Puedes responder únicamente con texto.</p><input id="sol-info-imagenes" type="file" accept="image/*" multiple class="inp" style="padding:7px;margin-bottom:6px"><input id="sol-info-pdf" type="file" accept="application/pdf,.pdf" class="inp" style="padding:7px"></div><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
       ${(!rej&&!susp&&s.comentarioIngenieria)?`<div style="padding:10px;background:#EFF6FF;border-radius:8px;margin-top:12px"><b>Comentario de Ingeniería</b><br>${escapeHtml(s.comentarioIngenieria)}</div>`:''}
       ${parseSolicitudFotosAdicionales(s).length?`<div style="margin-top:12px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><b style="font-size:.75rem">Imágenes adicionales enviadas</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px">${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.7rem;text-decoration:none">Imagen ${i+1}</a>`).join('')}</div></div>`:''}
       ${survey?renderSatisfactionSurvey(s.folio):''}
@@ -3265,14 +3264,13 @@ async function enviarInfoAdicionalSolicitud(folio){
   const el=$('sol-info-adicional'),comentario=el?el.value.trim():'';
   if(!comentario){toast('Agrega la información solicitada por Ingeniería','err');return;}
   const input=$('sol-info-imagenes'),files=input&&input.files?Array.from(input.files):[];
-  const imagenes=[];
-  for(const file of files){
-    if(file.size>5*1024*1024){toast('Cada imagen debe ser menor a 5 MB','err');return;}
-    imagenes.push({name:file.name,base64:await fileToBase64(file)});
-  }
-  const r=await api({action:'addRequestInfoByFolio',folio,comentario,imagenes});
-  if(r.success){toast('Información enviada. La solicitud volvió a Pendiente de Ingeniería.');consultarSolicitudFolio();}
-  else toast(r.error||'No se pudo enviar la información','err');
+  const pdfFile=$('sol-info-pdf')&&$('sol-info-pdf').files?$('sol-info-pdf').files[0]:null;
+  if(files.length>3){toast('Se permiten máximo 3 imágenes','err');return;}
+  try{
+    const at=await buildSolicitudAttachments(files,pdfFile);
+    const r=await api({action:'addRequestInfoByFolio',folio,comentario,imagenes:at.imagenes,pdf:at.pdf});
+    if(r.success){toast('Información enviada. La solicitud volvió a Pendiente de Ingeniería.');consultarSolicitudFolio();}else toast(r.error||'No se pudo enviar la información','err');
+  }catch(e){toast(e.message||'No se pudieron preparar los archivos','err');}
 }
 
 function renderSatisfactionSurvey(folio){
@@ -3298,7 +3296,7 @@ function resetSolicitud() {
   $('sol-form').style.display=''; $('sol-success').style.display='none';
   ['s-nombre','s-email','s-desc','s-presupuesto-num','s-presupuesto-monto'].forEach(id=>$(id).value='');
   $('s-gerente').value=''; $('s-depto').value=''; $('s-tipo').value='';
-  $('s-foto').value='';
+  SOL_CAMERA_FILES=[]; if($('s-fotos'))$('s-fotos').value=''; if($('s-pdf'))$('s-pdf').value=''; if($('s-files-preview'))$('s-files-preview').textContent='Sin archivos seleccionados.';
   document.querySelectorAll('input[name="s-nueva"]').forEach(r=>r.checked=false);
   togglePresupuestoFields();
   $('s-fecha').value=new Date().toISOString().slice(0,10);
@@ -4710,11 +4708,17 @@ function renderAcciones() {
 function parseSolicitudFotosAdicionales(r){
   try{const a=JSON.parse(r?.fotosAdicionales||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
 }
+function parseSolicitudArchivos(r){
+  try{const a=JSON.parse(r?.archivosSolicitud||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
+}
 function renderSolicitudFotosAdicionales(r){
   const wrap=$('ms-fotos-extra-wrap'),box=$('ms-fotos-extra');if(!wrap||!box)return;
-  const fotos=parseSolicitudFotosAdicionales(r);
-  wrap.style.display=fotos.length?'':'none';
-  box.innerHTML=fotos.map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.72rem;text-decoration:none"><i class="fas fa-image" style="margin-right:5px"></i>${escapeHtml(f.nombre||('Imagen '+(i+1)))}</a>`).join('');
+  let archivos=parseSolicitudArchivos(r);
+  if(!archivos.length)archivos=parseSolicitudFotosAdicionales(r).map(f=>Object.assign({tipo:'imagen'},f));
+  // Evitar duplicar la primera imagen que ya se muestra en el botón de fotografía original.
+  const seen={};archivos=archivos.filter(f=>{const k=String(f.url||'');if(!k||seen[k])return false;seen[k]=true;return true;});
+  wrap.style.display=archivos.length?'':'none';
+  box.innerHTML=archivos.map((f,i)=>{const pdf=String(f.tipo||'').toLowerCase()==='pdf'||String(f.nombre||'').toLowerCase().endsWith('.pdf');return `<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.72rem;text-decoration:none"><i class="fas ${pdf?'fa-file-pdf':'fa-image'}" style="margin-right:5px;${pdf?'color:#DC2626':''}"></i>${escapeHtml(f.nombre||(pdf?'PDF':'Imagen '+(i+1)))}</a>`;}).join('');
 }
 
 function openSolicitudModal(id) {
@@ -5206,9 +5210,16 @@ function init() {
           sessionStorage.removeItem('ktmex_session');
         }
       }).catch(()=>{
-        // No conservar una sesión que no pudo validarse contra el servidor.
-        SESSION=null;
-        sessionStorage.removeItem('ktmex_session');
+        // V8.2.1: si no hay conexión, conservar la sesión local para seguir trabajando.
+        // El token se volverá a validar al recuperar Internet; la cola offline nunca se elimina.
+        if(!navigator.onLine){
+          SESSION=parsed;
+          $('btn-logout').style.display='';
+          configureRoleUI();
+        }else{
+          SESSION=null;
+          sessionStorage.removeItem('ktmex_session');
+        }
       });
     } catch { SESSION=null; }
   }
@@ -5313,7 +5324,7 @@ function renderChkPoint(p){
   else if(p.objetivo!=='') rango=`<div style="font-size:.68rem;color:#64748B;margin-top:3px">Objetivo: ${p.objetivo} ${chkEsc(p.unidad||'')}</div>`;
   return `<div class="chk-row" data-id="${p.id}" style="padding:11px;border-bottom:1px solid #E2E8F0;display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(180px,.8fr);gap:10px;align-items:start">
     <div><div style="font-size:.8rem;font-weight:600;color:#334155">${chkEsc(p.parametro)} ${String(p.critico).toLowerCase()==='sí'?'<span title="Punto crítico" style="color:#DC2626">●</span>':''}</div>${rango}</div>
-    <div>${input}<textarea class="inp chk-obs" data-id="${p.id}" rows="2" placeholder="Observación si aplica" style="margin-top:6px;font-size:.74rem"></textarea>
+    <div>${input}<textarea class="inp chk-obs" data-id="${p.id}" rows="2" placeholder="Observación opcional" style="margin-top:6px;font-size:.74rem"></textarea>
       <input class="inp chk-photo" data-id="${p.id}" type="file" accept="image/*" capture="environment" style="margin-top:6px;padding:6px;font-size:.7rem"></div></div>`;
 }
 async function fileToDataUrlChk(f){
@@ -5387,14 +5398,53 @@ async function loadChkDashboard(){
     ].map(x=>`<div class="card" style="padding:13px"><div style="font-size:.68rem;color:#64748B">${x[0]}</div><div style="font-size:1.35rem;font-weight:800;color:#0F172A">${x[1]}</div></div>`).join('');
   }catch(e){}
 }
+let CHK_REPORT_DATA=null;
 async function loadChkHistory(){
   if(!SESSION)return;
   try{
     const r=await api({action:'getChecklistHistory',token:SESSION.token}); if(!r.success)return;
-    const a=(r.inspecciones||[]).slice(0,12);
-    $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Área</th><th>Turno</th><th>Inspector</th><th>OK</th><th>NG</th><th>Cumplimiento</th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
+    const a=(r.inspecciones||[]).slice(0,100),areas=r.responsibleAreas||[],canAll=!!r.canSeeAll;
+    if($('chk-history-access'))$('chk-history-access').textContent=canAll?'Acceso a todas las inspecciones':areas.length?'Responsable: '+areas.join(', '):'Tus inspecciones';
+    configureChecklistReports(canAll,areas);
+    $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Área</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td><td><button class="btn-g" style="padding:5px 8px;width:auto" onclick="openChecklistDetail('${chkEsc(x.id)}')">Ver</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
   }catch(e){}
 }
+function checklistTime(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v).slice(11,16):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function configureChecklistReports(canAll,areas){
+  const card=$('chk-report-card');if(!card)return;const allowed=canAll?['Subestaciones','Cuarto de Bombas','Cuarto de Máquinas','Compresores','Inspección General']:areas;
+  if(!allowed.length){card.style.display='none';return;}card.style.display='';$('chk-report-area').innerHTML=allowed.map(a=>`<option>${chkEsc(a)}</option>`).join('');if(!$('chk-report-month').value)$('chk-report-month').value=new Date().toISOString().slice(0,7);
+}
+async function openChecklistDetail(id){
+  if(!SESSION||!navigator.onLine){toast('El detalle histórico requiere conexión','err');return;}
+  const r=await api({action:'getChecklistDetail',token:SESSION.token,id});if(!r.success){toast(r.error||'No disponible','err');return;}
+  const x=r.inspeccion,resp=r.respuestas||[];
+  $('chk-detail-content').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px"><div><b>Área</b><br>${chkEsc(x.area)}</div><div><b>Realizó</b><br>${chkEsc(x.tecnicoNombre)}</div><div><b>Fecha</b><br>${chkEsc(x.fecha)}</div><div><b>Hora inicio</b><br>${chkEsc(checklistTime(x.inicio))}</div><div><b>Hora envío</b><br>${chkEsc(checklistTime(x.cierre))}</div><div><b>Turno</b><br>${chkEsc(x.turno)}</div></div><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>Valor</th><th>Resultado</th><th>Observación</th><th>Evidencia</th></tr></thead><tbody>${resp.map(z=>`<tr><td>${chkEsc(z.equipo)}</td><td>${chkEsc(z.parametro)}</td><td>${chkEsc(z.valor)} ${chkEsc(z.unidad||'')}</td><td>${chkEsc(z.resultado)}</td><td>${chkEsc(z.observacion||'—')}</td><td>${z.fotoURL?`<a href="${chkEsc(z.fotoURL)}" target="_blank">Ver foto</a>`:'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  $('chk-detail-modal').style.display='flex';
+}
+async function loadChecklistMonthlyReport(){
+  if(!SESSION||!navigator.onLine){toast('El reporte mensual requiere conexión','err');return;}
+  const area=$('chk-report-area').value,month=$('chk-report-month').value;if(!area||!month){toast('Selecciona área y mes','err');return;}
+  $('chk-report-content').innerHTML='<p>Generando reporte…</p>';
+  const r=await api({action:'getChecklistMonthlyReport',token:SESSION.token,area,month});if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
+  CHK_REPORT_DATA=r;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
+}
+function renderChecklistMonthlyReport(r){
+  const ins=r.inspecciones||[],pts=r.puntos||[],ok=ins.reduce((s,x)=>s+Number(x.ok||0),0),ng=ins.reduce((s,x)=>s+Number(x.ng||0),0),avg=ins.length?Math.round(ins.reduce((s,x)=>s+Number(x.cumplimiento||0),0)/ins.length*10)/10:0;
+  const topNg=pts.filter(x=>x.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,10);
+  $('chk-report-content').innerHTML=`<div id="chk-print-area"><div style="border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1.05rem">KTMEX · Facilities — Reporte mensual de inspecciones</b><div style="font-size:.75rem;color:#64748B">${chkEsc(r.area)} · ${chkEsc(r.month)} · Generado ${new Date().toLocaleString()}</div></div><div style="display:grid;grid-template-columns:repeat(4,minmax(110px,1fr));gap:8px"><div class="card" style="padding:10px"><small>Inspecciones</small><b style="display:block;font-size:1.2rem">${ins.length}</b></div><div class="card" style="padding:10px"><small>OK</small><b style="display:block;font-size:1.2rem">${ok}</b></div><div class="card" style="padding:10px"><small>NG</small><b style="display:block;font-size:1.2rem">${ng}</b></div><div class="card" style="padding:10px"><small>Cumplimiento prom.</small><b style="display:block;font-size:1.2rem">${avg}%</b></div></div><h4 style="margin:16px 0 7px">Tendencia diaria de cumplimiento</h4><div style="height:210px"><canvas id="chk-month-chart" style="width:100%;height:210px"></canvas></div><h4 style="margin:16px 0 7px">Principales puntos NG</h4>${topNg.length?`<table style="width:100%;border-collapse:collapse;font-size:.74rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>NG</th><th>Registros</th></tr></thead><tbody>${topNg.map(x=>`<tr><td>${chkEsc(x.equipo)}</td><td>${chkEsc(x.parametro)}</td><td>${x.ng}</td><td>${x.registros}</td></tr>`).join('')}</tbody></table>`:'<p style="font-size:.75rem;color:#64748B">Sin puntos NG en el periodo.</p>'}<h4 style="margin:16px 0 7px">Inspecciones del mes</h4><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumpl.</th></tr></thead><tbody>${ins.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento||0}%</td></tr>`).join('')}</tbody></table></div>`;
+  setTimeout(()=>drawChecklistMonthChart(ins),0);
+}
+function drawChecklistMonthChart(ins){const c=$('chk-month-chart');if(!c)return;const rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.max(600,rect.width*dpr);c.height=210*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);const w=c.width/dpr,h=210,p=28;g.clearRect(0,0,w,h);g.strokeStyle='#CBD5E1';g.beginPath();g.moveTo(p,10);g.lineTo(p,h-p);g.lineTo(w-8,h-p);g.stroke();const data=ins.map(x=>({label:String(x.fecha||'').slice(8,10),v:Number(x.cumplimiento||0)}));if(!data.length)return;g.strokeStyle='#2563EB';g.lineWidth=2;g.beginPath();data.forEach((x,i)=>{const px=p+i*Math.max(1,(w-p-16)/Math.max(1,data.length-1)),py=10+(100-x.v)*(h-p-20)/100;if(i===0)g.moveTo(px,py);else g.lineTo(px,py);});g.stroke();g.fillStyle='#334155';g.font='10px sans-serif';data.forEach((x,i)=>{const px=p+i*Math.max(1,(w-p-16)/Math.max(1,data.length-1));if(i%Math.ceil(data.length/12)===0)g.fillText(x.label,px-4,h-8);});}
+function printChecklistMonthlyReport(){if(!CHK_REPORT_DATA)return;const content=$('chk-print-area').innerHTML,w=window.open('','_blank');w.document.write(`<html><head><title>Reporte ${chkEsc(CHK_REPORT_DATA.area)} ${chkEsc(CHK_REPORT_DATA.month)}</title><style>body{font-family:Arial;padding:22px;color:#172033}table{border-collapse:collapse;width:100%}th,td{border:1px solid #CBD5E1;padding:6px;text-align:left}.card{border:1px solid #CBD5E1}</style></head><body>${content}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
+function exportChecklistMonthlyExcel(){
+  const r=CHK_REPORT_DATA;if(!r)return;const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const rows=[['Área',r.area],['Mes',r.month],[],['ID','Fecha','Hora','Turno','Realizó','Estatus','OK','NG','N/A','Cumplimiento']].concat((r.inspecciones||[]).map(x=>[x.id,x.fecha,checklistTime(x.cierre),x.turno,x.tecnicoNombre,x.estatus,x.ok,x.ng,x.na,x.cumplimiento]));
+  let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Resumen"><Table>'+rows.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet>';
+  const resp=[['Inspección','Punto','Equipo','Parámetro','Valor','Resultado','Unidad','Observación','Fecha']].concat((r.respuestas||[]).map(x=>[x.inspeccionId,x.puntoId,x.equipo,x.parametro,x.valor,x.resultado,x.unidad,x.observacion,x.fecha]));
+  xml+='<Worksheet ss:Name="Resultados"><Table>'+resp.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet></Workbook>';
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KTMEX_Checklist_'+r.area.replace(/\s+/g,'_')+'_'+r.month+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 </script>
 
 
@@ -5513,14 +5563,28 @@ async function offlineQueueAll(){const db=await offlineDb();return new Promise((
 async function offlineQueuePut(item){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').put(item);tx.oncomplete=()=>resolve(item);tx.onerror=()=>reject(tx.error);});}
 async function offlineQueueDelete(id){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').delete(id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
 function offlineLocalId(){return 'OFF-'+new Date().toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
-async function queueOfflineChecklist(payload){const localId=offlineLocalId();const safe=JSON.parse(JSON.stringify(payload));await offlineQueuePut({localId,createdAt:new Date().toISOString(),type:'facilities_checklist',payload:safe,status:'pending',lastError:''});return localId;}
+async function queueOfflineChecklist(payload){const localId=offlineLocalId();const safe=JSON.parse(JSON.stringify(payload));delete safe.token;await offlineQueuePut({localId,createdAt:new Date().toISOString(),type:'facilities_checklist',payload:safe,status:'pending',lastError:'',attempts:0});return localId;}
 function renderOfflineChecklistNotice(){const k=$('chk-kpis');if(k)k.innerHTML='<div class="card" style="padding:13px;border:1px solid #F59E0B;background:#FFFBEB"><b style="color:#92400E">Modo sin conexión</b><div style="font-size:.72rem;color:#92400E;margin-top:4px">Puedes completar y guardar checklists. Dashboard e historial se actualizarán cuando regrese Internet.</div></div>';}
-async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0;try{n=(await offlineQueueAll()).length}catch(_){}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
-async function syncOfflineChecklists(){if(OFFLINE_SYNC_RUNNING||!navigator.onLine||!SESSION)return;OFFLINE_SYNC_RUNNING=true;try{const items=await offlineQueueAll();for(const item of items){if(item.type!=='facilities_checklist')continue;try{item.payload.token=SESSION.token;const r=await api(item.payload);if(r&&r.success){await offlineQueueDelete(item.localId);}else{item.lastError=(r&&r.error)||'Error de sincronización';await offlineQueuePut(item);if(/sesión|token|expir/i.test(item.lastError))break;}}catch(e){item.lastError=e.message||String(e);await offlineQueuePut(item);break;}}}finally{OFFLINE_SYNC_RUNNING=false;await updateOfflineStatus();}if(navigator.onLine){try{if(typeof loadChkDashboard==='function')loadChkDashboard();if(typeof loadChkHistory==='function')loadChkHistory();}catch(_){}}}
+async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0;try{n=(await offlineQueueAll()).length}catch(_){}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(OFFLINE_SYNC_RUNNING){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate fa-spin';tx.textContent=`Sincronizando · ${n} pendiente${n===1?'':'s'}`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
+async function validateOrRestoreOfflineSession(){
+  if(SESSION&&SESSION.token)return true;const saved=sessionStorage.getItem('ktmex_session');if(!saved)return false;
+  try{const parsed=JSON.parse(saved);if(!parsed||!parsed.token)return false;if(!navigator.onLine){SESSION=parsed;return true;}const r=await api({action:'validateSession',token:parsed.token});if(r&&r.valid){SESSION=parsed;configureRoleUI();return true;}return false;}catch(e){return !navigator.onLine&&!!SESSION;}
+}
+async function syncOfflineChecklists(){
+  if(OFFLINE_SYNC_RUNNING||!navigator.onLine)return;const items=await offlineQueueAll();if(!items.length){updateOfflineStatus();return;}
+  const valid=await validateOrRestoreOfflineSession();if(!valid){items[0].lastError='Sesión requerida para sincronizar. Inicia sesión; el registro permanece guardado.';await offlineQueuePut(items[0]);await updateOfflineStatus();toast('Hay inspecciones pendientes. Inicia sesión para sincronizarlas.','err');return;}
+  OFFLINE_SYNC_RUNNING=true;await updateOfflineStatus();
+  try{for(const item of items){if(item.type!=='facilities_checklist')continue;try{const payload=Object.assign({},item.payload,{token:SESSION.token});const r=await api(payload);item.attempts=(item.attempts||0)+1;if(r&&r.success){await offlineQueueDelete(item.localId);}else{item.lastError=(r&&r.error)||'Error de sincronización';await offlineQueuePut(item);if(/sesión|token|expir/i.test(item.lastError)){toast('La sesión expiró. Inicia sesión nuevamente; la inspección sigue guardada.','err');break;}}}catch(e){item.lastError=e.message||String(e);item.attempts=(item.attempts||0)+1;await offlineQueuePut(item);break;}}}finally{OFFLINE_SYNC_RUNNING=false;await updateOfflineStatus();}
+  if(navigator.onLine){try{if(typeof loadChkDashboard==='function')loadChkDashboard();if(typeof loadChkHistory==='function')loadChkHistory();}catch(_){}}
+}
+async function openOfflineQueuePanel(){const items=await offlineQueueAll();const msg=items.length?items.map(x=>`${x.localId}\n${new Date(x.createdAt).toLocaleString()}\n${x.lastError||'Pendiente de envío'}`).join('\n\n'):'No hay registros pendientes.';if(items.length&&navigator.onLine&&confirm(msg+'\n\n¿Sincronizar ahora?'))syncOfflineChecklists();else if(!items)toast('Todo está sincronizado','ok');else alert(msg);}
 window.addEventListener('online',()=>{updateOfflineStatus();setTimeout(syncOfflineChecklists,700);});
 window.addEventListener('offline',updateOfflineStatus);
 window.addEventListener('load',()=>{updateOfflineStatus();if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(e=>console.warn('SW',e));}setTimeout(syncOfflineChecklists,1800);});
-setInterval(()=>{if(navigator.onLine&&SESSION)syncOfflineChecklists();},60000);
+setInterval(()=>{if(navigator.onLine)syncOfflineChecklists();},30000);
+// Después de un login exitoso, intentar vaciar automáticamente la cola.
+if(typeof window.performLogin==='function'){const __offLogin=window.performLogin;window.performLogin=async function(){const r=await __offLogin.apply(this,arguments);setTimeout(syncOfflineChecklists,500);return r;};}
+
 </script>
 </body>
 </html>
