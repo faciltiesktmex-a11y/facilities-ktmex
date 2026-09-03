@@ -143,8 +143,21 @@ thead th{background:#F5F8FC;color:#586980}
 }
 
 </style>
+
+<!-- V8.2 PWA / modo offline piloto -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0F2344">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KTMEX Facilities">
+
 </head>
 <body>
+<!-- V8.2 estado de conexión / sincronización -->
+<div id="offline-status" style="position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#064E3B;color:#fff;font-size:.74rem;font-weight:700;box-shadow:0 10px 28px rgba(15,23,42,.22)">
+  <i class="fas fa-wifi"></i><span id="offline-status-text">En línea · Todo sincronizado</span>
+</div>
+
 
 <!-- ══════════════════════════ CONFIGURACIÓN ══ -->
 <script>
@@ -1667,6 +1680,10 @@ const LPA_AREAS = {
       <div id="ms-foto-wrap" style="display:none">
         <a id="ms-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
       </div>
+      <div id="ms-fotos-extra-wrap" class="card-sm" style="display:none;padding:12px">
+        <p style="font-size:.68rem;color:#64748B;font-weight:700;text-transform:uppercase;margin:0 0 7px"><i class="fas fa-images" style="margin-right:5px;color:#2563EB"></i>Imágenes adicionales del solicitante</p>
+        <div id="ms-fotos-extra" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+      </div>
 
       <!-- GESTIÓN -->
       <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:13px;padding:16px">
@@ -1726,6 +1743,18 @@ const LPA_AREAS = {
       </div>
 
       <!-- Historial -->
+      <div id="mc-quotes-wrap" class="card-sm" style="padding:14px;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px">
+          <div><h4 style="font-size:.78rem;font-weight:700;color:#334155;margin:0"><i class="fas fa-file-pdf" style="margin-right:6px;color:#DC2626"></i>Cotizaciones PDF</h4><p style="font-size:.68rem;color:#94A3B8;margin:3px 0 0">Documentos enviados por Compras.</p></div>
+        </div>
+        <div id="mc-quotes-list" style="display:flex;flex-direction:column;gap:7px"></div>
+        <div id="mc-quote-upload" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
+          <label style="display:block;font-size:.74rem;font-weight:700;color:#334155;margin-bottom:5px">Agregar cotización PDF</label>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><input id="mc-quote-file" type="file" accept="application/pdf,.pdf" class="inp" style="flex:1;min-width:220px;padding:7px"><button class="btn-p" style="background:#DC2626" onclick="uploadCompraCotizacion()"><i class="fas fa-upload" style="margin-right:5px"></i>Subir PDF</button></div>
+          <p style="font-size:.67rem;color:#94A3B8;margin:5px 0 0">Máximo recomendado: 8 MB por archivo. Puedes agregar más de una cotización.</p>
+        </div>
+      </div>
+
       <div>
         <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
         <div id="ms-historial" class="status-timeline"></div>
@@ -3223,8 +3252,9 @@ async function consultarSolicitudFolio(){
       <div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${s.folio}</b>${estatusBadge(s.estatus)}</div>
       <div style="font-size:.82rem;line-height:1.7;margin-top:10px"><div><b>Técnico:</b> ${s.tecnico||'Pendiente de asignación'}</div><div><b>Tipo:</b> ${s.tipoSolicitud||'—'}</div></div>
       ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo / Comentario de Ingeniería</b><br>${escapeHtml(s.motivoRechazo||s.comentarioIngenieria||'Sin comentario')}</div>`:''}
-      ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
+      ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><div style="margin-top:9px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><label style="display:block;font-size:.76rem;font-weight:700;color:#334155;margin-bottom:5px"><i class="fas fa-images" style="margin-right:5px;color:#2563EB"></i>Imágenes adicionales (opcional)</label><input id="sol-info-imagenes" type="file" accept="image/*" multiple class="inp" style="padding:7px"><p style="font-size:.68rem;color:#94A3B8;margin:5px 0 0">Puedes adjuntar nuevas evidencias. No es obligatorio para reenviar la información a Ingeniería.</p></div><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
       ${(!rej&&!susp&&s.comentarioIngenieria)?`<div style="padding:10px;background:#EFF6FF;border-radius:8px;margin-top:12px"><b>Comentario de Ingeniería</b><br>${escapeHtml(s.comentarioIngenieria)}</div>`:''}
+      ${parseSolicitudFotosAdicionales(s).length?`<div style="margin-top:12px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><b style="font-size:.75rem">Imágenes adicionales enviadas</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px">${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.7rem;text-decoration:none">Imagen ${i+1}</a>`).join('')}</div></div>`:''}
       ${survey?renderSatisfactionSurvey(s.folio):''}
       ${s.estatus==='Cerrada sin encuesta de satisfacción'?'<div style="padding:10px;background:#F8FAFC;border-radius:8px;margin-top:12px">Cerrada automáticamente sin encuesta de satisfacción.</div>':''}
       ${s.promedioSatisfaccion?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px"><b>Encuesta registrada:</b> ${Number(s.promedioSatisfaccion).toFixed(2)} / 5</div>`:''}
@@ -3234,10 +3264,17 @@ async function consultarSolicitudFolio(){
 async function enviarInfoAdicionalSolicitud(folio){
   const el=$('sol-info-adicional'),comentario=el?el.value.trim():'';
   if(!comentario){toast('Agrega la información solicitada por Ingeniería','err');return;}
-  const r=await api({action:'addRequestInfoByFolio',folio,comentario});
+  const input=$('sol-info-imagenes'),files=input&&input.files?Array.from(input.files):[];
+  const imagenes=[];
+  for(const file of files){
+    if(file.size>5*1024*1024){toast('Cada imagen debe ser menor a 5 MB','err');return;}
+    imagenes.push({name:file.name,base64:await fileToBase64(file)});
+  }
+  const r=await api({action:'addRequestInfoByFolio',folio,comentario,imagenes});
   if(r.success){toast('Información enviada. La solicitud volvió a Pendiente de Ingeniería.');consultarSolicitudFolio();}
   else toast(r.error||'No se pudo enviar la información','err');
 }
+
 function renderSatisfactionSurvey(folio){
   const row=(id,label)=>`<div style="margin:12px 0"><div style="font-size:.78rem;font-weight:700;margin-bottom:6px">${label}</div><div id="${id}" style="display:flex;gap:5px">${[1,2,3,4,5].map(n=>`<button type="button" class="btn-g sat-star" data-group="${id}" data-value="${n}" onclick="selectSatisfaction('${id}',${n})" style="padding:7px 10px">★ ${n}</button>`).join('')}</div><input type="hidden" id="${id}-value"></div>`;
   return `<div style="margin-top:14px;padding:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px"><h4 style="margin:0 0 6px">Encuesta de satisfacción</h4><p style="font-size:.74rem;color:#64748B;margin:0">Califica de 1 a 5. Si alguna respuesta es 1 o 2, el comentario será obligatorio y la solicitud regresará a Ingeniería.</p>${row('sat-tiempo','Tiempo de ejecución')}${row('sat-calidad','Calidad del trabajo')}${row('sat-actitud','Actitud del servicio')}<textarea id="sat-comentario" class="inp" rows="3" placeholder="Comentarios / observaciones"></textarea><button class="btn-p" style="margin-top:10px" onclick="submitSatisfaction('${folio}')">Enviar encuesta</button></div>`;
@@ -3829,7 +3866,7 @@ function renderMisActividades(){
     if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';
     if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';
     const comentarioIng=(s.authIngComentario&&b!=='SUSPENDIDA'&&b!=='RECHAZADA')?`<div style="margin:8px 0;padding:9px;background:#EFF6FF;border-radius:8px"><b style="font-size:.72rem">Comentario de Ingeniería</b><br><span style="font-size:.78rem">${escapeHtml(s.authIngComentario)}</span></div>`:'';
-    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin-bottom:8px">Ver fotografía</a>`:''}<div>${act}</div></div>`;
+    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0">Ver fotografía</a>`:''}${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0"><i class="fas fa-image" style="margin-right:5px"></i>Imagen adicional ${i+1}</a>`).join('')}<div>${act}</div></div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';
 }
 
@@ -4670,6 +4707,16 @@ function renderAcciones() {
 }
 
 // ── Solicitud Modal ───────────────────────────────────────────
+function parseSolicitudFotosAdicionales(r){
+  try{const a=JSON.parse(r?.fotosAdicionales||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
+}
+function renderSolicitudFotosAdicionales(r){
+  const wrap=$('ms-fotos-extra-wrap'),box=$('ms-fotos-extra');if(!wrap||!box)return;
+  const fotos=parseSolicitudFotosAdicionales(r);
+  wrap.style.display=fotos.length?'':'none';
+  box.innerHTML=fotos.map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.72rem;text-decoration:none"><i class="fas fa-image" style="margin-right:5px"></i>${escapeHtml(f.nombre||('Imagen '+(i+1)))}</a>`).join('');
+}
+
 function openSolicitudModal(id) {
   CUR_SOL=SOL_DATA.find(r=>r.id===id);
   if(!CUR_SOL)return;
@@ -4694,6 +4741,7 @@ function openSolicitudModal(id) {
 
   if(r.fotoURL&&r.fotoURL.startsWith('http')){$('ms-foto').href=r.fotoURL;$('ms-foto-wrap').style.display='';}
   else $('ms-foto-wrap').style.display='none';
+  renderSolicitudFotosAdicionales(r);
   $('ms-badges').innerHTML=estatusBadge(r.estatus);
 
   // Flujo estricto:
@@ -4895,10 +4943,41 @@ function openCompraModal(id) {
 
   $('mc-comment').value='';
   configureCompraWorkflowUI(r);
+  renderCompraCotizaciones(r);
 
   renderCompraHistorial(r);
   $('modal-compra').style.display='flex';
   if(SESSION?.user?.rol==='manager')applyLanguage($('modal-compra'));
+}
+
+function renderCompraCotizaciones(r){
+  const wrap=$('mc-quotes-wrap'),list=$('mc-quotes-list'),upload=$('mc-quote-upload');
+  if(!wrap||!list||!upload)return;
+  const role=SESSION?.user?.rol||'';
+  const privilegedTech=role==='tecnico' && String(SESSION?.user?.username||'').toLowerCase()==='jpatlan';
+  const canView=role==='compras'||role==='ingeniero'||privilegedTech;
+  const canUpload=role==='compras';
+  if(!canView){wrap.style.display='none';return;}
+  wrap.style.display='';upload.style.display=canUpload?'':'none';
+  let quotes=[];try{quotes=JSON.parse(r.cotizacionesPDF||'[]');if(!Array.isArray(quotes))quotes=[];}catch(e){quotes=[];}
+  list.innerHTML=quotes.length?quotes.map((q,i)=>`<a href="${escapeHtml(q.url||'#')}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;background:#FFF7F7;border:1px solid #FECACA;border-radius:8px;text-decoration:none"><span style="font-size:.76rem;color:#991B1B;font-weight:700"><i class="fas fa-file-pdf" style="margin-right:6px"></i>${escapeHtml(q.nombre||('Cotización '+(i+1)))}</span><span style="font-size:.65rem;color:#94A3B8">${q.fecha?fmtDate(q.fecha):''} · ${escapeHtml(q.usuario||'Compras')}</span></a>`).join(''):'<p style="font-size:.74rem;color:#94A3B8;margin:0">Aún no hay cotizaciones PDF adjuntas.</p>';
+}
+async function uploadCompraCotizacion(){
+  if(!CUR_COMPRA||!SESSION||SESSION.user.rol!=='compras')return;
+  const input=$('mc-quote-file'),file=input?.files?.[0];
+  if(!file){toast('Selecciona un archivo PDF','err');return;}
+  if(file.type && file.type!=='application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){toast('El archivo debe ser PDF','err');return;}
+  if(file.size>8*1024*1024){toast('El PDF no debe exceder 8 MB','err');return;}
+  try{
+    const pdfBase64=await fileToBase64(file);
+    const res=await api({action:'uploadCompraCotizacion',token:SESSION.token,id:CUR_COMPRA.id,pdfBase64,pdfName:file.name});
+    if(!res.success){toast(res.error||'No se pudo subir la cotización','err');return;}
+    toast('Cotización PDF cargada correctamente');input.value='';
+    if(CR_MODAL_ORIGEN==='rol')await loadComprasRol();else await loadCompras();
+    const src=CR_MODAL_ORIGEN==='rol'?CR_DATA:COMPRA_DATA;
+    const refreshed=src.find(x=>x.id===CUR_COMPRA.id);
+    if(refreshed){CUR_COMPRA=refreshed;renderCompraCotizaciones(refreshed);renderCompraHistorial(refreshed);}
+  }catch(e){toast('Error al cargar PDF: '+e.message,'err');}
 }
 
 function renderCompraHistorial(r) {
@@ -5172,13 +5251,24 @@ function goChecklists(){
 }
 async function loadChecklistV80(){
   try{
-    const res=await api({action:'getChecklistCatalog',token:SESSION.token});
-    if(!res.success){toast(res.error||'No fue posible cargar los checklists','err');return;}
-    CHK_CATALOG=res.catalogo||[];
+    if(navigator.onLine){
+      const res=await api({action:'getChecklistCatalog',token:SESSION.token});
+      if(!res.success)throw new Error(res.error||'No fue posible cargar los checklists');
+      CHK_CATALOG=res.catalogo||[];
+      await offlineDbSet('catalogo','facilities_checklist_catalog',CHK_CATALOG);
+    }else{
+      CHK_CATALOG=(await offlineDbGet('catalogo','facilities_checklist_catalog'))||[];
+      if(!CHK_CATALOG.length)throw new Error('No hay catálogo disponible sin conexión. Abre Inspecciones una vez con Internet para descargarlo.');
+      toast('Modo sin conexión: usando el último catálogo descargado.','ok');
+    }
     renderChkAreas();
-    loadChkDashboard();
-    loadChkHistory();
-  }catch(e){toast('Error al cargar Inspecciones Facilities','err');}
+    if(navigator.onLine){ loadChkDashboard(); loadChkHistory(); }
+    else{ renderOfflineChecklistNotice(); }
+  }catch(e){
+    const cached=(await offlineDbGet('catalogo','facilities_checklist_catalog'))||[];
+    if(cached.length){ CHK_CATALOG=cached; renderChkAreas(); renderOfflineChecklistNotice(); toast('Sin conexión: catálogo local cargado.','ok'); }
+    else toast(e.message||'Error al cargar Inspecciones Facilities','err');
+  }
 }
 function renderChkAreas(){
   const areas=['Subestaciones','Cuarto de Bombas','Cuarto de Máquinas','Compresores','Inspección General'];
@@ -5228,7 +5318,22 @@ function renderChkPoint(p){
 }
 async function fileToDataUrlChk(f){
   if(!f)return '';
-  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f);});
+  if(!String(f.type||'').startsWith('image/')){
+    return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f);});
+  }
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader(); fr.onerror=reject;
+    fr.onload=()=>{
+      const img=new Image(); img.onerror=()=>resolve(fr.result);
+      img.onload=()=>{
+        try{
+          const max=1600, scale=Math.min(1,max/Math.max(img.width,img.height));
+          const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height); resolve(c.toDataURL('image/jpeg',0.72));
+        }catch(_){resolve(fr.result);}
+      }; img.src=fr.result;
+    }; fr.readAsDataURL(f);
+  });
 }
 async function submitChecklistV80(){
   if(!CHK_AREA||!SESSION)return;
@@ -5249,10 +5354,25 @@ async function submitChecklistV80(){
       if(file){fotoBase64=await fileToDataUrlChk(file);fotoName=file.name||'evidencia.jpg';}
       respuestas.push({puntoId:p.id,valor,observacion:obs,fotoBase64,fotoName});
     }
-    const res=await api({action:'submitFacilitiesChecklist',token:SESSION.token,area:CHK_AREA,turno:$('chk-turno').value,inicio:CHK_START,observaciones:$('chk-general-obs').value,respuestas});
-    if(!res.success)throw new Error(res.error||'No fue posible guardar');
-    toast(`Inspección ${res.id} guardada · NG: ${res.ng}`,'ok');
-    closeChecklistForm(); loadChkDashboard(); loadChkHistory();
+    const payload={action:'submitFacilitiesChecklist',token:SESSION.token,area:CHK_AREA,turno:$('chk-turno').value,inicio:CHK_START,observaciones:$('chk-general-obs').value,respuestas};
+    if(!navigator.onLine){
+      const localId=await queueOfflineChecklist(payload);
+      toast(`Inspección guardada sin conexión (${localId}). Se sincronizará al recuperar señal.`,'ok');
+      closeChecklistForm(); await updateOfflineStatus();
+    }else{
+      try{
+        const res=await api(payload);
+        if(!res.success)throw new Error(res.error||'No fue posible guardar');
+        toast(`Inspección ${res.id} guardada · NG: ${res.ng}`,'ok');
+        closeChecklistForm(); loadChkDashboard(); loadChkHistory();
+      }catch(netErr){
+        if(!navigator.onLine || /fetch|network|conexión|Failed/i.test(String(netErr.message||netErr))){
+          const localId=await queueOfflineChecklist(payload);
+          toast(`Se perdió la conexión. Inspección preservada (${localId}) para sincronizar después.`,'ok');
+          closeChecklistForm(); await updateOfflineStatus();
+        }else throw netErr;
+      }
+    }
   }catch(e){toast(e.message||'Error al guardar','err');}
   btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección';
 }
@@ -5380,5 +5500,27 @@ async function loadChkHistory(){
 })();
 </script>
 
+
+<script>
+// ===== V8.2 PWA / OFFLINE PILOTO PARA CHECKLISTS =====
+const OFFLINE_DB='ktmex_facilities_offline_v1';
+const OFFLINE_DB_VERSION=1;
+let OFFLINE_SYNC_RUNNING=false;
+function offlineDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(OFFLINE_DB,OFFLINE_DB_VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('catalogo'))db.createObjectStore('catalogo');if(!db.objectStoreNames.contains('cola')){const st=db.createObjectStore('cola',{keyPath:'localId'});st.createIndex('createdAt','createdAt');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function offlineDbSet(store,key,value){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value,key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
+async function offlineDbGet(store,key){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+async function offlineQueueAll(){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readonly');const r=tx.objectStore('cola').getAll();r.onsuccess=()=>resolve((r.result||[]).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))));r.onerror=()=>reject(r.error);});}
+async function offlineQueuePut(item){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').put(item);tx.oncomplete=()=>resolve(item);tx.onerror=()=>reject(tx.error);});}
+async function offlineQueueDelete(id){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').delete(id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
+function offlineLocalId(){return 'OFF-'+new Date().toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
+async function queueOfflineChecklist(payload){const localId=offlineLocalId();const safe=JSON.parse(JSON.stringify(payload));await offlineQueuePut({localId,createdAt:new Date().toISOString(),type:'facilities_checklist',payload:safe,status:'pending',lastError:''});return localId;}
+function renderOfflineChecklistNotice(){const k=$('chk-kpis');if(k)k.innerHTML='<div class="card" style="padding:13px;border:1px solid #F59E0B;background:#FFFBEB"><b style="color:#92400E">Modo sin conexión</b><div style="font-size:.72rem;color:#92400E;margin-top:4px">Puedes completar y guardar checklists. Dashboard e historial se actualizarán cuando regrese Internet.</div></div>';}
+async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0;try{n=(await offlineQueueAll()).length}catch(_){}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
+async function syncOfflineChecklists(){if(OFFLINE_SYNC_RUNNING||!navigator.onLine||!SESSION)return;OFFLINE_SYNC_RUNNING=true;try{const items=await offlineQueueAll();for(const item of items){if(item.type!=='facilities_checklist')continue;try{item.payload.token=SESSION.token;const r=await api(item.payload);if(r&&r.success){await offlineQueueDelete(item.localId);}else{item.lastError=(r&&r.error)||'Error de sincronización';await offlineQueuePut(item);if(/sesión|token|expir/i.test(item.lastError))break;}}catch(e){item.lastError=e.message||String(e);await offlineQueuePut(item);break;}}}finally{OFFLINE_SYNC_RUNNING=false;await updateOfflineStatus();}if(navigator.onLine){try{if(typeof loadChkDashboard==='function')loadChkDashboard();if(typeof loadChkHistory==='function')loadChkHistory();}catch(_){}}}
+window.addEventListener('online',()=>{updateOfflineStatus();setTimeout(syncOfflineChecklists,700);});
+window.addEventListener('offline',updateOfflineStatus);
+window.addEventListener('load',()=>{updateOfflineStatus();if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(e=>console.warn('SW',e));}setTimeout(syncOfflineChecklists,1800);});
+setInterval(()=>{if(navigator.onLine&&SESSION)syncOfflineChecklists();},60000);
+</script>
 </body>
 </html>
