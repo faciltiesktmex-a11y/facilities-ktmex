@@ -254,7 +254,8 @@ const ROL_PUESTO = {
 const ESTATUS_ACTIVIDAD_LABELS = {
   'En curso': 'En curso',
   'Cerrada': 'Cerrada',
-  'Cerrada automáticamente — sin evidencia de cierre': 'Cerrada automáticamente (sin evidencia)'
+  'Cerrada automáticamente — sin evidencia de cierre': 'Cerrada automáticamente (sin evidencia)',
+  'Pendiente de cierre por Ingeniería': 'Pendiente de cierre por Ingeniería'
 };
 
 // Items LPA por área
@@ -605,7 +606,7 @@ const LPA_AREAS = {
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#2563EB;margin-right:5px"></i>Descripción detallada *</label>
         <textarea id="s-desc" class="inp" rows="4" placeholder="Describe el trabajo requerido con el mayor detalle posible…"></textarea>
       </div>
-      <!-- Evidencias V8.2.1 -->
+      <!-- Evidencias V8.2.2 -->
       <div style="margin-bottom:16px;padding:14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px">
         <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fas fa-paperclip" style="color:#2563EB;margin-right:5px"></i>Evidencia de la solicitud *</label>
         <p style="font-size:.72rem;color:#64748B;margin:0 0 10px">Puedes adjuntar hasta <b>3 imágenes + 1 PDF</b>. En celular/tablet puedes tomar una fotografía o seleccionar archivos existentes.</p>
@@ -1012,7 +1013,7 @@ const LPA_AREAS = {
 <div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
     <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inspecciones Facilities</h2>
-      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.1 · Offline, historial, reportes y trazabilidad</p></div>
+      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.2 · Offline, historial, reportes y trazabilidad</p></div>
     <button class="btn-g" onclick="loadChkDashboard()" style="width:auto"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
   </div>
   <div id="chk-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -2347,7 +2348,8 @@ const STATUS_I18N = {
   'Solicitada':'Requested',
   'En curso':'In Progress',
   'Cerrada':'Closed',
-  'Cerrada automáticamente — sin evidencia de cierre':'Automatically Closed — No Close-out Evidence'
+  'Cerrada automáticamente — sin evidencia de cierre':'Automatically Closed — No Close-out Evidence',
+  'Pendiente de cierre por Ingeniería':'Pending Engineering Closure'
 };
 
 function uiText(es) {
@@ -3847,11 +3849,12 @@ function renderMisActividades(){
     else if(s.estatus==='Pendiente de confirmación del solicitante'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}
     else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}
     else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}
+    else if(s.estatus==='Pendiente de cierre por Ingeniería'||a?.estatusActividad==='Pendiente de cierre por Ingeniería'){b='PEND_ING';t='Pendiente de cierre por Ingeniería';}
     else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}
     return{s,a,b,t};
   });
-  const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,SUSPENDIDA:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0,RECHAZADA:0};data.forEach(x=>c[x.b]++);
-  $('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',SUSPENDIDA:'Suspendidas',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad',RECHAZADA:'Rechazadas'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');
+  const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,SUSPENDIDA:0,CONFIRMACION:0,PEND_ING:0,CERRADA:0,INCONFORMIDAD:0,RECHAZADA:0};data.forEach(x=>c[x.b]++);
+  $('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',SUSPENDIDA:'Suspendidas',CONFIRMACION:'Confirmación',PEND_ING:'Cierre Ingeniería',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad',RECHAZADA:'Rechazadas'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');
   const shown=data.filter(x=>filter==='TODAS'||x.b===filter);
   list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{
     let act='';
@@ -3861,6 +3864,7 @@ function renderMisActividades(){
     if(b==='SUSPENDIDA')act=`<div style="padding:10px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px"><b>Actividad suspendida por Ingeniería</b><br><small>${escapeHtml(s.authIngComentario||s.comentarioFacilities||'Consulta el motivo con Ingeniería.')}</small></div>`;
     if(b==='RECHAZADA')act=`<div style="padding:10px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px"><b>Actividad rechazada</b><br><small>${escapeHtml(s.authMgrComentario||s.authIngComentario||'Sin comentario registrado.')}</small></div>`;
     if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';
+    if(b==='PEND_ING')act='<div style="padding:10px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px"><b>Pendiente de cierre por Ingeniería</b><br><small>Tu actividad ya fue terminada y enviada a Ingeniería para su revisión/cierre. No es necesario iniciarla nuevamente.</small></div>';
     if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';
     if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';
     const comentarioIng=(s.authIngComentario&&b!=='SUSPENDIDA'&&b!=='RECHAZADA')?`<div style="margin:8px 0;padding:9px;background:#EFF6FF;border-radius:8px"><b style="font-size:.72rem">Comentario de Ingeniería</b><br><span style="font-size:.78rem">${escapeHtml(s.authIngComentario)}</span></div>`:'';
@@ -4356,7 +4360,15 @@ function switchTab(tab) {
     if(tb)tb.classList.toggle('active',t===tab);
     if(pn)pn.style.display=t===tab?'':'none';
   });
-  if(tab==='compra'&&COMPRA_DATA.length===0)loadCompras();
+
+  // V8.2.2: el resumen superior siempre corresponde a la pestaña activa.
+  if(tab==='sol') renderAdminKPIs('sol');
+  if(tab==='compra'){
+    if($('fc-search')) $('fc-search').value='';
+    if($('fc-est')) $('fc-est').value='';
+    if(COMPRA_DATA.length===0) loadCompras();
+    else { renderCompras(); renderAdminKPIs('compra'); }
+  }
   if(tab==='lpa'&&Object.keys(LPA_DATA).length===0)loadLPA();
   if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
   if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
@@ -4516,6 +4528,8 @@ async function loadCompras() {
       const sel=$('fc-est');
       if(sel.options.length<=1) sel.innerHTML='<option value="">'+uiText('Todos los estatus')+'</option>'+ESTATUS_COMPRA.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
       renderCompras();
+      const compraPanel=$('panel-compra');
+      if(compraPanel && compraPanel.style.display!=='none') renderAdminKPIs('compra');
     } else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
 }
@@ -4534,17 +4548,24 @@ async function loadAcciones() {
   } catch(e){ toast('Error al cargar plan de acciones','err'); }
 }
 
-function renderKPIs() {
-  $('kpi-total').textContent=SOL_DATA.length;
-  $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
-  $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Manager').length;
-  $('kpi-apro').textContent=SOL_DATA.filter(r=>
-    ['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado'].includes(r.estatus)
-  ).length;
-  $('kpi-rech').textContent=SOL_DATA.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
-  $('kpi-ejec').textContent=SOL_DATA.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
+function renderAdminKPIs(mode='sol') {
+  const isCompra=mode==='compra';
+  const data=isCompra?(Array.isArray(COMPRA_DATA)?COMPRA_DATA:[]):(Array.isArray(SOL_DATA)?SOL_DATA:[]);
+  $('kpi-total').textContent=data.length;
+  $('kpi-ing').textContent=data.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
+  $('kpi-mgr').textContent=data.filter(r=>r.estatus==='Pendiente de Manager').length;
+  if(isCompra){
+    $('kpi-apro').textContent=data.filter(r=>['Autorizada para Compra','En cotización','Ordenada','Recibida'].includes(r.estatus)).length;
+    $('kpi-rech').textContent=data.filter(r=>String(r.estatus||'').startsWith('Rechazada')).length;
+    $('kpi-ejec').textContent=data.filter(r=>['En cotización','Ordenada'].includes(r.estatus)).length;
+  }else{
+    $('kpi-apro').textContent=data.filter(r=>['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado','Pendiente de cierre por Ingeniería'].includes(r.estatus)).length;
+    $('kpi-rech').textContent=data.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
+    $('kpi-ejec').textContent=data.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
+  }
   setTimeout(()=>applyLanguage($('kpi-row')),0);
 }
+function renderKPIs(){ renderAdminKPIs('sol'); }
 
 const estatusBadge = s => {
   if(!s) return '<span class="badge b-pend">—</span>';
@@ -4556,6 +4577,7 @@ const estatusBadge = s => {
   else if(s==='Asignado a técnico') cls='b-ing';
   else if(s==='En ejecución') cls='b-ejec';
   else if(s==='Trabajo completado') cls='b-done';
+  else if(s==='Pendiente de cierre por Ingeniería') cls='b-mgr';
   else if(s==='Requiere revisión (auto-cierre)') cls='b-ing-rej';
   return `<span class="badge ${cls}">${statusLabel(s)}</span>`;
 };
@@ -4757,12 +4779,12 @@ function openSolicitudModal(id) {
   const engExecution=rol==='ingeniero'&&[
     'Aprobado por Manager — Pendiente de asignación',
     'Asignado a técnico','En ejecución','En espera de refacciones',
-    'Trabajo completado','Pendiente de encuesta de satisfacción','Suspendido'
+    'Trabajo completado','Pendiente de encuesta de satisfacción','Pendiente de cierre por Ingeniería','Suspendido'
   ].includes(r.estatus);
   const adminExecution=hasAdminPrivilege()&&[
     'Aprobado por Manager — Pendiente de asignación',
     'Asignado a técnico','En ejecución','En espera de refacciones',
-    'Trabajo completado','Pendiente de encuesta de satisfacción','Suspendido'
+    'Trabajo completado','Pendiente de encuesta de satisfacción','Pendiente de cierre por Ingeniería','Suspendido'
   ].includes(r.estatus);
 
   $('sec-auth-ing').style.display=engApproval?'':'none';
@@ -4780,8 +4802,11 @@ function openSolicitudModal(id) {
   $('ms-tecnico').innerHTML='<option value="">— '+uiText('Sin asignar')+' —</option>'+
     TECNICOS.map(t=>`<option value="${t}" ${r.tecnico===t?'selected':''}>${t}</option>`).join('');
 
+  const opcionesEstatus = r.estatus==='Pendiente de cierre por Ingeniería'
+    ? ['Cerrada','En ejecución']
+    : ESTATUS_MANUAL;
   $('ms-estatus').innerHTML='<option value="">— '+uiText('Sin cambio')+' —</option>'+
-    ESTATUS_MANUAL.map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('');
+    opcionesEstatus.map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('');
 
   // Save button only exists during post-manager execution management.
   $('btn-ms-save').style.display=(engExecution||adminExecution)?'':'none';
@@ -5210,7 +5235,7 @@ function init() {
           sessionStorage.removeItem('ktmex_session');
         }
       }).catch(()=>{
-        // V8.2.1: si no hay conexión, conservar la sesión local para seguir trabajando.
+        // V8.2.2: si no hay conexión, conservar la sesión local para seguir trabajando.
         // El token se volverá a validar al recuperar Internet; la cola offline nunca se elimina.
         if(!navigator.onLine){
           SESSION=parsed;
