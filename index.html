@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Facilities – KTMEX</title>
+  <!-- KTMEX Facilities V8.2.4: asignación visible, pausa/reanudación y cierre con 3 fotos + PDF -->
+<title>Sistema Facilities – KTMEX</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -1053,7 +1054,7 @@ const LPA_AREAS = {
     <button onclick="loadMisActividades()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
   </div>
 
-  <div class="card" style="padding:14px;margin-bottom:14px"><label style="font-size:.75rem;font-weight:700;color:#475569">Filtrar mis actividades</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:6px"><option value="TODAS">Todas</option><option value="PENDIENTE">Abiertas por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="MATERIAL">Abiertas por falta de material</option><option value="SUSPENDIDA">Suspendidas</option><option value="RECHAZADA">Rechazadas</option><option value="CONFIRMACION">Abiertas por confirmación del usuario</option><option value="CERRADA">Cerradas</option><option value="INCONFORMIDAD">Devueltas por inconformidad</option></select></div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
+  <div class="card" style="padding:14px;margin-bottom:14px"><label style="font-size:.75rem;font-weight:700;color:#475569">Filtrar mis actividades</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:6px"><option value="TODAS">Todas</option><option value="PENDIENTE">Abiertas por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="PAUSADA">Pausadas</option><option value="MATERIAL">Abiertas por falta de material</option><option value="SUSPENDIDA">Suspendidas</option><option value="RECHAZADA">Rechazadas</option><option value="CONFIRMACION">Abiertas por confirmación del usuario</option><option value="CERRADA">Cerradas</option><option value="INCONFORMIDAD">Devueltas por inconformidad</option></select></div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
 </div>
 
 <!-- ══════════════════════════ VIEW: INVENTARIO ══ -->
@@ -1870,22 +1871,49 @@ const LPA_AREAS = {
 
 <!-- MODAL: Foto Inicio/Cierre de Actividad -->
 <div id="modal-act-foto" class="modal-bg" style="display:none">
-  <div class="card slide" style="width:100%;max-width:380px;padding:24px">
+  <div class="card slide" style="width:100%;max-width:430px;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <h3 id="act-foto-title" style="font-size:1rem;font-weight:700;color:var(--navy);margin:0">Iniciar actividad</h3>
       <button onclick="closeModal('modal-act-foto')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
     </div>
     <p id="act-foto-folio" class="mono" style="font-size:.82rem;color:#7C3AED;font-weight:700;margin:0 0 14px"></p>
-    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica *</label>
-    <input type="file" id="act-foto-input" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:10px">
+    <div id="act-inicio-evidencia-wrap">
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica de inicio *</label>
+      <input type="file" id="act-foto-input" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:10px">
+      <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">1 fotografía · Máx. 5 MB.</p>
+    </div>
     <div id="act-foto-cierre-extra" style="display:none;margin-bottom:10px">
+      <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-images" style="color:#7C3AED;margin-right:5px"></i>Fotografías de cierre * <span style="font-weight:500;color:#64748B">(1 a 3)</span></label>
+      <input type="file" id="act-cierre-fotos" accept="image/*" multiple class="inp" style="padding:8px;margin-bottom:10px">
+      <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-file-pdf" style="color:#DC2626;margin-right:5px"></i>PDF de cierre <span style="font-weight:500;color:#64748B">(opcional)</span></label>
+      <input type="file" id="act-cierre-pdf" accept="application/pdf,.pdf" class="inp" style="padding:8px;margin-bottom:10px">
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Comentario de cierre (opcional)</label>
       <textarea id="act-foto-comentario" class="inp" rows="2" placeholder="Detalles del trabajo realizado…"></textarea>
+      <p style="font-size:.72rem;color:#94A3B8;margin:8px 0 0">Máximo 3 fotografías de 5 MB cada una y 1 PDF de hasta 10 MB. Los archivos quedan ligados al folio.</p>
     </div>
-    <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">Máx. 5 MB. La foto y la hora quedan registradas como evidencia.</p>
     <button class="btn-p" id="btn-act-foto-confirm" onclick="confirmActividadFoto()" style="width:100%;background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
       <i class="fas fa-check" style="margin-right:7px"></i>Confirmar
     </button>
+  </div>
+</div>
+
+<!-- MODAL: Pausar Actividad -->
+<div id="modal-act-pausa" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:420px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-pause" style="color:#D97706;margin-right:7px"></i>Pausar actividad</h3>
+      <button onclick="closeModal('modal-act-pausa')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p id="act-pausa-folio" class="mono" style="font-size:.82rem;color:#D97706;font-weight:700;margin:0 0 14px"></p>
+    <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Motivo de la pausa *</label>
+    <select id="act-pausa-motivo" class="inp" style="margin-bottom:12px">
+      <option value="">— Selecciona —</option>
+      <option>Espera de material</option><option>Espera de proveedor</option><option>Espera de producción</option><option>Falta de acceso al área</option><option>Falta de información</option><option>Prioridad / emergencia diferente</option><option>Otro</option>
+    </select>
+    <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Comentario *</label>
+    <textarea id="act-pausa-comentario" class="inp" rows="3" placeholder="Explica brevemente por qué se pausa la actividad…"></textarea>
+    <p style="font-size:.72rem;color:#64748B;margin:8px 0 14px">El tiempo de pausa no contará como tiempo efectivo de ejecución. Puedes reanudar esta actividad posteriormente e iniciar otra mientras tanto.</p>
+    <button class="btn-p" id="btn-act-pausa-confirm" onclick="confirmarPausaActividad()" style="width:100%;background:#D97706"><i class="fas fa-pause" style="margin-right:7px"></i>Confirmar pausa</button>
   </div>
 </div>
 
@@ -2184,7 +2212,22 @@ const TEXT_I18N = {
   'Guardar':'Save',
   'PENDIENTE':'PENDING',
   'Bajo mínimo':'Below Minimum',
-  'OK':'OK'
+  'OK':'OK',
+
+  'Pausadas':'Paused',
+  'Pausar':'Pause',
+  'Pausar actividad':'Pause Activity',
+  'Reanudar actividad':'Resume Activity',
+  'Motivo de la pausa *':'Pause Reason *',
+  'Comentario *':'Comment *',
+  'Solicitado por':'Requested by',
+  'Área solicitante':'Requesting Area',
+  'Fecha de asignación':'Assignment Date',
+  'Asignado por':'Assigned by',
+  'Fotografías de cierre *':'Closing Photos *',
+  'PDF de cierre':'Closing PDF',
+  'Tiempo efectivo':'Effective Time',
+  'Tiempo pausado':'Paused Time',
 };
 
 const TEXT_I18N_EXTRA = {
@@ -3829,6 +3872,9 @@ async function loadMisActividades() {
   } catch(e) { toast('Error de conexión','err'); }
 }
 
+function actFmtDateTime_(v){if(!v)return 'Sin registro';try{return new Date(v).toLocaleString(LANG==='en'?'en-US':'es-MX',{dateStyle:'short',timeStyle:'short'});}catch(e){return String(v);}}
+function actFmtMin_(v){const m=Math.max(0,Math.round(Number(v)||0));if(m<60)return m+' min';const h=Math.floor(m/60),r=m%60;return h+' h'+(r?' '+r+' min':'');}
+function parseActCloseFiles_(a){try{const x=JSON.parse(String(a?.archivosCierre||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
 function renderMisActividades(){
   const list=$('act-list'),filter=$('act-status-filter')?.value||'TODAS',{solicitudes,actividades}=ACT_DATA,latest={};
   actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});
@@ -3837,77 +3883,75 @@ function renderMisActividades(){
     if(String(s.estatus||'').includes('Suspendido')){b='SUSPENDIDA';t='Suspendida';}
     else if(String(s.estatus||'').includes('Rechazado')){b='RECHAZADA';t='Rechazada';}
     else if(s.estatus==='En espera de material'||a?.estatusActividad==='En espera de material'){b='MATERIAL';t='Abierta por falta de material';}
-    else if(s.estatus==='Pendiente de confirmación del solicitante'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}
+    else if(a?.estatusActividad==='Pausada'){b='PAUSADA';t='Pausada';}
+    else if(s.estatus==='Pendiente de confirmación del solicitante'||a?.estatusActividad==='Pendiente de encuesta de satisfacción'){b='CONFIRMACION';t='Abierta por confirmación del usuario';}
     else if(s.estatus==='Cerrada'||s.estatus==='Cerrada automáticamente — sin confirmación'||a?.estatusActividad==='Cerrada'){b='CERRADA';t='Cerrada';}
     else if(s.estatus==='Requiere revisión por Ingeniería'||a?.estatusActividad==='Inconformidad reportada'){b='INCONFORMIDAD';t='Devuelta por inconformidad';}
     else if(a?.estatusActividad==='En curso'){b='EN_CURSO';t='En ejecución';}
     return{s,a,b,t};
   });
-  const c={PENDIENTE:0,EN_CURSO:0,MATERIAL:0,SUSPENDIDA:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0,RECHAZADA:0};data.forEach(x=>c[x.b]++);
-  $('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',MATERIAL:'Falta material',SUSPENDIDA:'Suspendidas',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad',RECHAZADA:'Rechazadas'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');
+  const c={PENDIENTE:0,EN_CURSO:0,PAUSADA:0,MATERIAL:0,SUSPENDIDA:0,CONFIRMACION:0,CERRADA:0,INCONFORMIDAD:0,RECHAZADA:0};data.forEach(x=>c[x.b]++);
+  $('act-summary').innerHTML=Object.entries(c).map(([k,v])=>`<div class="card" style="padding:10px"><div style="font-size:.68rem;color:#64748B">${({PENDIENTE:'Por iniciar',EN_CURSO:'En curso',PAUSADA:'Pausadas',MATERIAL:'Falta material',SUSPENDIDA:'Suspendidas',CONFIRMACION:'Confirmación',CERRADA:'Cerradas',INCONFORMIDAD:'Inconformidad',RECHAZADA:'Rechazadas'})[k]}</div><b style="font-size:1.2rem">${v}</b></div>`).join('');
   const shown=data.filter(x=>filter==='TODAS'||x.b===filter);
   list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{
     let act='';
     if(b==='PENDIENTE')act=`<button class="btn-p" onclick="openIniciarModal('${s.id}','${s.folio}')">Iniciar actividad</button>`;
-    if(b==='EN_CURSO')act=`<button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')">Terminar</button> <button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button>`;
-    if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${a.materialPendiente||'Material pendiente'}</b><br>Cantidad: ${a.cantidadMaterial||'—'}<br><small>${a.comentarioMaterial||''}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;
+    if(b==='EN_CURSO')act=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')"><i class="fas fa-check" style="margin-right:5px"></i>Terminar</button><button class="btn-g" style="border-color:#F59E0B;color:#B45309" onclick="openPausaActividadModal('${a.id}','${s.folio}')"><i class="fas fa-pause" style="margin-right:5px"></i>Pausar</button><button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button></div>`;
+    if(b==='PAUSADA'){
+      const start=a?.horaPausaActual?new Date(a.horaPausaActual):null,mins=start&&!isNaN(start)?Math.max(0,Math.round((Date.now()-start.getTime())/60000)):0;
+      act=`<div style="padding:12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px"><b style="color:#9A3412"><i class="fas fa-pause" style="margin-right:5px"></i>Actividad pausada</b><br><span style="font-size:.8rem"><b>Motivo:</b> ${escapeHtml(a?.motivoPausaActual||'—')}<br><b>Desde:</b> ${escapeHtml(actFmtDateTime_(a?.horaPausaActual))}<br><b>Tiempo de esta pausa:</b> ${escapeHtml(actFmtMin_(mins))}<br><b>Comentario:</b> ${escapeHtml(a?.comentarioPausaActual||'—')}</span><br><button class="btn-p" style="margin-top:10px;background:#16A34A" onclick="reanudarActividadPausa('${a.id}')"><i class="fas fa-play" style="margin-right:5px"></i>Reanudar actividad</button></div>`;
+    }
+    if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${escapeHtml(a?.materialPendiente||'Material pendiente')}</b><br>Cantidad: ${escapeHtml(a?.cantidadMaterial||'—')}<br><small>${escapeHtml(a?.comentarioMaterial||'')}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;
     if(b==='SUSPENDIDA')act=`<div style="padding:10px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px"><b>Actividad suspendida por Ingeniería</b><br><small>${escapeHtml(s.authIngComentario||s.comentarioFacilities||'Consulta el motivo con Ingeniería.')}</small></div>`;
     if(b==='RECHAZADA')act=`<div style="padding:10px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px"><b>Actividad rechazada</b><br><small>${escapeHtml(s.authMgrComentario||s.authIngComentario||'Sin comentario registrado.')}</small></div>`;
     if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';
     if(b==='CERRADA')act='<div style="padding:10px;background:#F0FDF4;border-radius:8px">Actividad cerrada.</div>';
     if(b==='INCONFORMIDAD')act='<div style="padding:10px;background:#FEF2F2;border-radius:8px">Devuelta al Ingeniero por inconformidad.</div>';
     const comentarioIng=(s.authIngComentario&&b!=='SUSPENDIDA'&&b!=='RECHAZADA')?`<div style="margin:8px 0;padding:9px;background:#EFF6FF;border-radius:8px"><b style="font-size:.72rem">Comentario de Ingeniería</b><br><span style="font-size:.78rem">${escapeHtml(s.authIngComentario)}</span></div>`:'';
-    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${s.tipoSolicitud||''}</p><p style="color:#64748B">${s.descripcion||''}</p>${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0">Ver fotografía</a>`:''}${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0"><i class="fas fa-image" style="margin-right:5px"></i>Imagen adicional ${i+1}</a>`).join('')}<div>${act}</div></div>`;
+    const asignacion=`<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0;padding:10px;background:#F8FAFC;border-radius:9px;font-size:.76rem;color:#475569"><div><b>Solicitado por</b><br>${escapeHtml(s.nombre||'Sin registro')}</div><div><b>Área solicitante</b><br>${escapeHtml(s.departamento||'Sin registro')}</div><div><b>Fecha de asignación</b><br>${escapeHtml(actFmtDateTime_(s.fechaAsignacionTecnico))}</div><div><b>Asignado por</b><br>${escapeHtml(s.asignadoPor||'Sin registro')}</div></div>`;
+    const closeFiles=a?parseActCloseFiles_(a):[];
+    const cierreInfo=(a&&(a.tiempoEfectivoMinutos!==null&&a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''))?`<div style="font-size:.76rem;color:#475569;margin:8px 0"><b>Tiempo efectivo:</b> ${actFmtMin_(a.tiempoEfectivoMinutos)} · <b>Tiempo pausado:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:'';
+    const cierreLinks=closeFiles.length?`<div style="margin:8px 0">${closeFiles.map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 6px 0"><i class="fas ${f.tipo==='pdf'?'fa-file-pdf':'fa-image'}" style="margin-right:5px"></i>${f.tipo==='pdf'?'PDF de cierre':'Foto de cierre '+(i+1)}</a>`).join('')}</div>`:'';
+    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${escapeHtml(s.tipoSolicitud||'')}</p><p style="color:#64748B">${escapeHtml(s.descripcion||'')}</p>${asignacion}${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0">Ver fotografía</a>`:''}${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0"><i class="fas fa-image" style="margin-right:5px"></i>Imagen adicional ${i+1}</a>`).join('')}${cierreInfo}${cierreLinks}<div>${act}</div></div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';
 }
 
 function openIniciarModal(solicitudId, folio) {
-  ACT_FOTO_MODE = 'iniciar'; ACT_FOTO_TARGET = solicitudId;
-  $('act-foto-title').textContent = 'Iniciar actividad';
-  $('act-foto-folio').textContent = folio;
-  $('act-foto-input').value = '';
-  $('act-foto-cierre-extra').style.display = 'none';
-  $('modal-act-foto').style.display = 'flex';
+  ACT_FOTO_MODE='iniciar';ACT_FOTO_TARGET=solicitudId;$('act-foto-title').textContent='Iniciar actividad';$('act-foto-folio').textContent=folio;
+  $('act-foto-input').value='';$('act-inicio-evidencia-wrap').style.display='';$('act-foto-cierre-extra').style.display='none';$('modal-act-foto').style.display='flex';
 }
-
 function openCerrarModal(actividadId, folio) {
-  ACT_FOTO_MODE = 'cerrar'; ACT_FOTO_TARGET = actividadId;
-  $('act-foto-title').textContent = 'Cerrar actividad';
-  $('act-foto-folio').textContent = folio;
-  $('act-foto-input').value = '';
-  $('act-foto-comentario').value = '';
-  $('act-foto-cierre-extra').style.display = '';
-  $('modal-act-foto').style.display = 'flex';
+  ACT_FOTO_MODE='cerrar';ACT_FOTO_TARGET=actividadId;$('act-foto-title').textContent='Cerrar actividad';$('act-foto-folio').textContent=folio;
+  $('act-foto-input').value='';$('act-cierre-fotos').value='';$('act-cierre-pdf').value='';$('act-foto-comentario').value='';$('act-inicio-evidencia-wrap').style.display='none';$('act-foto-cierre-extra').style.display='';$('modal-act-foto').style.display='flex';
 }
-
 async function confirmActividadFoto() {
-  const fotoFile = $('act-foto-input').files[0];
-  if (!fotoFile) { toast('Adjunta la evidencia fotográfica','err'); return; }
-  if (fotoFile.size > 5*1024*1024) { toast('La foto supera 5 MB. Comprime la imagen.','err'); return; }
-
-  const btn = $('btn-act-foto-confirm');
-  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
-
-  const fotoBase64 = await fileToBase64(fotoFile);
-  const fotoName   = fotoFile.name;
-
-  try {
+  const btn=$('btn-act-foto-confirm');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
+  try{
     let res;
-    if (ACT_FOTO_MODE === 'iniciar') {
-      res = await api({action:'iniciarActividad', token:SESSION.token, solicitudId:ACT_FOTO_TARGET, fotoBase64, fotoName});
-    } else {
-      const comentario = $('act-foto-comentario').value.trim();
-      res = await api({action:'cerrarActividad', token:SESSION.token, actividadId:ACT_FOTO_TARGET, fotoBase64, fotoName, comentario});
+    if(ACT_FOTO_MODE==='iniciar'){
+      const f=$('act-foto-input').files[0];if(!f){toast('Adjunta la evidencia fotográfica de inicio','err');return;}if(f.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
+      res=await api({action:'iniciarActividad',token:SESSION.token,solicitudId:ACT_FOTO_TARGET,fotoBase64:await fileToBase64(f),fotoName:f.name});
+    }else{
+      const fotos=Array.from($('act-cierre-fotos').files||[]),pdf=$('act-cierre-pdf').files[0]||null;
+      if(fotos.length<1){toast('Adjunta al menos una fotografía de cierre','err');return;}if(fotos.length>3){toast('Se permiten máximo 3 fotografías de cierre','err');return;}
+      for(const f of fotos){if(f.size>5*1024*1024){toast('Cada fotografía debe pesar máximo 5 MB','err');return;}}
+      if(pdf&&pdf.size>10*1024*1024){toast('El PDF debe pesar máximo 10 MB','err');return;}
+      const imagenes=[];for(const f of fotos)imagenes.push({base64:await fileToBase64(f),name:f.name});
+      const pdfObj=pdf?{base64:await fileToBase64(pdf),name:pdf.name}:null;
+      res=await api({action:'cerrarActividad',token:SESSION.token,actividadId:ACT_FOTO_TARGET,imagenes,pdf:pdfObj,comentario:$('act-foto-comentario').value.trim()});
     }
-    if (res.success) {
-      toast(ACT_FOTO_MODE === 'iniciar' ? 'Actividad iniciada' : 'Actividad cerrada');
-      closeModal('modal-act-foto');
-      loadMisActividades();
-    } else toast(res.error||'Error','err');
-  } catch(e) { toast('Error de conexión: '+e.message,'err'); }
-
-  btn.disabled = false; btn.innerHTML = '<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';
+    if(res.success){toast(ACT_FOTO_MODE==='iniciar'?'Actividad iniciada':`Actividad cerrada · Tiempo efectivo ${actFmtMin_(res.tiempoEfectivoMinutos||0)}`);closeModal('modal-act-foto');loadMisActividades();}else toast(res.error||'Error','err');
+  }catch(e){toast('Error de conexión: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';}
 }
+let ACT_PAUSA_TARGET='';
+function openPausaActividadModal(id,folio){ACT_PAUSA_TARGET=id;$('act-pausa-folio').textContent=folio;$('act-pausa-motivo').value='';$('act-pausa-comentario').value='';$('modal-act-pausa').style.display='flex';}
+async function confirmarPausaActividad(){
+  const motivo=$('act-pausa-motivo').value.trim(),comentario=$('act-pausa-comentario').value.trim();if(!motivo||!comentario){toast('Selecciona el motivo y agrega un comentario','err');return;}
+  const b=$('btn-act-pausa-confirm');b.disabled=true;
+  try{const r=await api({action:'pausarActividad',token:SESSION.token,actividadId:ACT_PAUSA_TARGET,motivo,comentario});if(r.success){closeModal('modal-act-pausa');toast('Actividad pausada');loadMisActividades();}else toast(r.error||'No se pudo pausar','err');}catch(e){toast('Error de conexión: '+e.message,'err');}finally{b.disabled=false;}
+}
+async function reanudarActividadPausa(id){const r=await api({action:'reanudarActividadPausa',token:SESSION.token,actividadId:id});if(r.success){toast('Actividad reanudada · Pausa '+actFmtMin_(r.minutosPausa||0));loadMisActividades();}else toast(r.error||'No se pudo reanudar','err');}
 
 
 let ACT_MATERIAL_TARGET='';
