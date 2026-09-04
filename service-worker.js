@@ -1,4 +1,4 @@
-const CACHE='ktmex-facilities-v8-2-2-20260904';
+const CACHE='ktmex-facilities-v8-2-3-20260904';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(c=>Promise.all(APP_SHELL.map(u=>c.add(u).catch(()=>null)))).then(()=>self.skipWaiting()));
