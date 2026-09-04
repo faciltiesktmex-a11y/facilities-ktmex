@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- KTMEX Facilities V8.2.3 - LPA Quality: hallazgo simplificado (Champion y fecha ocultos al auditor) -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -3610,8 +3611,8 @@ function renderLpaQChecklist(){
     <div id="lpaq-nc-${q.id}" style="display:none;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px;margin-top:10px">
       <div style="font-size:.75rem;font-weight:700;color:#9A3412;margin-bottom:7px">NC · Reaction ${q.reaction}</div>
       <textarea class="inp lpaq-finding" rows="2" placeholder="Finding / Hallazgo *"></textarea>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <select class="inp lpaq-resp-area" onchange="updateLpaQChampion(this)">
+      <div style="margin-top:8px">
+        <select class="inp lpaq-resp-area">
           <option value="">Responsible Area / Área responsable *</option>
           <option value="Quality">Quality / Calidad</option>
           <option value="Maintenance">Maintenance / Mantenimiento</option>
@@ -3620,10 +3621,8 @@ function renderLpaQChecklist(){
           <option value="Welding">Welding</option>
           <option value="Blanking">Blanking</option>
         </select>
-        <input class="inp lpaq-champion" placeholder="LPA Champion" readonly>
       </div>
       <input class="inp lpaq-owner" placeholder="Assigned executor / Responsable ejecutor (optional)" style="margin-top:8px">
-      <input class="inp lpaq-due" type="date" style="margin-top:8px">
       <input class="inp lpaq-photo" type="file" accept="image/*" capture="environment" style="margin-top:8px">
       ${q.reaction==='D'?'<textarea class="inp lpaq-just" rows="2" placeholder="Technical justification / Justificación técnica *" style="margin-top:8px"></textarea>':''}
     </div>
@@ -3636,16 +3635,12 @@ function toggleLpaQNC(qid,on,clearWhenHidden=false){
   if(!on && clearWhenHidden){
     const finding=el.querySelector('.lpaq-finding');
     const owner=el.querySelector('.lpaq-owner');
-    const champion=el.querySelector('.lpaq-champion');
     const respArea=el.querySelector('.lpaq-resp-area');
-    const due=el.querySelector('.lpaq-due');
     const photo=el.querySelector('.lpaq-photo');
     const just=el.querySelector('.lpaq-just');
     if(finding) finding.value='';
     if(owner) owner.value='';
-    if(champion) champion.value='';
     if(respArea) respArea.value='';
-    if(due) due.value='';
     if(photo) photo.value='';
     if(just) just.value='';
   }
@@ -3663,14 +3658,12 @@ async function submitLpaQuality(){
     if(result==='NOK'){
       const finding=card.querySelector('.lpaq-finding')?.value.trim()||'';
       const owner=card.querySelector('.lpaq-owner')?.value.trim()||'';
-      const champion=card.querySelector('.lpaq-champion')?.value.trim()||'';
       const respArea=card.querySelector('.lpaq-resp-area')?.value||'';
-      const due=card.querySelector('.lpaq-due')?.value||'';
       const file=card.querySelector('.lpaq-photo')?.files?.[0];
-      if(!finding||!respArea||!champion||!file){toast(`${q.id}: Finding, responsible area, LPA Champion and photo are required / Hallazgo, área responsable, Champion LPA y foto son obligatorios`,'err');return;}
+      if(!finding||!respArea||!file){toast(`${q.id}: Finding, responsible area and photo are required / Hallazgo, área responsable y foto son obligatorios`,'err');return;}
       if(q.reaction==='D' && !(card.querySelector('.lpaq-just')?.value.trim())){toast(`${q.id}: Technical justification required`,'err');return;}
       if(file.size>5*1024*1024){toast(`${q.id}: Photo exceeds 5 MB`,'err');return;}
-      resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;resp.championNombre=champion;resp.fechaCompromiso=due;
+      resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;
       resp.justificacion=card.querySelector('.lpaq-just')?.value.trim()||'';
       resp.fotoName=file.name;resp.fotoBase64=await fileToBase64(file);
     }
