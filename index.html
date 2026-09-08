@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- KTMEX Facilities V8.2.5: corrige cierre de actividades espontáneas por Ingeniería; conserva V8.2.4 -->
+  <!-- KTMEX Facilities V8.2.6: corrige fechas y reporte mensual de Checklists; conserva V8.2.5 -->
 <title>Sistema Facilities – KTMEX</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@ thead th{background:#F5F8FC;color:#586980}
 <script>
 console.info('KTMEX Facilities V8.1A — Design System visual seguro');
 // ⚙️ ÚNICA LÍNEA A EDITAR: pega la URL de tu Apps Script desplegado
-window.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec'; 
+window.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7173QpMiqapYj0BJjVhLb-m776yrxXUk3vR4q6mViP6ZjjZfH3TqEWTdczDHh-cQz/exec';
 
 // Perfiles para selección en LPA (no requieren contraseña)
 const LPA_PERFILES = [
@@ -1014,7 +1014,7 @@ const LPA_AREAS = {
 <div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
     <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inspecciones Facilities</h2>
-      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.1 · Offline, historial, reportes y trazabilidad</p></div>
+      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.6 · Offline, historial, reportes y trazabilidad</p></div>
     <button class="btn-g" onclick="loadChkDashboard()" style="width:auto"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
   </div>
   <div id="chk-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -5453,8 +5453,26 @@ async function loadChkHistory(){
     const a=(r.inspecciones||[]).slice(0,100),areas=r.responsibleAreas||[],canAll=!!r.canSeeAll;
     if($('chk-history-access'))$('chk-history-access').textContent=canAll?'Acceso a todas las inspecciones':areas.length?'Responsable: '+areas.join(', '):'Tus inspecciones';
     configureChecklistReports(canAll,areas);
-    $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Área</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td><td><button class="btn-g" style="padding:5px 8px;width:auto" onclick="openChecklistDetail('${chkEsc(x.id)}')">Ver</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
+    $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Área</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(checklistDate(x.fecha))}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td><td><button class="btn-g" style="padding:5px 8px;width:auto" onclick="openChecklistDetail('${chkEsc(x.id)}')">Ver</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
   }catch(e){}
+}
+function checklistDate(v){
+  if(!v)return '—';
+  const s=String(v).trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return m[3]+'/'+m[2]+'/'+m[1];
+  const d=new Date(v);if(isNaN(d))return s;
+  return d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function checklistDateKey(v){
+  if(!v)return '';
+  const s=String(v).trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];
+  const d=new Date(v);if(isNaN(d))return s;
+  const y=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return y+'-'+mo+'-'+da;
+}
+function checklistMonthLabel(v){
+  const m=String(v||'').match(/^(\d{4})-(\d{2})$/);if(!m)return v||'';
+  const names=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return names[Number(m[2])-1]+' '+m[1];
 }
 function checklistTime(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v).slice(11,16):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function configureChecklistReports(canAll,areas){
@@ -5465,7 +5483,7 @@ async function openChecklistDetail(id){
   if(!SESSION||!navigator.onLine){toast('El detalle histórico requiere conexión','err');return;}
   const r=await api({action:'getChecklistDetail',token:SESSION.token,id});if(!r.success){toast(r.error||'No disponible','err');return;}
   const x=r.inspeccion,resp=r.respuestas||[];
-  $('chk-detail-content').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px"><div><b>Área</b><br>${chkEsc(x.area)}</div><div><b>Realizó</b><br>${chkEsc(x.tecnicoNombre)}</div><div><b>Fecha</b><br>${chkEsc(x.fecha)}</div><div><b>Hora inicio</b><br>${chkEsc(checklistTime(x.inicio))}</div><div><b>Hora envío</b><br>${chkEsc(checklistTime(x.cierre))}</div><div><b>Turno</b><br>${chkEsc(x.turno)}</div></div><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>Valor</th><th>Resultado</th><th>Observación</th><th>Evidencia</th></tr></thead><tbody>${resp.map(z=>`<tr><td>${chkEsc(z.equipo)}</td><td>${chkEsc(z.parametro)}</td><td>${chkEsc(z.valor)} ${chkEsc(z.unidad||'')}</td><td>${chkEsc(z.resultado)}</td><td>${chkEsc(z.observacion||'—')}</td><td>${z.fotoURL?`<a href="${chkEsc(z.fotoURL)}" target="_blank">Ver foto</a>`:'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  $('chk-detail-content').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px"><div><b>Área</b><br>${chkEsc(x.area)}</div><div><b>Realizó</b><br>${chkEsc(x.tecnicoNombre)}</div><div><b>Fecha</b><br>${chkEsc(checklistDate(x.fecha))}</div><div><b>Hora inicio</b><br>${chkEsc(checklistTime(x.inicio))}</div><div><b>Hora envío</b><br>${chkEsc(checklistTime(x.cierre))}</div><div><b>Turno</b><br>${chkEsc(x.turno)}</div></div><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>Valor</th><th>Resultado</th><th>Observación</th><th>Evidencia</th></tr></thead><tbody>${resp.map(z=>`<tr><td>${chkEsc(z.equipo)}</td><td>${chkEsc(z.parametro)}</td><td>${chkEsc(z.valor)} ${chkEsc(z.unidad||'')}</td><td>${chkEsc(z.resultado)}</td><td>${chkEsc(z.observacion||'—')}</td><td>${z.fotoURL?`<a href="${chkEsc(z.fotoURL)}" target="_blank">Ver foto</a>`:'—'}</td></tr>`).join('')}</tbody></table></div>`;
   $('chk-detail-modal').style.display='flex';
 }
 async function loadChecklistMonthlyReport(){
@@ -5476,18 +5494,30 @@ async function loadChecklistMonthlyReport(){
   CHK_REPORT_DATA=r;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
 }
 function renderChecklistMonthlyReport(r){
-  const ins=r.inspecciones||[],pts=r.puntos||[],ok=ins.reduce((s,x)=>s+Number(x.ok||0),0),ng=ins.reduce((s,x)=>s+Number(x.ng||0),0),avg=ins.length?Math.round(ins.reduce((s,x)=>s+Number(x.cumplimiento||0),0)/ins.length*10)/10:0;
+  const ins=(r.inspecciones||[]).slice().sort((a,b)=>{const ka=checklistDateKey(a.fecha),kb=checklistDateKey(b.fecha);if(ka!==kb)return ka.localeCompare(kb);return new Date(a.cierre||0)-new Date(b.cierre||0)}),pts=r.puntos||[],ok=ins.reduce((s,x)=>s+Number(x.ok||0),0),ng=ins.reduce((s,x)=>s+Number(x.ng||0),0),avg=ins.length?Math.round(ins.reduce((s,x)=>s+Number(x.cumplimiento||0),0)/ins.length*10)/10:0;
   const topNg=pts.filter(x=>x.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,10);
-  $('chk-report-content').innerHTML=`<div id="chk-print-area"><div style="border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1.05rem">KTMEX · Facilities — Reporte mensual de inspecciones</b><div style="font-size:.75rem;color:#64748B">${chkEsc(r.area)} · ${chkEsc(r.month)} · Generado ${new Date().toLocaleString()}</div></div><div style="display:grid;grid-template-columns:repeat(4,minmax(110px,1fr));gap:8px"><div class="card" style="padding:10px"><small>Inspecciones</small><b style="display:block;font-size:1.2rem">${ins.length}</b></div><div class="card" style="padding:10px"><small>OK</small><b style="display:block;font-size:1.2rem">${ok}</b></div><div class="card" style="padding:10px"><small>NG</small><b style="display:block;font-size:1.2rem">${ng}</b></div><div class="card" style="padding:10px"><small>Cumplimiento prom.</small><b style="display:block;font-size:1.2rem">${avg}%</b></div></div><h4 style="margin:16px 0 7px">Tendencia diaria de cumplimiento</h4><div style="height:210px"><canvas id="chk-month-chart" style="width:100%;height:210px"></canvas></div><h4 style="margin:16px 0 7px">Principales puntos NG</h4>${topNg.length?`<table style="width:100%;border-collapse:collapse;font-size:.74rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>NG</th><th>Registros</th></tr></thead><tbody>${topNg.map(x=>`<tr><td>${chkEsc(x.equipo)}</td><td>${chkEsc(x.parametro)}</td><td>${x.ng}</td><td>${x.registros}</td></tr>`).join('')}</tbody></table>`:'<p style="font-size:.75rem;color:#64748B">Sin puntos NG en el periodo.</p>'}<h4 style="margin:16px 0 7px">Inspecciones del mes</h4><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumpl.</th></tr></thead><tbody>${ins.map(x=>`<tr><td>${chkEsc(x.fecha)}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento||0}%</td></tr>`).join('')}</tbody></table></div>`;
+  $('chk-report-content').innerHTML=`<div id="chk-print-area"><div style="border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1.05rem">KTMEX · Facilities — Reporte mensual de inspecciones</b><div style="font-size:.75rem;color:#64748B">${chkEsc(r.area)} · ${chkEsc(checklistMonthLabel(r.month))} · Generado ${new Date().toLocaleString()}</div></div><div style="display:grid;grid-template-columns:repeat(4,minmax(110px,1fr));gap:8px"><div class="card" style="padding:10px"><small>Inspecciones</small><b style="display:block;font-size:1.2rem">${ins.length}</b></div><div class="card" style="padding:10px"><small>OK</small><b style="display:block;font-size:1.2rem">${ok}</b></div><div class="card" style="padding:10px"><small>NG</small><b style="display:block;font-size:1.2rem">${ng}</b></div><div class="card" style="padding:10px"><small>Cumplimiento prom.</small><b style="display:block;font-size:1.2rem">${avg}%</b></div></div><h4 style="margin:16px 0 7px">Tendencia diaria de cumplimiento</h4><div style="height:210px"><canvas id="chk-month-chart" style="width:100%;height:210px"></canvas></div><h4 style="margin:16px 0 7px">Principales puntos NG</h4>${topNg.length?`<table style="width:100%;border-collapse:collapse;font-size:.74rem"><thead><tr><th>Equipo</th><th>Parámetro</th><th>NG</th><th>Registros</th></tr></thead><tbody>${topNg.map(x=>`<tr><td>${chkEsc(x.equipo)}</td><td>${chkEsc(x.parametro)}</td><td>${x.ng}</td><td>${x.registros}</td></tr>`).join('')}</tbody></table>`:'<p style="font-size:.75rem;color:#64748B">Sin puntos NG en el periodo.</p>'}<h4 style="margin:16px 0 7px">Inspecciones del mes</h4><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumpl.</th></tr></thead><tbody>${ins.map(x=>`<tr><td>${chkEsc(checklistDate(x.fecha))}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento||0}%</td></tr>`).join('')}</tbody></table></div>`;
   setTimeout(()=>drawChecklistMonthChart(ins),0);
 }
-function drawChecklistMonthChart(ins){const c=$('chk-month-chart');if(!c)return;const rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.max(600,rect.width*dpr);c.height=210*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);const w=c.width/dpr,h=210,p=28;g.clearRect(0,0,w,h);g.strokeStyle='#CBD5E1';g.beginPath();g.moveTo(p,10);g.lineTo(p,h-p);g.lineTo(w-8,h-p);g.stroke();const data=ins.map(x=>({label:String(x.fecha||'').slice(8,10),v:Number(x.cumplimiento||0)}));if(!data.length)return;g.strokeStyle='#2563EB';g.lineWidth=2;g.beginPath();data.forEach((x,i)=>{const px=p+i*Math.max(1,(w-p-16)/Math.max(1,data.length-1)),py=10+(100-x.v)*(h-p-20)/100;if(i===0)g.moveTo(px,py);else g.lineTo(px,py);});g.stroke();g.fillStyle='#334155';g.font='10px sans-serif';data.forEach((x,i)=>{const px=p+i*Math.max(1,(w-p-16)/Math.max(1,data.length-1));if(i%Math.ceil(data.length/12)===0)g.fillText(x.label,px-4,h-8);});}
+function drawChecklistMonthChart(ins){
+  const c=$('chk-month-chart');if(!c)return;
+  const grouped={};(ins||[]).forEach(x=>{const key=checklistDateKey(x.fecha);if(!key)return;if(!grouped[key])grouped[key]={sum:0,count:0};grouped[key].sum+=Number(x.cumplimiento||0);grouped[key].count++;});
+  const data=Object.keys(grouped).sort().map(key=>({key,label:key.slice(8,10),v:Math.round((grouped[key].sum/grouped[key].count)*10)/10,count:grouped[key].count}));
+  const rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.max(600,rect.width*dpr);c.height=210*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);const w=c.width/dpr,h=210,pL=36,pR=12,pT=12,pB=30;g.clearRect(0,0,w,h);
+  g.font='10px sans-serif';g.fillStyle='#64748B';g.strokeStyle='#E2E8F0';g.lineWidth=1;
+  [0,50,100].forEach(v=>{const y=pT+(100-v)*(h-pT-pB)/100;g.beginPath();g.moveTo(pL,y);g.lineTo(w-pR,y);g.stroke();g.fillText(v+'%',3,y+3);});
+  g.strokeStyle='#94A3B8';g.beginPath();g.moveTo(pL,pT);g.lineTo(pL,h-pB);g.lineTo(w-pR,h-pB);g.stroke();
+  if(!data.length){g.fillStyle='#94A3B8';g.font='12px sans-serif';g.fillText('Sin inspecciones para el periodo seleccionado.',pL+15,h/2);return;}
+  const xFor=i=>data.length===1?(pL+(w-pL-pR)/2):pL+i*(w-pL-pR)/(data.length-1),yFor=v=>pT+(100-v)*(h-pT-pB)/100;
+  g.strokeStyle='#2563EB';g.lineWidth=2;g.beginPath();data.forEach((x,i)=>{const px=xFor(i),py=yFor(x.v);if(i===0)g.moveTo(px,py);else g.lineTo(px,py)});if(data.length>1)g.stroke();
+  data.forEach((x,i)=>{const px=xFor(i),py=yFor(x.v);g.fillStyle='#2563EB';g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();g.fillStyle='#334155';g.font='10px sans-serif';g.fillText(x.label,px-5,h-10);g.fillText(String(x.v)+'%',Math.max(pL,px-13),Math.max(10,py-8));});
+}
 function printChecklistMonthlyReport(){if(!CHK_REPORT_DATA)return;const content=$('chk-print-area').innerHTML,w=window.open('','_blank');w.document.write(`<html><head><title>Reporte ${chkEsc(CHK_REPORT_DATA.area)} ${chkEsc(CHK_REPORT_DATA.month)}</title><style>body{font-family:Arial;padding:22px;color:#172033}table{border-collapse:collapse;width:100%}th,td{border:1px solid #CBD5E1;padding:6px;text-align:left}.card{border:1px solid #CBD5E1}</style></head><body>${content}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 function exportChecklistMonthlyExcel(){
   const r=CHK_REPORT_DATA;if(!r)return;const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const rows=[['Área',r.area],['Mes',r.month],[],['ID','Fecha','Hora','Turno','Realizó','Estatus','OK','NG','N/A','Cumplimiento']].concat((r.inspecciones||[]).map(x=>[x.id,x.fecha,checklistTime(x.cierre),x.turno,x.tecnicoNombre,x.estatus,x.ok,x.ng,x.na,x.cumplimiento]));
+  const rows=[['Área',r.area],['Mes',r.month],[],['ID','Fecha','Hora','Turno','Realizó','Estatus','OK','NG','N/A','Cumplimiento']].concat((r.inspecciones||[]).map(x=>[x.id,checklistDate(x.fecha),checklistTime(x.cierre),x.turno,x.tecnicoNombre,x.estatus,x.ok,x.ng,x.na,x.cumplimiento]));
   let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Resumen"><Table>'+rows.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet>';
-  const resp=[['Inspección','Punto','Equipo','Parámetro','Valor','Resultado','Unidad','Observación','Fecha']].concat((r.respuestas||[]).map(x=>[x.inspeccionId,x.puntoId,x.equipo,x.parametro,x.valor,x.resultado,x.unidad,x.observacion,x.fecha]));
+  const resp=[['Inspección','Punto','Equipo','Parámetro','Valor','Resultado','Unidad','Observación','Fecha']].concat((r.respuestas||[]).map(x=>[x.inspeccionId,x.puntoId,x.equipo,x.parametro,x.valor,x.resultado,x.unidad,x.observacion,checklistDate(x.fecha)]));
   xml+='<Worksheet ss:Name="Resultados"><Table>'+resp.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet></Workbook>';
   const blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KTMEX_Checklist_'+r.area.replace(/\s+/g,'_')+'_'+r.month+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
