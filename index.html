@@ -1097,7 +1097,9 @@ const LPA_AREAS = {
 
   <div class="card" style="padding:18px">
     <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
-    <input id="inv-catalog-search" class="inp" type="search" placeholder="Buscar por código, material o ubicación..." oninput="filterInventarioCatalog()" style="margin-bottom:8px">
+    <input id="inv-catalog-search" class="inp" type="search" placeholder="Escribe parte del ID, código, nombre o ubicación..." oninput="filterInventarioCatalog()" style="margin-bottom:6px">
+    <div id="inv-catalog-search-info" style="font-size:.72rem;color:#64748B;margin:0 0 8px">Puedes escribir una palabra, parte del nombre o varias palabras en cualquier orden.</div>
+    <div id="inv-catalog-matches" style="display:none;margin:0 0 10px"></div>
     <select id="inv-catalog-select" class="inp" onchange="renderInventarioSeleccionado()"><option value="">— Selecciona material / refacción —</option></select>
     <div id="inv-catalog-detail" style="display:none;margin-top:12px"></div>
   </div>
@@ -2008,6 +2010,7 @@ const LPA_AREAS = {
 <!-- Toast -->
 <div id="toast" style="display:none"><i id="toast-ico" class="fas fa-circle-check" style="color:#4ADE80"></i><span id="toast-txt"></span></div>
 
+<!-- V8.2.8 · folios activos + búsqueda flexible de inventario -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -4047,22 +4050,62 @@ async function loadInventarioTec() {
     toast('Error al cargar inventario: '+e.message,'err');
   }
 
-  // Cargar solicitudes activas del técnico para ligar la salida.
+  // V8.2.8: cargar únicamente folios que todavía pueden recibir una salida de inventario.
+  // Las solicitudes/actividades ya cerradas no deben volver a aparecer en el selector.
   try{
     const res2=await api({action:'getMisActividades',token:SESSION.token});
     if(res2.success&&$('inv-solicitud')){
-      $('inv-solicitud').innerHTML='<option value="">— Selecciona —</option>'+
-        (res2.solicitudes||[]).map(s=>`<option value="${s.id}">${s.folio} — ${(s.tipoSolicitud||'').slice(0,30)}</option>`).join('');
+      const solicitudes=res2.solicitudes||[];
+      const actividades=res2.actividades||[];
+      const latest={};
+      actividades.forEach(function(a){
+        const key=String(a.solicitudId||'');
+        if(!latest[key] || new Date(a.timestamp||a.horaInicio||0)>new Date(latest[key].timestamp||latest[key].horaInicio||0)) latest[key]=a;
+      });
+
+      const cerradaSolicitud_=function(v){
+        const s=String(v||'').trim().toLowerCase();
+        return s==='cerrada' ||
+               s.indexOf('cerrada automáticamente')===0 ||
+               s.indexOf('rechazado')===0 ||
+               s.indexOf('rechazada')===0 ||
+               s==='cancelada';
+      };
+      const cerradaActividad_=function(v){
+        const s=String(v||'').trim().toLowerCase();
+        return s==='cerrada' || s.indexOf('cerrada automáticamente')===0;
+      };
+
+      const activas=solicitudes.filter(function(s){
+        const a=latest[String(s.id||'')];
+        return !cerradaSolicitud_(s.estatus) && !cerradaActividad_(a&&a.estatusActividad);
+      });
+
+      $('inv-solicitud').innerHTML='<option value="">— Selecciona folio activo —</option>'+
+        activas.map(s=>`<option value="${s.id}">${s.folio} — ${(s.tipoSolicitud||'').slice(0,30)}</option>`).join('');
     }
   }catch(e){}
 }
 
 
+function normalizeInventorySearch_(value){
+  // V8.2.8: búsqueda tolerante a mayúsculas, acentos, guiones, diagonales y espacios.
+  // Ej.: "filtro aire", "FILTRO-AIRE" y "fíltro   aire" se comparan de la misma forma.
+  let s=String(value==null?'':value).toLowerCase();
+  try{s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');}catch(e){}
+  return s.replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
 function inventorySearchText_(it){
-  // V8.2.7: incluir también el ID interno para que el técnico pueda localizar
-  // una refacción por ID, código FAC, nombre/descripción o ubicación.
-  return [it.id,it.codigo,it.descripcion,it.ubicacionGaveta]
-    .map(v=>String(v||'').toLowerCase()).join(' ');
+  return normalizeInventorySearch_([it.id,it.codigo,it.descripcion,it.ubicacionGaveta,it.unidad].join(' '));
+}
+function inventoryMatches_(it,query){
+  const q=normalizeInventorySearch_(query);
+  if(!q)return true;
+  const hay=inventorySearchText_(it);
+  const tokens=q.split(' ').filter(Boolean);
+  // Todas las palabras escritas deben aparecer, pero pueden estar en distinto orden
+  // y pueden ser solo una parte de la palabra/código existente.
+  return tokens.every(function(t){return hay.indexOf(t)>=0;});
 }
 function fillInventorySelect_(sel,items,label,allowNew){
   if(!sel)return;
@@ -4075,8 +4118,8 @@ function filterInventarioSalida(){
   const sel=$('inv-refaccion');
   const info=$('inv-refaccion-search-info');
   if(!sel)return;
-  const q=(input?.value||'').trim().toLowerCase();
-  const rows=q?INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):INV_DATA;
+  const q=(input?.value||'').trim();
+  const rows=q?INV_DATA.filter(it=>inventoryMatches_(it,q)):INV_DATA;
   const previous=String(sel.value||'');
   fillInventorySelect_(sel,rows,'— Selecciona —',false);
   if(previous&&rows.some(it=>String(it.id)===previous))sel.value=previous;
@@ -4085,7 +4128,8 @@ function filterInventarioSalida(){
   // automáticamente. Si solo queda un resultado, también se selecciona.
   let exact=null;
   if(q){
-    exact=rows.find(it=>[it.id,it.codigo,it.descripcion].some(v=>String(v||'').trim().toLowerCase()===q))||null;
+    const nq=normalizeInventorySearch_(q);
+    exact=rows.find(it=>[it.id,it.codigo,it.descripcion].some(v=>normalizeInventorySearch_(v)===nq))||null;
   }
   if(exact){sel.value=String(exact.id);invRefaccionChange();}
   else if(rows.length===1&&q){sel.value=String(rows[0].id);invRefaccionChange();}
@@ -4103,18 +4147,56 @@ function selectFirstInventarioSalida(){
   invRefaccionChange();
 }
 function filterInventarioCatalog(){
-  const q=($('inv-catalog-search')?.value||'').trim().toLowerCase();
-  const rows=q?INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):INV_DATA;
-  fillInventorySelect_($('inv-catalog-select'),rows,'— Selecciona material / refacción —',false);
+  const q=($('inv-catalog-search')?.value||'').trim();
+  const rows=q?INV_DATA.filter(it=>inventoryMatches_(it,q)):INV_DATA;
+  const sel=$('inv-catalog-select');
+  const info=$('inv-catalog-search-info');
+  const matches=$('inv-catalog-matches');
+
+  fillInventorySelect_(sel,rows,'— Selecciona material / refacción —',false);
+
+  if(info){
+    if(!q) info.textContent='Puedes escribir una palabra, parte del nombre o varias palabras en cualquier orden.';
+    else if(!rows.length) info.textContent='Sin coincidencias. Prueba con otra parte del nombre, código, ID o ubicación.';
+    else info.textContent=rows.length===1?'1 coincidencia encontrada':rows.length+' coincidencias encontradas';
+  }
+
+  if(matches){
+    if(!q || !rows.length){
+      matches.style.display='none';
+      matches.innerHTML='';
+    }else{
+      matches.style.display='';
+      matches.innerHTML=rows.slice(0,10).map(function(it){
+        return `<button type="button" onclick="selectInventarioCatalog_('${escapeHtml(String(it.id||''))}')" style="width:100%;text-align:left;border:1px solid #E2E8F0;background:#F8FAFC;border-radius:9px;padding:8px 10px;margin:0 0 5px;cursor:pointer;color:#334155">
+          <b>${escapeHtml(it.codigo||it.id||'—')}</b> · ${escapeHtml(it.descripcion||'Sin descripción')}
+          <span style="display:block;font-size:.68rem;color:#64748B;margin-top:2px">${escapeHtml(it.ubicacionGaveta||'Sin ubicación')} · Stock: ${escapeHtml(String(it.stockActual??'—'))} ${escapeHtml(it.unidad||'')}</span>
+        </button>`;
+      }).join('')+(rows.length>10?`<div style="font-size:.68rem;color:#64748B">Mostrando 10 de ${rows.length} coincidencias. Escribe más datos para reducir la búsqueda.</div>`:'');
+    }
+  }
+
+  if(q && rows.length===1 && sel){
+    sel.value=String(rows[0].id);
+    renderInventarioSeleccionado();
+  }else if(q && rows.length!==1 && $('inv-catalog-detail')){
+    $('inv-catalog-detail').style.display='none';
+  }
+}
+function selectInventarioCatalog_(id){
+  const sel=$('inv-catalog-select');
+  if(!sel)return;
+  sel.value=String(id);
+  renderInventarioSeleccionado();
 }
 function filterAdminInventario(){
-  const q=($('admin-inv-search')?.value||'').trim().toLowerCase();
-  const rows=q?ADMIN_INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):ADMIN_INV_DATA;
+  const q=($('admin-inv-search')?.value||'').trim();
+  const rows=q?ADMIN_INV_DATA.filter(it=>inventoryMatches_(it,q)):ADMIN_INV_DATA;
   fillInventorySelect_($('admin-inv-select'),rows,'— Selecciona material / refacción —',false);
 }
 function filterCompraInventario(){
-  const q=($('c-inventario-search')?.value||'').trim().toLowerCase();
-  const rows=q?COMPRA_INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):COMPRA_INV_DATA;
+  const q=($('c-inventario-search')?.value||'').trim();
+  const rows=q?COMPRA_INV_DATA.filter(it=>inventoryMatches_(it,q)):COMPRA_INV_DATA;
   fillInventorySelect_($('c-inventario'),rows,'— Selecciona del inventario —',true);
 }
 function renderInventarioCatalog(){
