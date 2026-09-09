@@ -2017,6 +2017,7 @@ const LPA_AREAS = {
 <!-- V8.2.8 · folios activos + búsqueda flexible de inventario -->
 <!-- V8.2.9 · KPIs del Dashboard dinámicos por Solicitudes/Compras -->
 <!-- V8.2.10 · búsqueda flexible visible en inventario del administrador -->
+<!-- V8.2.11 · checklists: lecturas dependientes deshabilitadas en reserva/standby -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -5538,6 +5539,84 @@ init();
 // ===== V8.0 CHECKLISTS FACILITIES =====
 let CHK_CATALOG=[], CHK_AREA='', CHK_START=null;
 const CHK_ICONS={'Subestaciones':'fa-bolt','Cuarto de Bombas':'fa-droplet','Cuarto de Máquinas':'fa-gears','Compresores':'fa-gauge-high','Inspección General':'fa-clipboard-check'};
+// V8.2.11 — puntos que dependen de un equipo con selector FUERA/STOP.
+const CHK_STANDBY_DEPENDENCIES={
+  'CHK-015':['CHK-022','CHK-023','CHK-024'],
+  'CHK-016':['CHK-025','CHK-026','CHK-027'],
+  'CHK-017':['CHK-028','CHK-029','CHK-030'],
+  'CHK-031':['CHK-034','CHK-035','CHK-036'],
+  'CHK-032':['CHK-037','CHK-038','CHK-039'],
+
+  'CHK-057':['CHK-058','CHK-059','CHK-060','CHK-061','CHK-062','CHK-063'],
+  'CHK-064':['CHK-065','CHK-066','CHK-067','CHK-068','CHK-069','CHK-070'],
+  'CHK-071':['CHK-072','CHK-073','CHK-074','CHK-075','CHK-076','CHK-077'],
+  'CHK-078':['CHK-079','CHK-080','CHK-081','CHK-082','CHK-083','CHK-084']
+};
+
+function chkIsStandbyValue_(value){
+  const z=String(value||'').trim().toUpperCase();
+  return z==='FUERA'||z==='STOP'||z==='STANDBY'||z==='RESERVA';
+}
+
+function chkClearRowValue_(row){
+  if(!row)return;
+  row.querySelectorAll('input[type="radio"],input[type="checkbox"]').forEach(function(el){el.checked=false;});
+  row.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]),select,textarea').forEach(function(el){
+    try{el.value='';}catch(e){}
+  });
+}
+
+function chkSetDependentDisabled_(pointId,disabled,controllerId){
+  const row=document.querySelector(`.chk-row[data-id="${pointId}"]`);
+  if(!row)return;
+
+  row.dataset.standbyDisabled=disabled?'1':'0';
+  row.querySelectorAll('input,select,textarea').forEach(function(el){el.disabled=!!disabled;});
+
+  let note=row.querySelector('.chk-standby-disabled-note');
+  if(disabled){
+    chkClearRowValue_(row);
+    row.style.opacity='.58';
+    row.style.background='#F8FAFC';
+    if(!note){
+      note=document.createElement('div');
+      note.className='chk-standby-disabled-note';
+      note.style.cssText='grid-column:1/-1;margin-top:4px;padding:7px 9px;border-radius:8px;background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;font-size:.7rem;font-weight:700';
+      row.appendChild(note);
+    }
+    note.innerHTML='<i class="fas fa-pause-circle" style="margin-right:5px"></i>No aplica: equipo en reserva / standby. Este punto no se contabiliza.';
+  }else{
+    row.style.opacity='';
+    row.style.background='';
+    if(note)note.remove();
+  }
+}
+
+function chkApplyStandbyController_(controllerId,value){
+  const children=CHK_STANDBY_DEPENDENCIES[String(controllerId)]||[];
+  const disabled=chkIsStandbyValue_(value);
+  children.forEach(function(id){chkSetDependentDisabled_(id,disabled,controllerId);});
+}
+
+function chkSelectorChanged_(controllerId,value){
+  chkApplyStandbyController_(controllerId,value);
+}
+
+function chkInitStandbyDependencies_(){
+  Object.keys(CHK_STANDBY_DEPENDENCIES).forEach(function(controllerId){
+    const el=document.querySelector(`.chk-value[data-id="${controllerId}"]`);
+    chkApplyStandbyController_(controllerId,el?el.value:'');
+  });
+}
+
+function chkDisabledPointIds_(){
+  const ids={};
+  document.querySelectorAll('.chk-row[data-standby-disabled="1"]').forEach(function(row){
+    ids[String(row.dataset.id||'')]=true;
+  });
+  return ids;
+}
+
 
 function goChecklists(){
   if(!requireLogin('checklists'))return;
@@ -5588,6 +5667,7 @@ function openChecklistArea(area){
   $('chk-points').innerHTML=Object.keys(groups).map(eq=>`<div style="margin-bottom:18px"><div style="background:#F8FAFC;border-left:4px solid #059669;padding:9px 11px;font-weight:700;color:#334155;font-size:.86rem">${chkEsc(eq)}</div>${groups[eq].map(renderChkPoint).join('')}</div>`).join('');
   $('chk-general-obs').value='';
   $('chk-form-wrap').style.display='';
+  chkInitStandbyDependencies_();
   $('chk-form-wrap').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderChkPoint(p){
@@ -5600,7 +5680,8 @@ function renderChkPoint(p){
       <label><input type="radio" name="chk-${p.id}" value="N/A"> N/A</label></div>`;
   } else if(t==='SELECTOR'||t==='SI_NO'){
     const optionLabel=o=>{const z=String(o).toUpperCase();if(z==='FUERA')return 'FUERA · Reserva/alternancia';if(z==='STOP')return 'STOP · Reserva/alternancia';return o;};
-    input=`<select class="inp chk-value" data-id="${p.id}"><option value="">— Selecciona —</option>${opts.map(o=>`<option value="${chkEsc(o)}">${chkEsc(optionLabel(o))}</option>`).join('')}</select>`;
+    const onChange=t==='SELECTOR'?` onchange="chkSelectorChanged_('${p.id}',this.value)"`:'';
+    input=`<select class="inp chk-value" data-id="${p.id}"${onChange}><option value="">— Selecciona —</option>${opts.map(o=>`<option value="${chkEsc(o)}">${chkEsc(optionLabel(o))}</option>`).join('')}</select>`;
   } else if(t==='TEXTO'){
     input=`<input class="inp chk-value" data-id="${p.id}" type="text">`;
   } else {
@@ -5609,7 +5690,7 @@ function renderChkPoint(p){
   let rango='';
   if(p.minimo!==''||p.maximo!=='') rango=`<div style="font-size:.68rem;color:#64748B;margin-top:3px">Rango: ${p.minimo||'—'} a ${p.maximo||'—'} ${chkEsc(p.unidad||'')}</div>`;
   else if(p.objetivo!=='') rango=`<div style="font-size:.68rem;color:#64748B;margin-top:3px">Objetivo: ${p.objetivo} ${chkEsc(p.unidad||'')}</div>`;
-  if(t==='SELECTOR' && (opts.some(o=>String(o).toUpperCase()==='FUERA')||opts.some(o=>String(o).toUpperCase()==='STOP'))) rango+=`<div style="font-size:.68rem;color:#047857;margin-top:4px"><i class="fas fa-circle-info"></i> FUERA/STOP por alternancia o reserva es condición normal y no genera NG.</div>`;
+  if(t==='SELECTOR' && (opts.some(o=>String(o).toUpperCase()==='FUERA')||opts.some(o=>String(o).toUpperCase()==='STOP'))) rango+=`<div style="font-size:.68rem;color:#047857;margin-top:4px"><i class="fas fa-circle-info"></i> FUERA/STOP por alternancia o reserva deshabilita las lecturas de ese equipo y no se contabiliza como NG.</div>`;
   return `<div class="chk-row" data-id="${p.id}" style="padding:11px;border-bottom:1px solid #E2E8F0;display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(180px,.8fr);gap:10px;align-items:start">
     <div><div style="font-size:.8rem;font-weight:600;color:#334155">${chkEsc(p.parametro)} ${String(p.critico).toLowerCase()==='sí'?'<span title="Punto crítico" style="color:#DC2626">●</span>':''}</div>${rango}</div>
     <div>${input}<textarea class="inp chk-obs" data-id="${p.id}" rows="2" placeholder="Observación opcional" style="margin-top:6px;font-size:.74rem"></textarea>
@@ -5637,9 +5718,12 @@ async function fileToDataUrlChk(f){
 async function submitChecklistV80(){
   if(!CHK_AREA||!SESSION)return;
   const pts=CHK_CATALOG.filter(x=>x.area===CHK_AREA), respuestas=[];
+  const disabledIds=chkDisabledPointIds_();
   const btn=$('chk-submit'); btn.disabled=true; btn.textContent='Guardando…';
   try{
     for(const p of pts){
+      // V8.2.11: no solicitar ni enviar lecturas de equipos en reserva/standby.
+      if(disabledIds[String(p.id)])continue;
       let valor='';
       if(String(p.tipoCaptura).toUpperCase()==='OK_NG'){
         const el=document.querySelector(`input[name="chk-${p.id}"]:checked`); valor=el?el.value:'';
@@ -5662,7 +5746,7 @@ async function submitChecklistV80(){
       try{
         const res=await api(payload);
         if(!res.success)throw new Error(res.error||'No fue posible guardar');
-        toast(`Inspección ${res.id} guardada · NG: ${res.ng}`,'ok');
+        toast(`Inspección ${res.id} guardada · NG: ${res.ng}${res.omitidos?` · No aplican: ${res.omitidos}`:''}`,'ok');
         closeChecklistForm(); loadChkDashboard(); loadChkHistory();
       }catch(netErr){
         if(!navigator.onLine || /fetch|network|conexión|Failed/i.test(String(netErr.message||netErr))){
