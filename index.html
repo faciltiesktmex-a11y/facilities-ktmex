@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- KTMEX Facilities V8.2.6: corrige fechas y reporte mensual de Checklists; conserva V8.2.5 -->
+  <!-- KTMEX Facilities V8.2.7: corrige búsqueda de material en salida de inventario; conserva V8.2.6 -->
 <title>Sistema Facilities – KTMEX</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
@@ -1014,7 +1014,7 @@ const LPA_AREAS = {
 <div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
     <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 4px">Inspecciones Facilities</h2>
-      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.6 · Offline, historial, reportes y trazabilidad</p></div>
+      <p style="color:#64748B;font-size:.82rem;margin:0">V8.2.7 · Offline, historial, reportes y trazabilidad</p></div>
     <button class="btn-g" onclick="loadChkDashboard()" style="width:auto"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
   </div>
   <div id="chk-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -1072,7 +1072,9 @@ const LPA_AREAS = {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div>
         <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Refacción *</label>
+        <input id="inv-refaccion-search" class="inp" type="search" placeholder="Buscar por ID, código FAC, nombre o ubicación..." oninput="filterInventarioSalida()" onkeydown="if(event.key==='Enter'){event.preventDefault();selectFirstInventarioSalida();}" style="margin-bottom:7px">
         <select id="inv-refaccion" class="inp" style="cursor:pointer" onchange="invRefaccionChange()"><option value="">— Selecciona —</option></select>
+        <div id="inv-refaccion-search-info" style="font-size:.68rem;color:#64748B;margin-top:5px">Escribe parte del ID, código FAC, nombre o ubicación del material.</div>
       </div>
       <div>
         <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:6px">Solicitud de trabajo (folio) *</label>
@@ -4033,11 +4035,9 @@ async function loadInventarioTec() {
     }else{
       INV_DATA=res.items||[];
       if($('inv-catalog-search'))$('inv-catalog-search').value='';
+      if($('inv-refaccion-search'))$('inv-refaccion-search').value='';
       renderInventarioCatalog();
-      if(refSel){
-        refSel.innerHTML='<option value="">— Selecciona —</option>'+
-          INV_DATA.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}</option>`).join('');
-      }
+      filterInventarioSalida();
       if(!INV_DATA.length)toast('La hoja Inventario fue encontrada, pero no devolvió materiales.','err');
     }
   }catch(e){
@@ -4059,7 +4059,9 @@ async function loadInventarioTec() {
 
 
 function inventorySearchText_(it){
-  return [it.codigo,it.descripcion,it.ubicacionGaveta]
+  // V8.2.7: incluir también el ID interno para que el técnico pueda localizar
+  // una refacción por ID, código FAC, nombre/descripción o ubicación.
+  return [it.id,it.codigo,it.descripcion,it.ubicacionGaveta]
     .map(v=>String(v||'').toLowerCase()).join(' ');
 }
 function fillInventorySelect_(sel,items,label,allowNew){
@@ -4067,6 +4069,38 @@ function fillInventorySelect_(sel,items,label,allowNew){
   sel.innerHTML=`<option value="">${label}</option>`+
     items.map(it=>`<option value="${it.id}">${it.codigo||''} — ${it.descripcion||''}${it.ubicacionGaveta?' · '+it.ubicacionGaveta:''}</option>`).join('')+
     (allowNew?'<option value="__NUEVO__">➕ No se encuentra en inventario / Solicitar alta</option>':'');
+}
+function filterInventarioSalida(){
+  const input=$('inv-refaccion-search');
+  const sel=$('inv-refaccion');
+  const info=$('inv-refaccion-search-info');
+  if(!sel)return;
+  const q=(input?.value||'').trim().toLowerCase();
+  const rows=q?INV_DATA.filter(it=>inventorySearchText_(it).includes(q)):INV_DATA;
+  const previous=String(sel.value||'');
+  fillInventorySelect_(sel,rows,'— Selecciona —',false);
+  if(previous&&rows.some(it=>String(it.id)===previous))sel.value=previous;
+
+  // Si el texto coincide exactamente con ID, código o descripción, seleccionar
+  // automáticamente. Si solo queda un resultado, también se selecciona.
+  let exact=null;
+  if(q){
+    exact=rows.find(it=>[it.id,it.codigo,it.descripcion].some(v=>String(v||'').trim().toLowerCase()===q))||null;
+  }
+  if(exact){sel.value=String(exact.id);invRefaccionChange();}
+  else if(rows.length===1&&q){sel.value=String(rows[0].id);invRefaccionChange();}
+  else if(!sel.value){$('inv-stock-info').style.display='none';}
+
+  if(info){
+    if(!q)info.textContent='Escribe parte del ID, código FAC, nombre o ubicación del material.';
+    else info.textContent=rows.length===1?'1 material encontrado':rows.length+' materiales encontrados';
+  }
+}
+function selectFirstInventarioSalida(){
+  const sel=$('inv-refaccion');
+  if(!sel||sel.options.length<2)return;
+  if(!sel.value)sel.selectedIndex=1;
+  invRefaccionChange();
 }
 function filterInventarioCatalog(){
   const q=($('inv-catalog-search')?.value||'').trim().toLowerCase();
@@ -4098,7 +4132,7 @@ function renderInventarioSeleccionado(){
 }
 function invRefaccionChange() {
   const id = $('inv-refaccion').value;
-  const item = INV_DATA.find(it => it.id === id);
+  const item = INV_DATA.find(it => String(it.id) === String(id));
   if (!item) { $('inv-stock-info').style.display='none'; return; }
   $('inv-stock-text').textContent = `Stock disponible: ${item.stockActual} ${item.unidad||''} — Mínimo: ${item.stockMinimo}`;
   $('inv-stock-info').style.display = '';
