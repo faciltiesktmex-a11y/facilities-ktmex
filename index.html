@@ -1628,7 +1628,11 @@ const LPA_AREAS = {
       </div>
       <div class="card" style="padding:18px">
         <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
-        <input id="admin-inv-search" class="inp" type="search" placeholder="Buscar por código, material o ubicación..." oninput="filterAdminInventario()" style="margin-bottom:8px">
+        <input id="admin-inv-search" class="inp" type="search" placeholder="Escribe parte del ID, código, nombre o ubicación..." oninput="filterAdminInventario()" style="margin-bottom:6px">
+        <div id="admin-inv-search-info" style="font-size:.72rem;color:#64748B;margin:0 0 8px">
+          Puedes escribir una palabra, parte del nombre o varias palabras en cualquier orden.
+        </div>
+        <div id="admin-inv-matches" style="display:none;margin:0 0 10px"></div>
         <select id="admin-inv-select" class="inp" onchange="renderAdminInventarioSeleccionado()">
           <option value="">— Selecciona material / refacción —</option>
         </select>
@@ -2012,6 +2016,7 @@ const LPA_AREAS = {
 
 <!-- V8.2.8 · folios activos + búsqueda flexible de inventario -->
 <!-- V8.2.9 · KPIs del Dashboard dinámicos por Solicitudes/Compras -->
+<!-- V8.2.10 · búsqueda flexible visible en inventario del administrador -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -4104,9 +4109,16 @@ function inventoryMatches_(it,query){
   if(!q)return true;
   const hay=inventorySearchText_(it);
   const tokens=q.split(' ').filter(Boolean);
-  // Todas las palabras escritas deben aparecer, pero pueden estar en distinto orden
-  // y pueden ser solo una parte de la palabra/código existente.
-  return tokens.every(function(t){return hay.indexOf(t)>=0;});
+
+  // V8.2.10:
+  // - ignora mayúsculas, acentos y signos
+  // - acepta fragmentos: "filtr" encuentra "filtro"
+  // - acepta varias palabras en cualquier orden
+  // - cada palabra puede encontrarse en ID, código, descripción, ubicación o unidad
+  return tokens.every(function(t){
+    if(!t)return true;
+    return hay.indexOf(t)>=0;
+  });
 }
 function fillInventorySelect_(sel,items,label,allowNew){
   if(!sel)return;
@@ -4193,7 +4205,57 @@ function selectInventarioCatalog_(id){
 function filterAdminInventario(){
   const q=($('admin-inv-search')?.value||'').trim();
   const rows=q?ADMIN_INV_DATA.filter(it=>inventoryMatches_(it,q)):ADMIN_INV_DATA;
-  fillInventorySelect_($('admin-inv-select'),rows,'— Selecciona material / refacción —',false);
+  const sel=$('admin-inv-select');
+  const info=$('admin-inv-search-info');
+  const matches=$('admin-inv-matches');
+
+  fillInventorySelect_(sel,rows,'— Selecciona material / refacción —',false);
+
+  if(info){
+    if(!q){
+      info.textContent='Puedes escribir una palabra, parte del nombre o varias palabras en cualquier orden.';
+    }else if(!rows.length){
+      info.textContent='Sin coincidencias. Prueba con otra parte del nombre, código, ID o ubicación.';
+    }else{
+      info.textContent=rows.length===1?'1 coincidencia encontrada':rows.length+' coincidencias encontradas';
+    }
+  }
+
+  if(matches){
+    if(!q || !rows.length){
+      matches.style.display='none';
+      matches.innerHTML='';
+    }else{
+      matches.style.display='';
+      matches.innerHTML=rows.slice(0,12).map(function(it){
+        return `<button type="button"
+          onclick="selectAdminInventario_('${escapeHtml(String(it.id||''))}')"
+          style="width:100%;text-align:left;border:1px solid #E2E8F0;background:#F8FAFC;border-radius:9px;padding:9px 10px;margin:0 0 5px;cursor:pointer;color:#334155">
+          <b>${escapeHtml(it.codigo||it.id||'—')}</b> · ${escapeHtml(it.descripcion||'Sin descripción')}
+          <span style="display:block;font-size:.68rem;color:#64748B;margin-top:2px">
+            ${escapeHtml(it.ubicacionGaveta||'Sin ubicación')} · Stock: ${escapeHtml(String(it.stockActual??'—'))} ${escapeHtml(it.unidad||'')}
+          </span>
+        </button>`;
+      }).join('')+(rows.length>12
+        ? `<div style="font-size:.68rem;color:#64748B">Mostrando 12 de ${rows.length} coincidencias. Escribe más datos para reducir la búsqueda.</div>`
+        : '');
+    }
+  }
+
+  // Si solo hay una coincidencia, mostrarla automáticamente.
+  if(q && rows.length===1 && sel){
+    sel.value=String(rows[0].id);
+    renderAdminInventarioSeleccionado();
+  }else if(q && rows.length!==1 && $('admin-inv-detail')){
+    $('admin-inv-detail').style.display='none';
+    $('admin-inv-detail').innerHTML='';
+  }
+}
+function selectAdminInventario_(id){
+  const sel=$('admin-inv-select');
+  if(!sel)return;
+  sel.value=String(id);
+  renderAdminInventarioSeleccionado();
 }
 function filterCompraInventario(){
   const q=($('c-inventario-search')?.value||'').trim();
@@ -4556,6 +4618,11 @@ async function loadAdminInventario() {
 
     ADMIN_INV_DATA=res.items||[];
     if($('admin-inv-search'))$('admin-inv-search').value='';
+    if($('admin-inv-matches')){
+      $('admin-inv-matches').style.display='none';
+      $('admin-inv-matches').innerHTML='';
+    }
+    if($('admin-inv-search-info'))$('admin-inv-search-info').textContent='Puedes escribir una palabra, parte del nombre o varias palabras en cualquier orden.';
     const dot=$('inv-alert-dot');
     if(dot){
       if(res.bajoMinimoCount>0){dot.style.display='';dot.textContent=res.bajoMinimoCount;}
