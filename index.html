@@ -1475,27 +1475,27 @@ const LPA_AREAS = {
     <!-- KPIs / Seguimiento de flujo -->
     <div style="display:grid;grid-template-columns:repeat(6,minmax(115px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total</p>
+        <p id="kpi-label-total" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total solicitudes</p>
         <p id="kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Pendientes de Ingeniería</p>
+        <p id="kpi-label-ing" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Pendientes de Ingeniería</p>
         <p id="kpi-ing" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px;border:1.5px solid #DDD6FE">
-        <p style="font-size:.68rem;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Con Manager</p>
+        <p id="kpi-label-mgr" style="font-size:.68rem;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Con Manager</p>
         <p id="kpi-mgr" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Aprobadas</p>
+        <p id="kpi-label-apro" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Aprobadas</p>
         <p id="kpi-apro" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Rechazadas</p>
+        <p id="kpi-label-rech" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Rechazadas</p>
         <p id="kpi-rech" class="mono" style="font-size:1.8rem;font-weight:700;color:#DC2626;margin:0">0</p>
       </div>
       <div class="card" style="padding:14px 16px">
-        <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En ejecución</p>
+        <p id="kpi-label-ejec" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En ejecución</p>
         <p id="kpi-ejec" class="mono" style="font-size:1.8rem;font-weight:700;color:#0891B2;margin:0">0</p>
       </div>
     </div>
@@ -2011,6 +2011,7 @@ const LPA_AREAS = {
 <div id="toast" style="display:none"><i id="toast-ico" class="fas fa-circle-check" style="color:#4ADE80"></i><span id="toast-txt"></span></div>
 
 <!-- V8.2.8 · folios activos + búsqueda flexible de inventario -->
+<!-- V8.2.9 · KPIs del Dashboard dinámicos por Solicitudes/Compras -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -4513,6 +4514,12 @@ function switchTab(tab) {
     if(tb)tb.classList.toggle('active',t===tab);
     if(pn)pn.style.display=t===tab?'':'none';
   });
+
+  // V8.2.9: los KPIs del dashboard cambian con la pestaña seleccionada.
+  // Solicitudes muestra únicamente cantidades de solicitudes de trabajo.
+  // Compras muestra únicamente cantidades de solicitudes de compra.
+  renderDashboardKPIs_(tab);
+
   if(tab==='compra'&&COMPRA_DATA.length===0)loadCompras();
   if(tab==='lpa'&&Object.keys(LPA_DATA).length===0)loadLPA();
   if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
@@ -4660,7 +4667,7 @@ async function loadSolicitudes() {
       refreshWorkStatusFilterLabels();
       renderSolicitudes();
       renderManagerApprovalQueue();
-      renderKPIs();
+      if(dashboardActiveTab_()==='sol')renderDashboardKPIs_('sol');
     }else toast(res.error,'err');
   }catch(e){toast('Error al cargar solicitudes','err');}
 }
@@ -4673,6 +4680,7 @@ async function loadCompras() {
       const sel=$('fc-est');
       if(sel.options.length<=1) sel.innerHTML='<option value="">'+uiText('Todos los estatus')+'</option>'+ESTATUS_COMPRA.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
       renderCompras();
+      if(dashboardActiveTab_()==='compra')renderDashboardKPIs_('compra');
     } else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
 }
@@ -4691,17 +4699,67 @@ async function loadAcciones() {
   } catch(e){ toast('Error al cargar plan de acciones','err'); }
 }
 
-function renderKPIs() {
-  $('kpi-total').textContent=SOL_DATA.length;
-  $('kpi-ing').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
-  $('kpi-mgr').textContent=SOL_DATA.filter(r=>r.estatus==='Pendiente de Manager').length;
-  $('kpi-apro').textContent=SOL_DATA.filter(r=>
-    ['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado','Pendiente de cierre por Ingeniería'].includes(r.estatus)
-  ).length;
-  $('kpi-rech').textContent=SOL_DATA.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
-  $('kpi-ejec').textContent=SOL_DATA.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
-  setTimeout(()=>applyLanguage($('kpi-row')),0);
+function dashboardActiveTab_(){
+  const active=document.querySelector('#view-admin .tab-btn.active');
+  return active&&active.id?String(active.id).replace('tab-',''):'sol';
 }
+function setDashboardKpiLabels_(labels){
+  const ids=['total','ing','mgr','apro','rech','ejec'];
+  ids.forEach(function(id,i){
+    const el=$('kpi-label-'+id);
+    if(el)el.textContent=labels[i]||'';
+  });
+}
+function renderDashboardKPIs_(tab){
+  const row=$('kpi-row');
+  if(!row)return;
+  tab=tab||dashboardActiveTab_();
+
+  // En LPA, Plan de Acciones e Inventario los contadores de solicitudes no se muestran,
+  // para evitar mezclar información de otros módulos.
+  if(!['sol','compra'].includes(tab)){
+    row.style.display='none';
+    return;
+  }
+  row.style.display='grid';
+
+  if(tab==='compra'){
+    const data=Array.isArray(COMPRA_DATA)?COMPRA_DATA:[];
+    setDashboardKpiLabels_([
+      'Total compras',
+      'Pendientes de Ingeniería',
+      'Con Manager',
+      'Autorizadas',
+      'Rechazadas',
+      'En proceso de compra'
+    ]);
+    $('kpi-total').textContent=data.length;
+    $('kpi-ing').textContent=data.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
+    $('kpi-mgr').textContent=data.filter(r=>r.estatus==='Pendiente de Manager').length;
+    $('kpi-apro').textContent=data.filter(r=>r.estatus==='Autorizada para Compra').length;
+    $('kpi-rech').textContent=data.filter(r=>['Rechazada por Ingeniería','Rechazada por Manager'].includes(r.estatus)).length;
+    $('kpi-ejec').textContent=data.filter(r=>['En cotización','Ordenada'].includes(r.estatus)).length;
+  }else{
+    const data=Array.isArray(SOL_DATA)?SOL_DATA:[];
+    setDashboardKpiLabels_([
+      'Total solicitudes',
+      'Pendientes de Ingeniería',
+      'Con Manager',
+      'Aprobadas',
+      'Rechazadas',
+      'En ejecución'
+    ]);
+    $('kpi-total').textContent=data.length;
+    $('kpi-ing').textContent=data.filter(r=>r.estatus==='Pendiente de Ingeniería').length;
+    $('kpi-mgr').textContent=data.filter(r=>r.estatus==='Pendiente de Manager').length;
+    $('kpi-apro').textContent=data.filter(r=>
+      ['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado','Pendiente de cierre por Ingeniería'].includes(r.estatus)
+    ).length;
+    $('kpi-rech').textContent=data.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
+    $('kpi-ejec').textContent=data.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
+  }
+}
+function renderKPIs(){ renderDashboardKPIs_(dashboardActiveTab_()); }
 
 const estatusBadge = s => {
   if(!s) return '<span class="badge b-pend">—</span>';
