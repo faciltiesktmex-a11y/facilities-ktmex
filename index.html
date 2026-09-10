@@ -12,6 +12,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js"></script>
 <style>
 *{font-family:'DM Sans',system-ui,sans-serif}
 .mono{font-family:'Space Mono',monospace}
@@ -68,6 +71,22 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .st-item{display:flex;gap:10px;align-items:flex-start;padding-left:14px;position:relative}
 .st-item::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:#CBD5E1}
 .st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}
+
+
+/* V8.4.0 Daily Plan + Platform */
+.support-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-size:.7rem;font-weight:700;margin:3px 4px 3px 0}
+.support-chip button{border:none;background:transparent;color:#DC2626;cursor:pointer;padding:0}
+.v840-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
+.platform-subnav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.platform-subnav button.active{background:#0F2A4A;color:white}
+.platform-check-row{display:grid;grid-template-columns:minmax(220px,1fr) repeat(3,58px);gap:5px;align-items:center;padding:7px 8px;border-bottom:1px solid #E2E8F0;font-size:.76rem}
+.platform-check-row.head{background:#0F2A4A;color:#fff;font-weight:700;position:sticky;top:0}
+.platform-check-row label{text-align:center}
+.platform-check-section{margin:14px 0 6px;background:#E8EEF7;color:#0F2A4A;font-weight:800;padding:8px 10px;border-radius:8px;font-size:.78rem}
+@media(max-width:720px){
+  .platform-check-row{grid-template-columns:minmax(150px,1fr) repeat(3,44px);font-size:.69rem}
+  #daily-form-grid{grid-template-columns:1fr!important}
+}
 
 /* V7.10 Notification Center */
 #notif-bell{position:relative;width:36px;height:36px;border:none;border-radius:9px;background:transparent;color:#94A3B8;cursor:pointer;display:none;align-items:center;justify-content:center}
@@ -460,6 +479,12 @@ const LPA_AREAS = {
       <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
       </button>
+      <button onclick="goPlanDiario()" id="nav-daily" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-calendar-day" style="margin-right:5px"></i>Plan Diario
+      </button>
+      <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
+        <i class="fas fa-up-right-from-square" style="margin-right:5px"></i>Plataforma
+      </button>
       <button onclick="goInventario()" id="nav-inv" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-boxes-stacked" style="margin-right:5px"></i>Inventario
       </button>
@@ -547,6 +572,25 @@ const LPA_AREAS = {
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Inventario</h3>
       <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Registra la salida de refacciones de las gavetas ligadas a tu actividad.</p>
       <span style="color:#0284C7;font-size:.8rem;font-weight:600">Abrir inventario →</span>
+    </div>
+
+    <!-- Plan Diario Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goPlanDiario()">
+      <div style="width:48px;height:48px;background:#FFF7ED;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-calendar-day" style="color:#EA580C;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Plan Diario</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Técnicos: declara mínimo 3 actividades del día. Ingeniería valida el cierre y los tiempos de apoyo.</p>
+      <span style="color:#EA580C;font-size:.8rem;font-weight:600">Abrir plan diario →</span>
+    </div>
+    <!-- Plataforma Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goPlataforma()">
+      <div style="width:48px;height:48px;background:#F0FDFA;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-up-right-from-square" style="color:#0F766E;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Préstamo de Plataforma</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Consulta disponibilidad, solicita la Genie Z45, revisa tu folio y llena el checklist cuando corresponda.</p>
+      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir plataforma →</span>
     </div>
     <!-- Admin Card -->
     <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
@@ -1025,7 +1069,7 @@ const LPA_AREAS = {
       <div style="display:flex;gap:8px"><select id="chk-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option></select><button class="btn-g" onclick="closeChecklistForm()" style="width:auto">Cerrar</button></div>
     </div>
     <div id="chk-points"></div>
-    <div style="margin-top:14px"><label style="font-size:.78rem;font-weight:600">Observaciones generales</label><textarea id="chk-general-obs" class="inp" rows="3" placeholder="Observaciones generales de la inspección"></textarea></div>
+    <div style="margin-top:14px"><label style="font-size:.78rem;font-weight:600">Observaciones generales <span style="font-weight:500;color:#94A3B8">(opcional)</span></label><textarea id="chk-general-obs" class="inp" rows="3" placeholder="Puede quedar en blanco si no hay observaciones"></textarea></div>
     <button id="chk-submit" class="btn-p" onclick="submitChecklistV80()" style="width:100%;margin-top:14px"><i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección</button>
   </div>
   <div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
@@ -1394,6 +1438,128 @@ const LPA_AREAS = {
   </div>
 </div>
 
+
+<!-- ══════════════════════════════ VIEW: PLAN DIARIO ══ -->
+<div id="view-daily" style="display:none;max-width:1100px;margin:0 auto;padding:26px 16px" class="fade">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+    <div>
+      <h2 style="font-size:1.3rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-calendar-day" style="color:#EA580C;margin-right:7px"></i>Plan Diario de Técnicos</h2>
+      <p id="daily-subtitle" style="font-size:.78rem;color:#64748B;margin:0">Mínimo 3 actividades declaradas por técnico cada día.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+      <div id="daily-admin-month-wrap" style="display:none"><label style="display:block;font-size:.68rem;font-weight:700;color:#64748B;margin-bottom:4px">Mes</label><input id="daily-admin-month" type="month" class="inp" style="width:auto;padding:8px"></div>
+      <button class="btn-g" onclick="loadDailyPlan()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+    </div>
+  </div>
+
+  <div id="daily-tech-form" class="card" style="padding:18px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px">
+      <div><h3 style="font-size:.92rem;font-weight:800;margin:0;color:#334155">Declarar actividad del día</h3><p style="font-size:.7rem;color:#94A3B8;margin:2px 0 0">Puedes registrar más de 3. El mínimo diario es 3.</p></div>
+      <span id="daily-progress" class="badge b-ejec">0 / 3</span>
+    </div>
+    <div id="daily-form-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px">
+      <input id="daily-desc" class="inp" placeholder="Descripción de la actividad *">
+      <input id="daily-category" class="inp" placeholder="Categoría (preventivo, correctivo...)">
+      <input id="daily-area" class="inp" placeholder="Área *">
+      <input id="daily-estimate" class="inp" type="number" min="1" placeholder="Tiempo estimado (min) *">
+    </div>
+    <div style="margin-top:10px">
+      <label style="display:block;font-size:.72rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo previstos (opcional)</label>
+      <div style="display:flex;gap:7px"><select id="support-daily-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('daily')">Agregar</button></div>
+      <div id="support-daily-list" style="margin-top:5px"></div>
+    </div>
+    <p style="font-size:.68rem;color:#94A3B8;margin:8px 0">El tiempo estimado se utilizará únicamente en la analítica visible para Ingeniería y el técnico administrador.</p>
+    <button class="btn-p" onclick="createDailyActivityUI()" style="margin-top:6px;background:#EA580C"><i class="fas fa-plus" style="margin-right:5px"></i>Agregar actividad diaria</button>
+  </div>
+
+  <div id="daily-kpis" class="v840-kpi-grid" style="margin-bottom:14px"></div>
+  <div id="daily-list" style="display:flex;flex-direction:column;gap:10px"></div>
+</div>
+
+<!-- ══════════════════════════════ VIEW: PLATAFORMA ══ -->
+<div id="view-platform" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
+  <div style="margin-bottom:18px">
+    <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-up-right-from-square" style="color:#0F766E;margin-right:8px"></i>Solicitud de préstamo de plataforma de elevación</h2>
+    <p style="font-size:.78rem;color:#64748B;margin:0">Genie Z45 · Solicitud pública · Aprobación Andrés Ramírez → Pedro Loya</p>
+  </div>
+  <div class="platform-subnav">
+    <button id="platform-tab-calendar" class="btn-g active" onclick="showPlatformTab('calendar')">📅 Calendario</button>
+    <button id="platform-tab-request" class="btn-g" onclick="showPlatformTab('request')">📝 Solicitar equipo</button>
+    <button id="platform-tab-status" class="btn-g" onclick="showPlatformTab('status')">🔍 Consultar folio</button>
+    <button id="platform-tab-checklist" class="btn-g" onclick="showPlatformTab('checklist')">📋 Checklist</button>
+    <button id="platform-tab-admin" class="btn-g" onclick="showPlatformTab('admin')" style="display:none">⚙️ Gestión Facilities</button>
+  </div>
+
+  <div id="platform-panel-calendar" class="card" style="padding:18px">
+    <h3 style="font-size:.95rem;font-weight:800;color:#334155;margin:0 0 10px">Disponibilidad de plataforma</h3>
+    <div id="platform-calendar"></div>
+  </div>
+
+  <div id="platform-panel-request" class="card" style="display:none;padding:20px">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <div><label style="font-size:.75rem;font-weight:700">Nombre del solicitante *</label><input id="plat-name" class="inp" placeholder="Nombre completo"></div>
+      <div><label style="font-size:.75rem;font-weight:700">Área / departamento *</label><input id="plat-area" class="inp" placeholder="Mantenimiento, Welding..."></div>
+      <div><label style="font-size:.75rem;font-weight:700">Área de trabajo *</label><input id="plat-work-area" class="inp" placeholder="Nave / línea / ubicación"></div>
+      <div><label style="font-size:.75rem;font-weight:700">Descripción de la actividad *</label><input id="plat-desc" class="inp" placeholder="Ej. Cambio de luminarias"></div>
+    </div>
+    <h4 style="font-size:.8rem;color:#334155;margin:16px 0 8px">Fechas y horarios requeridos</h4>
+    <div id="platform-date-rows"></div>
+    <button class="btn-g" onclick="addPlatformDateRow()" style="margin-top:7px">+ Agregar otro día u horario</button>
+    <div style="margin-top:16px;padding:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;font-size:.72rem;color:#92400E;line-height:1.5">
+      <b>Reglamento:</b> uso destinado a mantenimiento de activos; el operador debe cumplir requisitos de seguridad y DC-3 aplicables; cualquier anomalía debe notificarse a Facilities; al terminar, el equipo debe regresar al Cuarto de Máquinas y quedar conectado para carga; no dejar llaves en el switch.
+      <label style="display:block;margin-top:8px;font-weight:700"><input id="plat-terms" type="checkbox"> Sí, acepto el reglamento para solicitar la plataforma.</label>
+    </div>
+    <button class="btn-p" onclick="submitPlatformRequestUI()" style="width:100%;margin-top:12px;background:#0F766E">Emitir solicitud a Facilities</button>
+  </div>
+
+  <div id="platform-panel-status" style="display:none">
+    <div class="card" style="padding:20px;max-width:600px;margin:0 auto">
+      <h3 style="font-size:.95rem;margin:0 0 8px">Consultar estatus por folio</h3>
+      <div style="display:flex;gap:8px"><input id="plat-status-folio" class="inp" placeholder="FC-PLAT-0001"><button class="btn-p" onclick="searchPlatformFolio()">Consultar</button></div>
+      <div id="plat-status-result" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="platform-panel-checklist" style="display:none">
+    <div id="platform-check-print" class="card" style="padding:18px">
+      <div style="text-align:center;border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1rem">KTMEX CHECK LIST - INSPECCIÓN PARA USO DE PLATAFORMA ARTICULADA</b><div style="font-size:.72rem;color:#64748B">Sistema de gestión de Facilities</div></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px">
+        <input id="pchk-operator" class="inp" placeholder="Nombre del operador">
+        <input id="pchk-date" type="date" class="inp">
+        <input id="pchk-company" class="inp" placeholder="Empresa">
+        <input id="pchk-zone" class="inp" placeholder="Zona de trabajo">
+        <input class="inp" value="Genie Z45" readonly>
+        <input id="pchk-serial" class="inp" placeholder="No. serie">
+        <input id="pchk-work" class="inp" placeholder="Descripción del trabajo" style="grid-column:1/-1">
+      </div>
+      <div class="platform-check-row head"><div>Punto de inspección</div><div>BIEN</div><div>MAL</div><div>N/A</div></div>
+      <div id="platform-check-items"></div>
+      <textarea id="pchk-comments-off" class="inp" rows="2" placeholder="Comentarios unidad apagada (opcional)" style="margin-top:10px"></textarea>
+      <textarea id="pchk-comments-on" class="inp" rows="2" placeholder="Comentarios unidad encendida (opcional)" style="margin-top:8px"></textarea>
+      <div style="margin-top:12px;padding:10px;border:1px solid #FDE68A;background:#FFFBEB;border-radius:8px;font-size:.68rem;color:#92400E">
+        A) El operador debe inspeccionar y reportar anomalías. B) Al concluir, resguardar el equipo con paro de emergencia activado y conectado para carga. C) No dejar las llaves en el switch.
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:35px;text-align:center;font-size:.7rem">
+        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA DEL OPERADOR CALIFICADO<br><input class="inp" id="pchk-sign1" placeholder="Nombre"></div>
+        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA OPERADOR AYUDANTE / BANDERERO<br><input class="inp" id="pchk-sign2" placeholder="Nombre"></div>
+        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA RESPONSABLE DE SEGURIDAD KTMEX<br><input class="inp" id="pchk-sign3" placeholder="Nombre"></div>
+      </div>
+    </div>
+    <button class="btn-p" onclick="printPlatformChecklist()" style="margin-top:10px;background:#0F766E"><i class="fas fa-print" style="margin-right:6px"></i>Imprimir checklist</button>
+    <p style="font-size:.68rem;color:#64748B;margin-top:6px">El checklist está disponible para llenarse cuando corresponda; no bloquea la solicitud de préstamo.</p>
+  </div>
+
+  <div id="platform-panel-admin" style="display:none">
+    <div class="card" style="padding:16px;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="font-size:.92rem;margin:0">Gestión de solicitudes de plataforma</h3><button class="btn-g" onclick="loadPlatformAdmin()">Actualizar</button></div>
+      <table style="width:100%;min-width:900px;border-collapse:collapse">
+        <thead><tr><th>Folio</th><th>Solicitante</th><th>Área</th><th>Actividad</th><th>Fechas</th><th>Estatus</th><th>Acciones</th></tr></thead>
+        <tbody id="platform-admin-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════ VIEW: LOGIN ══ -->
 <div id="view-login" style="display:none" class="fade">
   <div style="min-height:calc(100vh - 54px);display:flex;align-items:center;justify-content:center;padding:16px">
@@ -1703,7 +1869,7 @@ const LPA_AREAS = {
 
         <!-- TECHNICIAN ANALYTICS -->
         <div id="ops-panel-tech" style="display:none">
-          <div id="ops-tech-kpis" style="display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:10px;margin-bottom:14px"></div>
+          <div id="ops-tech-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px"></div>
 
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
             <div class="card" style="padding:14px">
@@ -1732,8 +1898,8 @@ const LPA_AREAS = {
             <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Detalle por técnico</h4>
             <table style="width:100%;border-collapse:collapse;min-width:980px;font-size:.72rem">
               <thead><tr>
-                <th>Técnico</th><th>Actividades</th><th>Finalizadas</th><th>Prom. efectivo</th><th>Prom. pausa</th>
-                <th>Espera material</th><th>Apoyo técnico/capacitación</th><th>Tiempo activo</th><th>Finalización</th><th>Inconformidades</th>
+                <th>Técnico</th><th>Actividades propias</th><th>Finalizadas</th><th>Prom. efectivo</th><th>Prom. pausa</th>
+                <th>Espera material</th><th>Apoyo técnico/capacitación</th><th>Participaciones de apoyo</th><th>Tiempo como apoyo</th><th>Contribución total</th><th>Tiempo activo</th><th>Finalización</th><th>Inconformidades</th>
               </tr></thead>
               <tbody id="ops-tech-table"></tbody>
             </table>
@@ -1993,9 +2159,18 @@ const LPA_AREAS = {
     </div>
     <p id="act-foto-folio" class="mono" style="font-size:.82rem;color:#7C3AED;font-weight:700;margin:0 0 14px"></p>
     <div id="act-inicio-evidencia-wrap">
-      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica de inicio *</label>
-      <input type="file" id="act-foto-input" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:10px">
-      <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">1 fotografía · Máx. 5 MB.</p>
+      <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica de inicio *</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-camera" style="margin-right:5px"></i>Tomar fotografía<input type="file" id="act-foto-camera" accept="image/*" capture="environment" style="display:none" onchange="activityStartFileSelected_('camera')"></label>
+        <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images" style="margin-right:5px"></i>Galería / archivos<input type="file" id="act-foto-gallery" accept="image/*" style="display:none" onchange="activityStartFileSelected_('gallery')"></label>
+      </div>
+      <div id="act-foto-file-name" style="font-size:.7rem;color:#64748B;margin-bottom:8px">Sin fotografía seleccionada.</div>
+      <div id="act-start-support-wrap" style="margin-bottom:10px">
+        <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label>
+        <div style="display:flex;gap:7px"><select id="support-start-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('start')">Agregar</button></div>
+        <div id="support-start-list" style="margin-top:5px"></div>
+      </div>
+      <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">1 fotografía · Máx. 5 MB. Tú eliges cámara o galería.</p>
     </div>
     <div id="act-foto-cierre-extra" style="display:none;margin-bottom:10px">
       <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-images" style="color:#7C3AED;margin-right:5px"></i>Fotografías de cierre * <span style="font-weight:500;color:#64748B">(1 a 3)</span></label>
@@ -2039,29 +2214,42 @@ const LPA_AREAS = {
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-bolt" style="color:#7C3AED;margin-right:7px"></i>Actividad Espontánea</h3>
       <button onclick="closeModal('modal-act-nueva')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
     </div>
-    <p style="font-size:.78rem;color:#64748B;margin:0 0 16px">Para trabajo que surge en el momento, sin una solicitud previa. Se inicia de inmediato y queda visible para Ingeniería.</p>
-
-    <div style="margin-bottom:12px">
-        <label style="display:block;font-size:.78rem;font-weight:700;color:#334155;margin-bottom:7px">¿La actividad está relacionada con un folio existente? *</label>
-        <div style="display:flex;gap:10px"><label><input type="radio" name="act-folio-mode" value="SI" onchange="toggleActividadFolio()"> Sí, con folio</label><label><input type="radio" name="act-folio-mode" value="NO" onchange="toggleActividadFolio()"> No, sin folio</label></div>
-      </div>
-      <div id="act-folio-wrap" style="display:none;margin-bottom:12px">
-        <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Folio de la solicitud *</label>
-        <input id="act-nueva-folio" class="inp" placeholder="FAC-2026-00025">
-        <div id="act-folio-info" style="font-size:.72rem;color:#64748B;margin-top:5px">Se validará contra la base de datos. El apoyo quedará asociado al mismo folio.</div>
-      </div>
+    <p style="font-size:.78rem;color:#64748B;margin:0 0 12px">Para trabajo que surge en el momento, sin una solicitud previa. Si ya existe un folio, no generes otra actividad: el técnico responsable debe agregar a los técnicos de apoyo en la misma actividad.</p>
+    <div style="padding:9px 10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;font-size:.7rem;color:#1D4ED8;margin-bottom:12px"><i class="fas fa-users" style="margin-right:5px"></i>Los apoyos ya no generan folios o actividades duplicadas.</div>
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#7C3AED;margin-right:5px"></i>¿Qué vas a hacer? *</label>
     <textarea id="act-nueva-desc" class="inp" rows="3" placeholder="Describe la actividad…" style="margin-bottom:12px"></textarea>
 
     <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-tag" style="color:#7C3AED;margin-right:5px"></i>Tipo (opcional)</label>
     <input type="text" id="act-nueva-tipo" class="inp" placeholder="Ej. Fuga de aire, falla eléctrica…" style="margin-bottom:12px">
 
-    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-camera" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica *</label>
-    <input type="file" id="act-nueva-foto" accept="image/*" capture="environment" class="inp" style="padding:8px;margin-bottom:14px">
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#7C3AED;margin-right:5px"></i>Evidencia fotográfica *</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-camera" style="margin-right:5px"></i>Tomar fotografía<input type="file" id="act-nueva-foto-camera" accept="image/*" capture="environment" style="display:none" onchange="spontFileSelected_('camera')"></label>
+      <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images" style="margin-right:5px"></i>Galería / archivos<input type="file" id="act-nueva-foto-gallery" accept="image/*" style="display:none" onchange="spontFileSelected_('gallery')"></label>
+    </div>
+    <div id="act-nueva-file-name" style="font-size:.7rem;color:#64748B;margin-bottom:10px">Sin fotografía seleccionada.</div>
+    <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label>
+    <div style="display:flex;gap:7px"><select id="support-spont-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('spont')">Agregar</button></div>
+    <div id="support-spont-list" style="margin:4px 0 12px"></div>
 
     <button class="btn-p" id="btn-act-nueva-confirm" onclick="confirmActividadEspontanea()" style="width:100%;background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
       <i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora
     </button>
+  </div>
+</div>
+
+
+<!-- MODAL: Técnicos de apoyo -->
+<div id="modal-act-support" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:430px;padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div><h3 style="font-size:.95rem;font-weight:800;color:var(--navy);margin:0">Técnicos de apoyo</h3><p id="support-active-folio" class="mono" style="font-size:.7rem;color:#64748B;margin:3px 0 0"></p></div>
+      <button onclick="closeModal('modal-act-support')" class="btn-g" style="padding:6px 9px"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p style="font-size:.72rem;color:#64748B">Solo el técnico responsable agrega o elimina apoyos. Todos trabajan sobre el mismo folio.</p>
+    <div style="display:flex;gap:7px"><select id="support-active-select" class="inp"></select><button class="btn-g" onclick="supportPickerAdd('active')">Agregar</button></div>
+    <div id="support-active-list" style="margin:8px 0 12px"></div>
+    <button class="btn-p" onclick="saveActiveSupport()" style="width:100%">Guardar técnicos de apoyo</button>
   </div>
 </div>
 
@@ -2125,6 +2313,7 @@ const LPA_AREAS = {
 <!-- V8.2.10 · búsqueda flexible visible en inventario del administrador -->
 <!-- V8.2.11 · checklists: lecturas dependientes deshabilitadas en reserva/standby -->
 <!-- V8.3.0 · Analítica operativa restringida: checklists + técnicos -->
+<!-- V8.4.0 · cotizaciones Compras + Plan Diario + apoyos compartidos + galería/cámara + Plataforma -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -2754,23 +2943,23 @@ let PENDING_VIEW = null; // vista a la que regresar después de iniciar sesión
 
 function configureRoleUI() {
   const role=SESSION?.user?.rol||'';
-  const ids=['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
+  const ids=['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-daily','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
   ids.forEach(id=>{if($(id))$(id).style.display='';});
 
   if(role==='manager'){
     if($('manager-approval-box'))$('manager-approval-box').style.display='';
     // Manager: Dashboard + Auditorías LPA. El resto se gestiona desde Dashboard.
-    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-compra','nav-act','nav-daily','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-lpa'))$('nav-lpa').style.display='';
     if($('nav-admin')){
       $('nav-admin').style.display='';
       $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
     }
   }else if(role==='lpa'){
-    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-compra','nav-act','nav-daily','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-lpa'))$('nav-lpa').style.display='';
   }else if(role==='compras'){
-    ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-lpa','nav-act','nav-daily','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
   }else{
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
@@ -2779,6 +2968,7 @@ function configureRoleUI() {
     if(!SESSION&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
     if($('nav-electricas'))$('nav-electricas').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
     if($('nav-checklists'))$('nav-checklists').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
+    if($('nav-daily'))$('nav-daily').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
     if(role==='tecnico'&&$('nav-admin'))$('nav-admin').style.display=hasAdminPrivilege()?'':'none';
   }
   configureManagerDashboardTabs();
@@ -2789,10 +2979,10 @@ function roleCanView(v) {
   if(!SESSION)return true;
   const role=SESSION.user.rol;
   if(role==='manager'){
-    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','login'].includes(v);
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login'].includes(v);
   }
-  if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','login'].includes(v);
-  if(role==='compras')return ['home','solicitud','compras-rol','login'].includes(v);
+  if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
+  if(role==='compras')return ['home','solicitud','compras-rol','platform','login'].includes(v);
   if(v==='electricas'&&!['tecnico','ingeniero'].includes(role))return false;
   if(role==='tecnico'){
     if(v==='admin')return hasAdminPrivilege();
@@ -2807,7 +2997,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','daily','platform','inventario','recepcion-qr','electricas','compras-rol','login','admin'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -2848,6 +3038,16 @@ function goActividades() {
   if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a actividades técnicas.','err'); goComprasRol(); return; }
   showView('actividades'); loadMisActividades();
 }
+function goPlanDiario(){
+  if(!requireLogin('daily'))return;
+  if(!['tecnico','ingeniero'].includes(SESSION.user.rol)){toast('Plan Diario disponible para Técnicos e Ingeniería Facilities.','err');return;}
+  showView('daily');loadDailyPlan();
+}
+function goPlataforma(){
+  showView('platform');
+  initPlatformModule();
+}
+
 function goComprasRol() {
   if (!SESSION) { PENDING_VIEW='admin'; showView('login'); return; }
   if (SESSION.user.rol !== 'compras') { toast('Esta sección es exclusiva del área de Compras.','err'); return; }
@@ -3247,7 +3447,7 @@ async function markAllNotificationsReadUI(){if(!SESSION?.token)return;const r=aw
 function showNotificationPopup(n,newCount=1){NOTIF_CURRENT=n;const multi=newCount>1;const title=multi?(LANG==='en'?`You have ${newCount} new notifications`:`Tienes ${newCount} nuevas notificaciones`):notifText(n,'titulo');const msg=multi?(LANG==='en'?'Open the notification center to review the new items.':'Abre el centro de notificaciones para revisar los nuevos avisos.'):notifText(n,'mensaje');$('notif-popup-title').textContent=title;$('notif-popup-msg').textContent=msg;$('notif-popup-open').textContent=multi?(LANG==='en'?'View notifications':'Ver notificaciones'):(LANG==='en'?'View':'Ver');$('modal-notification').style.display='flex';if(NOTIF_SOUND_ENABLED && ['Importante','Crítico','Critico'].includes(String(n.prioridad||'')))playNotificationSound();}
 function closeNotificationPopup(){$('modal-notification').style.display='none';}
 async function openCurrentNotification(){const n=NOTIF_CURRENT;if(!n){closeNotificationPopup();toggleNotificationPanel();return;}if(String(n.leida||'').toUpperCase()!=='TRUE'){await api({action:'markNotificationRead',token:SESSION.token,id:n.id}).catch(()=>{});n.leida='TRUE';NOTIF_LAST_UNREAD=Math.max(0,NOTIF_LAST_UNREAD-1);updateNotificationBadge(NOTIF_LAST_UNREAD);}closeNotificationPopup();openNotificationTarget(n);}
-function openNotificationTarget(n){const p=$('notif-panel');if(p)p.style.display='none';const a=String(n.accion||'');if(a==='compra'){if(SESSION.user.rol==='compras')goComprasRol();else goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='actividad'){goActividades();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='lpa'){goLpaQuality();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='solicitud'){goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}toggleNotificationPanel();}
+function openNotificationTarget(n){const p=$('notif-panel');if(p)p.style.display='none';const a=String(n.accion||'');if(a==='compra'){if(SESSION.user.rol==='compras')goComprasRol();else goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='actividad'){goActividades();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='lpa'){goLpaQuality();setTimeout(()=>focusNotificationRecord(n),900);return;}if(a==='plan-diario'){goPlanDiario();return;}if(a==='plataforma'){goPlataforma();setTimeout(()=>showPlatformTab('admin'),500);return;}if(a==='solicitud'){goAdmin();setTimeout(()=>focusNotificationRecord(n),900);return;}toggleNotificationPanel();}
 function focusNotificationRecord(n){const folio=String(n.folio||'');if(!folio)return;const candidates=[...document.querySelectorAll('tr,.card')].filter(el=>(el.textContent||'').includes(folio));if(candidates[0]){candidates[0].scrollIntoView({behavior:'smooth',block:'center'});candidates[0].style.outline='3px solid #F59E0B';setTimeout(()=>candidates[0].style.outline='',3500);}}
 function playNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.035,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.16);o.start();o.stop(ctx.currentTime+.16);}catch(e){}}
 document.addEventListener('click',e=>{const p=$('notif-panel'),b=$('notif-bell');if(p&&p.style.display==='block'&&!p.contains(e.target)&&!b?.contains(e.target))p.style.display='none';});
@@ -3316,6 +3516,10 @@ async function performLogin() {
       else{showView('compra');setTimeout(()=>initCompraForm(),0);}
     }else if(dest==='actividades'){
       showView('actividades');setTimeout(()=>loadMisActividades(),0);
+    }else if(dest==='daily'){
+      showView('daily');setTimeout(()=>loadDailyPlan(),0);
+    }else if(dest==='platform'){
+      showView('platform');setTimeout(()=>initPlatformModule(),0);
     }else if(dest==='inventario'){
       showView('inventario');setTimeout(()=>loadInventarioTec(),0);
     }else if(dest==='lpa-select'){
@@ -4002,6 +4206,12 @@ async function loadMisActividades() {
 function actFmtDateTime_(v){if(!v)return 'Sin registro';try{return new Date(v).toLocaleString(LANG==='en'?'en-US':'es-MX',{dateStyle:'short',timeStyle:'short'});}catch(e){return String(v);}}
 function actFmtMin_(v){const m=Math.max(0,Math.round(Number(v)||0));if(m<60)return m+' min';const h=Math.floor(m/60),r=m%60;return h+' h'+(r?' '+r+' min':'');}
 function parseActCloseFiles_(a){try{const x=JSON.parse(String(a?.archivosCierre||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
+function parseActSupports_(a){try{const x=JSON.parse(String(a?.tecnicosApoyoJSON||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
+function renderActSupports_(a){
+  const s=parseActSupports_(a);if(!s.length)return '<span style="font-size:.7rem;color:#94A3B8">Sin técnicos de apoyo</span>';
+  return s.map(x=>`<span class="support-chip"><i class="fas fa-user-plus"></i>${escapeHtml(x.nombre||x.username||'')}</span>`).join('');
+}
+
 function renderMisActividades(){
   const list=$('act-list'),filter=$('act-status-filter')?.value||'TODAS',{solicitudes,actividades}=ACT_DATA,latest={};
   actividades.forEach(a=>{if(!latest[a.solicitudId]||new Date(a.timestamp)>new Date(latest[a.solicitudId].timestamp))latest[a.solicitudId]=a;});
@@ -4024,12 +4234,12 @@ function renderMisActividades(){
   list.innerHTML=shown.length?shown.map(({s,a,b,t})=>{
     let act='';
     if(b==='PENDIENTE')act=`<button class="btn-p" onclick="openIniciarModal('${s.id}','${s.folio}')">Iniciar actividad</button>`;
-    if(b==='EN_CURSO')act=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')"><i class="fas fa-check" style="margin-right:5px"></i>Terminar</button><button class="btn-g" style="border-color:#F59E0B;color:#B45309" onclick="openPausaActividadModal('${a.id}','${s.folio}')"><i class="fas fa-pause" style="margin-right:5px"></i>Pausar</button><button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button></div>`;
+    if(b==='EN_CURSO')act=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${s.folio}')"><i class="fas fa-check" style="margin-right:5px"></i>Terminar</button><button class="btn-g" style="border-color:#F59E0B;color:#B45309" onclick="openPausaActividadModal('${a.id}','${s.folio}')"><i class="fas fa-pause" style="margin-right:5px"></i>Pausar</button><button class="btn-g" onclick="openEsperaMaterialModal('${a.id}','${s.folio}')">En espera de material</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${s.folio}')"><i class="fas fa-users" style="margin-right:5px"></i>Técnicos de apoyo</button></div>`;
     if(b==='PAUSADA'){
       const start=a?.horaPausaActual?new Date(a.horaPausaActual):null,mins=start&&!isNaN(start)?Math.max(0,Math.round((Date.now()-start.getTime())/60000)):0;
-      act=`<div style="padding:12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px"><b style="color:#9A3412"><i class="fas fa-pause" style="margin-right:5px"></i>Actividad pausada</b><br><span style="font-size:.8rem"><b>Motivo:</b> ${escapeHtml(a?.motivoPausaActual||'—')}<br><b>Desde:</b> ${escapeHtml(actFmtDateTime_(a?.horaPausaActual))}<br><b>Tiempo de esta pausa:</b> ${escapeHtml(actFmtMin_(mins))}<br><b>Comentario:</b> ${escapeHtml(a?.comentarioPausaActual||'—')}</span><br><button class="btn-p" style="margin-top:10px;background:#16A34A" onclick="reanudarActividadPausa('${a.id}')"><i class="fas fa-play" style="margin-right:5px"></i>Reanudar actividad</button></div>`;
+      act=`<div style="padding:12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px"><b style="color:#9A3412"><i class="fas fa-pause" style="margin-right:5px"></i>Actividad pausada</b><br><span style="font-size:.8rem"><b>Motivo:</b> ${escapeHtml(a?.motivoPausaActual||'—')}<br><b>Desde:</b> ${escapeHtml(actFmtDateTime_(a?.horaPausaActual))}<br><b>Tiempo de esta pausa:</b> ${escapeHtml(actFmtMin_(mins))}<br><b>Comentario:</b> ${escapeHtml(a?.comentarioPausaActual||'—')}</span><br><button class="btn-p" style="margin-top:10px;background:#16A34A" onclick="reanudarActividadPausa('${a.id}')"><i class="fas fa-play" style="margin-right:5px"></i>Reanudar actividad</button> <button class="btn-g" style="margin-top:10px" onclick="openActiveSupportModal('${a.id}','${s.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
     }
-    if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${escapeHtml(a?.materialPendiente||'Material pendiente')}</b><br>Cantidad: ${escapeHtml(a?.cantidadMaterial||'—')}<br><small>${escapeHtml(a?.comentarioMaterial||'')}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button></div>`;
+    if(b==='MATERIAL')act=`<div style="padding:10px;background:#FFFBEB;border-radius:8px"><b>${escapeHtml(a?.materialPendiente||'Material pendiente')}</b><br>Cantidad: ${escapeHtml(a?.cantidadMaterial||'—')}<br><small>${escapeHtml(a?.comentarioMaterial||'')}</small><br><button class="btn-p" style="margin-top:8px" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button> <button class="btn-g" style="margin-top:8px" onclick="openActiveSupportModal('${a.id}','${s.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
     if(b==='SUSPENDIDA')act=`<div style="padding:10px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px"><b>Actividad suspendida por Ingeniería</b><br><small>${escapeHtml(s.authIngComentario||s.comentarioFacilities||'Consulta el motivo con Ingeniería.')}</small></div>`;
     if(b==='RECHAZADA')act=`<div style="padding:10px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px"><b>Actividad rechazada</b><br><small>${escapeHtml(s.authMgrComentario||s.authIngComentario||'Sin comentario registrado.')}</small></div>`;
     if(b==='CONFIRMACION')act='<div style="padding:10px;background:#FDF2F8;border-radius:8px">Pendiente de confirmación del solicitante.</div>';
@@ -4041,25 +4251,56 @@ function renderMisActividades(){
     const closeFiles=a?parseActCloseFiles_(a):[];
     const cierreInfo=(a&&(a.tiempoEfectivoMinutos!==null&&a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''))?`<div style="font-size:.76rem;color:#475569;margin:8px 0"><b>Tiempo efectivo:</b> ${actFmtMin_(a.tiempoEfectivoMinutos)} · <b>Tiempo pausado:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:'';
     const cierreLinks=closeFiles.length?`<div style="margin:8px 0">${closeFiles.map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 6px 0"><i class="fas ${f.tipo==='pdf'?'fa-file-pdf':'fa-image'}" style="margin-right:5px"></i>${f.tipo==='pdf'?'PDF de cierre':'Foto de cierre '+(i+1)}</a>`).join('')}</div>`:'';
-    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${escapeHtml(s.tipoSolicitud||'')}</p><p style="color:#64748B">${escapeHtml(s.descripcion||'')}</p>${asignacion}${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0">Ver fotografía</a>`:''}${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0"><i class="fas fa-image" style="margin-right:5px"></i>Imagen adicional ${i+1}</a>`).join('')}${cierreInfo}${cierreLinks}<div>${act}</div></div>`;
+    return `<div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><b class="mono">${s.folio}</b><span class="badge">${t}</span></div><p style="font-weight:700">${escapeHtml(s.tipoSolicitud||'')}</p><p style="color:#64748B">${escapeHtml(s.descripcion||'')}</p>${asignacion}${comentarioIng}${s.fotoURL?`<a href="${s.fotoURL}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0">Ver fotografía</a>`:''}${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" class="btn-g" style="display:inline-flex;text-decoration:none;margin:0 6px 8px 0"><i class="fas fa-image" style="margin-right:5px"></i>Imagen adicional ${i+1}</a>`).join('')}${a?`<div style="margin:8px 0;padding:8px;background:#F8FAFC;border-radius:8px"><b style="font-size:.7rem;color:#64748B">Técnicos de apoyo</b><div>${renderActSupports_(a)}</div></div>`:''}${cierreInfo}${cierreLinks}<div>${act}</div></div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para este filtro.</div>';
 }
 
-function openIniciarModal(solicitudId, folio) {
-  ACT_FOTO_MODE='iniciar';ACT_FOTO_TARGET=solicitudId;$('act-foto-title').textContent='Iniciar actividad';$('act-foto-folio').textContent=folio;
-  $('act-foto-input').value='';$('act-inicio-evidencia-wrap').style.display='';$('act-foto-cierre-extra').style.display='none';$('modal-act-foto').style.display='flex';
+let ACT_START_SELECTED_FILE=null;
+let ACT_RETURN_DAILY=false;
+
+function activityStartFileSelected_(mode){
+  const cam=$('act-foto-camera'),gal=$('act-foto-gallery');
+  ACT_START_SELECTED_FILE=mode==='camera'?(cam?.files?.[0]||null):(gal?.files?.[0]||null);
+  if(mode==='camera'&&gal)gal.value='';
+  if(mode==='gallery'&&cam)cam.value='';
+  if($('act-foto-file-name'))$('act-foto-file-name').textContent=ACT_START_SELECTED_FILE?ACT_START_SELECTED_FILE.name:'Sin fotografía seleccionada.';
 }
-function openCerrarModal(actividadId, folio) {
-  ACT_FOTO_MODE='cerrar';ACT_FOTO_TARGET=actividadId;$('act-foto-title').textContent='Cerrar actividad';$('act-foto-folio').textContent=folio;
-  $('act-foto-input').value='';$('act-cierre-fotos').value='';$('act-cierre-pdf').value='';$('act-foto-comentario').value='';$('act-inicio-evidencia-wrap').style.display='none';$('act-foto-cierre-extra').style.display='';$('modal-act-foto').style.display='flex';
+function openIniciarModal(solicitudId, folio) {
+  ACT_FOTO_MODE='iniciar';ACT_FOTO_TARGET=solicitudId;ACT_RETURN_DAILY=false;
+  $('act-foto-title').textContent='Iniciar actividad';$('act-foto-folio').textContent=folio;
+  ACT_START_SELECTED_FILE=null;if($('act-foto-camera'))$('act-foto-camera').value='';if($('act-foto-gallery'))$('act-foto-gallery').value='';
+  if($('act-foto-file-name'))$('act-foto-file-name').textContent='Sin fotografía seleccionada.';
+  resetSupportPicker('start');
+  $('act-inicio-evidencia-wrap').style.display='';$('act-foto-cierre-extra').style.display='none';$('modal-act-foto').style.display='flex';
+}
+function openDailyStartModal(id,folio,supports){
+  ACT_FOTO_MODE='daily-start';ACT_FOTO_TARGET=id;ACT_RETURN_DAILY=true;
+  $('act-foto-title').textContent='Iniciar actividad diaria';$('act-foto-folio').textContent=folio;
+  ACT_START_SELECTED_FILE=null;if($('act-foto-camera'))$('act-foto-camera').value='';if($('act-foto-gallery'))$('act-foto-gallery').value='';
+  if($('act-foto-file-name'))$('act-foto-file-name').textContent='Sin fotografía seleccionada.';
+  setSupportPicker('start',supports||[]);
+  $('act-inicio-evidencia-wrap').style.display='';$('act-foto-cierre-extra').style.display='none';$('modal-act-foto').style.display='flex';
+}
+function openCerrarModal(actividadId, folio,fromDaily) {
+  ACT_FOTO_MODE='cerrar';ACT_FOTO_TARGET=actividadId;ACT_RETURN_DAILY=!!fromDaily;
+  $('act-foto-title').textContent='Terminar actividad';$('act-foto-folio').textContent=folio;
+  $('act-cierre-fotos').value='';$('act-cierre-pdf').value='';$('act-foto-comentario').value='';
+  $('act-inicio-evidencia-wrap').style.display='none';$('act-foto-cierre-extra').style.display='';$('modal-act-foto').style.display='flex';
 }
 async function confirmActividadFoto() {
   const btn=$('btn-act-foto-confirm');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
   try{
     let res;
-    if(ACT_FOTO_MODE==='iniciar'){
-      const f=$('act-foto-input').files[0];if(!f){toast('Adjunta la evidencia fotográfica de inicio','err');return;}if(f.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
-      res=await api({action:'iniciarActividad',token:SESSION.token,solicitudId:ACT_FOTO_TARGET,fotoBase64:await fileToBase64(f),fotoName:f.name});
+    if(ACT_FOTO_MODE==='iniciar'||ACT_FOTO_MODE==='daily-start'){
+      const f=ACT_START_SELECTED_FILE;
+      if(!f){toast('Selecciona una fotografía desde cámara o galería','err');return;}
+      if(f.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
+      const base=await fileToBase64(f);
+      if(ACT_FOTO_MODE==='daily-start'){
+        res=await api({action:'startDailyActivity',token:SESSION.token,id:ACT_FOTO_TARGET,fotoBase64:base,fotoName:f.name,tecnicosApoyo:SUPPORT_STATE.start});
+      }else{
+        res=await api({action:'iniciarActividad',token:SESSION.token,solicitudId:ACT_FOTO_TARGET,fotoBase64:base,fotoName:f.name,tecnicosApoyo:SUPPORT_STATE.start});
+      }
     }else{
       const fotos=Array.from($('act-cierre-fotos').files||[]),pdf=$('act-cierre-pdf').files[0]||null;
       if(fotos.length<1){toast('Adjunta al menos una fotografía de cierre','err');return;}if(fotos.length>3){toast('Se permiten máximo 3 fotografías de cierre','err');return;}
@@ -4069,18 +4310,23 @@ async function confirmActividadFoto() {
       const pdfObj=pdf?{base64:await fileToBase64(pdf),name:pdf.name}:null;
       res=await api({action:'cerrarActividad',token:SESSION.token,actividadId:ACT_FOTO_TARGET,imagenes,pdf:pdfObj,comentario:$('act-foto-comentario').value.trim()});
     }
-    if(res.success){toast(ACT_FOTO_MODE==='iniciar'?'Actividad iniciada':`Actividad cerrada · Tiempo efectivo ${actFmtMin_(res.tiempoEfectivoMinutos||0)}`);closeModal('modal-act-foto');loadMisActividades();}else toast(res.error||'Error','err');
+    if(res.success){
+      toast(ACT_FOTO_MODE==='cerrar'?`Actividad terminada · Pendiente de cierre por Ingeniería`:'Actividad iniciada');
+      closeModal('modal-act-foto');
+      if(ACT_RETURN_DAILY)loadDailyPlan();else loadMisActividades();
+    }else toast(res.error||'Error','err');
   }catch(e){toast('Error de conexión: '+e.message,'err');}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';}
 }
+
 let ACT_PAUSA_TARGET='';
 function openPausaActividadModal(id,folio){ACT_PAUSA_TARGET=id;$('act-pausa-folio').textContent=folio;$('act-pausa-motivo').value='';$('act-pausa-comentario').value='';$('modal-act-pausa').style.display='flex';}
 async function confirmarPausaActividad(){
   const motivo=$('act-pausa-motivo').value.trim(),comentario=$('act-pausa-comentario').value.trim();if(!motivo||!comentario){toast('Selecciona el motivo y agrega un comentario','err');return;}
   const b=$('btn-act-pausa-confirm');b.disabled=true;
-  try{const r=await api({action:'pausarActividad',token:SESSION.token,actividadId:ACT_PAUSA_TARGET,motivo,comentario});if(r.success){closeModal('modal-act-pausa');toast('Actividad pausada');loadMisActividades();}else toast(r.error||'No se pudo pausar','err');}catch(e){toast('Error de conexión: '+e.message,'err');}finally{b.disabled=false;}
+  try{const r=await api({action:'pausarActividad',token:SESSION.token,actividadId:ACT_PAUSA_TARGET,motivo,comentario});if(r.success){closeModal('modal-act-pausa');toast('Actividad pausada');loadMisActividades();if($('view-daily')?.style.display!=='none')loadDailyPlan();}else toast(r.error||'No se pudo pausar','err');}catch(e){toast('Error de conexión: '+e.message,'err');}finally{b.disabled=false;}
 }
-async function reanudarActividadPausa(id){const r=await api({action:'reanudarActividadPausa',token:SESSION.token,actividadId:id});if(r.success){toast('Actividad reanudada · Pausa '+actFmtMin_(r.minutosPausa||0));loadMisActividades();}else toast(r.error||'No se pudo reanudar','err');}
+async function reanudarActividadPausa(id){const r=await api({action:'reanudarActividadPausa',token:SESSION.token,actividadId:id});if(r.success){toast('Actividad reanudada · Pausa '+actFmtMin_(r.minutosPausa||0));loadMisActividades();if($('view-daily')?.style.display!=='none')loadDailyPlan();}else toast(r.error||'No se pudo reanudar','err');}
 
 
 let ACT_MATERIAL_TARGET='';
@@ -4088,42 +4334,41 @@ function openEsperaMaterialModal(id,folio){ACT_MATERIAL_TARGET=id;$('mat-folio')
 async function confirmarEsperaMaterial(){const material=$('mat-material').value.trim(),cantidad=$('mat-cantidad').value,fecha=$('mat-fecha').value,comentario=$('mat-comentario').value.trim();if(!material||!cantidad||!fecha){toast('Completa los campos obligatorios','err');return;}const r=await api({action:'marcarEsperaMaterial',token:SESSION.token,actividadId:ACT_MATERIAL_TARGET,material,cantidad,fechaSolicitudMaterial:fecha,comentario});if(r.success){closeModal('modal-material');toast('Actividad en espera de material');loadMisActividades();}else toast(r.error,'err');}
 async function reanudarActividad(id){const r=await api({action:'reanudarActividadMaterial',token:SESSION.token,actividadId:id});if(r.success){toast('Actividad reanudada');loadMisActividades();}else toast(r.error,'err');}
 
+let SPONT_SELECTED_FILE=null;
+function spontFileSelected_(mode){
+  const cam=$('act-nueva-foto-camera'),gal=$('act-nueva-foto-gallery');
+  SPONT_SELECTED_FILE=mode==='camera'?(cam?.files?.[0]||null):(gal?.files?.[0]||null);
+  if(mode==='camera'&&gal)gal.value='';
+  if(mode==='gallery'&&cam)cam.value='';
+  if($('act-nueva-file-name'))$('act-nueva-file-name').textContent=SPONT_SELECTED_FILE?SPONT_SELECTED_FILE.name:'Sin fotografía seleccionada.';
+}
 function openActividadEspontaneaModal() {
   if (!SESSION) { showView('login'); return; }
-  $('act-nueva-desc').value='';
-  $('act-nueva-tipo').value='';
-  $('act-nueva-foto').value='';
-  if($('act-nueva-folio')) $('act-nueva-folio').value='';
-  document.querySelectorAll('input[name="act-folio-mode"]').forEach(r=>r.checked=false);
-  if($('act-folio-wrap')) $('act-folio-wrap').style.display='none';
+  $('act-nueva-desc').value='';$('act-nueva-tipo').value='';
+  SPONT_SELECTED_FILE=null;
+  if($('act-nueva-foto-camera'))$('act-nueva-foto-camera').value='';
+  if($('act-nueva-foto-gallery'))$('act-nueva-foto-gallery').value='';
+  if($('act-nueva-file-name'))$('act-nueva-file-name').textContent='Sin fotografía seleccionada.';
+  resetSupportPicker('spont');
   $('modal-act-nueva').style.display='flex';
 }
-function toggleActividadFolio(){
-  const mode=document.querySelector('input[name="act-folio-mode"]:checked')?.value||'';
-  $('act-folio-wrap').style.display=mode==='SI'?'':'none';
-  if(mode!=='SI') $('act-nueva-folio').value='';
-}
+function toggleActividadFolio(){}
 
 async function confirmActividadEspontanea() {
   const descripcion=$('act-nueva-desc').value.trim();
   const tipo=$('act-nueva-tipo').value.trim();
-  const fotoFile=$('act-nueva-foto').files[0];
-  const folioMode=document.querySelector('input[name="act-folio-mode"]:checked')?.value||'';
-  const folio=folioMode==='SI'?$('act-nueva-folio').value.trim():'';
-
-  if(!folioMode){toast('Indica si la actividad es con folio o sin folio','err');return;}
-  if(folioMode==='SI'&&!folio){toast('Captura el número de folio','err');return;}
+  const fotoFile=SPONT_SELECTED_FILE;
   if(!descripcion){toast('Describe la actividad que vas a realizar','err');return;}
-  if(!fotoFile){toast('Adjunta la evidencia fotográfica','err');return;}
+  if(!fotoFile){toast('Selecciona una fotografía desde cámara o galería','err');return;}
   if(fotoFile.size>5*1024*1024){toast('La foto supera 5 MB. Comprime la imagen.','err');return;}
 
   const btn=$('btn-act-nueva-confirm');
   btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
   try{
     const fotoBase64=await fileToBase64(fotoFile),fotoName=fotoFile.name;
-    const res=await api({action:'crearActividadEspontanea',token:SESSION.token,descripcion,tipo,folioMode,folio,fotoBase64,fotoName});
+    const res=await api({action:'crearActividadEspontanea',token:SESSION.token,descripcion,tipo,folioMode:'NO',fotoBase64,fotoName,tecnicosApoyo:SUPPORT_STATE.spont});
     if(res.success){
-      toast(res.esApoyo?'Apoyo registrado en folio '+res.folio:'Actividad espontánea iniciada — folio '+res.folio);
+      toast('Actividad espontánea iniciada — folio '+res.folio);
       closeModal('modal-act-nueva');loadMisActividades();
     }else toast(res.error||'Error','err');
   }catch(e){toast('Error de conexión: '+e.message,'err');}
@@ -4136,6 +4381,252 @@ function fmtDateTime(iso) {
   if (isNaN(d)) return String(iso);
   return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
 }
+
+
+// ============================================================
+// V8.4.0 — TÉCNICOS DE APOYO
+// ============================================================
+const SUPPORT_STATE={start:[],spont:[],daily:[],active:[]};
+let SUPPORT_ACTIVE_ID='';
+
+function supportAvailableNames_(){
+  const me=SESSION?.user?.nombre||'';
+  return (typeof TECNICOS!=='undefined'?TECNICOS:[]).filter(function(n){return n&&n!==me;});
+}
+function fillSupportSelect_(ctx){
+  const sel=$('support-'+ctx+'-select');if(!sel)return;
+  const selected=SUPPORT_STATE[ctx]||[];
+  sel.innerHTML='<option value="">— Selecciona técnico —</option>'+
+    supportAvailableNames_().filter(n=>!selected.includes(n)).map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+}
+function renderSupportPicker_(ctx){
+  const box=$('support-'+ctx+'-list');if(!box)return;
+  box.innerHTML=(SUPPORT_STATE[ctx]||[]).length?(SUPPORT_STATE[ctx]||[]).map((n,i)=>`<span class="support-chip">${escapeHtml(n)}<button type="button" onclick="supportPickerRemove('${ctx}',${i})"><i class="fas fa-xmark"></i></button></span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin técnicos de apoyo.</span>';
+  fillSupportSelect_(ctx);
+}
+function resetSupportPicker(ctx){SUPPORT_STATE[ctx]=[];renderSupportPicker_(ctx);}
+function setSupportPicker(ctx,list){
+  SUPPORT_STATE[ctx]=(list||[]).map(x=>typeof x==='string'?x:(x.nombre||x.username||'')).filter(Boolean);
+  renderSupportPicker_(ctx);
+}
+function supportPickerAdd(ctx){
+  const sel=$('support-'+ctx+'-select'),v=sel?.value||'';if(!v)return;
+  if(!SUPPORT_STATE[ctx].includes(v))SUPPORT_STATE[ctx].push(v);
+  renderSupportPicker_(ctx);
+}
+function supportPickerRemove(ctx,i){SUPPORT_STATE[ctx].splice(i,1);renderSupportPicker_(ctx);}
+function openActiveSupportModal(id,folio){
+  let a=(ACT_DATA.actividades||[]).find(x=>String(x.id)===String(id));
+  if(!a){const p=(DAILY_DATA||[]).find(x=>String(x.actividad?.id||'')===String(id));a=p?.actividad||null;}
+  SUPPORT_ACTIVE_ID=id;$('support-active-folio').textContent=folio||a?.folio||'';
+  setSupportPicker('active',parseActSupports_(a));
+  $('modal-act-support').style.display='flex';
+}
+async function saveActiveSupport(){
+  if(!SUPPORT_ACTIVE_ID)return;
+  const r=await api({action:'updateActividadApoyos',token:SESSION.token,actividadId:SUPPORT_ACTIVE_ID,tecnicosApoyo:SUPPORT_STATE.active});
+  if(r.success){toast('Técnicos de apoyo actualizados');closeModal('modal-act-support');loadMisActividades();if($('view-daily')?.style.display!=='none')loadDailyPlan();}
+  else toast(r.error||'No se pudieron guardar los apoyos','err');
+}
+
+// ============================================================
+// V8.4.0 — PLAN DIARIO
+// ============================================================
+let DAILY_DATA=[];
+function canViewDailyAdmin_(){return SESSION&&(SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
+async function loadDailyPlan(){
+  if(!SESSION)return;
+  const admin=canViewDailyAdmin_();
+  $('daily-tech-form').style.display=SESSION.user.rol==='tecnico'&&!hasAdminPrivilege()?'':'none';
+  $('daily-admin-month-wrap').style.display=admin?'':'none';
+
+  if(admin){
+    if(!$('daily-admin-month').value)$('daily-admin-month').value=new Date().toISOString().slice(0,7);
+    const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,month:$('daily-admin-month').value});
+    if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
+    DAILY_DATA=r.items||[];renderDailyAdmin();
+  }else{
+    const r=await api({action:'getDailyActivities',token:SESSION.token});
+    if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
+    DAILY_DATA=r.items||[];
+    $('daily-progress').textContent=(r.total||0)+' / '+(r.minimo||3);
+    $('daily-progress').className='badge '+((r.total||0)>=3?'b-done':'b-ejec');
+    renderDailyTech(r);
+    resetSupportPicker('daily');
+  }
+}
+async function createDailyActivityUI(){
+  const desc=$('daily-desc').value.trim(),cat=$('daily-category').value.trim(),area=$('daily-area').value.trim(),est=Number($('daily-estimate').value||0);
+  if(!desc||!area||est<=0){toast('Completa descripción, área y tiempo estimado','err');return;}
+  const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tiempoEstimadoMinutos:est,tecnicosApoyo:SUPPORT_STATE.daily});
+  if(r.success){$('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';$('daily-estimate').value='';resetSupportPicker('daily');toast('Actividad diaria declarada · '+r.totalDia+'/3');loadDailyPlan();}
+  else toast(r.error||'No se pudo crear','err');
+}
+function dailyStatusBadge_(s){
+  const cls=s==='Cerrada'?'b-done':s==='Pendiente de cierre por Ingeniería'?'b-mgr':s==='En curso'?'b-ejec':'b-pend';
+  return `<span class="badge ${cls}">${escapeHtml(s||'')}</span>`;
+}
+function renderDailyTech(r){
+  const total=r.total||0;
+  $('daily-kpis').innerHTML=opsKpiCard_('Actividades declaradas',total,total>=3?'Mínimo cumplido':'Faltan '+Math.max(0,3-total))+
+    opsKpiCard_('Pendientes de iniciar',DAILY_DATA.filter(x=>x.estatus==='Declarada'||x.estatus==='Devuelta por Ingeniería').length)+
+    opsKpiCard_('En curso',DAILY_DATA.filter(x=>x.estatus==='En curso').length)+
+    opsKpiCard_('Pend. cierre Ingeniería',DAILY_DATA.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length);
+  $('daily-list').innerHTML=DAILY_DATA.length?DAILY_DATA.map(x=>{
+    const a=x.actividad||null,supports=a?parseActSupports_(a):v840FrontParse_(x.tecnicosApoyoJSON);
+    let actions='';
+    if(['Declarada','Devuelta por Ingeniería'].includes(x.estatus))actions=`<button class="btn-p" onclick='openDailyStartModal("${x.id}","${x.folio}",${JSON.stringify(supports)})'>Iniciar</button>`;
+    else if(x.estatus==='En curso'&&a)actions=`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${x.folio}',true)">Terminar</button><button class="btn-g" onclick="openPausaActividadModal('${a.id}','${x.folio}')">Pausar</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
+    else if(a?.estatusActividad==='Pausada')actions=`<button class="btn-p" onclick="reanudarActividadPausa('${a.id}');setTimeout(loadDailyPlan,500)">Reanudar</button> <button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')">Apoyos</button>`;
+    else if(x.estatus==='Pendiente de cierre por Ingeniería')actions='<span style="font-size:.72rem;color:#B45309">Esperando validación de Ingeniería.</span>';
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${escapeHtml(x.folio)}</b>${dailyStatusBadge_(x.estatus)}</div><div style="font-weight:700;margin-top:6px">${escapeHtml(x.descripcion)}</div><div style="font-size:.72rem;color:#64748B">${escapeHtml(x.categoria||'Sin categoría')} · ${escapeHtml(x.area||'')}</div><div style="margin:7px 0">${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||s)}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${actions}</div>`;
+  }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Todavía no has declarado actividades hoy.</div>';
+}
+function v840FrontParse_(v){try{const x=JSON.parse(String(v||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
+function renderDailyAdmin(){
+  const items=DAILY_DATA||[];
+  const techs=[...new Set(items.map(x=>x.tecnico).filter(Boolean))];
+  $('daily-kpis').innerHTML=opsKpiCard_('Registros',items.length)+opsKpiCard_('Técnicos',techs.length)+opsKpiCard_('Pend. cierre',items.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length)+opsKpiCard_('Cerradas',items.filter(x=>x.estatus==='Cerrada').length);
+  $('daily-list').innerHTML=items.length?items.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).map(x=>{
+    const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON),finalSupports=v840FrontParse_(a.apoyosCierreJSON);
+    const actions=x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'
+      ?`<div style="display:flex;gap:7px;margin-top:8px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:'';
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo estimado:</b> ${actFmtMin_(x.tiempoEstimadoMinutos||0)}${a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?' · <b>Efectivo:</b> '+actFmtMin_(a.tiempoEfectivoMinutos):''}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${actions}</div>`;
+  }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Sin actividades declaradas en el periodo.</div>';
+}
+async function closeDailyEngineeringUI(id){
+  const r=await api({action:'closeDailyActivityEngineering',token:SESSION.token,id});
+  if(r.success){toast('Actividad cerrada por Ingeniería. Tiempos de apoyo contabilizados.');loadDailyPlan();}else toast(r.error||'No se pudo cerrar','err');
+}
+async function returnDailyEngineeringUI(id){
+  const comment=prompt('Motivo para devolver la actividad a ejecución:');if(!comment)return;
+  const r=await api({action:'returnDailyActivityEngineering',token:SESSION.token,id,comentario:comment});
+  if(r.success){toast('Actividad devuelta a ejecución');loadDailyPlan();}else toast(r.error||'No se pudo devolver','err');
+}
+
+// ============================================================
+// V8.4.0 — PLATAFORMA
+// ============================================================
+let PLATFORM_CAL=null,PLATFORM_ADMIN_DATA=[];
+const PLATFORM_CHECK_SECTIONS=[
+  {name:'1. REVISIÓN DE LA UNIDAD APAGADA',items:[
+    '1 Llantas y birlos','2 Luces / Estroboscópicos','3a Motor: Mangueras / bandas','3b Motor: Cables / alambres','3c Motor: Escombros / suciedad',
+    '4a Batería(s): Terminales apretadas / limpias','4b Batería(s): Limpia / seca / bien asegurada','5a Hidráulica: Cilindros / barras sin fugas ni daño',
+    '5b Hidráulica: Mangueras / líneas / conexiones','6a Aceite de motor (nivel / goteo)','6b Refrigerante motor (nivel / goteo)',
+    '6c Aceite hidráulico (nivel / goteo)','6d Combustible / batería (nivel / goteo)','7 Inspecciones de equipo actualizadas',
+    '8 Contrapeso / perno del contrapeso','9 Cubierta de paneles','10 Goteras / derrames bajo la plataforma','11 Condición visual general de desgaste',
+    '12 Barandal / tablero de canastilla','13 Porta objetos interno de canastilla']},
+  {name:'2. REVISIÓN DE LA UNIDAD ENCENDIDA',items:[
+    '14 La unidad enciende y opera correctamente','15 Estado de instrumentos e indicadores','16 Luces de trabajo y alarma de traslación',
+    '17 Claxon / dispositivo advertencia audible','18 Nivel de carga de batería','19a Brazo: levanta / baja / extiende / retrae',
+    '19b Rotación de la canastilla','19c En marcha: adelante / reversa','19d Dirección: derecha / izquierda',
+    '19e Plataforma: inclina / rotación / extensión','19f Paros emergencia (canastilla y piso)','19g Frenos de servicio y estacionamiento',
+    '19h Puntos de anclaje de arnés en buen estado']},
+  {name:'3. ASPECTOS GENERALES',items:['20 Limpieza general del equipo','21 Letreros de advertencia / etiquetas / propietario','22 Partes sueltas / faltantes / rotas']},
+  {name:'4. INSPECCIÓN DEL LUGAR DE TRABAJO',items:[
+    '23 LOTO / Bloqueo y etiquetado (si aplica)','24 Desniveles, rampas o agujeros en piso','25 Golpes, zanjas y obstáculos en el suelo',
+    '26 Escombros / material en área de trayecto','27 Obstrucciones superiores / vigas / tuberías','28 Líneas eléctricas aéreas energizadas',
+    '29 Presencia de sustancias o áreas peligrosas','30 Condiciones de apoyo y estabilidad del suelo','31 Cinta / conos de delimitación peatonal',
+    '32 Condiciones de clima y viento aptas','33 Otros posibles riesgos evaluados']},
+  {name:'5. EQUIPO DE PROTECCIÓN PERSONAL',items:['34 Arnés de cuerpo entero en buen estado','35 Línea de vida / amortiguador y ganchos','36 Guantes de seguridad','37 Casco con barbiquejo','38 Lentes de seguridad']}
+];
+function canManagePlatform(){return SESSION&&(SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
+function initPlatformModule(){
+  $('platform-tab-admin').style.display=canManagePlatform()?'':'none';
+  if(!$('platform-date-rows').children.length)addPlatformDateRow();
+  if(!$('platform-check-items').children.length)renderPlatformChecklist();
+  if(!$('pchk-date').value)$('pchk-date').value=new Date().toISOString().slice(0,10);
+  loadPlatformCalendar();
+}
+function showPlatformTab(tab){
+  ['calendar','request','status','checklist','admin'].forEach(t=>{
+    const p=$('platform-panel-'+t),b=$('platform-tab-'+t);
+    if(p)p.style.display=t===tab?'':'none';
+    if(b)b.classList.toggle('active',t===tab);
+  });
+  if(tab==='calendar')loadPlatformCalendar();
+  if(tab==='admin'){if(!canManagePlatform()){showPlatformTab('calendar');return;}loadPlatformAdmin();}
+}
+function addPlatformDateRow(){
+  const box=$('platform-date-rows'),div=document.createElement('div');div.className='plat-date-row';
+  div.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:7px';
+  div.innerHTML=`<input type="date" class="inp plat-date"><input type="time" class="inp plat-start"><input type="time" class="inp plat-end"><button class="btn-red" type="button" onclick="this.parentElement.remove()">X</button>`;
+  box.appendChild(div);
+}
+async function submitPlatformRequestUI(){
+  const dates=[...document.querySelectorAll('.plat-date-row')].map(r=>({date:r.querySelector('.plat-date').value,start:r.querySelector('.plat-start').value,end:r.querySelector('.plat-end').value})).filter(x=>x.date&&x.start&&x.end);
+  if(!$('plat-terms').checked){toast('Debes aceptar el reglamento','err');return;}
+  const r=await api({action:'submitPlatformRequest',nombre:$('plat-name').value,area:$('plat-area').value,areaTrabajo:$('plat-work-area').value,descripcion:$('plat-desc').value,fechas:dates});
+  if(r.success){toast('Solicitud generada: '+r.folio);$('plat-status-folio').value=r.folio;showPlatformTab('status');searchPlatformFolio();loadPlatformCalendar();}
+  else toast(r.error||'No se pudo generar la solicitud','err');
+}
+async function loadPlatformCalendar(){
+  try{
+    const r=await api({action:'getPlatformAvailability'});if(!r.success)return;
+    const events=(r.events||[]).map(x=>({
+      title:x.folio+' · '+x.status,
+      start:x.date+'T'+x.start+':00',end:x.date+'T'+x.end+':00',
+      extendedProps:x
+    }));
+    if(typeof FullCalendar==='undefined'){$('platform-calendar').innerHTML='<p style="color:#64748B">Calendario no disponible sin conexión a la librería. Las solicitudes continúan funcionando.</p>';return;}
+    if(!PLATFORM_CAL){
+      PLATFORM_CAL=new FullCalendar.Calendar($('platform-calendar'),{
+        initialView:'dayGridMonth',locale:'es',height:'auto',
+        headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listMonth'},
+        events:events,eventDidMount:function(info){info.el.title=info.event.title;}
+      });PLATFORM_CAL.render();
+    }else{PLATFORM_CAL.removeAllEvents();PLATFORM_CAL.addEventSource(events);}
+  }catch(e){}
+}
+async function searchPlatformFolio(){
+  const folio=$('plat-status-folio').value.trim();if(!folio)return;
+  const r=await api({action:'getPlatformStatus',folio});
+  if(!r.success){$('plat-status-result').innerHTML=`<div class="card" style="padding:12px;color:#B91C1C">${escapeHtml(r.error||'No encontrado')}</div>`;return;}
+  const x=r.request;
+  $('plat-status-result').innerHTML=`<div class="card" style="padding:14px"><b class="mono">${escapeHtml(x.folio)}</b><div style="margin:6px 0">${dailyStatusBadge_(x.estatus)}</div><div style="font-size:.78rem"><b>Solicitante:</b> ${escapeHtml(x.nombre)} · ${escapeHtml(x.area)}<br><b>Lugar:</b> ${escapeHtml(x.areaTrabajo)}<br><b>Actividad:</b> ${escapeHtml(x.descripcion)}</div><div style="font-size:.72rem;color:#64748B;margin-top:7px">${(x.fechas||[]).map(d=>escapeHtml(d.date+' '+d.start+'-'+d.end)).join('<br>')}</div>${x.ultimoMovimiento?`<div style="margin-top:8px;font-size:.68rem;color:#94A3B8">Último movimiento: ${escapeHtml(x.ultimoMovimiento.accion||'')}</div>`:''}</div>`;
+}
+async function loadPlatformAdmin(){
+  const r=await api({action:'getPlatformRequests',token:SESSION.token});if(!r.success){toast(r.error||'No disponible','err');return;}
+  PLATFORM_ADMIN_DATA=r.requests||[];renderPlatformAdmin();
+}
+function renderPlatformAdmin(){
+  const body=$('platform-admin-body');
+  body.innerHTML=PLATFORM_ADMIN_DATA.length?PLATFORM_ADMIN_DATA.map(x=>{
+    const dates=(x.fechas||[]).map(d=>`${d.date} ${d.start}-${d.end}`).join('<br>');
+    let actions='';
+    const un=String(SESSION.user.username||'').toLowerCase();
+    if(x.estatus==='Pendiente Andrés Ramírez'&&un==='aramirez')actions=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar</button>`;
+    if(x.estatus==='Pendiente Pedro Loya'&&un==='ploya')actions=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar final</button>`;
+    if(x.estatus!=='Cancelada')actions+=` <button class="btn-red" onclick="cancelPlatformUI('${x.id}')">Cancelar</button>`;
+    return `<tr><td><b class="mono">${escapeHtml(x.folio)}</b></td><td>${escapeHtml(x.nombre)}</td><td>${escapeHtml(x.area)}<br><small>${escapeHtml(x.areaTrabajo)}</small></td><td>${escapeHtml(x.descripcion)}</td><td style="font-size:.7rem">${dates}</td><td>${dailyStatusBadge_(x.estatus)}</td><td>${actions}</td></tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;padding:20px;color:#94A3B8">Sin solicitudes</td></tr>';
+}
+async function approvePlatformUI(id){
+  const r=await api({action:'approvePlatformRequest',token:SESSION.token,id});
+  if(r.success){toast('Solicitud actualizada: '+r.estatus);loadPlatformAdmin();loadPlatformCalendar();}else toast(r.error||'No se pudo aprobar','err');
+}
+async function cancelPlatformUI(id){
+  const c=prompt('Comentario de cancelación (opcional):')||'';
+  const r=await api({action:'cancelPlatformRequest',token:SESSION.token,id,comentario:c});
+  if(r.success){toast('Solicitud cancelada');loadPlatformAdmin();loadPlatformCalendar();}else toast(r.error||'No se pudo cancelar','err');
+}
+function renderPlatformChecklist(){
+  const box=$('platform-check-items');let idx=0,html='';
+  PLATFORM_CHECK_SECTIONS.forEach(sec=>{
+    html+=`<div class="platform-check-section">${escapeHtml(sec.name)}</div>`;
+    sec.items.forEach(item=>{
+      idx++;const name='pchk-'+idx;
+      html+=`<div class="platform-check-row"><div>${escapeHtml(item)}</div><label><input type="radio" name="${name}" value="BIEN"></label><label><input type="radio" name="${name}" value="MAL"></label><label><input type="radio" name="${name}" value="N/A"></label></div>`;
+    });
+  });
+  box.innerHTML=html;
+}
+function printPlatformChecklist(){
+  const area=$('platform-check-print');if(!area)return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Checklist Plataforma KTMEX</title><style>body{font-family:Arial,sans-serif;padding:16px;color:#111;font-size:11px}input,textarea{border:0;border-bottom:1px solid #999;font-size:11px}.platform-check-row{display:grid;grid-template-columns:1fr 55px 55px 55px;gap:4px;padding:4px;border-bottom:1px solid #ccc}.platform-check-row.head{font-weight:bold;background:#eee}.platform-check-section{font-weight:bold;background:#dbe5f1;padding:5px;margin-top:8px}.card{border:0}.btn-p{display:none}</style></head><body>${area.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();
+}
+
 
 // ── Inventario (técnicos) ──────────────────────────────────────
 let INV_DATA = [];
@@ -4845,7 +5336,8 @@ function renderOperationsAnalytics(){
     opsKpiCard_('Tiempo efectivo',opsFmtMin_(tk.tiempoEfectivoMin||0)),
     opsKpiCard_('Tiempo pausado',opsFmtMin_(tk.tiempoPausaMin||0)),
     opsKpiCard_('Espera material',opsFmtMin_(tk.esperaMaterialMin||0)),
-    opsKpiCard_('Apoyo técnico',opsFmtMin_(tk.apoyoTecnicoMin||0),'Registro explícito')
+    opsKpiCard_('Apoyo técnico',opsFmtMin_(tk.apoyoTecnicoMin||0),'Registro explícito'),
+    opsKpiCard_('Tiempo como apoyo',opsFmtMin_(tk.tiempoApoyoMin||0),'Validado por Ingeniería')
   ].join('');
 
   const items=tech.items||[];
@@ -4885,10 +5377,13 @@ function renderOperationsAnalytics(){
     <td>${escapeHtml(opsFmtMin_(x.promedioPausaMin||0))}</td>
     <td>${escapeHtml(opsFmtMin_(x.esperaMaterialMin||0))}</td>
     <td>${escapeHtml(opsFmtMin_(x.apoyoTecnicoMin||0))}</td>
+    <td>${x.participacionesApoyo||0}</td>
+    <td>${escapeHtml(opsFmtMin_(x.tiempoApoyoMin||0))}</td>
+    <td>${escapeHtml(opsFmtMin_(x.tiempoContribucionMin||0))}</td>
     <td>${Number(x.tiempoActivoPct||0).toFixed(1)}%</td>
     <td>${Number(x.tasaFinalizacionPct||0).toFixed(1)}%</td>
     <td>${x.inconformidades||0}</td>
-  </tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:18px">Sin actividades en el periodo.</td></tr>';
+  </tr>`).join(''):'<tr><td colspan="13" style="text-align:center;color:#94A3B8;padding:18px">Sin actividades en el periodo.</td></tr>';
 
   showOpsAnalyticsSubtab('check');
 }
@@ -5377,7 +5872,7 @@ function openSolicitudModal(id) {
     ? ['Cerrada','En ejecución']
     : ESTATUS_MANUAL;
   $('ms-estatus').innerHTML='<option value="">— '+uiText('Sin cambio')+' —</option>'+
-    opcionesEstatus.map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('');
+    opcionesEstatus.map(st=>`<option value="${st}">${r.estatus==='Pendiente de cierre por Ingeniería'?(st==='Cerrada'?'Aprobar cierre':st==='En ejecución'?'Devolver a ejecución':statusLabel(st)):statusLabel(st)}</option>`).join('');
 
   // Save button only exists during post-manager execution management.
   $('btn-ms-save').style.display=(engExecution||adminExecution)?'':'none';
@@ -5714,6 +6209,7 @@ function openCompraModalDesde(event, id, origen) {
   $('mc-badges').innerHTML = `<span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad}</span>` + compraBadge(r.estatus);
   $('mc-comment').value = '';
   configureCompraWorkflowUI(r);
+  renderCompraCotizaciones(r);
 
   renderCompraHistorial(r);
   $('modal-compra').style.display = 'flex';
@@ -5784,7 +6280,7 @@ function init() {
   DEPARTAMENTOS.forEach(d=>{ const o=document.createElement('option'); o.value=o.textContent=d; $('fs-depto').appendChild(o); });
 
   // Close modals on overlay
-  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-qr','modal-acc','modal-tech-notice','modal-notification'].forEach(id=>{
+  ['modal-sol','modal-compra','modal-act-foto','modal-act-nueva','modal-act-support','modal-qr','modal-acc','modal-tech-notice','modal-notification'].forEach(id=>{
     $(id).addEventListener('click',e=>{ if(e.target===$(id)) closeModal(id); });
   });
 
