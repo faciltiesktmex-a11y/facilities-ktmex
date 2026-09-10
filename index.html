@@ -1507,6 +1507,7 @@ const LPA_AREAS = {
       <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
       <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
       <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')">Inventario <span id="inv-alert-dot" style="display:none;background:#EF4444;color:#fff;border-radius:8px;padding:1px 6px;font-size:.68rem;margin-left:4px"></span></button>
+      <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')" style="display:none"><i class="fas fa-chart-column" style="margin-right:5px"></i>Analítica</button>
     </div>
 
     <!-- TAB: Solicitudes -->
@@ -1637,6 +1638,111 @@ const LPA_AREAS = {
           <option value="">— Selecciona material / refacción —</option>
         </select>
         <div id="admin-inv-detail" style="display:none;margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Analítica Operativa — solo Ingeniería y técnico administrador -->
+    <div id="panel-analytics" style="display:none">
+      <div class="card" style="padding:14px 16px;margin-bottom:14px;border:1.5px solid #BFDBFE;background:#F8FBFF">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <h3 style="font-size:1rem;color:#0F2A4A;margin:0 0 3px"><i class="fas fa-chart-line" style="margin-right:7px;color:#2563EB"></i>Analítica operativa Facilities</h3>
+            <p style="font-size:.73rem;color:#64748B;margin:0">Visible únicamente para Ingenieros Facilities y el técnico administrador. Los indicadores separan tiempo efectivo de tiempos de espera.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div>
+              <label style="display:block;font-size:.68rem;font-weight:700;color:#64748B;margin-bottom:4px">Periodo</label>
+              <input id="ops-analytics-month" type="month" class="inp" style="width:auto;padding:8px 10px">
+            </div>
+            <button class="btn-p" onclick="loadOperationsAnalytics()" style="width:auto;padding:9px 14px"><i class="fas fa-rotate" style="margin-right:6px"></i>Actualizar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="ops-analytics-loading" class="card" style="display:none;padding:18px;text-align:center;color:#64748B;margin-bottom:14px">
+        <i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Calculando indicadores…
+      </div>
+
+      <div id="ops-analytics-content" style="display:none">
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+          <button id="ops-subtab-check" class="btn-p" onclick="showOpsAnalyticsSubtab('check')" style="width:auto">Checklists de cuartos</button>
+          <button id="ops-subtab-tech" class="btn-g" onclick="showOpsAnalyticsSubtab('tech')" style="width:auto">Actividades de técnicos</button>
+        </div>
+
+        <!-- CHECKLIST ANALYTICS -->
+        <div id="ops-panel-check">
+          <div id="ops-check-kpis" style="display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-bottom:14px"></div>
+
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Cumplimiento por área</h4>
+              <div style="height:260px"><canvas id="ops-chart-check-area"></canvas></div>
+            </div>
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">NG por área</h4>
+              <div style="height:260px"><canvas id="ops-chart-check-ng"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:14px;margin-bottom:14px">
+            <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tendencia diaria de cumplimiento</h4>
+            <div style="height:260px"><canvas id="ops-chart-check-daily"></canvas></div>
+          </div>
+
+          <div class="card" style="padding:14px">
+            <div style="display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:10px">
+              <div style="flex:1;min-width:280px">
+                <label style="display:block;font-size:.68rem;font-weight:700;color:#64748B;margin-bottom:4px">Variable numérica del checklist</label>
+                <select id="ops-numeric-point" class="inp" onchange="drawOpsNumericTrend()"></select>
+              </div>
+            </div>
+            <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tendencia de lecturas capturadas</h4>
+            <div style="height:280px"><canvas id="ops-chart-numeric"></canvas></div>
+          </div>
+        </div>
+
+        <!-- TECHNICIAN ANALYTICS -->
+        <div id="ops-panel-tech" style="display:none">
+          <div id="ops-tech-kpis" style="display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:10px;margin-bottom:14px"></div>
+
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Promedio por actividad: tiempo efectivo vs pausa</h4>
+              <div style="height:300px"><canvas id="ops-chart-tech-time"></canvas></div>
+            </div>
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tiempo pausado por motivo</h4>
+              <div style="height:300px"><canvas id="ops-chart-pause-reasons"></canvas></div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tiempo activo por técnico</h4>
+              <p style="font-size:.68rem;color:#64748B;margin:-5px 0 8px">Tiempo efectivo ÷ (tiempo efectivo + pausas). No es una calificación automática de desempeño.</p>
+              <div style="height:300px"><canvas id="ops-chart-active-pct"></canvas></div>
+            </div>
+            <div class="card" style="padding:14px">
+              <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Finalización de actividades</h4>
+              <div style="height:300px"><canvas id="ops-chart-finish-pct"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:14px;overflow:auto">
+            <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Detalle por técnico</h4>
+            <table style="width:100%;border-collapse:collapse;min-width:980px;font-size:.72rem">
+              <thead><tr>
+                <th>Técnico</th><th>Actividades</th><th>Finalizadas</th><th>Prom. efectivo</th><th>Prom. pausa</th>
+                <th>Espera material</th><th>Apoyo técnico/capacitación</th><th>Tiempo activo</th><th>Finalización</th><th>Inconformidades</th>
+              </tr></thead>
+              <tbody id="ops-tech-table"></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="padding:12px 14px;margin-top:14px;background:#FFFBEB;border:1px solid #FDE68A">
+            <p style="font-size:.72rem;color:#92400E;margin:0"><b>Interpretación:</b> el sistema no deduce “falta de habilidad” por tardar más tiempo. El indicador de apoyo técnico/capacitación solo aumenta cuando el técnico registra explícitamente ese motivo de pausa. Esto evita confundir trabajos complejos con falta de capacidad.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1917,7 +2023,7 @@ const LPA_AREAS = {
     <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Motivo de la pausa *</label>
     <select id="act-pausa-motivo" class="inp" style="margin-bottom:12px">
       <option value="">— Selecciona —</option>
-      <option>Espera de material</option><option>Espera de proveedor</option><option>Espera de producción</option><option>Falta de acceso al área</option><option>Falta de información</option><option>Prioridad / emergencia diferente</option><option>Otro</option>
+      <option>Espera de material</option><option>Espera de proveedor</option><option>Espera de producción</option><option>Falta de acceso al área</option><option>Falta de información</option><option>Prioridad / emergencia diferente</option><option>Requiere apoyo técnico / capacitación</option><option>Otro</option>
     </select>
     <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Comentario *</label>
     <textarea id="act-pausa-comentario" class="inp" rows="3" placeholder="Explica brevemente por qué se pausa la actividad…"></textarea>
@@ -2018,6 +2124,7 @@ const LPA_AREAS = {
 <!-- V8.2.9 · KPIs del Dashboard dinámicos por Solicitudes/Compras -->
 <!-- V8.2.10 · búsqueda flexible visible en inventario del administrador -->
 <!-- V8.2.11 · checklists: lecturas dependientes deshabilitadas en reserva/standby -->
+<!-- V8.3.0 · Analítica operativa restringida: checklists + técnicos -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -2046,6 +2153,11 @@ try{
 const ADMIN_PRIVILEGED_USERS = ['jpatlan'];
 function hasAdminPrivilege(){
   return !!SESSION && ADMIN_PRIVILEGED_USERS.includes(String(SESSION.user?.username||'').toLowerCase());
+}
+
+function canViewOperationsAnalytics(){
+  if(!SESSION)return false;
+  return SESSION.user?.rol==='ingeniero' || (SESSION.user?.rol==='tecnico' && hasAdminPrivilege());
 }
 
 
@@ -2232,6 +2344,7 @@ const TEXT_I18N = {
   'Pausar actividad':'Pause Activity',
   'Reanudar actividad':'Resume Activity',
   'Motivo de la pausa *':'Pause Reason *',
+  'Requiere apoyo técnico / capacitación':'Requires technical support / training',
   'Comentario *':'Comment *',
   'Solicitado por':'Requested by',
   'Área solicitante':'Requesting Area',
@@ -4563,8 +4676,11 @@ async function registrarEntradaQR() {
 
 // ── Admin ────────────────────────────────────────────────────
 function configureManagerDashboardTabs(){
-  if(SESSION?.user?.rol!=='manager')return;
+  const role=SESSION?.user?.rol||'';
+  if($('tab-analytics'))$('tab-analytics').style.display=canViewOperationsAnalytics()?'':'none';
+  if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
+  if($('tab-analytics'))$('tab-analytics').style.display='none';
   ['tab-sol','tab-compra','tab-lpa','tab-acc'].forEach(id=>{if($(id))$(id).style.display='';});
 }
 function switchTab(tab) {
@@ -4572,21 +4688,23 @@ function switchTab(tab) {
     toast('El inventario no está disponible para Manager en este panel.','err');
     tab='sol';
   }
-  ['sol','compra','lpa','acc','inv'].forEach(t=>{
+  if(tab==='analytics'&&!canViewOperationsAnalytics()){
+    toast('La analítica operativa está disponible únicamente para Ingeniería y el técnico administrador.','err');
+    tab='sol';
+  }
+  ['sol','compra','lpa','acc','inv','analytics'].forEach(t=>{
     const tb=$('tab-'+t),pn=$('panel-'+t);
     if(tb)tb.classList.toggle('active',t===tab);
     if(pn)pn.style.display=t===tab?'':'none';
   });
 
-  // V8.2.9: los KPIs del dashboard cambian con la pestaña seleccionada.
-  // Solicitudes muestra únicamente cantidades de solicitudes de trabajo.
-  // Compras muestra únicamente cantidades de solicitudes de compra.
   renderDashboardKPIs_(tab);
 
   if(tab==='compra'&&COMPRA_DATA.length===0)loadCompras();
   if(tab==='lpa'&&Object.keys(LPA_DATA).length===0)loadLPA();
   if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
   if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
+  if(tab==='analytics')loadOperationsAnalytics();
 }
 
 async function refreshAdmin() {
@@ -4604,6 +4722,197 @@ async function refreshAdmin() {
     return;
   }
   await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
+}
+
+
+let OPS_ANALYTICS_DATA=null;
+let OPS_ANALYTICS_CHARTS={};
+
+function opsDestroyChart_(key){
+  try{if(OPS_ANALYTICS_CHARTS[key])OPS_ANALYTICS_CHARTS[key].destroy();}catch(e){}
+  OPS_ANALYTICS_CHARTS[key]=null;
+}
+function opsFmtMin_(m){
+  const n=Math.max(0,Math.round(Number(m)||0));
+  if(n<60)return n+' min';
+  const h=Math.floor(n/60),r=n%60;
+  return h+' h'+(r?' '+r+' min':'');
+}
+function opsShortDate_(v){
+  const s=String(v||''),m=s.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return m?m[2]+'/'+m[1]:s;
+}
+function opsKpiCard_(label,value,sub){
+  return `<div class="card" style="padding:12px 13px"><div style="font-size:.65rem;color:#64748B;font-weight:700;text-transform:uppercase">${escapeHtml(label)}</div><div style="font-size:1.35rem;font-weight:800;color:#0F2A4A;margin-top:3px">${escapeHtml(String(value))}</div>${sub?`<div style="font-size:.64rem;color:#94A3B8;margin-top:2px">${escapeHtml(sub)}</div>`:''}</div>`;
+}
+function opsChartDefaults_(title){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom'},title:{display:false,text:title||''}},
+    scales:{y:{beginAtZero:true}}
+  };
+}
+function opsCreateBar_(key,canvasId,labels,datasets,opts){
+  opsDestroyChart_(key);
+  const c=$(canvasId);if(!c||typeof Chart==='undefined')return;
+  OPS_ANALYTICS_CHARTS[key]=new Chart(c,{
+    type:'bar',
+    data:{labels:labels,datasets:datasets},
+    options:Object.assign(opsChartDefaults_(),opts||{})
+  });
+}
+function opsCreateLine_(key,canvasId,labels,datasets,opts){
+  opsDestroyChart_(key);
+  const c=$(canvasId);if(!c||typeof Chart==='undefined')return;
+  OPS_ANALYTICS_CHARTS[key]=new Chart(c,{
+    type:'line',
+    data:{labels:labels,datasets:datasets},
+    options:Object.assign(opsChartDefaults_(),opts||{})
+  });
+}
+
+async function loadOperationsAnalytics(){
+  if(!SESSION||!canViewOperationsAnalytics())return;
+  if(!navigator.onLine){toast('La analítica requiere conexión.','err');return;}
+
+  const monthEl=$('ops-analytics-month');
+  if(monthEl&&!monthEl.value)monthEl.value=new Date().toISOString().slice(0,7);
+  const month=monthEl?monthEl.value:new Date().toISOString().slice(0,7);
+
+  if($('ops-analytics-loading'))$('ops-analytics-loading').style.display='';
+  if($('ops-analytics-content'))$('ops-analytics-content').style.display='none';
+
+  try{
+    const r=await api({action:'getOperationsAnalyticsDashboard',token:SESSION.token,month});
+    if(!r.success){toast(r.error||'No se pudo cargar la analítica.','err');return;}
+    OPS_ANALYTICS_DATA=r;
+    renderOperationsAnalytics();
+  }catch(e){
+    toast('Error al cargar analítica: '+e.message,'err');
+  }finally{
+    if($('ops-analytics-loading'))$('ops-analytics-loading').style.display='none';
+  }
+}
+
+function renderOperationsAnalytics(){
+  const r=OPS_ANALYTICS_DATA;if(!r)return;
+  if($('ops-analytics-content'))$('ops-analytics-content').style.display='';
+
+  const ck=r.checklist||{}, k=ck.kpis||{};
+  $('ops-check-kpis').innerHTML=[
+    opsKpiCard_('Inspecciones',k.inspecciones||0),
+    opsKpiCard_('Cumplimiento',Number(k.cumplimiento||0).toFixed(1)+'%'),
+    opsKpiCard_('OK',k.ok||0),
+    opsKpiCard_('NG',k.ng||0),
+    opsKpiCard_('Standby / omitidos',k.standby||0,'No penalizan')
+  ].join('');
+
+  const areas=ck.porArea||[];
+  opsCreateBar_('checkArea','ops-chart-check-area',
+    areas.map(x=>x.area),
+    [{label:'Cumplimiento %',data:areas.map(x=>Number(x.cumplimiento||0))}],
+    {scales:{y:{beginAtZero:true,max:100}}}
+  );
+  opsCreateBar_('checkNg','ops-chart-check-ng',
+    areas.map(x=>x.area),
+    [{label:'NG',data:areas.map(x=>Number(x.ng||0))}],
+    {scales:{y:{beginAtZero:true}}}
+  );
+
+  const daily=ck.diario||[];
+  opsCreateLine_('checkDaily','ops-chart-check-daily',
+    daily.map(x=>opsShortDate_(x.fecha)),
+    [{label:'Cumplimiento %',data:daily.map(x=>Number(x.cumplimiento||0)),tension:.25,fill:false}],
+    {scales:{y:{beginAtZero:true,max:100}}}
+  );
+
+  const numeric=ck.numericSeries||[],sel=$('ops-numeric-point');
+  if(sel){
+    const prev=sel.value;
+    sel.innerHTML=numeric.length?numeric.map((x,i)=>{
+      const label=[x.area,x.equipo,x.parametro,x.unidad?`(${x.unidad})`:''].filter(Boolean).join(' · ');
+      return `<option value="${i}">${escapeHtml(label)}</option>`;
+    }).join(''):'<option value="">Sin variables numéricas en el periodo</option>';
+    if(prev&&Number(prev)<numeric.length)sel.value=prev;
+  }
+  drawOpsNumericTrend();
+
+  const tech=r.tecnicos||{}, tk=tech.kpis||{};
+  $('ops-tech-kpis').innerHTML=[
+    opsKpiCard_('Actividades',tk.actividades||0),
+    opsKpiCard_('Finalizadas',tk.finalizadas||0),
+    opsKpiCard_('Tiempo efectivo',opsFmtMin_(tk.tiempoEfectivoMin||0)),
+    opsKpiCard_('Tiempo pausado',opsFmtMin_(tk.tiempoPausaMin||0)),
+    opsKpiCard_('Espera material',opsFmtMin_(tk.esperaMaterialMin||0)),
+    opsKpiCard_('Apoyo técnico',opsFmtMin_(tk.apoyoTecnicoMin||0),'Registro explícito')
+  ].join('');
+
+  const items=tech.items||[];
+  opsCreateBar_('techTime','ops-chart-tech-time',
+    items.map(x=>x.tecnico),
+    [
+      {label:'Prom. efectivo (min)',data:items.map(x=>Number(x.promedioEfectivoMin||0))},
+      {label:'Prom. pausa (min)',data:items.map(x=>Number(x.promedioPausaMin||0))}
+    ],
+    {indexAxis:'y',scales:{x:{beginAtZero:true},y:{beginAtZero:true}}}
+  );
+
+  const reasons=tech.pausasPorMotivo||[];
+  opsCreateBar_('pauseReasons','ops-chart-pause-reasons',
+    reasons.map(x=>x.motivo),
+    [{label:'Minutos',data:reasons.map(x=>Number(x.minutos||0))}],
+    {indexAxis:'y',scales:{x:{beginAtZero:true},y:{beginAtZero:true}}}
+  );
+
+  opsCreateBar_('activePct','ops-chart-active-pct',
+    items.map(x=>x.tecnico),
+    [{label:'Tiempo activo %',data:items.map(x=>Number(x.tiempoActivoPct||0))}],
+    {indexAxis:'y',scales:{x:{beginAtZero:true,max:100},y:{beginAtZero:true}}}
+  );
+
+  opsCreateBar_('finishPct','ops-chart-finish-pct',
+    items.map(x=>x.tecnico),
+    [{label:'Finalización %',data:items.map(x=>Number(x.tasaFinalizacionPct||0))}],
+    {indexAxis:'y',scales:{x:{beginAtZero:true,max:100},y:{beginAtZero:true}}}
+  );
+
+  $('ops-tech-table').innerHTML=items.length?items.map(x=>`<tr>
+    <td><b>${escapeHtml(x.tecnico)}</b></td>
+    <td>${x.actividades||0}</td>
+    <td>${x.finalizadas||0}</td>
+    <td>${escapeHtml(opsFmtMin_(x.promedioEfectivoMin||0))}</td>
+    <td>${escapeHtml(opsFmtMin_(x.promedioPausaMin||0))}</td>
+    <td>${escapeHtml(opsFmtMin_(x.esperaMaterialMin||0))}</td>
+    <td>${escapeHtml(opsFmtMin_(x.apoyoTecnicoMin||0))}</td>
+    <td>${Number(x.tiempoActivoPct||0).toFixed(1)}%</td>
+    <td>${Number(x.tasaFinalizacionPct||0).toFixed(1)}%</td>
+    <td>${x.inconformidades||0}</td>
+  </tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:18px">Sin actividades en el periodo.</td></tr>';
+
+  showOpsAnalyticsSubtab('check');
+}
+function drawOpsNumericTrend(){
+  const r=OPS_ANALYTICS_DATA,sel=$('ops-numeric-point');if(!r||!sel)return;
+  const numeric=r.checklist?.numericSeries||[];
+  const idx=Number(sel.value||0),p=numeric[idx];
+  if(!p){
+    opsDestroyChart_('numeric');
+    return;
+  }
+  const serie=p.serie||[];
+  opsCreateLine_('numeric','ops-chart-numeric',
+    serie.map(x=>opsShortDate_(x.fecha)),
+    [{label:(p.parametro||'Lectura')+(p.unidad?' ('+p.unidad+')':''),data:serie.map(x=>Number(x.valor||0)),tension:.2,fill:false}],
+    {scales:{y:{beginAtZero:false}}}
+  );
+}
+function showOpsAnalyticsSubtab(tab){
+  const check=tab==='check';
+  if($('ops-panel-check'))$('ops-panel-check').style.display=check?'':'none';
+  if($('ops-panel-tech'))$('ops-panel-tech').style.display=check?'none':'';
+  if($('ops-subtab-check'))$('ops-subtab-check').className=check?'btn-p':'btn-g';
+  if($('ops-subtab-tech'))$('ops-subtab-tech').className=check?'btn-g':'btn-p';
 }
 
 let ADMIN_INV_DATA=[];
