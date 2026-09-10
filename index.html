@@ -1452,23 +1452,27 @@ const LPA_AREAS = {
     </div>
   </div>
 
+  <div id="daily-mode-tabs" style="display:none;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+    <button id="daily-mode-own" class="btn-p" onclick="setDailyMode('own')" style="width:auto"><i class="fas fa-user" style="margin-right:5px"></i>Mi plan</button>
+    <button id="daily-mode-admin" class="btn-g" onclick="setDailyMode('admin')" style="width:auto"><i class="fas fa-users-gear" style="margin-right:5px"></i>Supervisión</button>
+  </div>
+
   <div id="daily-tech-form" class="card" style="padding:18px;margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px">
       <div><h3 style="font-size:.92rem;font-weight:800;margin:0;color:#334155">Declarar actividad del día</h3><p style="font-size:.7rem;color:#94A3B8;margin:2px 0 0">Puedes registrar más de 3. El mínimo diario es 3.</p></div>
       <span id="daily-progress" class="badge b-ejec">0 / 3</span>
     </div>
-    <div id="daily-form-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px">
+    <div id="daily-form-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:9px">
       <input id="daily-desc" class="inp" placeholder="Descripción de la actividad *">
       <input id="daily-category" class="inp" placeholder="Categoría (preventivo, correctivo...)">
       <input id="daily-area" class="inp" placeholder="Área *">
-      <input id="daily-estimate" class="inp" type="number" min="1" placeholder="Tiempo estimado (min) *">
     </div>
     <div style="margin-top:10px">
       <label style="display:block;font-size:.72rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo previstos (opcional)</label>
       <div style="display:flex;gap:7px"><select id="support-daily-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('daily')">Agregar</button></div>
       <div id="support-daily-list" style="margin-top:5px"></div>
     </div>
-    <p style="font-size:.68rem;color:#94A3B8;margin:8px 0">El tiempo estimado se utilizará únicamente en la analítica visible para Ingeniería y el técnico administrador.</p>
+    <p style="font-size:.68rem;color:#64748B;margin:8px 0"><i class="fas fa-clock" style="margin-right:4px"></i>El sistema calcula el tiempo real desde que inicias hasta que terminas, descontando las pausas. Si vas a cambiar temporalmente a otra actividad, pausa primero la actual.</p>
     <button class="btn-p" onclick="createDailyActivityUI()" style="margin-top:6px;background:#EA580C"><i class="fas fa-plus" style="margin-right:5px"></i>Agregar actividad diaria</button>
   </div>
 
@@ -1885,7 +1889,7 @@ const LPA_AREAS = {
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
             <div class="card" style="padding:14px">
               <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tiempo activo por técnico</h4>
-              <p style="font-size:.68rem;color:#64748B;margin:-5px 0 8px">Tiempo efectivo ÷ (tiempo efectivo + pausas). No es una calificación automática de desempeño.</p>
+              <p style="font-size:.68rem;color:#64748B;margin:-5px 0 8px">Tiempo efectivo ÷ (tiempo efectivo + pausas no productivas). Las pausas por cambio a otra actividad no penalizan este indicador.</p>
               <div style="height:300px"><canvas id="ops-chart-active-pct"></canvas></div>
             </div>
             <div class="card" style="padding:14px">
@@ -2198,7 +2202,7 @@ const LPA_AREAS = {
     <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Motivo de la pausa *</label>
     <select id="act-pausa-motivo" class="inp" style="margin-bottom:12px">
       <option value="">— Selecciona —</option>
-      <option>Espera de material</option><option>Espera de proveedor</option><option>Espera de producción</option><option>Falta de acceso al área</option><option>Falta de información</option><option>Prioridad / emergencia diferente</option><option>Requiere apoyo técnico / capacitación</option><option>Otro</option>
+      <option>Espera de material</option><option>Espera de proveedor</option><option>Espera de producción</option><option>Falta de acceso al área</option><option>Falta de información</option><option>Cambio a otra actividad / prioridad operativa</option><option>Prioridad / emergencia diferente</option><option>Requiere apoyo técnico / capacitación</option><option>Otro</option>
     </select>
     <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px">Comentario *</label>
     <textarea id="act-pausa-comentario" class="inp" rows="3" placeholder="Explica brevemente por qué se pausa la actividad…"></textarea>
@@ -2314,6 +2318,7 @@ const LPA_AREAS = {
 <!-- V8.2.11 · checklists: lecturas dependientes deshabilitadas en reserva/standby -->
 <!-- V8.3.0 · Analítica operativa restringida: checklists + técnicos -->
 <!-- V8.4.0 · cotizaciones Compras + Plan Diario + apoyos compartidos + galería/cámara + Plataforma -->
+<!-- V8.4.1 · Plan Diario sin estimado + un cronómetro activo + técnico administrador carga plan -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -2534,6 +2539,7 @@ const TEXT_I18N = {
   'Reanudar actividad':'Resume Activity',
   'Motivo de la pausa *':'Pause Reason *',
   'Requiere apoyo técnico / capacitación':'Requires technical support / training',
+  'Cambio a otra actividad / prioridad operativa':'Switch to another activity / operational priority',
   'Comentario *':'Comment *',
   'Solicitado por':'Requested by',
   'Área solicitante':'Requesting Area',
@@ -3041,6 +3047,7 @@ function goActividades() {
 function goPlanDiario(){
   if(!requireLogin('daily'))return;
   if(!['tecnico','ingeniero'].includes(SESSION.user.rol)){toast('Plan Diario disponible para Técnicos e Ingeniería Facilities.','err');return;}
+  DAILY_MODE=SESSION.user.rol==='tecnico'?'own':'admin';
   showView('daily');loadDailyPlan();
 }
 function goPlataforma(){
@@ -4433,53 +4440,97 @@ async function saveActiveSupport(){
 // V8.4.0 — PLAN DIARIO
 // ============================================================
 let DAILY_DATA=[];
-function canViewDailyAdmin_(){return SESSION&&(SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
+let DAILY_MODE='own';
+
+function canViewDailyAdmin_(){return !!SESSION && (SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
+function setDailyMode(mode){
+  if(mode==='admin'&&!canViewDailyAdmin_())mode='own';
+  if(mode==='own'&&SESSION?.user?.rol!=='tecnico')mode='admin';
+  DAILY_MODE=mode;
+  if($('daily-mode-own'))$('daily-mode-own').className=mode==='own'?'btn-p':'btn-g';
+  if($('daily-mode-admin'))$('daily-mode-admin').className=mode==='admin'?'btn-p':'btn-g';
+  loadDailyPlan();
+}
+function dailyLiveMinutes_(a){
+  if(!a||!a.horaInicio)return 0;
+  const start=new Date(a.horaInicio).getTime();if(!isFinite(start))return 0;
+  let end=Date.now();
+  if(a.horaCierre){const x=new Date(a.horaCierre).getTime();if(isFinite(x))end=x;}
+  let pause=Number(a.minutosPausaAcumulados)||0;
+  if(a.estatusActividad==='Pausada'&&a.horaPausaActual){
+    const ps=new Date(a.horaPausaActual).getTime();
+    if(isFinite(ps))pause+=Math.max(0,Math.round((end-ps)/60000));
+  }
+  return Math.max(0,Math.round((end-start)/60000)-pause);
+}
 async function loadDailyPlan(){
   if(!SESSION)return;
-  const admin=canViewDailyAdmin_();
-  $('daily-tech-form').style.display=SESSION.user.rol==='tecnico'&&!hasAdminPrivilege()?'':'none';
-  $('daily-admin-month-wrap').style.display=admin?'':'none';
+  const isTech=SESSION.user.rol==='tecnico';
+  const canAdmin=canViewDailyAdmin_();
 
-  if(admin){
-    if(!$('daily-admin-month').value)$('daily-admin-month').value=new Date().toISOString().slice(0,7);
-    const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,month:$('daily-admin-month').value});
-    if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
-    DAILY_DATA=r.items||[];renderDailyAdmin();
+  if(isTech&&canAdmin){
+    $('daily-mode-tabs').style.display='flex';
   }else{
+    $('daily-mode-tabs').style.display='none';
+    DAILY_MODE=isTech?'own':'admin';
+  }
+
+  if(DAILY_MODE==='own'){
+    if(!isTech){DAILY_MODE='admin';return loadDailyPlan();}
+    $('daily-tech-form').style.display='';
+    $('daily-admin-month-wrap').style.display='none';
     const r=await api({action:'getDailyActivities',token:SESSION.token});
     if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
     DAILY_DATA=r.items||[];
     $('daily-progress').textContent=(r.total||0)+' / '+(r.minimo||3);
     $('daily-progress').className='badge '+((r.total||0)>=3?'b-done':'b-ejec');
     renderDailyTech(r);
-    resetSupportPicker('daily');
+    if(!SUPPORT_STATE.daily.length)resetSupportPicker('daily');
+  }else{
+    $('daily-tech-form').style.display='none';
+    $('daily-admin-month-wrap').style.display=canAdmin?'':'none';
+    if(!canAdmin){toast('No tienes acceso a la supervisión del Plan Diario.','err');DAILY_MODE='own';return loadDailyPlan();}
+    if(!$('daily-admin-month').value)$('daily-admin-month').value=new Date().toISOString().slice(0,7);
+    const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,month:$('daily-admin-month').value});
+    if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
+    DAILY_DATA=r.items||[];
+    renderDailyAdmin();
   }
 }
 async function createDailyActivityUI(){
-  const desc=$('daily-desc').value.trim(),cat=$('daily-category').value.trim(),area=$('daily-area').value.trim(),est=Number($('daily-estimate').value||0);
-  if(!desc||!area||est<=0){toast('Completa descripción, área y tiempo estimado','err');return;}
-  const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tiempoEstimadoMinutos:est,tecnicosApoyo:SUPPORT_STATE.daily});
-  if(r.success){$('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';$('daily-estimate').value='';resetSupportPicker('daily');toast('Actividad diaria declarada · '+r.totalDia+'/3');loadDailyPlan();}
+  const desc=$('daily-desc').value.trim(),cat=$('daily-category').value.trim(),area=$('daily-area').value.trim();
+  if(!desc||!area){toast('Completa descripción y área','err');return;}
+  const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tecnicosApoyo:SUPPORT_STATE.daily});
+  if(r.success){$('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';resetSupportPicker('daily');toast('Actividad diaria declarada · '+r.totalDia+'/3');loadDailyPlan();}
   else toast(r.error||'No se pudo crear','err');
 }
 function dailyStatusBadge_(s){
-  const cls=s==='Cerrada'?'b-done':s==='Pendiente de cierre por Ingeniería'?'b-mgr':s==='En curso'?'b-ejec':'b-pend';
+  const cls=s==='Cerrada'?'b-done':s==='Pendiente de cierre por Ingeniería'?'b-mgr':s==='En curso'?'b-ejec':s==='Pausada'?'b-wait':'b-pend';
   return `<span class="badge ${cls}">${escapeHtml(s||'')}</span>`;
 }
 function renderDailyTech(r){
   const total=r.total||0;
   $('daily-kpis').innerHTML=opsKpiCard_('Actividades declaradas',total,total>=3?'Mínimo cumplido':'Faltan '+Math.max(0,3-total))+
     opsKpiCard_('Pendientes de iniciar',DAILY_DATA.filter(x=>x.estatus==='Declarada'||x.estatus==='Devuelta por Ingeniería').length)+
-    opsKpiCard_('En curso',DAILY_DATA.filter(x=>x.estatus==='En curso').length)+
+    opsKpiCard_('En curso',DAILY_DATA.filter(x=>x.actividad?.estatusActividad==='En curso').length)+
+    opsKpiCard_('Pausadas',DAILY_DATA.filter(x=>x.actividad?.estatusActividad==='Pausada'||x.actividad?.estatusActividad==='En espera de material').length)+
     opsKpiCard_('Pend. cierre Ingeniería',DAILY_DATA.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length);
+
   $('daily-list').innerHTML=DAILY_DATA.length?DAILY_DATA.map(x=>{
     const a=x.actividad||null,supports=a?parseActSupports_(a):v840FrontParse_(x.tecnicosApoyoJSON);
     let actions='';
     if(['Declarada','Devuelta por Ingeniería'].includes(x.estatus))actions=`<button class="btn-p" onclick='openDailyStartModal("${x.id}","${x.folio}",${JSON.stringify(supports)})'>Iniciar</button>`;
-    else if(x.estatus==='En curso'&&a)actions=`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${x.folio}',true)">Terminar</button><button class="btn-g" onclick="openPausaActividadModal('${a.id}','${x.folio}')">Pausar</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
-    else if(a?.estatusActividad==='Pausada')actions=`<button class="btn-p" onclick="reanudarActividadPausa('${a.id}');setTimeout(loadDailyPlan,500)">Reanudar</button> <button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')">Apoyos</button>`;
+    else if(a?.estatusActividad==='En curso')actions=`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${x.folio}',true)">Terminar</button><button class="btn-g" onclick="openPausaActividadModal('${a.id}','${x.folio}')"><i class="fas fa-pause" style="margin-right:4px"></i>Pausar / cambiar de actividad</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
+    else if(a?.estatusActividad==='Pausada')actions=`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" onclick="reanudarActividadPausa('${a.id}');setTimeout(loadDailyPlan,500)">Reanudar</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${x.folio}')">Apoyos</button></div>`;
+    else if(a?.estatusActividad==='En espera de material')actions=`<button class="btn-p" onclick="reanudarActividad('${a.id}');setTimeout(loadDailyPlan,500)">Material recibido / Reanudar</button>`;
     else if(x.estatus==='Pendiente de cierre por Ingeniería')actions='<span style="font-size:.72rem;color:#B45309">Esperando validación de Ingeniería.</span>';
-    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${escapeHtml(x.folio)}</b>${dailyStatusBadge_(x.estatus)}</div><div style="font-weight:700;margin-top:6px">${escapeHtml(x.descripcion)}</div><div style="font-size:.72rem;color:#64748B">${escapeHtml(x.categoria||'Sin categoría')} · ${escapeHtml(x.area||'')}</div><div style="margin:7px 0">${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||s)}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${actions}</div>`;
+
+    const real=a?dailyLiveMinutes_(a):0;
+    const timeText=a
+      ? `<div style="font-size:.72rem;color:#475569;margin:6px 0"><b>Tiempo real efectivo:</b> ${actFmtMin_(a.tiempoEfectivoMinutos!==''&&a.tiempoEfectivoMinutos!==undefined?a.tiempoEfectivoMinutos:real)}${Number(a.minutosPausaAcumulados||0)>0?' · <b>Pausas acumuladas:</b> '+actFmtMin_(a.minutosPausaAcumulados):''}</div>`
+      : '';
+
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${escapeHtml(x.folio)}</b>${dailyStatusBadge_(a?.estatusActividad||x.estatus)}</div><div style="font-weight:700;margin-top:6px">${escapeHtml(x.descripcion)}</div><div style="font-size:.72rem;color:#64748B">${escapeHtml(x.categoria||'Sin categoría')} · ${escapeHtml(x.area||'')}</div>${timeText}<div style="margin:7px 0">${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||s)}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${actions}</div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Todavía no has declarado actividades hoy.</div>';
 }
 function v840FrontParse_(v){try{const x=JSON.parse(String(v||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
@@ -4491,7 +4542,9 @@ function renderDailyAdmin(){
     const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON),finalSupports=v840FrontParse_(a.apoyosCierreJSON);
     const actions=x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'
       ?`<div style="display:flex;gap:7px;margin-top:8px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:'';
-    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo estimado:</b> ${actFmtMin_(x.tiempoEstimadoMinutos||0)}${a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?' · <b>Efectivo:</b> '+actFmtMin_(a.tiempoEfectivoMinutos):''}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${actions}</div>`;
+    const real=a&&a.horaInicio?dailyLiveMinutes_(a):0;
+    const effective=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):real;
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo real efectivo:</b> ${actFmtMin_(effective)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${actions}</div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Sin actividades declaradas en el periodo.</div>';
 }
 async function closeDailyEngineeringUI(id){
@@ -5336,6 +5389,7 @@ function renderOperationsAnalytics(){
     opsKpiCard_('Tiempo efectivo',opsFmtMin_(tk.tiempoEfectivoMin||0)),
     opsKpiCard_('Tiempo pausado',opsFmtMin_(tk.tiempoPausaMin||0)),
     opsKpiCard_('Espera material',opsFmtMin_(tk.esperaMaterialMin||0)),
+    opsKpiCard_('Cambio de actividad',opsFmtMin_(tk.cambioActividadMin||0),'Pausa operativa, no penaliza'),
     opsKpiCard_('Apoyo técnico',opsFmtMin_(tk.apoyoTecnicoMin||0),'Registro explícito'),
     opsKpiCard_('Tiempo como apoyo',opsFmtMin_(tk.tiempoApoyoMin||0),'Validado por Ingeniería')
   ].join('');
