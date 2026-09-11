@@ -2060,18 +2060,6 @@ const LPA_AREAS = {
       </div>
 
       <!-- Historial -->
-      <div id="mc-quotes-wrap" class="card-sm" style="padding:14px;display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px">
-          <div><h4 style="font-size:.78rem;font-weight:700;color:#334155;margin:0"><i class="fas fa-file-pdf" style="margin-right:6px;color:#DC2626"></i>Cotizaciones de la solicitud de compra</h4><p id="mc-quotes-status" style="font-size:.68rem;color:#94A3B8;margin:3px 0 0">Compras puede cargar varias cotizaciones y enviarlas juntas a Ingeniería.</p></div>
-        </div>
-        <div id="mc-quotes-list" style="display:flex;flex-direction:column;gap:7px"></div>
-        <div id="mc-quote-upload" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
-          <label style="display:block;font-size:.74rem;font-weight:700;color:#334155;margin-bottom:5px">Agregar cotización PDF</label>
-          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><input id="mc-quote-file" type="file" accept="application/pdf,.pdf" class="inp" style="flex:1;min-width:220px;padding:7px"><button class="btn-g" style="border-color:#DC2626;color:#B91C1C" onclick="uploadCompraCotizacion()"><i class="fas fa-upload" style="margin-right:5px"></i>Cargar PDF</button><button id="mc-quotes-send-btn" class="btn-p" style="background:#2563EB" onclick="sendCompraCotizacionesUI()"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar cotizaciones a Ingeniería</button></div><p style="font-size:.66rem;color:#64748B;margin:6px 0 0">Primero carga una o varias cotizaciones. Cuando estén completas, presiona Enviar cotizaciones a Ingeniería.</p>
-          <p style="font-size:.67rem;color:#94A3B8;margin:5px 0 0">Máximo recomendado: 8 MB por archivo. Puedes agregar más de una cotización.</p>
-        </div>
-      </div>
-
       <div>
         <h4 style="font-size:.78rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px"><i class="fas fa-timeline" style="margin-right:6px"></i>Historial</h4>
         <div id="ms-historial" class="status-timeline"></div>
@@ -2135,6 +2123,18 @@ const LPA_AREAS = {
       </div>
       <div id="mc-foto-wrap" style="display:none">
         <a id="mc-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía de referencia</a>
+      </div>
+
+      <div id="mc-quotes-wrap" class="card-sm" style="padding:14px;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px">
+          <div><h4 style="font-size:.78rem;font-weight:700;color:#334155;margin:0"><i class="fas fa-file-pdf" style="margin-right:6px;color:#DC2626"></i>Cotizaciones de la solicitud de compra</h4><p id="mc-quotes-status" style="font-size:.68rem;color:#94A3B8;margin:3px 0 0">Compras puede cargar varias cotizaciones y enviarlas juntas a Ingeniería.</p></div>
+        </div>
+        <div id="mc-quotes-list" style="display:flex;flex-direction:column;gap:7px"></div>
+        <div id="mc-quote-upload" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
+          <label style="display:block;font-size:.74rem;font-weight:700;color:#334155;margin-bottom:5px">Agregar cotización PDF</label>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><input id="mc-quote-file" type="file" accept="application/pdf,.pdf" class="inp" style="flex:1;min-width:220px;padding:7px"><button class="btn-g" style="border-color:#DC2626;color:#B91C1C" onclick="uploadCompraCotizacion()"><i class="fas fa-upload" style="margin-right:5px"></i>Cargar PDF</button><button id="mc-quotes-send-btn" class="btn-p" style="background:#2563EB" onclick="sendCompraCotizacionesUI()"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar cotizaciones a Ingeniería</button></div><p style="font-size:.66rem;color:#64748B;margin:6px 0 0">Primero carga una o varias cotizaciones. Cuando estén completas, presiona Enviar cotizaciones a Ingeniería.</p>
+          <p style="font-size:.67rem;color:#94A3B8;margin:5px 0 0">Máximo recomendado: 8 MB por archivo. Puedes agregar más de una cotización.</p>
+        </div>
       </div>
 
       <!-- GESTIÓN -->
@@ -2339,6 +2339,7 @@ const LPA_AREAS = {
 <!-- V8.4.0 · cotizaciones Compras + Plan Diario + apoyos compartidos + galería/cámara + Plataforma -->
 <!-- V8.4.1 · Plan Diario sin estimado + un cronómetro activo + técnico administrador carga plan -->
 <!-- V8.4.2 · registro Plan Diario robusto + Dashboard diario + envío explícito de cotizaciones -->
+<!-- V8.4.3 · fechas Plan Diario normalizadas + cotizaciones en modal correcto + sesión lateral corregida -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -3510,6 +3511,8 @@ async function performLogin() {
     $('btn-logout').style.display='';
     $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
     configureRoleUI();
+    if($('v81-role-name'))$('v81-role-name').textContent=SESSION.user.nombre||SESSION.user.username||'Usuario';
+    if($('v81-role-meta'))$('v81-role-meta').textContent=(SESSION.user.rol||'usuario')+' · Facilities';
     if(SESSION.user.rol==='manager') applyLanguage();
 
     const dest=PENDING_VIEW||'admin';
@@ -4462,6 +4465,16 @@ async function saveActiveSupport(){
 let DAILY_DATA=[];
 let DAILY_MODE='own';
 
+function localDateKeyV843_(d){
+  d=d||new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function localMonthKeyV843_(d){
+  d=d||new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
 function canViewDailyAdmin_(){return !!SESSION && (SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
 function setDailyMode(mode){
   if(mode==='admin'&&!canViewDailyAdmin_())mode='own';
@@ -4502,6 +4515,7 @@ async function loadDailyPlan(){
     const r=await api({action:'getDailyActivities',token:SESSION.token});
     if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
     DAILY_DATA=r.items||[];
+    if($('daily-subtitle'))$('daily-subtitle').textContent='Mínimo 3 actividades declaradas por técnico cada día · Fecha operativa: '+(r.fecha||localDateKeyV843_());
     $('daily-progress').textContent=(r.total||0)+' / '+(r.minimo||3);
     $('daily-progress').className='badge '+((r.total||0)>=3?'b-done':'b-ejec');
     renderDailyTech(r);
@@ -4510,7 +4524,7 @@ async function loadDailyPlan(){
     $('daily-tech-form').style.display='none';
     $('daily-admin-month-wrap').style.display=canAdmin?'':'none';
     if(!canAdmin){toast('No tienes acceso a la supervisión del Plan Diario.','err');DAILY_MODE='own';return loadDailyPlan();}
-    if(!$('daily-admin-month').value)$('daily-admin-month').value=new Date().toISOString().slice(0,7);
+    if(!$('daily-admin-month').value)$('daily-admin-month').value=localMonthKeyV843_();
     const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,month:$('daily-admin-month').value});
     if(!r.success){toast(r.error||'Error Plan Diario','err');return;}
     DAILY_DATA=r.items||[];
@@ -4619,7 +4633,7 @@ function initPlatformModule(){
   $('platform-tab-admin').style.display=canManagePlatform()?'':'none';
   if(!$('platform-date-rows').children.length)addPlatformDateRow();
   if(!$('platform-check-items').children.length)renderPlatformChecklist();
-  if(!$('pchk-date').value)$('pchk-date').value=new Date().toISOString().slice(0,10);
+  if(!$('pchk-date').value)$('pchk-date').value=localDateKeyV843_();
   loadPlatformCalendar();
 }
 function showPlatformTab(tab){
@@ -5312,12 +5326,13 @@ let DASH_DAILY_DATA=[];
 let DASH_DAILY_TECHS=[];
 async function loadDashboardDaily(){
   if(!SESSION||!canViewOperationsAnalytics())return;
-  const input=$('dash-daily-date');if(input&&!input.value)input.value=new Date().toISOString().slice(0,10);
-  const date=input?.value||new Date().toISOString().slice(0,10);
+  const input=$('dash-daily-date');if(input&&!input.value)input.value=localDateKeyV843_();
+  const date=input?.value||localDateKeyV843_();
   try{
     const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
     if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
-    DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];renderDashboardDaily();
+    DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];
+    renderDashboardDaily();
   }catch(e){toast('Error Plan Diario: '+e.message,'err');}
 }
 function renderDashboardDaily(){
@@ -6432,6 +6447,11 @@ function init() {
           $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
           if($('admin-rol-label')) $('admin-rol-label').textContent=res.user.nombre+' · '+res.user.rol;
           configureRoleUI();
+          setTimeout(function(){
+            const n=$('v81-role-name'),m=$('v81-role-meta');
+            if(n)n.textContent=SESSION.user.nombre||SESSION.user.username||'Usuario';
+            if(m)m.textContent=(SESSION.user.rol||'usuario')+' · Facilities';
+          },0);
           startNotificationPolling();
         } else {
           sessionStorage.removeItem('ktmex_session');
@@ -6845,7 +6865,10 @@ function exportChecklistMonthlyExcel(){
   function sec(text){var d=document.createElement('div');d.className='v81-section';d.textContent=text;return d}
   function move(parent,id){var n=el(id);if(n)parent.appendChild(n)}
   function syncRole(){
-    var u=(window.SESSION&&SESSION.user)?SESSION.user:null;
+    // V8.4.3: SESSION fue declarada con let y no pertenece a window.
+    // Consultarla por window.SESSION hacía que la barra mostrara "Sesión no iniciada"
+    // aun cuando el usuario sí estaba autenticado.
+    var u=(typeof SESSION!=='undefined'&&SESSION&&SESSION.user)?SESSION.user:null;
     var n=el('v81-role-name'),m=el('v81-role-meta');
     if(!n||!m)return;
     if(u){n.textContent=u.nombre||u.username||'Usuario';m.textContent=(u.rol||'usuario')+' · Facilities'}
