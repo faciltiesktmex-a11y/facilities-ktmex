@@ -73,6 +73,24 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .st-item.st-ok::before{background:#22C55E}.st-item.st-bad::before{background:#EF4444}.st-item.st-info::before{background:#3B82F6}
 
 
+/* V8.5A Plataforma V2 integrada */
+.platform-v2-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;font-size:.75rem;font-weight:700;margin-bottom:12px}
+.platform-v2-status.available{background:#ECFDF5;color:#166534;border:1px solid #A7F3D0}
+.platform-v2-status.out{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.platform-priority-box{padding:10px;border:1px solid #E2E8F0;border-radius:9px;background:#F8FAFC;font-size:.7rem;line-height:1.45}
+.platform-v2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.platform-mal-detail{display:none;grid-column:1/-1;padding:10px;margin:4px 0 8px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px}
+.platform-mal-detail.show{display:block}
+.platform-sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:25px}
+.platform-sign-box{border-top:1px solid #334155;padding-top:6px;text-align:center;font-size:.68rem}
+.platform-sign-canvas{width:100%;height:90px;border:1.5px dashed #94A3B8;border-radius:8px;background:#fff;cursor:pointer;display:block;margin-top:6px}
+.platform-sign-canvas.locked{border:2px solid #22C55E;background:#F0FDF4;cursor:not-allowed}
+.platform-v2-modal{position:fixed;inset:0;background:rgba(15,42,74,.7);z-index:12000;display:none;align-items:center;justify-content:center;padding:15px}
+.platform-v2-modal-card{width:min(760px,100%);background:white;border-radius:14px;padding:15px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+#platform-sign-modal-canvas{width:100%;height:300px;border:1px solid #CBD5E1;border-radius:8px;touch-action:none;background:#fff}
+.platform-admin-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+@media(max-width:760px){.platform-v2-grid,.platform-sign-grid,.platform-admin-grid{grid-template-columns:1fr}.platform-check-row{grid-template-columns:minmax(145px,1fr) repeat(3,42px)!important}.platform-subnav{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.platform-subnav button{white-space:nowrap}}
+
 /* V8.4.0 Daily Plan + Platform */
 .support-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-size:.7rem;font-weight:700;margin:3px 4px 3px 0}
 .support-chip button{border:none;background:transparent;color:#DC2626;cursor:pointer;padding:0}
@@ -172,6 +190,7 @@ thead th{background:#F5F8FC;color:#586980}
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="KTMEX Facilities">
 
+<!-- V8.5A · Plataforma V2 integrada -->
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
@@ -576,9 +595,9 @@ const LPA_AREAS = {
       <div style="width:48px;height:48px;background:#F0FDFA;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <i class="fas fa-up-right-from-square" style="color:#0F766E;font-size:20px"></i>
       </div>
-      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Préstamo de Plataforma</h3>
-      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Consulta disponibilidad, solicita la Genie Z45, revisa tu folio y llena el checklist cuando corresponda.</p>
-      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir plataforma →</span>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Trabajo en Alturas</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Plataforma Genie Z45: calendario, prioridades, lista de espera, aprobación y checklist digital.</p>
+      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir Trabajo en Alturas →</span>
     </div>
     <!-- Admin Card -->
     <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
@@ -1455,59 +1474,90 @@ const LPA_AREAS = {
 </div>
 
 
-<!-- ══════════════════════════════ VIEW: PLATAFORMA ══ -->
-<div id="view-platform" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
-  <div style="margin-bottom:18px">
-    <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-up-right-from-square" style="color:#0F766E;margin-right:8px"></i>Solicitud de préstamo de plataforma de elevación</h2>
-    <p style="font-size:.78rem;color:#64748B;margin:0">Genie Z45 · Solicitud pública · Aprobación Andrés Ramírez → Pedro Loya</p>
+<!-- ══════════════════════════════ VIEW: TRABAJO EN ALTURAS / PLATAFORMA V2 ══ -->
+<div id="view-platform" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div>
+      <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-person-falling-burst" style="color:#0F766E;margin-right:8px"></i>Trabajo en Alturas · Plataforma Genie Z45</h2>
+      <p style="font-size:.78rem;color:#64748B;margin:0">Plataforma V2 · Prioridades · Lista de espera · Buffer de carga 1 h · Andrés Ramírez → Pedro Loya</p>
+    </div>
+    <span style="font-size:.66rem;padding:5px 9px;border-radius:999px;background:#E0F2FE;color:#0369A1;font-weight:800">V8.5A · Plataforma</span>
   </div>
+
+  <div id="platform-equipment-public-state" class="platform-v2-status available"><i class="fas fa-circle-check"></i><span>Consultando estado de la plataforma…</span></div>
+
   <div class="platform-subnav">
-    <button id="platform-tab-calendar" class="btn-g active" onclick="showPlatformTab('calendar')">📅 Calendario</button>
-    <button id="platform-tab-request" class="btn-g" onclick="showPlatformTab('request')">📝 Solicitar equipo</button>
-    <button id="platform-tab-status" class="btn-g" onclick="showPlatformTab('status')">🔍 Consultar folio</button>
-    <button id="platform-tab-checklist" class="btn-g" onclick="showPlatformTab('checklist')">📋 Checklist</button>
+    <button id="platform-tab-calendar" class="btn-g active" onclick="showPlatformTab('calendar')">📅 Calendario / Calendar</button>
+    <button id="platform-tab-request" class="btn-g" onclick="showPlatformTab('request')">📝 Solicitar equipo / Request</button>
+    <button id="platform-tab-status" class="btn-g" onclick="showPlatformTab('status')">🔍 Consultar folio / Status</button>
+    <button id="platform-tab-checklist" class="btn-g" onclick="showPlatformTab('checklist')" style="display:none">📋 Checklist</button>
     <button id="platform-tab-admin" class="btn-g" onclick="showPlatformTab('admin')" style="display:none">⚙️ Gestión Facilities</button>
   </div>
 
   <div id="platform-panel-calendar" class="card" style="padding:18px">
-    <h3 style="font-size:.95rem;font-weight:800;color:#334155;margin:0 0 10px">Disponibilidad de plataforma</h3>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <div><h3 style="font-size:.95rem;font-weight:800;color:#334155;margin:0">Disponibilidad / Availability</h3><p style="font-size:.68rem;color:#64748B;margin:2px 0 0">Las reservaciones activas incluyen 1 hora de holgura para carga. La Lista de Espera no ocupa el calendario.</p></div>
+      <button class="btn-g" onclick="loadPlatformCalendar()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;font-size:.65rem;color:#64748B"><span>🟨 Pendiente Andrés</span><span>🟦 Pendiente Pedro</span><span>🟩 Aprobada</span><span>⬜ Lista de Espera</span><span>🔌 Buffer carga</span><span>⬛ Mantenimiento</span></div>
     <div id="platform-calendar"></div>
   </div>
 
   <div id="platform-panel-request" class="card" style="display:none;padding:20px">
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-      <div><label style="font-size:.75rem;font-weight:700">Nombre del solicitante *</label><input id="plat-name" class="inp" placeholder="Nombre completo"></div>
-      <div><label style="font-size:.75rem;font-weight:700">Área / departamento *</label><input id="plat-area" class="inp" placeholder="Mantenimiento, Welding..."></div>
-      <div><label style="font-size:.75rem;font-weight:700">Área de trabajo *</label><input id="plat-work-area" class="inp" placeholder="Nave / línea / ubicación"></div>
-      <div><label style="font-size:.75rem;font-weight:700">Descripción de la actividad *</label><input id="plat-desc" class="inp" placeholder="Ej. Cambio de luminarias"></div>
+    <div style="display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.6fr);gap:16px">
+      <div>
+        <div style="padding:16px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE">
+          <div style="width:55px;height:55px;border-radius:14px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><i class="fas fa-truck-ramp-box" style="font-size:23px;color:#1D4ED8"></i></div>
+          <b style="color:#0F2A4A">Plataforma articulada Genie Z45</b>
+          <p style="font-size:.7rem;color:#64748B;line-height:1.45">Revise alcance, condiciones del área, requisitos de seguridad y disponibilidad antes de emitir la solicitud.</p>
+        </div>
+        <div class="platform-priority-box" style="margin-top:10px"><b>Matriz de prioridades</b><br>1 · Crítica — riesgo inminente<br>2 · Operativa — paro de línea<br>3 · Preventiva — TPM programado<br>4 · Mejora — proyectos / estética</div>
+      </div>
+      <div>
+        <div class="platform-v2-grid">
+          <div style="grid-column:1/-1"><label style="font-size:.73rem;font-weight:700">Nivel de prioridad / Priority *</label><select id="plat-priority" class="inp"><option value="">— Seleccione —</option><option value="1">1 - Crítica / Critical (Riesgo inminente de seguridad)</option><option value="2">2 - Operativa / Operational (Falla con paro de línea)</option><option value="3">3 - Preventiva / Preventive (Mantenimiento programado TPM)</option><option value="4">4 - Mejora / Improvement (Proyectos, estética)</option></select></div>
+          <div><label style="font-size:.73rem;font-weight:700">Nombre del solicitante *</label><input id="plat-name" class="inp" placeholder="Nombre completo"></div>
+          <div><label style="font-size:.73rem;font-weight:700">Área / departamento *</label><input id="plat-area" class="inp" placeholder="Mantenimiento, Welding..."></div>
+          <div><label style="font-size:.73rem;font-weight:700">Área de trabajo *</label><input id="plat-work-area" class="inp" placeholder="Nave / línea / ubicación"></div>
+          <div><label style="font-size:.73rem;font-weight:700">Descripción / propósito *</label><input id="plat-desc" class="inp" placeholder="Ej. Cambio de luminarias"></div>
+        </div>
+        <h4 style="font-size:.8rem;color:#334155;margin:16px 0 8px">Fechas y horarios requeridos</h4>
+        <div id="platform-date-rows"></div>
+        <button class="btn-g" onclick="addPlatformDateRow()" style="margin-top:5px">+ Agregar otro día u horario</button>
+        <div style="margin-top:15px;padding:13px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;font-size:.69rem;color:#92400E;line-height:1.5">
+          <b>KYOHO TOYOTSU MÉXICO · Reglamento Genie Z45</b><br><br>
+          <b>1.</b> La asignación se rige por prioridades: Crítica, Operativa, Preventiva y Mejora. Facilities podrá reasignar a una prioridad mayor y mover el área desplazada a Lista de Espera.<br>
+          <b>2.</b> Según corresponda: llenar solicitud, checklist digital antes del uso y dejar credencial de la empresa mientras se utiliza la plataforma.<br>
+          <b>3.</b> Robo o extravío de la plataforma o accesorios implica reposición del equipo/accesorio.<br>
+          <b>4.</b> Alteraciones no autorizadas que afecten seguridad pueden causar revocación de la credencial.<br>
+          <b>5.</b> Operar sin DC-3 en trabajos en altura implica revocación de la credencial.<br>
+          <b>6.</b> Regresar la plataforma al Cuarto de Máquinas para carga. El sistema reserva 1 hora de buffer entre solicitudes.<br>
+          <b>7.</b> Notificar cualquier falla a Facilities, canal de radio 12.
+          <label style="display:block;margin-top:8px;font-weight:800"><input id="plat-terms" type="checkbox"> Sí, acepto el reglamento / I accept.</label>
+        </div>
+        <button id="plat-submit-btn" class="btn-p" onclick="submitPlatformRequestUI(false)" style="width:100%;margin-top:12px;background:#0F766E">Emitir solicitud a Facilities</button>
+      </div>
     </div>
-    <h4 style="font-size:.8rem;color:#334155;margin:16px 0 8px">Fechas y horarios requeridos</h4>
-    <div id="platform-date-rows"></div>
-    <button class="btn-g" onclick="addPlatformDateRow()" style="margin-top:7px">+ Agregar otro día u horario</button>
-    <div style="margin-top:16px;padding:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;font-size:.72rem;color:#92400E;line-height:1.5">
-      <b>Reglamento:</b> uso destinado a mantenimiento de activos; el operador debe cumplir requisitos de seguridad y DC-3 aplicables; cualquier anomalía debe notificarse a Facilities; al terminar, el equipo debe regresar al Cuarto de Máquinas y quedar conectado para carga; no dejar llaves en el switch.
-      <label style="display:block;margin-top:8px;font-weight:700"><input id="plat-terms" type="checkbox"> Sí, acepto el reglamento para solicitar la plataforma.</label>
-    </div>
-    <button class="btn-p" onclick="submitPlatformRequestUI()" style="width:100%;margin-top:12px;background:#0F766E">Emitir solicitud a Facilities</button>
   </div>
 
   <div id="platform-panel-status" style="display:none">
-    <div class="card" style="padding:20px;max-width:600px;margin:0 auto">
-      <h3 style="font-size:.95rem;margin:0 0 8px">Consultar estatus por folio</h3>
-      <div style="display:flex;gap:8px"><input id="plat-status-folio" class="inp" placeholder="FC-PLAT-0001"><button class="btn-p" onclick="searchPlatformFolio()">Consultar</button></div>
+    <div class="card" style="padding:20px;max-width:720px;margin:0 auto">
+      <h3 style="font-size:.95rem;margin:0 0 8px">Consultar estatus por folio / Check request status</h3>
+      <div style="display:flex;gap:8px"><input id="plat-status-folio" class="inp" placeholder="FC-PLAT-0001" style="text-transform:uppercase"><button class="btn-p" onclick="searchPlatformFolio()">Consultar</button></div>
       <div id="plat-status-result" style="margin-top:12px"></div>
     </div>
   </div>
 
   <div id="platform-panel-checklist" style="display:none">
     <div id="platform-check-print" class="card" style="padding:18px">
-      <div style="text-align:center;border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1rem">KTMEX CHECK LIST - INSPECCIÓN PARA USO DE PLATAFORMA ARTICULADA</b><div style="font-size:.72rem;color:#64748B">Sistema de gestión de Facilities</div></div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px">
-        <input id="pchk-operator" class="inp" placeholder="Nombre del operador">
+      <div style="text-align:center;border-bottom:2px solid #0F2A4A;padding-bottom:10px;margin-bottom:12px"><b style="font-size:1rem">KTMEX · CHECK LIST - INSPECCIÓN PARA USO DE PLATAFORMA ARTICULADA</b><div id="pchk-folio-display" style="font-size:.72rem;color:#64748B;margin-top:3px"></div></div>
+      <div class="platform-v2-grid" style="margin-bottom:10px">
+        <input id="pchk-jsa" class="inp" placeholder="Folio JSA (opcional)">
+        <input id="pchk-operator" class="inp" placeholder="Nombre del operador *">
         <input id="pchk-date" type="date" class="inp">
-        <input id="pchk-company" class="inp" placeholder="Empresa">
+        <input id="pchk-company" class="inp" value="KTMEX" placeholder="Empresa">
         <input id="pchk-zone" class="inp" placeholder="Zona de trabajo">
-        <input class="inp" value="Genie Z45" readonly>
+        <input id="pchk-model" class="inp" value="Genie Z45" readonly>
         <input id="pchk-serial" class="inp" placeholder="No. serie">
         <input id="pchk-work" class="inp" placeholder="Descripción del trabajo" style="grid-column:1/-1">
       </div>
@@ -1515,27 +1565,45 @@ const LPA_AREAS = {
       <div id="platform-check-items"></div>
       <textarea id="pchk-comments-off" class="inp" rows="2" placeholder="Comentarios unidad apagada (opcional)" style="margin-top:10px"></textarea>
       <textarea id="pchk-comments-on" class="inp" rows="2" placeholder="Comentarios unidad encendida (opcional)" style="margin-top:8px"></textarea>
-      <div style="margin-top:12px;padding:10px;border:1px solid #FDE68A;background:#FFFBEB;border-radius:8px;font-size:.68rem;color:#92400E">
-        A) El operador debe inspeccionar y reportar anomalías. B) Al concluir, resguardar el equipo con paro de emergencia activado y conectado para carga. C) No dejar las llaves en el switch.
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:35px;text-align:center;font-size:.7rem">
-        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA DEL OPERADOR CALIFICADO<br><input class="inp" id="pchk-sign1" placeholder="Nombre"></div>
-        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA OPERADOR AYUDANTE / BANDERERO<br><input class="inp" id="pchk-sign2" placeholder="Nombre"></div>
-        <div style="border-top:1px solid #334155;padding-top:5px">FIRMA RESPONSABLE DE SEGURIDAD KTMEX<br><input class="inp" id="pchk-sign3" placeholder="Nombre"></div>
+      <div style="margin-top:12px;padding:10px;border:1px solid #FDE68A;background:#FFFBEB;border-radius:8px;font-size:.68rem;color:#92400E"><b>A)</b> El operador debe inspeccionar y reportar anomalías. <b>B)</b> Al concluir, resguardar el equipo con paro de emergencia activado y conectado para carga. <b>C)</b> No dejar llaves en el switch.</div>
+      <div class="platform-sign-grid">
+        <div class="platform-sign-box">FIRMA DEL OPERADOR CALIFICADO<input class="inp" id="pchk-sign1-name" placeholder="Nombre"><canvas id="pchk-sign1-canvas" class="platform-sign-canvas" onclick="openPlatformSignature('pchk-sign1-canvas','Firma operador calificado')"></canvas></div>
+        <div class="platform-sign-box">FIRMA OPERADOR AYUDANTE / BANDERERO<input class="inp" id="pchk-sign2-name" placeholder="Nombre"><canvas id="pchk-sign2-canvas" class="platform-sign-canvas" onclick="openPlatformSignature('pchk-sign2-canvas','Firma ayudante / banderero')"></canvas></div>
+        <div class="platform-sign-box">FIRMA RESPONSABLE DE SEGURIDAD KTMEX<input class="inp" id="pchk-sign3-name" placeholder="Nombre"><canvas id="pchk-sign3-canvas" class="platform-sign-canvas" onclick="openPlatformSignature('pchk-sign3-canvas','Firma responsable de Seguridad')"></canvas></div>
       </div>
     </div>
-    <button class="btn-p" onclick="printPlatformChecklist()" style="margin-top:10px;background:#0F766E"><i class="fas fa-print" style="margin-right:6px"></i>Imprimir checklist</button>
-    <p style="font-size:.68rem;color:#64748B;margin-top:6px">El checklist está disponible para llenarse cuando corresponda; no bloquea la solicitud de préstamo.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-p" onclick="savePlatformChecklistUI()" style="background:#16A34A"><i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar checklist</button><button class="btn-g" onclick="printPlatformChecklist()"><i class="fas fa-print" style="margin-right:6px"></i>Imprimir / PDF</button><button class="btn-g" onclick="showPlatformTab('status')">Volver a consulta</button></div>
+    <p style="font-size:.68rem;color:#64748B;margin-top:6px">El checklist se habilita únicamente para folios aprobados. Un punto MAL requiere comentario y fotografía. Las firmas guardadas quedan bloqueadas.</p>
   </div>
 
   <div id="platform-panel-admin" style="display:none">
-    <div class="card" style="padding:16px;overflow:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="font-size:.92rem;margin:0">Gestión de solicitudes de plataforma</h3><button class="btn-g" onclick="loadPlatformAdmin()">Actualizar</button></div>
-      <table style="width:100%;min-width:900px;border-collapse:collapse">
-        <thead><tr><th>Folio</th><th>Solicitante</th><th>Área</th><th>Actividad</th><th>Fechas</th><th>Estatus</th><th>Acciones</th></tr></thead>
-        <tbody id="platform-admin-body"></tbody>
-      </table>
+    <div id="platform-admin-state" class="platform-v2-status available"><i class="fas fa-circle-check"></i><span>Estado equipo</span></div>
+    <div class="card" style="padding:16px;overflow:auto;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><h3 style="font-size:.92rem;margin:0">Gestión de solicitudes Plataforma V2</h3><p style="font-size:.67rem;color:#64748B;margin:2px 0 0">Prioridad, aprobaciones, lista de espera y liberación de fechas.</p></div><button class="btn-g" onclick="loadPlatformAdmin()">Actualizar</button></div>
+      <table style="width:100%;min-width:1080px;border-collapse:collapse"><thead><tr><th>Folio / Prioridad</th><th>Solicitante</th><th>Área / Actividad</th><th>Fechas</th><th>Estatus / Trazabilidad</th><th>Acciones</th></tr></thead><tbody id="platform-admin-body"></tbody></table>
     </div>
+
+    <div class="platform-admin-grid">
+      <div class="card" style="padding:15px">
+        <h3 style="font-size:.88rem;margin:0 0 8px">Hallazgos y liberación</h3>
+        <div id="platform-findings-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button id="platform-release-btn" class="btn-p" onclick="releasePlatformEquipmentUI()" style="display:none;margin-top:10px;background:#16A34A"><i class="fas fa-unlock" style="margin-right:5px"></i>Liberar plataforma</button>
+      </div>
+      <div class="card" style="padding:15px">
+        <h3 style="font-size:.88rem;margin:0 0 8px">Bloqueos / mantenimiento</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><input id="plat-block-date" type="date" class="inp"><input id="plat-block-desc" class="inp" placeholder="Descripción"><input id="plat-block-start" type="time" class="inp" value="06:00"><input id="plat-block-end" type="time" class="inp" value="22:00"></div>
+        <button class="btn-p" onclick="addPlatformBlockUI()" style="margin-top:8px;width:auto">Agregar bloqueo</button>
+        <div id="platform-block-list" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="platform-sign-modal" class="platform-v2-modal">
+  <div class="platform-v2-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b id="platform-sign-title">Firma</b><button class="btn-g" onclick="closePlatformSignatureModal()"><i class="fas fa-xmark"></i></button></div>
+    <canvas id="platform-sign-modal-canvas"></canvas>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn-red" onclick="clearPlatformSignatureModal()">Limpiar</button><button class="btn-p" onclick="acceptPlatformSignature()">Aceptar firma</button></div>
   </div>
 </div>
 
@@ -4660,37 +4728,49 @@ async function returnDailyEngineeringUI(id){
 }
 
 // ============================================================
-// V8.4.0 — PLATAFORMA
+// V8.5A — PLATAFORMA V2 INTEGRADA
 // ============================================================
-let PLATFORM_CAL=null,PLATFORM_ADMIN_DATA=[];
+let PLATFORM_CAL=null,PLATFORM_ADMIN_DATA=[],PLATFORM_ADMIN_FINDINGS=[],PLATFORM_ADMIN_BLOCKS=[],PLATFORM_EQUIPMENT_STATE=null;
+let PLATFORM_CURRENT_FOLIO='',PLATFORM_CURRENT_CHECKLIST=null,PLATFORM_CHECK_ITEMS=[],PLATFORM_MAL_FILES={};
+let PLATFORM_SIGNATURE_TARGET='',PLATFORM_SIGNATURE_DIRTY={};
+
 const PLATFORM_CHECK_SECTIONS=[
-  {name:'1. REVISIÓN DE LA UNIDAD APAGADA',items:[
-    '1 Llantas y birlos','2 Luces / Estroboscópicos','3a Motor: Mangueras / bandas','3b Motor: Cables / alambres','3c Motor: Escombros / suciedad',
-    '4a Batería(s): Terminales apretadas / limpias','4b Batería(s): Limpia / seca / bien asegurada','5a Hidráulica: Cilindros / barras sin fugas ni daño',
-    '5b Hidráulica: Mangueras / líneas / conexiones','6a Aceite de motor (nivel / goteo)','6b Refrigerante motor (nivel / goteo)',
-    '6c Aceite hidráulico (nivel / goteo)','6d Combustible / batería (nivel / goteo)','7 Inspecciones de equipo actualizadas',
-    '8 Contrapeso / perno del contrapeso','9 Cubierta de paneles','10 Goteras / derrames bajo la plataforma','11 Condición visual general de desgaste',
-    '12 Barandal / tablero de canastilla','13 Porta objetos interno de canastilla']},
-  {name:'2. REVISIÓN DE LA UNIDAD ENCENDIDA',items:[
-    '14 La unidad enciende y opera correctamente','15 Estado de instrumentos e indicadores','16 Luces de trabajo y alarma de traslación',
-    '17 Claxon / dispositivo advertencia audible','18 Nivel de carga de batería','19a Brazo: levanta / baja / extiende / retrae',
-    '19b Rotación de la canastilla','19c En marcha: adelante / reversa','19d Dirección: derecha / izquierda',
-    '19e Plataforma: inclina / rotación / extensión','19f Paros emergencia (canastilla y piso)','19g Frenos de servicio y estacionamiento',
-    '19h Puntos de anclaje de arnés en buen estado']},
-  {name:'3. ASPECTOS GENERALES',items:['20 Limpieza general del equipo','21 Letreros de advertencia / etiquetas / propietario','22 Partes sueltas / faltantes / rotas']},
-  {name:'4. INSPECCIÓN DEL LUGAR DE TRABAJO',items:[
-    '23 LOTO / Bloqueo y etiquetado (si aplica)','24 Desniveles, rampas o agujeros en piso','25 Golpes, zanjas y obstáculos en el suelo',
-    '26 Escombros / material en área de trayecto','27 Obstrucciones superiores / vigas / tuberías','28 Líneas eléctricas aéreas energizadas',
-    '29 Presencia de sustancias o áreas peligrosas','30 Condiciones de apoyo y estabilidad del suelo','31 Cinta / conos de delimitación peatonal',
-    '32 Condiciones de clima y viento aptas','33 Otros posibles riesgos evaluados']},
-  {name:'5. EQUIPO DE PROTECCIÓN PERSONAL',items:['34 Arnés de cuerpo entero en buen estado','35 Línea de vida / amortiguador y ganchos','36 Guantes de seguridad','37 Casco con barbiquejo','38 Lentes de seguridad']}
+  {id:'1',name:'1. REVISIÓN DE LA UNIDAD APAGADA'},
+  {id:'2',name:'2. REVISIÓN DE LA UNIDAD ENCENDIDA'},
+  {id:'3',name:'3. ASPECTOS GENERALES'},
+  {id:'4',name:'4. INSPECCIÓN DEL LUGAR DE TRABAJO'},
+  {id:'5',name:'5. EQUIPO DE PROTECCIÓN PERSONAL'}
 ];
-function canManagePlatform(){return SESSION&&(SESSION.user.rol==='ingeniero'||(SESSION.user.rol==='tecnico'&&hasAdminPrivilege()));}
+
+function canManagePlatform(){
+  return !!SESSION && (SESSION.user?.rol==='ingeniero' || (SESSION.user?.rol==='tecnico' && hasAdminPrivilege()));
+}
+function platformStatusClass_(s){
+  s=String(s||'');
+  if(s==='Aprobada')return 'b-done';
+  if(s.indexOf('Pedro')>=0)return 'b-ejec';
+  if(s.indexOf('Andrés')>=0)return 'b-pend';
+  if(s==='Lista de Espera')return 'b-wait';
+  if(s==='Cancelada')return 'b-rech';
+  return 'b-pend';
+}
+function platformBadge_(s){
+  return `<span class="badge ${platformStatusClass_(s)}">${escapeHtml(s||'')}</span>`;
+}
+function setPlatformEquipmentStateUI_(state,admin){
+  state=state||{estado:'DISPONIBLE',motivo:''};
+  const el=$(admin?'platform-admin-state':'platform-equipment-public-state');
+  if(!el)return;
+  const ok=String(state.estado||'DISPONIBLE')==='DISPONIBLE';
+  el.className='platform-v2-status '+(ok?'available':'out');
+  el.innerHTML=`<i class="fas ${ok?'fa-circle-check':'fa-triangle-exclamation'}"></i><span>${ok?'Plataforma DISPONIBLE':'Plataforma '+escapeHtml(state.estado||'FUERA DE SERVICIO')}${state.motivo?' · '+escapeHtml(state.motivo):''}</span>`;
+}
+
 function initPlatformModule(){
-  $('platform-tab-admin').style.display=canManagePlatform()?'':'none';
+  if($('platform-tab-admin'))$('platform-tab-admin').style.display=canManagePlatform()?'':'none';
   if(!$('platform-date-rows').children.length)addPlatformDateRow();
-  if(!$('platform-check-items').children.length)renderPlatformChecklist();
   if(!$('pchk-date').value)$('pchk-date').value=localDateKeyV843_();
+  if(!$('plat-block-date').value)$('plat-block-date').value=localDateKeyV843_();
   loadPlatformCalendar();
 }
 function showPlatformTab(tab){
@@ -4700,88 +4780,509 @@ function showPlatformTab(tab){
     if(b)b.classList.toggle('active',t===tab);
   });
   if(tab==='calendar')loadPlatformCalendar();
-  if(tab==='admin'){if(!canManagePlatform()){showPlatformTab('calendar');return;}loadPlatformAdmin();}
+  if(tab==='admin'){
+    if(!canManagePlatform()){showPlatformTab('calendar');return;}
+    loadPlatformAdmin();
+  }
 }
 function addPlatformDateRow(){
-  const box=$('platform-date-rows'),div=document.createElement('div');div.className='plat-date-row';
+  const box=$('platform-date-rows'),div=document.createElement('div');
+  div.className='plat-date-row';
   div.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:7px';
   div.innerHTML=`<input type="date" class="inp plat-date"><input type="time" class="inp plat-start"><input type="time" class="inp plat-end"><button class="btn-red" type="button" onclick="this.parentElement.remove()">X</button>`;
   box.appendChild(div);
 }
-async function submitPlatformRequestUI(){
-  const dates=[...document.querySelectorAll('.plat-date-row')].map(r=>({date:r.querySelector('.plat-date').value,start:r.querySelector('.plat-start').value,end:r.querySelector('.plat-end').value})).filter(x=>x.date&&x.start&&x.end);
+
+async function submitPlatformRequestUI(acceptWaitlist){
+  const dates=[...document.querySelectorAll('.plat-date-row')].map(r=>({
+    date:r.querySelector('.plat-date').value,
+    start:r.querySelector('.plat-start').value,
+    end:r.querySelector('.plat-end').value
+  })).filter(x=>x.date&&x.start&&x.end);
+
   if(!$('plat-terms').checked){toast('Debes aceptar el reglamento','err');return;}
-  const r=await api({action:'submitPlatformRequest',nombre:$('plat-name').value,area:$('plat-area').value,areaTrabajo:$('plat-work-area').value,descripcion:$('plat-desc').value,fechas:dates});
-  if(r.success){toast('Solicitud generada: '+r.folio);$('plat-status-folio').value=r.folio;showPlatformTab('status');searchPlatformFolio();loadPlatformCalendar();}
-  else toast(r.error||'No se pudo generar la solicitud','err');
+
+  const payload={
+    action:'submitPlatformRequest',
+    prioridadCodigo:$('plat-priority').value,
+    nombre:$('plat-name').value,
+    area:$('plat-area').value,
+    areaTrabajo:$('plat-work-area').value,
+    descripcion:$('plat-desc').value,
+    fechas:dates,
+    acceptWaitlist:!!acceptWaitlist
+  };
+  const btn=$('plat-submit-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando…';}
+  try{
+    const r=await api(payload);
+    if(r.requiresWaitlistConfirm){
+      if(confirm(r.message||'Existe conflicto. ¿Enviar a Lista de Espera?'))return submitPlatformRequestUI(true);
+      return;
+    }
+    if(!r.success){toast(r.error||'No se pudo generar la solicitud','err');return;}
+    toast((r.waitlist?'Solicitud agregada a Lista de Espera: ':'Solicitud generada: ')+r.folio);
+    $('plat-status-folio').value=r.folio;
+    showPlatformTab('status');
+    await searchPlatformFolio();
+    loadPlatformCalendar();
+    $('plat-priority').value='';
+    $('plat-name').value='';
+    $('plat-area').value='';
+    $('plat-work-area').value='';
+    $('plat-desc').value='';
+    $('plat-terms').checked=false;
+  }catch(e){
+    toast('Error al generar solicitud: '+e.message,'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='Emitir solicitud a Facilities';}
+  }
+}
+
+function platformEventColors_(x){
+  if(x.eventType==='BLOCK')return {bg:'#334155',bd:'#0F172A',tx:'#fff'};
+  if(x.eventType==='BUFFER')return {bg:'#DBEAFE',bd:'#93C5FD',tx:'#1E3A8A'};
+  if(x.status==='Aprobada')return {bg:'#16A34A',bd:'#15803D',tx:'#fff'};
+  if(String(x.status).indexOf('Pedro')>=0)return {bg:'#0891B2',bd:'#0E7490',tx:'#fff'};
+  if(String(x.status).indexOf('Andrés')>=0)return {bg:'#F59E0B',bd:'#D97706',tx:'#111827'};
+  if(x.status==='Lista de Espera')return {bg:'#64748B',bd:'#475569',tx:'#fff'};
+  return {bg:'#94A3B8',bd:'#64748B',tx:'#fff'};
 }
 async function loadPlatformCalendar(){
   try{
-    const r=await api({action:'getPlatformAvailability'});if(!r.success)return;
-    const events=(r.events||[]).map(x=>({
-      title:x.folio+' · '+x.status,
-      start:x.date+'T'+x.start+':00',end:x.date+'T'+x.end+':00',
-      extendedProps:x
-    }));
-    if(typeof FullCalendar==='undefined'){$('platform-calendar').innerHTML='<p style="color:#64748B">Calendario no disponible sin conexión a la librería. Las solicitudes continúan funcionando.</p>';return;}
+    const r=await api({action:'getPlatformAvailability'});
+    if(!r.success){toast(r.error||'No se pudo cargar calendario','err');return;}
+    PLATFORM_EQUIPMENT_STATE=r.equipmentState;
+    setPlatformEquipmentStateUI_(r.equipmentState,false);
+
+    const events=(r.events||[]).map(x=>{
+      const c=platformEventColors_(x);
+      let title='';
+      if(x.eventType==='BLOCK')title='Mantenimiento · '+(x.areaTrabajo||'');
+      else if(x.eventType==='BUFFER')title='Carga / buffer · '+x.folio;
+      else title=x.folio+' · '+x.status+' · P'+(x.prioridadCodigo||'-');
+      return {
+        title,
+        start:x.date+'T'+x.start+':00',
+        end:x.date+'T'+x.end+':00',
+        backgroundColor:c.bg,borderColor:c.bd,textColor:c.tx,
+        extendedProps:x
+      };
+    });
+
+    if(typeof FullCalendar==='undefined'){
+      $('platform-calendar').innerHTML='<p style="color:#64748B">Calendario no disponible sin conexión a la librería. Las solicitudes continúan funcionando.</p>';
+      return;
+    }
     if(!PLATFORM_CAL){
       PLATFORM_CAL=new FullCalendar.Calendar($('platform-calendar'),{
-        initialView:'dayGridMonth',locale:'es',height:'auto',
-        headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listMonth'},
-        events:events,eventDidMount:function(info){info.el.title=info.event.title;}
-      });PLATFORM_CAL.render();
-    }else{PLATFORM_CAL.removeAllEvents();PLATFORM_CAL.addEventSource(events);}
-  }catch(e){}
+        initialView:'dayGridMonth',
+        locale:'es',
+        height:'auto',
+        headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,timeGridDay,listMonth'},
+        events,
+        eventDidMount:function(info){
+          const x=info.event.extendedProps;
+          info.el.title=x.eventType==='REQUEST'
+            ? info.event.title+'\nÁrea: '+(x.areaTrabajo||'')+'\n'+(x.prioridadTexto||'')
+            : info.event.title;
+        }
+      });
+      PLATFORM_CAL.render();
+    }else{
+      PLATFORM_CAL.removeAllEvents();
+      PLATFORM_CAL.addEventSource(events);
+    }
+  }catch(e){
+    toast('Error calendario plataforma: '+e.message,'err');
+  }
 }
+
 async function searchPlatformFolio(){
-  const folio=$('plat-status-folio').value.trim();if(!folio)return;
+  const folio=$('plat-status-folio').value.trim().toUpperCase();
+  if(!folio)return;
   const r=await api({action:'getPlatformStatus',folio});
-  if(!r.success){$('plat-status-result').innerHTML=`<div class="card" style="padding:12px;color:#B91C1C">${escapeHtml(r.error||'No encontrado')}</div>`;return;}
+  const box=$('plat-status-result');
+  if(!r.success){
+    box.innerHTML=`<div style="padding:12px;color:#B91C1C">${escapeHtml(r.error||'No encontrado')}</div>`;
+    return;
+  }
   const x=r.request;
-  $('plat-status-result').innerHTML=`<div class="card" style="padding:14px"><b class="mono">${escapeHtml(x.folio)}</b><div style="margin:6px 0">${dailyStatusBadge_(x.estatus)}</div><div style="font-size:.78rem"><b>Solicitante:</b> ${escapeHtml(x.nombre)} · ${escapeHtml(x.area)}<br><b>Lugar:</b> ${escapeHtml(x.areaTrabajo)}<br><b>Actividad:</b> ${escapeHtml(x.descripcion)}</div><div style="font-size:.72rem;color:#64748B;margin-top:7px">${(x.fechas||[]).map(d=>escapeHtml(d.date+' '+d.start+'-'+d.end)).join('<br>')}</div>${x.ultimoMovimiento?`<div style="margin-top:8px;font-size:.68rem;color:#94A3B8">Último movimiento: ${escapeHtml(x.ultimoMovimiento.accion||'')}</div>`:''}</div>`;
+  setPlatformEquipmentStateUI_(x.equipmentState,false);
+  const checklistBtn=x.checklistDisponible
+    ? `<button class="btn-p" style="margin-top:10px;background:#0F2A4A" onclick="openPlatformChecklist('${escapeHtml(x.folio)}')"><i class="fas fa-clipboard-check" style="margin-right:5px"></i>Abrir Checklist Digital</button>`
+    : '';
+  box.innerHTML=`<div style="padding:14px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFC">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b class="mono">${escapeHtml(x.folio)}</b>${platformBadge_(x.estatus)}</div>
+    <div style="font-size:.78rem;line-height:1.55;margin-top:7px"><b>Solicitante:</b> ${escapeHtml(x.nombre||'')} · ${escapeHtml(x.area||'')}<br>
+      <b>Prioridad:</b> ${escapeHtml(x.prioridadTexto||'')}<br>
+      <b>Área de trabajo:</b> ${escapeHtml(x.areaTrabajo||'')}<br>
+      <b>Actividad:</b> ${escapeHtml(x.descripcion||'')}</div>
+    <div style="font-size:.71rem;color:#64748B;margin-top:7px">${(x.fechas||[]).map(d=>escapeHtml(d.date+' '+d.start+'-'+d.end)).join('<br>')}</div>
+    ${x.listaEsperaMotivo?`<div style="margin-top:7px;padding:7px;background:#F1F5F9;border-radius:7px;font-size:.69rem"><b>Lista de espera:</b> ${escapeHtml(x.listaEsperaMotivo)}</div>`:''}
+    ${x.ultimoMovimiento?`<div style="margin-top:7px;font-size:.67rem;color:#94A3B8">Último movimiento: ${escapeHtml(x.ultimoMovimiento.accion||'')}</div>`:''}
+    ${checklistBtn}
+  </div>`;
 }
+
 async function loadPlatformAdmin(){
-  const r=await api({action:'getPlatformRequests',token:SESSION.token});if(!r.success){toast(r.error||'No disponible','err');return;}
-  PLATFORM_ADMIN_DATA=r.requests||[];renderPlatformAdmin();
+  const r=await api({action:'getPlatformRequests',token:SESSION.token});
+  if(!r.success){toast(r.error||'No disponible','err');return;}
+  PLATFORM_ADMIN_DATA=r.requests||[];
+  PLATFORM_ADMIN_FINDINGS=r.findings||[];
+  PLATFORM_ADMIN_BLOCKS=r.blocks||[];
+  PLATFORM_EQUIPMENT_STATE=r.equipmentState;
+  setPlatformEquipmentStateUI_(r.equipmentState,true);
+  renderPlatformAdmin();
+  renderPlatformFindings();
+  renderPlatformBlocks();
+}
+function platformHistShort_(x){
+  const h=x.historialArray||[];
+  return h.slice(-2).map(z=>`<div style="font-size:.62rem;border-top:1px dashed #CBD5E1;padding:3px 0">${escapeHtml(z.accion||'')}</div>`).join('');
 }
 function renderPlatformAdmin(){
-  const body=$('platform-admin-body');
-  body.innerHTML=PLATFORM_ADMIN_DATA.length?PLATFORM_ADMIN_DATA.map(x=>{
-    const dates=(x.fechas||[]).map(d=>`${d.date} ${d.start}-${d.end}`).join('<br>');
-    let actions='';
-    const un=String(SESSION.user.username||'').toLowerCase();
-    if(x.estatus==='Pendiente Andrés Ramírez'&&un==='aramirez')actions=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar</button>`;
-    if(x.estatus==='Pendiente Pedro Loya'&&un==='ploya')actions=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar final</button>`;
-    if(x.estatus!=='Cancelada')actions+=` <button class="btn-red" onclick="cancelPlatformUI('${x.id}')">Cancelar</button>`;
-    return `<tr><td><b class="mono">${escapeHtml(x.folio)}</b></td><td>${escapeHtml(x.nombre)}</td><td>${escapeHtml(x.area)}<br><small>${escapeHtml(x.areaTrabajo)}</small></td><td>${escapeHtml(x.descripcion)}</td><td style="font-size:.7rem">${dates}</td><td>${dailyStatusBadge_(x.estatus)}</td><td>${actions}</td></tr>`;
-  }).join(''):'<tr><td colspan="7" style="text-align:center;padding:20px;color:#94A3B8">Sin solicitudes</td></tr>';
+  const body=$('platform-admin-body'),un=String(SESSION.user.username||'').toLowerCase();
+  body.innerHTML=PLATFORM_ADMIN_DATA.length
+    ? PLATFORM_ADMIN_DATA.slice().sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0)).map(x=>{
+        const dates=(x.fechas||[]).map(d=>`${escapeHtml(d.date)} ${escapeHtml(d.start)}-${escapeHtml(d.end)}`).join('<br>');
+        let actions=`<button class="btn-g" onclick="$('plat-status-folio').value='${escapeHtml(x.folio)}';showPlatformTab('status');searchPlatformFolio()">Ver</button>`;
+        if(x.estatus==='Pendiente Andrés Ramírez'&&un==='aramirez')actions+=` <button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar Andrés</button>`;
+        if(x.estatus==='Pendiente Pedro Loya'&&un==='ploya')actions+=` <button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar Pedro</button>`;
+        if(x.estatus==='Lista de Espera')actions+=` <button class="btn-p" style="background:#D97706" onclick="promotePlatformUI('${x.id}')">Promover</button>`;
+        if(x.estatus!=='Cancelada')actions+=` <button class="btn-red" onclick="cancelPlatformUI('${x.id}')">Cancelar / liberar fecha</button>`;
+        return `<tr>
+          <td><b class="mono">${escapeHtml(x.folio)}</b><br><small>${escapeHtml(x.prioridadTexto||'Sin prioridad')}</small></td>
+          <td><b>${escapeHtml(x.nombre||'')}</b><br><small>${escapeHtml(x.area||'')}</small></td>
+          <td>${escapeHtml(x.areaTrabajo||'')}<br><small>${escapeHtml(x.descripcion||'')}</small></td>
+          <td style="font-size:.68rem">${dates}</td>
+          <td>${platformBadge_(x.estatus)}${x.listaEsperaMotivo?`<div style="font-size:.62rem;color:#64748B;margin-top:3px">${escapeHtml(x.listaEsperaMotivo)}</div>`:''}${platformHistShort_(x)}</td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94A3B8">Sin solicitudes</td></tr>';
 }
 async function approvePlatformUI(id){
   const r=await api({action:'approvePlatformRequest',token:SESSION.token,id});
-  if(r.success){toast('Solicitud actualizada: '+r.estatus);loadPlatformAdmin();loadPlatformCalendar();}else toast(r.error||'No se pudo aprobar','err');
+  if(r.success){toast('Solicitud actualizada: '+r.estatus);loadPlatformAdmin();loadPlatformCalendar();}
+  else toast(r.error||'No se pudo aprobar','err');
 }
 async function cancelPlatformUI(id){
-  const c=prompt('Comentario de cancelación (opcional):')||'';
+  const c=prompt('Comentario de cancelación / liberación de fecha (opcional):')||'';
   const r=await api({action:'cancelPlatformRequest',token:SESSION.token,id,comentario:c});
-  if(r.success){toast('Solicitud cancelada');loadPlatformAdmin();loadPlatformCalendar();}else toast(r.error||'No se pudo cancelar','err');
+  if(r.success){
+    toast('Solicitud cancelada'+(r.promovidos?.length?' · Promovidos: '+r.promovidos.join(', '):''));
+    loadPlatformAdmin();loadPlatformCalendar();
+  }else toast(r.error||'No se pudo cancelar','err');
 }
-function renderPlatformChecklist(){
-  const box=$('platform-check-items');let idx=0,html='';
+async function promotePlatformUI(id){
+  let r=await api({action:'promotePlatformWaitlist',token:SESSION.token,id,force:false});
+  if(r.requiresForce){
+    if(!confirm((r.error||'Continúa el conflicto.')+'\n\nSi la solicitud tiene prioridad mayor, ¿intentar reasignar y mover la prioridad menor a Lista de Espera?'))return;
+    r=await api({action:'promotePlatformWaitlist',token:SESSION.token,id,force:true});
+  }
+  if(r.success){toast('Solicitud promovida a revisión de Andrés');loadPlatformAdmin();loadPlatformCalendar();}
+  else toast(r.error||'No se pudo promover','err');
+}
+
+async function addPlatformBlockUI(){
+  const r=await api({
+    action:'addPlatformBlock',token:SESSION.token,
+    fecha:$('plat-block-date').value,horaInicio:$('plat-block-start').value,horaFin:$('plat-block-end').value,
+    tipo:'Mantenimiento',descripcion:$('plat-block-desc').value
+  });
+  if(r.success){toast('Bloqueo agregado');$('plat-block-desc').value='';loadPlatformAdmin();loadPlatformCalendar();}
+  else toast(r.error||'No se pudo bloquear','err');
+}
+async function removePlatformBlockUI(id){
+  if(!confirm('¿Liberar este bloqueo de mantenimiento?'))return;
+  const r=await api({action:'removePlatformBlock',token:SESSION.token,id});
+  if(r.success){toast('Bloqueo liberado');loadPlatformAdmin();loadPlatformCalendar();}
+  else toast(r.error||'No se pudo liberar','err');
+}
+function renderPlatformBlocks(){
+  $('platform-block-list').innerHTML=PLATFORM_ADMIN_BLOCKS.length
+    ? PLATFORM_ADMIN_BLOCKS.map(x=>`<div style="padding:7px;border-bottom:1px solid #E2E8F0;font-size:.68rem"><b>${escapeHtml(x.fecha)} ${escapeHtml(x.horaInicio)}-${escapeHtml(x.horaFin)}</b><br>${escapeHtml(x.tipo||'')} · ${escapeHtml(x.descripcion||'')} <button class="btn-red" style="padding:4px 7px;float:right" onclick="removePlatformBlockUI('${x.id}')">Liberar</button></div>`).join('')
+    : '<div style="font-size:.68rem;color:#94A3B8">Sin bloqueos activos.</div>';
+}
+function renderPlatformFindings(){
+  const box=$('platform-findings-list');
+  $('platform-release-btn').style.display=String(PLATFORM_EQUIPMENT_STATE?.estado||'')==='FUERA DE SERVICIO'?'':'none';
+  box.innerHTML=PLATFORM_ADMIN_FINDINGS.length
+    ? PLATFORM_ADMIN_FINDINGS.map(x=>`<div style="padding:9px;border:1px solid ${x.tipoHallazgo==='EQUIPO'?'#FECACA':'#FDE68A'};border-radius:8px;background:${x.tipoHallazgo==='EQUIPO'?'#FEF2F2':'#FFFBEB'};font-size:.68rem">
+        <div style="display:flex;justify-content:space-between;gap:8px"><b>${escapeHtml(x.folio)} · Punto ${escapeHtml(x.itemId)}</b><span>${escapeHtml(x.estatus||'')}</span></div>
+        <div>${escapeHtml(x.itemDescripcion||'')}</div>
+        <div style="color:#64748B;margin-top:3px">${escapeHtml(x.comentario||'')}</div>
+        ${x.fotoURL?`<a href="${escapeHtml(x.fotoURL)}" target="_blank">Ver foto</a>`:''}
+        ${x.evidenciaCierreURL?` · <a href="${escapeHtml(x.evidenciaCierreURL)}" target="_blank">Ver evidencia cierre</a>`:''}
+        ${String(x.estatus||'')==='Abierto'?`<button class="btn-g" style="margin-top:6px;width:100%" onclick="resolvePlatformFindingUI('${x.id}')">Registrar corrección + evidencia</button>`:''}
+      </div>`).join('')
+    : '<div style="font-size:.68rem;color:#94A3B8">Sin hallazgos pendientes.</div>';
+}
+async function resolvePlatformFindingUI(id){
+  const comment=prompt('Describe la acción correctiva realizada:');
+  if(!comment)return;
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*,application/pdf,.pdf';
+  input.onchange=async()=>{
+    const f=input.files?.[0];if(!f)return;
+    if(f.size>10*1024*1024){toast('Evidencia máximo 10 MB','err');return;}
+    const base64=await fileToBase64(f);
+    const r=await api({action:'resolvePlatformFinding',token:SESSION.token,id,comentario:comment,evidenciaBase64:base64,evidenciaName:f.name});
+    if(r.success){toast('Corrección registrada: '+r.estatus);loadPlatformAdmin();}
+    else toast(r.error||'No se pudo registrar','err');
+  };
+  input.click();
+}
+async function releasePlatformEquipmentUI(){
+  const comment=prompt('Comentario de liberación de la plataforma:');
+  if(!comment)return;
+  if(!confirm('La liberación habilitará nuevamente la plataforma para aprobaciones/reservaciones. ¿Continuar?'))return;
+  const r=await api({action:'releasePlatformEquipment',token:SESSION.token,comentario:comment});
+  if(r.success){
+    toast('Plataforma liberada'+(r.promovidos?.length?' · Solicitudes promovidas: '+r.promovidos.join(', '):''));
+    loadPlatformAdmin();loadPlatformCalendar();
+  }else toast(r.error||'No se pudo liberar','err');
+}
+
+// ---------- CHECKLIST V2 ----------
+function renderPlatformChecklistRows_(items,answers,details){
+  const box=$('platform-check-items');answers=answers||{};details=details||{};let out='';
   PLATFORM_CHECK_SECTIONS.forEach(sec=>{
-    html+=`<div class="platform-check-section">${escapeHtml(sec.name)}</div>`;
-    sec.items.forEach(item=>{
-      idx++;const name='pchk-'+idx;
-      html+=`<div class="platform-check-row"><div>${escapeHtml(item)}</div><label><input type="radio" name="${name}" value="BIEN"></label><label><input type="radio" name="${name}" value="MAL"></label><label><input type="radio" name="${name}" value="N/A"></label></div>`;
+    out+=`<div class="platform-check-section">${escapeHtml(sec.name)}</div>`;
+    (items||[]).filter(it=>String(it.sec)===sec.id).forEach(it=>{
+      const v=answers[it.id]||'',det=details[it.id]||{};
+      out+=`<div class="platform-check-row">
+          <div><b>${escapeHtml(it.id)}</b> ${escapeHtml(it.desc)}</div>
+          <label><input type="radio" name="pchk_${it.id}" value="BIEN" ${v==='BIEN'?'checked':''} onchange="platformCheckChanged('${it.id}')"></label>
+          <label><input type="radio" name="pchk_${it.id}" value="MAL" ${v==='MAL'?'checked':''} onchange="platformCheckChanged('${it.id}')"></label>
+          <label><input type="radio" name="pchk_${it.id}" value="N/A" ${v==='N/A'?'checked':''} onchange="platformCheckChanged('${it.id}')"></label>
+        </div>
+        <div id="pchk-mal-${it.id}" class="platform-mal-detail ${v==='MAL'?'show':''}">
+          <b style="font-size:.7rem;color:#B91C1C">Punto MAL · comentario y fotografía obligatorios</b>
+          <textarea id="pchk-mal-comment-${it.id}" class="inp" rows="2" placeholder="Describe la condición observada">${escapeHtml(det.comentario||'')}</textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px">
+            <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-camera"></i> Tomar foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="platformMalFileSelected('${it.id}',this)"></label>
+            <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images"></i> Galería<input type="file" accept="image/*" style="display:none" onchange="platformMalFileSelected('${it.id}',this)"></label>
+          </div>
+          <div id="pchk-mal-file-${it.id}" style="font-size:.65rem;color:#64748B;margin-top:4px">${det.fotoURL?`Evidencia guardada · <a href="${escapeHtml(det.fotoURL)}" target="_blank">ver foto</a>`:'Sin fotografía seleccionada'}</div>
+        </div>`;
     });
   });
-  box.innerHTML=html;
+  box.innerHTML=out;
+}
+function platformCheckChanged(id){
+  const v=document.querySelector(`input[name="pchk_${id}"]:checked`)?.value||'';
+  const d=$('pchk-mal-'+id);
+  if(d)d.classList.toggle('show',v==='MAL');
+}
+function platformMalFileSelected(id,input){
+  const f=input.files?.[0]||null;if(!f)return;
+  if(f.size>5*1024*1024){toast('La fotografía debe pesar máximo 5 MB','err');input.value='';return;}
+  PLATFORM_MAL_FILES[id]=f;
+  const el=$('pchk-mal-file-'+id);if(el)el.textContent=f.name;
+}
+function clearPlatformSignatureCanvases_(){
+  ['pchk-sign1-canvas','pchk-sign2-canvas','pchk-sign3-canvas'].forEach(id=>{
+    const c=$(id);if(!c)return;
+    const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
+    c.classList.remove('locked');c.dataset.url='';
+    PLATFORM_SIGNATURE_DIRTY[id]=false;
+  });
+}
+function fitPlatformSignatureCanvas_(id){
+  const c=$(id);if(!c)return;
+  const rect=c.getBoundingClientRect();
+  if(rect.width>0){c.width=Math.max(300,Math.round(rect.width));c.height=90;}
+}
+function markStoredSignature_(id,url){
+  const c=$(id);if(!c||!url)return;
+  fitPlatformSignatureCanvas_(id);
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='#F0FDF4';ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#15803D';ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('✓ Firma digital guardada',c.width/2,c.height/2);
+  c.classList.add('locked');c.dataset.url=url;PLATFORM_SIGNATURE_DIRTY[id]=false;
+}
+async function openPlatformChecklist(folio){
+  const r=await api({action:'getPlatformChecklist',folio});
+  if(!r.success){toast(r.error||'Checklist no disponible','err');return;}
+
+  PLATFORM_CURRENT_FOLIO=folio;
+  PLATFORM_CURRENT_CHECKLIST=r.checklist||null;
+  PLATFORM_CHECK_ITEMS=r.items||[];
+  PLATFORM_MAL_FILES={};
+
+  $('pchk-folio-display').textContent='Folio Plataforma: '+folio;
+  $('pchk-jsa').value=r.checklist?.jsaFolio||'';
+  $('pchk-operator').value=r.checklist?.operador||r.request?.nombre||'';
+  $('pchk-date').value=r.checklist?.fecha||r.request?.fechas?.[0]?.date||localDateKeyV843_();
+  $('pchk-company').value=r.checklist?.empresa||'KTMEX';
+  $('pchk-zone').value=r.checklist?.zona||r.request?.areaTrabajo||'';
+  $('pchk-model').value=r.checklist?.modelo||'Genie Z45';
+  $('pchk-serial').value=r.checklist?.serie||'';
+  $('pchk-work').value=r.checklist?.descripcion||r.request?.descripcion||'';
+  $('pchk-comments-off').value=r.checklist?.comentarioApagada||'';
+  $('pchk-comments-on').value=r.checklist?.comentarioEncendida||'';
+  $('pchk-sign1-name').value=r.checklist?.nombreOperador||'';
+  $('pchk-sign2-name').value=r.checklist?.nombreAyudante||'';
+  $('pchk-sign3-name').value=r.checklist?.nombreSeguridad||'';
+
+  const ans={};(r.checklist?.respuestas||[]).forEach(x=>ans[x.itemId]=x.valor);
+  const det={};(r.checklist?.detallesMal||[]).forEach(x=>det[x.itemId]=x);
+  renderPlatformChecklistRows_(PLATFORM_CHECK_ITEMS,ans,det);
+
+  clearPlatformSignatureCanvases_();
+  $('platform-tab-checklist').style.display='';
+  showPlatformTab('checklist');
+  setTimeout(()=>{
+    ['pchk-sign1-canvas','pchk-sign2-canvas','pchk-sign3-canvas'].forEach(fitPlatformSignatureCanvas_);
+    markStoredSignature_('pchk-sign1-canvas',r.checklist?.firmaOperadorURL);
+    markStoredSignature_('pchk-sign2-canvas',r.checklist?.firmaAyudanteURL);
+    markStoredSignature_('pchk-sign3-canvas',r.checklist?.firmaSeguridadURL);
+  },80);
+}
+function platformSignaturePayload_(id){
+  const c=$(id);
+  if(!c||c.classList.contains('locked')||!PLATFORM_SIGNATURE_DIRTY[id])return '';
+  return c.toDataURL('image/png');
+}
+async function savePlatformChecklistUI(){
+  if(!PLATFORM_CURRENT_FOLIO)return;
+  const respuestas=[],detallesMal=[];
+
+  for(const it of PLATFORM_CHECK_ITEMS){
+    const v=document.querySelector(`input[name="pchk_${it.id}"]:checked`)?.value||'';
+    respuestas.push({itemId:it.id,valor:v});
+    if(v==='MAL'){
+      const comment=$('pchk-mal-comment-'+it.id)?.value.trim()||'',file=PLATFORM_MAL_FILES[it.id]||null;
+      let photoBase64='';
+      if(file)photoBase64=await fileToBase64(file);
+      const existing=(PLATFORM_CURRENT_CHECKLIST?.detallesMal||[]).find(x=>String(x.itemId)===String(it.id));
+      detallesMal.push({
+        itemId:it.id,comentario:comment,
+        photoBase64,photoName:file?.name||'',
+        existingPhotoUrl:existing?.fotoURL||''
+      });
+    }
+  }
+
+  const checklist={
+    jsaFolio:$('pchk-jsa').value.trim(),
+    operador:$('pchk-operator').value.trim(),
+    fecha:$('pchk-date').value,
+    empresa:$('pchk-company').value.trim(),
+    zona:$('pchk-zone').value.trim(),
+    modelo:$('pchk-model').value.trim(),
+    serie:$('pchk-serial').value.trim(),
+    descripcion:$('pchk-work').value.trim(),
+    respuestas,detallesMal,
+    comentarioApagada:$('pchk-comments-off').value.trim(),
+    comentarioEncendida:$('pchk-comments-on').value.trim(),
+    nombreOperador:$('pchk-sign1-name').value.trim(),
+    nombreAyudante:$('pchk-sign2-name').value.trim(),
+    nombreSeguridad:$('pchk-sign3-name').value.trim(),
+    firmaOperadorBase64:platformSignaturePayload_('pchk-sign1-canvas'),
+    firmaAyudanteBase64:platformSignaturePayload_('pchk-sign2-canvas'),
+    firmaSeguridadBase64:platformSignaturePayload_('pchk-sign3-canvas')
+  };
+
+  const r=await api({action:'savePlatformChecklist',folio:PLATFORM_CURRENT_FOLIO,checklist});
+  if(!r.success){toast(r.error||'No se pudo guardar checklist','err');return;}
+  toast('Checklist guardado · '+r.estatusChecklist+' · '+r.estadoUso);
+  await openPlatformChecklist(PLATFORM_CURRENT_FOLIO);
+  loadPlatformCalendar();
 }
 function printPlatformChecklist(){
   const area=$('platform-check-print');if(!area)return;
+  const clone=area.cloneNode(true);
+
+  ['pchk-sign1-canvas','pchk-sign2-canvas','pchk-sign3-canvas'].forEach(id=>{
+    const original=$(id),copy=clone.querySelector('#'+id);
+    if(!original||!copy)return;
+    const box=document.createElement('div');
+    box.style.cssText='height:70px;border:1px solid #999;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-top:5px';
+    if(original.dataset.url){
+      box.textContent='✓ Firma digital guardada';
+    }else if(PLATFORM_SIGNATURE_DIRTY[id]){
+      const img=document.createElement('img');
+      img.src=original.toDataURL('image/png');
+      img.style.cssText='max-width:100%;max-height:68px';
+      box.appendChild(img);
+    }else{
+      box.textContent='Sin firma';
+    }
+    copy.replaceWith(box);
+  });
+
+  clone.querySelectorAll('.platform-mal-detail').forEach(el=>{
+    if(!el.classList.contains('show'))el.remove();
+    else el.querySelectorAll('input[type=file],label.btn-g').forEach(x=>x.remove());
+  });
+
   const w=window.open('','_blank');
-  w.document.write(`<html><head><title>Checklist Plataforma KTMEX</title><style>body{font-family:Arial,sans-serif;padding:16px;color:#111;font-size:11px}input,textarea{border:0;border-bottom:1px solid #999;font-size:11px}.platform-check-row{display:grid;grid-template-columns:1fr 55px 55px 55px;gap:4px;padding:4px;border-bottom:1px solid #ccc}.platform-check-row.head{font-weight:bold;background:#eee}.platform-check-section{font-weight:bold;background:#dbe5f1;padding:5px;margin-top:8px}.card{border:0}.btn-p{display:none}</style></head><body>${area.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();
+  w.document.write(`<html><head><title>Checklist Plataforma KTMEX</title><style>
+    body{font-family:Arial,sans-serif;padding:16px;color:#111;font-size:11px}
+    .platform-check-row{display:grid;grid-template-columns:1fr 55px 55px 55px;gap:4px;padding:4px;border-bottom:1px solid #ccc}
+    .platform-check-row.head{font-weight:bold;background:#eee}.platform-check-section{font-weight:bold;background:#dbe5f1;padding:5px;margin-top:8px}
+    .platform-mal-detail{display:block;font-size:9px}.btn-p,.btn-g,input[type=file]{display:none!important}
+    input,textarea{border:0;border-bottom:1px solid #999}.platform-sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:25px}
+  </style></head><body>${clone.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
 }
 
+// Signature modal
+let PLATFORM_SIGN_ACTIVE='',PLATFORM_SIGN_DRAWING=false,PLATFORM_SIGN_LAST={x:0,y:0};
+function openPlatformSignature(target,title){
+  const c=$(target);
+  if(c?.classList.contains('locked')){toast('Esta firma ya fue guardada y está bloqueada.','err');return;}
+  PLATFORM_SIGN_ACTIVE=target;
+  $('platform-sign-title').textContent=title||'Firma';
+  $('platform-sign-modal').style.display='flex';
+  setTimeout(()=>{
+    const mc=$('platform-sign-modal-canvas'),rect=mc.getBoundingClientRect();
+    mc.width=Math.max(500,Math.round(rect.width));mc.height=300;
+    const ctx=mc.getContext('2d');ctx.lineWidth=4;ctx.lineCap='round';ctx.strokeStyle='#0F2A4A';ctx.clearRect(0,0,mc.width,mc.height);
+  },40);
+}
+function closePlatformSignatureModal(){
+  $('platform-sign-modal').style.display='none';PLATFORM_SIGN_ACTIVE='';PLATFORM_SIGN_DRAWING=false;
+}
+function clearPlatformSignatureModal(){
+  const c=$('platform-sign-modal-canvas');c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+function acceptPlatformSignature(){
+  if(!PLATFORM_SIGN_ACTIVE)return;
+  const src=$('platform-sign-modal-canvas'),dst=$(PLATFORM_SIGN_ACTIVE);
+  fitPlatformSignatureCanvas_(PLATFORM_SIGN_ACTIVE);
+  dst.getContext('2d').clearRect(0,0,dst.width,dst.height);
+  dst.getContext('2d').drawImage(src,0,0,dst.width,dst.height);
+  PLATFORM_SIGNATURE_DIRTY[PLATFORM_SIGN_ACTIVE]=true;
+  closePlatformSignatureModal();
+}
+function platformSignPos_(e){
+  const c=$('platform-sign-modal-canvas'),r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;
+  return {x:(p.clientX-r.left)*(c.width/r.width),y:(p.clientY-r.top)*(c.height/r.height)};
+}
+function platformSignStart_(e){e.preventDefault();PLATFORM_SIGN_DRAWING=true;PLATFORM_SIGN_LAST=platformSignPos_(e);}
+function platformSignMove_(e){
+  if(!PLATFORM_SIGN_DRAWING)return;e.preventDefault();
+  const c=$('platform-sign-modal-canvas'),ctx=c.getContext('2d'),p=platformSignPos_(e);
+  ctx.beginPath();ctx.moveTo(PLATFORM_SIGN_LAST.x,PLATFORM_SIGN_LAST.y);ctx.lineTo(p.x,p.y);ctx.stroke();PLATFORM_SIGN_LAST=p;
+}
+function platformSignEnd_(){PLATFORM_SIGN_DRAWING=false;}
+setTimeout(()=>{
+  const c=$('platform-sign-modal-canvas');
+  if(c){
+    c.addEventListener('mousedown',platformSignStart_);
+    c.addEventListener('mousemove',platformSignMove_);
+    window.addEventListener('mouseup',platformSignEnd_);
+    c.addEventListener('touchstart',platformSignStart_,{passive:false});
+    c.addEventListener('touchmove',platformSignMove_,{passive:false});
+    c.addEventListener('touchend',platformSignEnd_);
+  }
+},0);
 
 // ── Inventario (técnicos) ──────────────────────────────────────
 let INV_DATA = [];
