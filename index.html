@@ -1479,7 +1479,7 @@ const LPA_AREAS = {
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <div>
       <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-person-falling-burst" style="color:#0F766E;margin-right:8px"></i>Trabajo en Alturas · Plataforma Genie Z45</h2>
-      <p style="font-size:.78rem;color:#64748B;margin:0">Plataforma V2 · Prioridades · Lista de espera · Buffer de carga 1 h · Andrés Ramírez → Pedro Loya</p>
+      <p style="font-size:.78rem;color:#64748B;margin:0">Plataforma V2 · Prioridades · Lista de espera · Carga de plataforma 1 h · Andrés Ramírez → Pedro Loya</p>
     </div>
     <span style="font-size:.66rem;padding:5px 9px;border-radius:999px;background:#E0F2FE;color:#0369A1;font-weight:800">V8.5A · Plataforma</span>
   </div>
@@ -1499,7 +1499,7 @@ const LPA_AREAS = {
       <div><h3 style="font-size:.95rem;font-weight:800;color:#334155;margin:0">Disponibilidad / Availability</h3><p style="font-size:.68rem;color:#64748B;margin:2px 0 0">Las reservaciones activas incluyen 1 hora de holgura para carga. La Lista de Espera no ocupa el calendario.</p></div>
       <button class="btn-g" onclick="loadPlatformCalendar()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
     </div>
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;font-size:.65rem;color:#64748B"><span>🟨 Pendiente Andrés</span><span>🟦 Pendiente Pedro</span><span>🟩 Aprobada</span><span>⬜ Lista de Espera</span><span>🔌 Buffer carga</span><span>⬛ Mantenimiento</span></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;font-size:.65rem;color:#64748B"><span>🟨 Pendiente Andrés</span><span>🟦 Pendiente Pedro</span><span>🟩 Aprobada</span><span>⬜ Lista de Espera</span><span>🔌 Carga de plataforma · 1 h</span><span>⬛ Mantenimiento</span></div>
     <div id="platform-calendar"></div>
   </div>
 
@@ -1531,7 +1531,7 @@ const LPA_AREAS = {
           <b>3.</b> Robo o extravío de la plataforma o accesorios implica reposición del equipo/accesorio.<br>
           <b>4.</b> Alteraciones no autorizadas que afecten seguridad pueden causar revocación de la credencial.<br>
           <b>5.</b> Operar sin DC-3 en trabajos en altura implica revocación de la credencial.<br>
-          <b>6.</b> Regresar la plataforma al Cuarto de Máquinas para carga. El sistema reserva 1 hora de buffer entre solicitudes.<br>
+          <b>6.</b> Regresar la plataforma al Cuarto de Máquinas para carga. El sistema reserva 1 hora para carga de la plataforma entre solicitudes.<br>
           <b>7.</b> Notificar cualquier falla a Facilities, canal de radio 12.
           <label style="display:block;margin-top:8px;font-weight:800"><input id="plat-terms" type="checkbox"> Sí, acepto el reglamento / I accept.</label>
         </div>
@@ -4859,7 +4859,7 @@ async function loadPlatformCalendar(){
       const c=platformEventColors_(x);
       let title='';
       if(x.eventType==='BLOCK')title='Mantenimiento · '+(x.areaTrabajo||'');
-      else if(x.eventType==='BUFFER')title='Carga / buffer · '+x.folio;
+      else if(x.eventType==='BUFFER')title='Carga de plataforma · 1 h · '+x.folio;
       else title=x.folio+' · '+x.status+' · P'+(x.prioridadCodigo||'-');
       return {
         title,
