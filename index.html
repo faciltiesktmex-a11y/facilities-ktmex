@@ -1468,7 +1468,7 @@ const LPA_AREAS = {
       <input id="daily-area" class="inp" placeholder="Área *">
     </div>
     <div style="margin-top:10px">
-      <label style="display:block;font-size:.72rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo previstos (opcional)</label>
+      <label style="display:block;font-size:.72rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo previstos (opcional)</label><div style="font-size:.66rem;color:#64748B;margin:-2px 0 5px">Puedes agregar 1, 2, 3 o más técnicos; no existe límite de 2.</div>
       <div style="display:flex;gap:7px"><select id="support-daily-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('daily')">Agregar</button></div>
       <div id="support-daily-list" style="margin-top:5px"></div>
     </div>
@@ -1677,6 +1677,7 @@ const LPA_AREAS = {
       <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
       <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
       <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')">Inventario <span id="inv-alert-dot" style="display:none;background:#EF4444;color:#fff;border-radius:8px;padding:1px 6px;font-size:.68rem;margin-left:4px"></span></button>
+      <button class="tab-btn" id="tab-daily-dash" onclick="switchTab('daily-dash')" style="display:none"><i class="fas fa-calendar-check" style="margin-right:5px"></i>Plan Diario</button>
       <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')" style="display:none"><i class="fas fa-chart-column" style="margin-right:5px"></i>Analítica</button>
     </div>
 
@@ -1809,6 +1810,24 @@ const LPA_AREAS = {
         </select>
         <div id="admin-inv-detail" style="display:none;margin-top:14px"></div>
       </div>
+    </div>
+
+    <!-- TAB: Plan Diario — solo Ingeniería y técnico administrador -->
+    <div id="panel-daily-dash" style="display:none">
+      <div class="card" style="padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <h3 style="font-size:.95rem;color:#0F2A4A;margin:0 0 3px"><i class="fas fa-calendar-check" style="margin-right:6px;color:#EA580C"></i>Actividades declaradas por los técnicos</h3>
+            <p style="font-size:.72rem;color:#64748B;margin:0">Muestra las 3 actividades mínimas del día y cualquier actividad adicional declarada.</p>
+          </div>
+          <div style="display:flex;gap:7px;align-items:end">
+            <div><label style="display:block;font-size:.66rem;font-weight:700;color:#64748B;margin-bottom:4px">Fecha</label><input id="dash-daily-date" type="date" class="inp" style="width:auto;padding:8px"></div>
+            <button class="btn-p" onclick="loadDashboardDaily()" style="width:auto"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+          </div>
+        </div>
+      </div>
+      <div id="dash-daily-kpis" class="v840-kpi-grid" style="margin-bottom:12px"></div>
+      <div id="dash-daily-list" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
 
     <!-- TAB: Analítica Operativa — solo Ingeniería y técnico administrador -->
@@ -2043,12 +2062,12 @@ const LPA_AREAS = {
       <!-- Historial -->
       <div id="mc-quotes-wrap" class="card-sm" style="padding:14px;display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px">
-          <div><h4 style="font-size:.78rem;font-weight:700;color:#334155;margin:0"><i class="fas fa-file-pdf" style="margin-right:6px;color:#DC2626"></i>Cotizaciones PDF</h4><p style="font-size:.68rem;color:#94A3B8;margin:3px 0 0">Documentos enviados por Compras.</p></div>
+          <div><h4 style="font-size:.78rem;font-weight:700;color:#334155;margin:0"><i class="fas fa-file-pdf" style="margin-right:6px;color:#DC2626"></i>Cotizaciones de la solicitud de compra</h4><p id="mc-quotes-status" style="font-size:.68rem;color:#94A3B8;margin:3px 0 0">Compras puede cargar varias cotizaciones y enviarlas juntas a Ingeniería.</p></div>
         </div>
         <div id="mc-quotes-list" style="display:flex;flex-direction:column;gap:7px"></div>
         <div id="mc-quote-upload" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
           <label style="display:block;font-size:.74rem;font-weight:700;color:#334155;margin-bottom:5px">Agregar cotización PDF</label>
-          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><input id="mc-quote-file" type="file" accept="application/pdf,.pdf" class="inp" style="flex:1;min-width:220px;padding:7px"><button class="btn-p" style="background:#DC2626" onclick="uploadCompraCotizacion()"><i class="fas fa-upload" style="margin-right:5px"></i>Subir PDF</button></div>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><input id="mc-quote-file" type="file" accept="application/pdf,.pdf" class="inp" style="flex:1;min-width:220px;padding:7px"><button class="btn-g" style="border-color:#DC2626;color:#B91C1C" onclick="uploadCompraCotizacion()"><i class="fas fa-upload" style="margin-right:5px"></i>Cargar PDF</button><button id="mc-quotes-send-btn" class="btn-p" style="background:#2563EB" onclick="sendCompraCotizacionesUI()"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar cotizaciones a Ingeniería</button></div><p style="font-size:.66rem;color:#64748B;margin:6px 0 0">Primero carga una o varias cotizaciones. Cuando estén completas, presiona Enviar cotizaciones a Ingeniería.</p>
           <p style="font-size:.67rem;color:#94A3B8;margin:5px 0 0">Máximo recomendado: 8 MB por archivo. Puedes agregar más de una cotización.</p>
         </div>
       </div>
@@ -2170,7 +2189,7 @@ const LPA_AREAS = {
       </div>
       <div id="act-foto-file-name" style="font-size:.7rem;color:#64748B;margin-bottom:8px">Sin fotografía seleccionada.</div>
       <div id="act-start-support-wrap" style="margin-bottom:10px">
-        <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label>
+        <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label><div style="font-size:.66rem;color:#64748B;margin:-2px 0 5px">Agrega todos los técnicos que participen; no se crean folios adicionales.</div>
         <div style="display:flex;gap:7px"><select id="support-start-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('start')">Agregar</button></div>
         <div id="support-start-list" style="margin-top:5px"></div>
       </div>
@@ -2232,7 +2251,7 @@ const LPA_AREAS = {
       <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images" style="margin-right:5px"></i>Galería / archivos<input type="file" id="act-nueva-foto-gallery" accept="image/*" style="display:none" onchange="spontFileSelected_('gallery')"></label>
     </div>
     <div id="act-nueva-file-name" style="font-size:.7rem;color:#64748B;margin-bottom:10px">Sin fotografía seleccionada.</div>
-    <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label>
+    <label style="display:block;font-size:.74rem;font-weight:700;color:#475569;margin-bottom:5px">Técnicos de apoyo (opcional)</label><div style="font-size:.66rem;color:#64748B;margin:-2px 0 5px">Agrega todos los técnicos que participen; no se crean folios adicionales.</div>
     <div style="display:flex;gap:7px"><select id="support-spont-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('spont')">Agregar</button></div>
     <div id="support-spont-list" style="margin:4px 0 12px"></div>
 
@@ -2319,6 +2338,7 @@ const LPA_AREAS = {
 <!-- V8.3.0 · Analítica operativa restringida: checklists + técnicos -->
 <!-- V8.4.0 · cotizaciones Compras + Plan Diario + apoyos compartidos + galería/cámara + Plataforma -->
 <!-- V8.4.1 · Plan Diario sin estimado + un cronómetro activo + técnico administrador carga plan -->
+<!-- V8.4.2 · registro Plan Diario robusto + Dashboard diario + envío explícito de cotizaciones -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -4500,9 +4520,20 @@ async function loadDailyPlan(){
 async function createDailyActivityUI(){
   const desc=$('daily-desc').value.trim(),cat=$('daily-category').value.trim(),area=$('daily-area').value.trim();
   if(!desc||!area){toast('Completa descripción y área','err');return;}
-  const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tecnicosApoyo:SUPPORT_STATE.daily});
-  if(r.success){$('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';resetSupportPicker('daily');toast('Actividad diaria declarada · '+r.totalDia+'/3');loadDailyPlan();}
-  else toast(r.error||'No se pudo crear','err');
+  const btn=[...document.querySelectorAll('#daily-tech-form button')].find(b=>String(b.textContent||'').includes('Agregar actividad diaria'));
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>Registrando…';}
+  try{
+    const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tecnicosApoyo:SUPPORT_STATE.daily});
+    if(r.success){
+      $('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';resetSupportPicker('daily');
+      toast('Actividad registrada correctamente · '+r.totalDia+'/3');
+      await loadDailyPlan();
+    }else{
+      toast(r.error||'No se pudo registrar la actividad diaria','err');
+      if(/Acción no reconocida/i.test(String(r.error||'')))toast('Debes desplegar una nueva versión de Code.gs V8.4.2.','err');
+    }
+  }catch(e){toast('Error al registrar actividad diaria: '+e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-plus" style="margin-right:5px"></i>Agregar actividad diaria';}}
 }
 function dailyStatusBadge_(s){
   const cls=s==='Cerrada'?'b-done':s==='Pendiente de cierre por Ingeniería'?'b-mgr':s==='En curso'?'b-ejec':s==='Pausada'?'b-wait':'b-pend';
@@ -5221,10 +5252,13 @@ async function registrarEntradaQR() {
 // ── Admin ────────────────────────────────────────────────────
 function configureManagerDashboardTabs(){
   const role=SESSION?.user?.rol||'';
-  if($('tab-analytics'))$('tab-analytics').style.display=canViewOperationsAnalytics()?'':'none';
+  const canOps=canViewOperationsAnalytics();
+  if($('tab-analytics'))$('tab-analytics').style.display=canOps?'':'none';
+  if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none';
   if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
   if($('tab-analytics'))$('tab-analytics').style.display='none';
+  if($('tab-daily-dash'))$('tab-daily-dash').style.display='none';
   ['tab-sol','tab-compra','tab-lpa','tab-acc'].forEach(id=>{if($(id))$(id).style.display='';});
 }
 function switchTab(tab) {
@@ -5236,7 +5270,11 @@ function switchTab(tab) {
     toast('La analítica operativa está disponible únicamente para Ingeniería y el técnico administrador.','err');
     tab='sol';
   }
-  ['sol','compra','lpa','acc','inv','analytics'].forEach(t=>{
+  if(tab==='daily-dash'&&!canViewOperationsAnalytics()){
+    toast('El Plan Diario del Dashboard está disponible únicamente para Ingeniería y el técnico administrador.','err');
+    tab='sol';
+  }
+  ['sol','compra','lpa','acc','inv','daily-dash','analytics'].forEach(t=>{
     const tb=$('tab-'+t),pn=$('panel-'+t);
     if(tb)tb.classList.toggle('active',t===tab);
     if(pn)pn.style.display=t===tab?'':'none';
@@ -5248,6 +5286,7 @@ function switchTab(tab) {
   if(tab==='lpa'&&Object.keys(LPA_DATA).length===0)loadLPA();
   if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
   if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
+  if(tab==='daily-dash')loadDashboardDaily();
   if(tab==='analytics')loadOperationsAnalytics();
 }
 
@@ -5268,6 +5307,31 @@ async function refreshAdmin() {
   await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
 }
 
+
+let DASH_DAILY_DATA=[];
+let DASH_DAILY_TECHS=[];
+async function loadDashboardDaily(){
+  if(!SESSION||!canViewOperationsAnalytics())return;
+  const input=$('dash-daily-date');if(input&&!input.value)input.value=new Date().toISOString().slice(0,10);
+  const date=input?.value||new Date().toISOString().slice(0,10);
+  try{
+    const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
+    if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
+    DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];renderDashboardDaily();
+  }catch(e){toast('Error Plan Diario: '+e.message,'err');}
+}
+function renderDashboardDaily(){
+  const items=DASH_DAILY_DATA||[],byTech={};
+  (DASH_DAILY_TECHS||[]).forEach(function(t){if(t&&t.nombre)byTech[t.nombre]=[];});
+  items.forEach(function(x){const k=x.tecnico||'Sin técnico';if(!byTech[k])byTech[k]=[];byTech[k].push(x);});
+  const techs=Object.keys(byTech).sort(),ok=techs.filter(t=>byTech[t].length>=3).length,missing=techs.filter(t=>byTech[t].length<3).length,pending=items.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length;
+  $('dash-daily-kpis').innerHTML=[opsKpiCard_('Técnicos con registro',techs.length),opsKpiCard_('Cumplieron mínimo 3',ok),opsKpiCard_('Con menos de 3',missing),opsKpiCard_('Actividades declaradas',items.length),opsKpiCard_('Pend. cierre Ingeniería',pending)].join('');
+  if(!techs.length){$('dash-daily-list').innerHTML='<div class="card" style="padding:25px;text-align:center;color:#94A3B8">No hay actividades declaradas para la fecha seleccionada.</div>';return;}
+  $('dash-daily-list').innerHTML=techs.map(function(tech){
+    const rows=byTech[tech].sort((a,b)=>String(a.creado||'').localeCompare(String(b.creado||''))),complete=rows.length>=3;
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px"><div><b style="color:#0F2A4A">${escapeHtml(tech)}</b><div style="font-size:.68rem;color:#64748B">${rows.length} actividad(es) declarada(s)</div></div><span class="badge ${complete?'b-done':'b-rech'}">${rows.length}/3 mínimo</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">${rows.map((x,i)=>{const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON||x.tecnicosApoyoJSON),eff=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):dailyLiveMinutes_(a);return `<div style="padding:10px;border:1px solid #E2E8F0;border-radius:9px;background:#F8FAFC"><div style="display:flex;justify-content:space-between;gap:6px"><b style="font-size:.74rem">Actividad ${i+1}</b>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><div style="font-size:.78rem;font-weight:700;color:#334155;margin-top:5px">${escapeHtml(x.descripcion||'')}</div><div style="font-size:.67rem;color:#64748B;margin-top:3px">${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'Sin categoría')}</div>${a.horaInicio?`<div style="font-size:.67rem;color:#475569;margin-top:5px"><b>Tiempo efectivo:</b> ${actFmtMin_(eff||0)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:''}${supports.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Apoyos:</b> ${supports.map(s=>escapeHtml(s.nombre||s)).join(', ')}</div>`:''}</div>`;}).join('')}</div></div>`;
+  }).join('');
+}
 
 let OPS_ANALYTICS_DATA=null;
 let OPS_ANALYTICS_CHARTS={};
@@ -5788,7 +5852,7 @@ function renderCompras() {
       <td style="font-size:.78rem;color:#475569">${r.materialNuevoNombre||r.descripcion||'—'}${r.altaInventarioEstatus==='Pendiente alta'?'<br><span style="font-size:.68rem;color:#92400E">Pendiente de alta</span>':''}</td>
       <td style="color:#64748B">${r.cantidad||'—'} ${r.unidad||''}</td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
-      <td>${compraBadge(r.estatus)}</td>
+      <td>${compraBadge(r.estatus)}${String(r.cotizacionesEstado||'')==='Enviadas a Ingeniería'?'<div style="font-size:.62rem;color:#15803D;margin-top:3px"><i class="fas fa-paper-plane"></i> Cotizaciones enviadas</div>':(r.cotizacionesPDF&&r.cotizacionesPDF!=='[]'?'<div style="font-size:.62rem;color:#B45309;margin-top:3px"><i class="fas fa-file-pdf"></i> Pendientes de enviar</div>':'')}</td>
       <td style="text-align:center"><button onclick="event.stopPropagation();openCompraModal('${r.id}')" style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
     </tr>`).join('');
 }
@@ -6108,7 +6172,11 @@ function renderCompraCotizaciones(r){
   const canUpload=role==='compras';
   if(!canView){wrap.style.display='none';return;}
   wrap.style.display='';upload.style.display=canUpload?'':'none';
+  const statusEl=$('mc-quotes-status'),sendBtn=$('mc-quotes-send-btn');
   let quotes=[];try{quotes=JSON.parse(r.cotizacionesPDF||'[]');if(!Array.isArray(quotes))quotes=[];}catch(e){quotes=[];}
+  const sent=String(r.cotizacionesEstado||'')==='Enviadas a Ingeniería';
+  if(statusEl){statusEl.textContent=sent?('Enviadas a Ingeniería'+(r.cotizacionesEnviadasFecha?' · '+fmtDate(r.cotizacionesEnviadasFecha):'')):(quotes.length?'Cotizaciones cargadas en borrador · Pendientes de enviar':'Compras puede cargar varias cotizaciones y enviarlas juntas a Ingeniería.');statusEl.style.color=sent?'#15803D':(quotes.length?'#B45309':'#94A3B8');}
+  if(sendBtn){sendBtn.style.display=canUpload?'':'none';sendBtn.disabled=!quotes.length||sent;sendBtn.innerHTML=sent?'<i class="fas fa-circle-check" style="margin-right:5px"></i>Cotizaciones enviadas':'<i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar cotizaciones a Ingeniería';}
   list.innerHTML=quotes.length?quotes.map((q,i)=>`<a href="${escapeHtml(q.url||'#')}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;background:#FFF7F7;border:1px solid #FECACA;border-radius:8px;text-decoration:none"><span style="font-size:.76rem;color:#991B1B;font-weight:700"><i class="fas fa-file-pdf" style="margin-right:6px"></i>${escapeHtml(q.nombre||('Cotización '+(i+1)))}</span><span style="font-size:.65rem;color:#94A3B8">${q.fecha?fmtDate(q.fecha):''} · ${escapeHtml(q.usuario||'Compras')}</span></a>`).join(''):'<p style="font-size:.74rem;color:#94A3B8;margin:0">Aún no hay cotizaciones PDF adjuntas.</p>';
 }
 async function uploadCompraCotizacion(){
@@ -6121,12 +6189,25 @@ async function uploadCompraCotizacion(){
     const pdfBase64=await fileToBase64(file);
     const res=await api({action:'uploadCompraCotizacion',token:SESSION.token,id:CUR_COMPRA.id,pdfBase64,pdfName:file.name});
     if(!res.success){toast(res.error||'No se pudo subir la cotización','err');return;}
-    toast('Cotización PDF cargada correctamente');input.value='';
+    toast('Cotización cargada en borrador. Cuando estén completas, envíalas a Ingeniería.');input.value='';
     if(CR_MODAL_ORIGEN==='rol')await loadComprasRol();else await loadCompras();
     const src=CR_MODAL_ORIGEN==='rol'?CR_DATA:COMPRA_DATA;
     const refreshed=src.find(x=>x.id===CUR_COMPRA.id);
     if(refreshed){CUR_COMPRA=refreshed;renderCompraCotizaciones(refreshed);renderCompraHistorial(refreshed);}
   }catch(e){toast('Error al cargar PDF: '+e.message,'err');}
+}
+async function sendCompraCotizacionesUI(){
+  if(!CUR_COMPRA||!SESSION||SESSION.user.rol!=='compras')return;
+  let quotes=[];try{quotes=JSON.parse(CUR_COMPRA.cotizacionesPDF||'[]');if(!Array.isArray(quotes))quotes=[];}catch(e){quotes=[];}
+  if(!quotes.length){toast('Primero carga al menos una cotización PDF','err');return;}
+  const btn=$('mc-quotes-send-btn');if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>Enviando…';}
+  try{
+    const res=await api({action:'sendCompraCotizaciones',token:SESSION.token,id:CUR_COMPRA.id});
+    if(!res.success){toast(res.error||'No se pudieron enviar las cotizaciones','err');return;}
+    toast('Cotizaciones enviadas a Ingeniería');await loadComprasRol();
+    const refreshed=CR_DATA.find(x=>x.id===CUR_COMPRA.id);if(refreshed){CUR_COMPRA=refreshed;renderCompraCotizaciones(refreshed);renderCompraHistorial(refreshed);}
+  }catch(e){toast('Error al enviar cotizaciones: '+e.message,'err');}
+  finally{if(btn)btn.disabled=false;}
 }
 
 function renderCompraHistorial(r) {
