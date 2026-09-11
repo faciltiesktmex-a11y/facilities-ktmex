@@ -1109,7 +1109,7 @@ const LPA_AREAS = {
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
       <div>
         <h3 style="font-size:.88rem;color:#334155;margin:0"><i class="fas fa-calendar-day" style="color:#EA580C;margin-right:5px"></i>Plan Diario</h3>
-        <p style="font-size:.68rem;color:#64748B;margin:2px 0 0">Declara mínimo 3 actividades. Se mostrarán junto con tus solicitudes y actividades espontáneas.</p>
+        <p style="font-size:.68rem;color:#64748B;margin:2px 0 0">Declara mínimo 3 actividades. Se mostrarán junto con tus solicitudes y actividades espontáneas.</p><p id="daily-visible-date" style="font-size:.64rem;color:#0F766E;margin:3px 0 0;font-weight:700"></p>
       </div>
       <span id="daily-progress" class="badge b-ejec">0 / 3</span>
     </div>
@@ -4274,11 +4274,12 @@ async function loadMisActividades(force){
   if(!SESSION){showView('login');return;}
   if(ACT_LOAD_IN_FLIGHT&&!force)return ACT_LOAD_IN_FLIGHT;
   if($('act-user-label'))$('act-user-label').textContent=SESSION.user.nombre+' · '+(ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol);
+  if($('daily-visible-date'))$('daily-visible-date').textContent='Actividades del día: '+localDateKeyV843_().split('-').reverse().join('/');
   const list=$('act-list');
   if(list&&!ACT_DATA.daily?.length&&!ACT_DATA.solicitudes?.length&&!ACT_DATA.apoyos?.length)list.innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando actividades…</div>';
   ACT_LOAD_IN_FLIGHT=(async function(){
     try{
-      const res=await api({action:'getMisActividades',token:SESSION.token});
+      const res=await api({action:'getMisActividades',token:SESSION.token,fechaLocal:localDateKeyV843_()});
       if(res.success){
         ACT_DATA=res;
         const totalDaily=(res.daily||[]).length;
@@ -4659,7 +4660,7 @@ async function createDailyActivityUI(){
   const desc=$('daily-desc')?.value.trim()||'',cat=$('daily-category')?.value.trim()||'',area=$('daily-area')?.value.trim()||'';
   if(!desc||!area){toast('Completa descripción y área','err');return;}
   try{
-    const r=await api({action:'createDailyActivity',token:SESSION.token,descripcion:desc,categoria:cat,area:area,tecnicosApoyo:SUPPORT_STATE.daily});
+    const r=await api({action:'createDailyActivity',token:SESSION.token,fecha:localDateKeyV843_(),descripcion:desc,categoria:cat,area:area,tecnicosApoyo:SUPPORT_STATE.daily});
     if(r.success){
       $('daily-desc').value='';$('daily-category').value='';$('daily-area').value='';
       resetSupportPicker('daily');
