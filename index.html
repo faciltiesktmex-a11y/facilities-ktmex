@@ -571,6 +571,156 @@ const LPA_AREAS = {
       <span style="color:#0284C7;font-size:.8rem;font-weight:600">Abrir inventario →</span>
     </div>
 
+    <!-- Plataforma Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goPlataforma()">
+      <div style="width:48px;height:48px;background:#F0FDFA;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-up-right-from-square" style="color:#0F766E;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Préstamo de Plataforma</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Consulta disponibilidad, solicita la Genie Z45, revisa tu folio y llena el checklist cuando corresponda.</p>
+      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir plataforma →</span>
+    </div>
+    <!-- Admin Card -->
+    <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
+      <div style="width:48px;height:48px;background:#F8FAFC;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <i class="fas fa-shield-halved" style="color:#475569;font-size:20px"></i>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Panel Administrativo</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Autorización de solicitudes, asignación de técnicos y resultados LPA.</p>
+      <span style="color:#475569;font-size:.8rem;font-weight:600">Acceder →</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ VIEW: SOLICITUD FORM ══ -->
+<div id="view-solicitud" style="display:none;max-width:580px;margin:0 auto;padding:28px 16px" class="fade"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px"><button id="sol-tab-new" class="btn-p" onclick="showSolicitudTab('new')">Nueva solicitud</button><button id="sol-tab-status" class="btn-g" onclick="showSolicitudTab('status')">Consultar estatus</button></div><div id="sol-status-panel" style="display:none"><div class="card" style="padding:18px;margin-bottom:14px"><h3 style="margin:0 0 8px;font-size:1rem">Consultar estatus por folio</h3><p style="font-size:.8rem;color:#64748B">Escribe el folio para conocer el estatus, técnico asignado y motivo del rechazo.</p><div style="display:flex;gap:8px"><input id="sol-status-folio" class="inp" style="flex:1" placeholder="FAC-2026-00025"><button class="btn-p" onclick="consultarSolicitudFolio()">Consultar</button></div></div><div id="sol-status-result"></div></div><div id="sol-new-panel">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(37,99,235,.28)">
+      <i class="fas fa-clipboard-list" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Solicitud de Trabajo</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
+  </div>
+
+  <div class="card" style="padding:24px">
+    <div id="sol-form">
+      <!-- Fecha -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-calendar" style="color:#2563EB;margin-right:5px"></i>Fecha de solicitud *</label>
+        <input type="date" id="s-fecha" class="inp">
+      </div>
+      <!-- Nombre -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user" style="color:#2563EB;margin-right:5px"></i>Nombre del solicitante *</label>
+        <input type="text" id="s-nombre" class="inp" placeholder="Nombre completo">
+      </div>
+      <!-- Email -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-envelope" style="color:#2563EB;margin-right:5px"></i>Correo electrónico (para recibir folio) *</label>
+        <input type="email" id="s-email" class="inp" placeholder="usuario@ktmex.com">
+      </div>
+      <!-- Gerente -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-user-tie" style="color:#2563EB;margin-right:5px"></i>Nombre del gerente de área *</label>
+        <select id="s-gerente" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Departamento -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-building" style="color:#2563EB;margin-right:5px"></i>Departamento solicitante *</label>
+        <select id="s-depto" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Tipo -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-wrench" style="color:#2563EB;margin-right:5px"></i>Tipo de solicitud *</label>
+        <select id="s-tipo" class="inp" style="cursor:pointer"><option value="">— Selecciona —</option></select>
+      </div>
+      <!-- Descripción -->
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#2563EB;margin-right:5px"></i>Descripción detallada *</label>
+        <textarea id="s-desc" class="inp" rows="4" placeholder="Describe el trabajo requerido con el mayor detalle posible…"></textarea>
+      </div>
+      <!-- Evidencias V8.2.1 -->
+      <div style="margin-bottom:16px;padding:14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px">
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:8px"><i class="fas fa-paperclip" style="color:#2563EB;margin-right:5px"></i>Evidencia de la solicitud *</label>
+        <p style="font-size:.72rem;color:#64748B;margin:0 0 10px">Puedes adjuntar hasta <b>3 imágenes + 1 PDF</b>. En celular/tablet puedes tomar una fotografía o seleccionar archivos existentes.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-camera" style="margin-right:5px"></i>Tomar fotografía<input type="file" id="s-foto-camera" accept="image/*" capture="environment" style="display:none" onchange="mergeSolicitudCameraFile(this)"></label>
+          <label class="btn-g" style="text-align:center;cursor:pointer"><i class="fas fa-images" style="margin-right:5px"></i>Seleccionar imágenes<input type="file" id="s-fotos" accept="image/*" multiple style="display:none" onchange="previewSolicitudFiles()"></label>
+        </div>
+        <label class="btn-g" style="display:block;text-align:center;cursor:pointer;margin-top:8px"><i class="fas fa-file-pdf" style="margin-right:5px;color:#DC2626"></i>Seleccionar PDF<input type="file" id="s-pdf" accept="application/pdf,.pdf" style="display:none" onchange="previewSolicitudFiles()"></label>
+        <div id="s-files-preview" style="font-size:.72rem;color:#475569;margin-top:9px">Sin archivos seleccionados.</div>
+      </div>
+      <!-- Nueva instalación -->
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:8px"><i class="fas fa-question-circle" style="color:#2563EB;margin-right:5px"></i>¿Es una instalación nueva? *</label>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="s-nueva" value="Si" onchange="togglePresupuestoFields()" style="accent-color:#2563EB"> Sí
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:#334155">
+            <input type="radio" name="s-nueva" value="No" onchange="togglePresupuestoFields()" style="accent-color:#2563EB"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- Datos de presupuesto: visibles solo para instalación nueva -->
+      <div id="s-presupuesto-fields" style="display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:14px;margin-bottom:20px">
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-hashtag" style="color:#2563EB;margin-right:5px"></i>Anota el número de presupuesto asignado *</label>
+          <input type="text" id="s-presupuesto-num" class="inp" placeholder="Ej. CAPEX-2026-0158">
+        </div>
+        <div>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-dollar-sign" style="color:#2563EB;margin-right:5px"></i>Anota el monto asignado para el trabajo *</label>
+          <input type="number" id="s-presupuesto-monto" class="inp" min="0" step="0.01" inputmode="decimal" placeholder="Ej. 125500.00">
+          <p style="font-size:.72rem;color:#64748B;margin-top:4px">Monto en pesos mexicanos (MXN).</p>
+        </div>
+      </div>
+      <button class="btn-p" id="btn-sol-submit" onclick="submitSolicitud()" style="width:100%">
+        <i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud
+      </button>
+      <p style="text-align:center;font-size:.72rem;color:#94A3B8;margin-top:8px">* Campos obligatorios</p>
+    </div>
+
+    <!-- Success -->
+    <div id="sol-success" style="display:none;text-align:center;padding:20px 0">
+      <div style="width:58px;height:58px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <i class="fas fa-check-circle" style="color:#22C55E;font-size:26px"></i>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0 0 6px">¡Solicitud Enviada!</h3>
+      <p style="color:#64748B;font-size:.82rem;margin:0 0 12px">Número de folio:</p>
+      <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:11px;padding:10px 20px;display:inline-block;margin-bottom:18px">
+        <span id="sol-folio" class="mono" style="font-size:1.2rem;font-weight:700;color:#2563EB"></span>
+      </div>
+      <p style="color:#64748B;font-size:.8rem;margin:0 0 20px">Facilities revisará tu solicitud a la brevedad. Recibirás confirmación por email.</p>
+      <button class="btn-g" onclick="resetSolicitud()"><i class="fas fa-plus" style="margin-right:6px"></i>Nueva Solicitud</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /sol-new-panel -->
+<!-- ══════════════════════ VIEW: SOLICITUD DE COMPRA ══ -->
+<div id="view-compra" style="display:none;max-width:760px;margin:0 auto;padding:28px 16px" class="fade">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#D97706,#B45309);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 22px rgba(217,119,6,.28)">
+      <i class="fas fa-cart-shopping" style="color:#fff;font-size:20px"></i>
+    </div>
+    <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Solicitud de Compra</h2>
+    <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <button id="compra-tab-new" class="btn-p" onclick="showCompraTab('new')"><i class="fas fa-cart-plus" style="margin-right:6px"></i>Nueva solicitud</button>
+    <button id="compra-tab-status" class="btn-g" onclick="showCompraTab('status')"><i class="fas fa-list-check" style="margin-right:6px"></i>Mis solicitudes</button>
+  </div>
+  <div id="compra-status-panel" style="display:none">
+    <div class="card" style="padding:18px;margin-bottom:14px">
+      <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div><h3 style="font-size:1rem;margin:0">Estatus de mis solicitudes de compra</h3><p style="font-size:.76rem;color:#64748B;margin:4px 0 0">Consulta aprobaciones, rechazos y motivo.</p></div>
+        <select id="compra-status-filter" class="inp" style="width:auto;min-width:170px" onchange="renderMisCompras()">
+          <option value="">Todas</option><option value="Pendiente">Pendientes</option><option value="Aprobada">Aprobadas</option><option value="Rechazada">Rechazadas</option><option value="Compra">En compra</option><option value="Recibida">Recibidas</option>
+        </select>
+      </div>
+    </div>
     <div id="compra-notice"></div>
     <div id="compra-status-list" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
@@ -933,7 +1083,7 @@ const LPA_AREAS = {
     <button onclick="openActividadEspontaneaModal()" class="btn-p" style="background:#7C3AED;flex:1" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
       <i class="fas fa-bolt" style="margin-right:7px"></i>Actividad Espontánea
     </button>
-    <button onclick="loadMisActividades()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
+    <button onclick="loadMisActividades(true)" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
   </div>
 
   <div id="act-daily-form" class="card" style="padding:16px;margin-bottom:14px">
@@ -1647,7 +1797,7 @@ const LPA_AREAS = {
           </div>
           <div style="display:flex;gap:7px;align-items:end">
             <div><label style="display:block;font-size:.66rem;font-weight:700;color:#64748B;margin-bottom:4px">Fecha</label><input id="dash-daily-date" type="date" class="inp" style="width:auto;padding:8px"></div>
-            <button class="btn-p" onclick="loadDashboardDaily()" style="width:auto"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+            <button class="btn-p" onclick="loadDashboardDaily(true)" style="width:auto"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
           </div>
         </div>
       </div>
@@ -2166,6 +2316,7 @@ const LPA_AREAS = {
 <!-- V8.4.2 · registro Plan Diario robusto + Dashboard diario + envío explícito de cotizaciones -->
 <!-- V8.4.3 · fechas Plan Diario normalizadas + cotizaciones en modal correcto + sesión lateral corregida -->
 <!-- V8.4.4 · Mis Actividades unificadas + apoyos con tiempo visible + eliminación segura de duplicados -->
+<!-- V8.4.5 · DOM restaurado + apoyos previstos visibles + actualización optimizada -->
 <!-- ══════════════════════════════════ JS ══ -->
 <script>
 // V7.10 — Centro de Notificaciones
@@ -2845,6 +2996,7 @@ function roleCanView(v) {
 }
 
 function showView(v) {
+  if(v==='compra'&&!SESSION){PENDING_VIEW='compra';v='login';}
   if(!roleCanView(v)){
     toast('Tu usuario no tiene permiso para acceder a esta sección.','err');
     if(SESSION?.user?.rol==='manager')v='admin';
@@ -4049,24 +4201,28 @@ let ACT_DATA = { solicitudes: [], actividades: [], daily: [], apoyos: [] };
 let ACT_FOTO_MODE = null;      // 'iniciar' | 'cerrar'
 let ACT_FOTO_TARGET = null;    // solicitudId (iniciar) o actividadId (cerrar)
 
-async function loadMisActividades() {
-  if (!SESSION) { showView('login'); return; }
-  if ($('act-user-label')) $('act-user-label').textContent = SESSION.user.nombre + ' · ' + (ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol);
-  try {
-    const res = await api({action:'getMisActividades', token:SESSION.token});
-    if (res.success) {
-      ACT_DATA = res;
-      const totalDaily=(res.daily||[]).length;
-      if($('daily-progress')){
-        $('daily-progress').textContent=totalDaily+' / 3';
-        $('daily-progress').className='badge '+(totalDaily>=3?'b-done':'b-ejec');
-      }
-      if($('act-daily-form'))$('act-daily-form').style.display=SESSION.user.rol==='tecnico'?'':'none';
-      if(SESSION.user.rol==='tecnico')resetSupportPicker('daily');
-      renderMisActividades();
-    }
-    else toast(res.error||'Error al cargar actividades','err');
-  } catch(e) { toast('Error de conexión','err'); }
+let ACT_LOAD_IN_FLIGHT=null;
+async function loadMisActividades(force){
+  if(!SESSION){showView('login');return;}
+  if(ACT_LOAD_IN_FLIGHT&&!force)return ACT_LOAD_IN_FLIGHT;
+  if($('act-user-label'))$('act-user-label').textContent=SESSION.user.nombre+' · '+(ROL_PUESTO[SESSION.user.rol]||SESSION.user.rol);
+  const list=$('act-list');
+  if(list&&!ACT_DATA.daily?.length&&!ACT_DATA.solicitudes?.length&&!ACT_DATA.apoyos?.length)list.innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando actividades…</div>';
+  ACT_LOAD_IN_FLIGHT=(async function(){
+    try{
+      const res=await api({action:'getMisActividades',token:SESSION.token});
+      if(res.success){
+        ACT_DATA=res;
+        const totalDaily=(res.daily||[]).length;
+        if($('daily-progress')){$('daily-progress').textContent=totalDaily+' / 3';$('daily-progress').className='badge '+(totalDaily>=3?'b-done':'b-ejec');}
+        if($('act-daily-form'))$('act-daily-form').style.display=SESSION.user.rol==='tecnico'?'':'none';
+        if(SESSION.user.rol==='tecnico'&&!(SUPPORT_STATE.daily||[]).length)resetSupportPicker('daily');
+        renderMisActividades();
+      }else toast(res.error||'Error al cargar actividades','err');
+    }catch(e){toast('Error de conexión al cargar actividades','err');}
+    finally{ACT_LOAD_IN_FLIGHT=null;}
+  })();
+  return ACT_LOAD_IN_FLIGHT;
 }
 
 function actFmtDateTime_(v){if(!v)return 'Sin registro';try{return new Date(v).toLocaleString(LANG==='en'?'en-US':'es-MX',{dateStyle:'short',timeStyle:'short'});}catch(e){return String(v);}}
@@ -4139,7 +4295,8 @@ function renderUnifiedDailyCard_(d){
   </div>`;
 }
 function renderUnifiedSupportCard_(x){
-  const a=x.actividad||{},sp=x.soporte||{},status=actBucketUnified_(x.solicitud||{},a);
+  const a=x.actividad||null,sp=x.soporte||{};
+  const status=a?actBucketUnified_(x.solicitud||{},a):{b:'PENDIENTE',t:'Apoyo previsto'};
   const validated=!!sp.validado;
   const time=actFmtMin_(sp.minutosEfectivos||0);
   return `<div class="card" style="padding:16px;border-left:4px solid #0EA5E9">
@@ -4148,7 +4305,7 @@ function renderUnifiedSupportCard_(x){
     <div style="font-size:.7rem;color:#64748B"><b>Responsable:</b> ${escapeHtml(x.responsable||'')} · <b>Origen:</b> ${x.fuente==='PLAN_DIARIO'?'Plan Diario':x.fuente==='ESPONTANEA'?'Espontánea':'Solicitud asignada'}</div>
     <div style="margin-top:8px;padding:9px;background:${validated?'#F0FDF4':'#EFF6FF'};border-radius:8px;font-size:.74rem;color:${validated?'#166534':'#1D4ED8'}">
       <b>Mi tiempo de apoyo:</b> ${escapeHtml(time)}<br>
-      <span>${escapeHtml(sp.estado||'Apoyo en curso')}${validated&&sp.validadoPor?' · validado por '+escapeHtml(sp.validadoPor):''}</span>
+      <span>${escapeHtml(sp.estado||(a?'Apoyo en curso':'Apoyo previsto · Por iniciar'))}${validated&&sp.validadoPor?' · validado por '+escapeHtml(sp.validadoPor):''}</span>
     </div>
     <p style="font-size:.66rem;color:#64748B;margin:7px 0 0">El técnico responsable controla inicio, pausas, término y cierre de esta actividad.</p>
   </div>`;
@@ -4380,7 +4537,7 @@ function supportPickerAdd(ctx){
 function supportPickerRemove(ctx,i){SUPPORT_STATE[ctx].splice(i,1);renderSupportPicker_(ctx);}
 function openActiveSupportModal(id,folio){
   let a=(ACT_DATA.actividades||[]).find(x=>String(x.id)===String(id));
-  if(!a){const p=(DAILY_DATA||[]).find(x=>String(x.actividad?.id||'')===String(id));a=p?.actividad||null;}
+  if(!a){const p=(ACT_DATA.daily||[]).find(x=>String(x.actividad?.id||'')===String(id));a=p?.actividad||null;}
   SUPPORT_ACTIVE_ID=id;$('support-active-folio').textContent=folio||a?.folio||'';
   setSupportPicker('active',parseActSupports_(a));
   $('modal-act-support').style.display='flex';
@@ -5224,16 +5381,22 @@ async function refreshAdmin() {
 
 let DASH_DAILY_DATA=[];
 let DASH_DAILY_TECHS=[];
-async function loadDashboardDaily(){
+let DASH_DAILY_LAST_KEY='';let DASH_DAILY_LAST_AT=0;let DASH_DAILY_LOADING=null;
+async function loadDashboardDaily(force){
   if(!SESSION||!canViewOperationsAnalytics())return;
   const input=$('dash-daily-date');if(input&&!input.value)input.value=localDateKeyV843_();
   const date=input?.value||localDateKeyV843_();
-  try{
-    const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
-    if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
-    DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];
-    renderDashboardDaily();
-  }catch(e){toast('Error Plan Diario: '+e.message,'err');}
+  if(!force&&DASH_DAILY_LAST_KEY===date&&Date.now()-DASH_DAILY_LAST_AT<10000){renderDashboardDaily();return;}
+  if(DASH_DAILY_LOADING&&!force)return DASH_DAILY_LOADING;
+  DASH_DAILY_LOADING=(async function(){
+    try{
+      const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
+      if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
+      DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];DASH_DAILY_LAST_KEY=date;DASH_DAILY_LAST_AT=Date.now();renderDashboardDaily();
+    }catch(e){toast('Error Plan Diario: '+e.message,'err');}
+    finally{DASH_DAILY_LOADING=null;}
+  })();
+  return DASH_DAILY_LOADING;
 }
 function renderDashboardDaily(){
   const items=DASH_DAILY_DATA||[],byTech={};
@@ -5244,7 +5407,7 @@ function renderDashboardDaily(){
   if(!techs.length){$('dash-daily-list').innerHTML='<div class="card" style="padding:25px;text-align:center;color:#94A3B8">No hay actividades declaradas para la fecha seleccionada.</div>';return;}
   $('dash-daily-list').innerHTML=techs.map(function(tech){
     const rows=byTech[tech].sort((a,b)=>String(a.creado||'').localeCompare(String(b.creado||''))),complete=rows.length>=3;
-    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px"><div><b style="color:#0F2A4A">${escapeHtml(tech)}</b><div style="font-size:.68rem;color:#64748B">${rows.length} actividad(es) declarada(s)</div></div><span class="badge ${complete?'b-done':'b-rech'}">${rows.length}/3 mínimo</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">${rows.map((x,i)=>{const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON||x.tecnicosApoyoJSON),supportTimes=x.apoyosCalculados||[],eff=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):dailyLiveMinutes_(a);return `<div style="padding:10px;border:1px solid #E2E8F0;border-radius:9px;background:#F8FAFC"><div style="display:flex;justify-content:space-between;gap:6px"><b style="font-size:.74rem">Actividad ${i+1}</b>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><div style="font-size:.78rem;font-weight:700;color:#334155;margin-top:5px">${escapeHtml(x.descripcion||'')}</div><div style="font-size:.67rem;color:#64748B;margin-top:3px">${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'Sin categoría')}</div>${a.horaInicio?`<div style="font-size:.67rem;color:#475569;margin-top:5px"><b>Tiempo efectivo:</b> ${actFmtMin_(eff||0)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:''}${supportTimes.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Apoyos y tiempo:</b><br>${supportTimes.map(s=>escapeHtml(s.nombre||'')+' · '+actFmtMin_(s.minutosEfectivos||0)+' · '+escapeHtml(s.estado||'')).join('<br>')}</div>`:(supports.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Apoyos:</b> ${supports.map(s=>escapeHtml(s.nombre||s)).join(', ')}</div>`:'')}${x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'?`<div style="display:flex;gap:5px;margin-top:7px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:''}${x.estatus==='Declarada'&&SESSION.user.rol==='ingeniero'?`<button class="btn-red" style="margin-top:7px" onclick="deleteDailyAdminDuplicateUI('${x.id}')"><i class="fas fa-trash"></i> Eliminar duplicada</button>`:''}</div>`;}).join('')}</div></div>`;
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px"><div><b style="color:#0F2A4A">${escapeHtml(tech)}</b><div style="font-size:.68rem;color:#64748B">${rows.length} actividad(es) declarada(s)</div></div><span class="badge ${complete?'b-done':'b-rech'}">${rows.length}/3 mínimo</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">${rows.map((x,i)=>{const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON||x.tecnicosApoyoJSON),supportTimes=x.apoyosCalculados||[],eff=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):dailyLiveMinutes_(a);return `<div style="padding:10px;border:1px solid #E2E8F0;border-radius:9px;background:#F8FAFC"><div style="display:flex;justify-content:space-between;gap:6px"><b style="font-size:.74rem">Actividad ${i+1}</b>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><div style="font-size:.78rem;font-weight:700;color:#334155;margin-top:5px">${escapeHtml(x.descripcion||'')}</div><div style="font-size:.67rem;color:#64748B;margin-top:3px">${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'Sin categoría')}</div>${a.horaInicio?`<div style="font-size:.67rem;color:#475569;margin-top:5px"><b>Tiempo efectivo:</b> ${actFmtMin_(eff||0)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:''}${supportTimes.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Técnicos de apoyo:</b><br>${supportTimes.map(s=>escapeHtml(s.nombre||'')+' · '+actFmtMin_(s.minutosEfectivos||0)+' · '+escapeHtml(s.estado||'')).join('<br>')}</div>`:(supports.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Apoyos:</b> ${supports.map(s=>escapeHtml(s.nombre||s)).join(', ')}</div>`:'')}${x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'?`<div style="display:flex;gap:5px;margin-top:7px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:''}${x.estatus==='Declarada'&&SESSION.user.rol==='ingeniero'?`<button class="btn-red" style="margin-top:7px" onclick="deleteDailyAdminDuplicateUI('${x.id}')"><i class="fas fa-trash"></i> Eliminar duplicada</button>`:''}</div>`;}).join('')}</div></div>`;
   }).join('');
 }
 
