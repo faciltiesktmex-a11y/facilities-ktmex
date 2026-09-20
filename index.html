@@ -191,6 +191,7 @@ thead th{background:#F5F8FC;color:#586980}
 <meta name="apple-mobile-web-app-title" content="KTMEX Facilities">
 
 <!-- V8.5A · Plataforma V2 integrada -->
+<!-- V8.5A.4 · LPA date lock + Manager readonly dashboard -->
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
@@ -959,11 +960,10 @@ const LPA_AREAS = {
     <div style="display:flex;align-items:center;gap:10px">
       <button class="btn-g" onclick="goLpaSelect()" style="padding:7px 12px"><i class="fas fa-arrow-left"></i></button>
       <div><h2 style="font-size:1.2rem;margin:0;color:var(--navy)">LPA Quality</h2>
-      <p style="font-size:.75rem;color:#64748B;margin:2px 0 0">Layered Process Audit · Pilot V7</p></div>
+      <p style="font-size:.75rem;color:#64748B;margin:2px 0 0">Layered Process Audit · Quality</p></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-g" onclick="loadLpaQDashboard()" style="padding:8px 12px"><i class="fas fa-chart-line" style="margin-right:5px"></i><span>Dashboard</span></button>
-      <button id="lpaq-btn-new" class="btn-p" onclick="openLpaQNew()" style="padding:8px 12px"><i class="fas fa-plus" style="margin-right:5px"></i><span>New Audit</span></button>
     </div>
   </div>
 
@@ -990,8 +990,7 @@ const LPA_AREAS = {
 
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div><strong style="font-size:.9rem">Pilot schedule / Programa piloto</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly</div></div>
-      <button class="btn-g" onclick="generateLpaQPilotProgram()" style="padding:7px 11px"><i class="fas fa-calendar-plus" style="margin-right:5px"></i><span>Generate current month</span></button>
+      <div><strong style="font-size:.9rem">Audit schedule / Programa de auditorías</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
     </div>
 
     <div style="display:grid;grid-template-columns:minmax(230px,1fr) minmax(170px,.55fr);gap:10px;margin-top:14px;align-items:end">
@@ -1032,7 +1031,7 @@ const LPA_AREAS = {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
       <div><label>Area *</label><select id="lpaq-area" class="inp"></select></div>
       <div><label>Level *</label><select id="lpaq-level" class="inp" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
-      <div><label>Date *</label><input id="lpaq-date" type="date" class="inp"></div>
+      <div><label>Date / Fecha de ejecución *</label><input id="lpaq-date" type="date" class="inp" readonly><div style="font-size:.62rem;color:#64748B;margin-top:3px">System date / Fecha controlada por el sistema</div></div>
       <div><label>Shift</label><select id="lpaq-shift" class="inp"><option value="">—</option><option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option></select></div>
       <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"></div>
       <div><label>Part Number</label><input id="lpaq-part" class="inp" placeholder="Part No."></div>
@@ -1855,8 +1854,9 @@ const LPA_AREAS = {
       </div>
     </div>
 
-    <!-- TAB: Plan Diario — solo Ingeniería y técnico administrador -->
+    <!-- TAB: Plan Diario — Manager lectura; Ingeniería/técnico administrador supervisión -->
     <div id="panel-daily-dash" style="display:none">
+      <div id="manager-daily-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de Manager: consulta de actividades únicamente. No puede cerrar, devolver, borrar ni modificar actividades.</div>
       <div class="card" style="padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div>
@@ -1873,8 +1873,9 @@ const LPA_AREAS = {
       <div id="dash-daily-list" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
 
-    <!-- TAB: Analítica Operativa — solo Ingeniería y técnico administrador -->
+    <!-- TAB: Analítica Operativa — Manager lectura; Ingeniería/técnico administrador -->
     <div id="panel-analytics" style="display:none">
+      <div id="manager-analytics-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de Manager: analítica en modo de solo lectura.</div>
       <div class="card" style="padding:14px 16px;margin-bottom:14px;border:1.5px solid #BFDBFE;background:#F8FBFF">
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
           <div>
@@ -2417,7 +2418,7 @@ function hasAdminPrivilege(){
 
 function canViewOperationsAnalytics(){
   if(!SESSION)return false;
-  return SESSION.user?.rol==='ingeniero' || (SESSION.user?.rol==='tecnico' && hasAdminPrivilege());
+  return SESSION.user?.rol==='manager' || SESSION.user?.rol==='ingeniero' || (SESSION.user?.rol==='tecnico' && hasAdminPrivilege());
 }
 
 
@@ -3893,11 +3894,9 @@ async function loadLpaQDashboard(){
     const r=await api({action:'getLpaQualityDashboard',token:SESSION.token});
     if(!r.success){toast(r.error||'LPA Quality error','err');return;}
     LPAQ_ACCESS=r.access; LPAQ_DASH=r;
-    if($('lpaq-btn-new')) $('lpaq-btn-new').style.display=r.access.qadmin?'none':((SESSION.user.rol==='lpa' && !r.access.validator)?'none':'');
     $('lpaq-access-note').innerHTML=(LANG==='en'?'Assigned areas: ':'Áreas asignadas: ')+
       `<strong>${(r.access.areas||[]).join(', ')||'—'}</strong> · ${r.access.level||'—'} · ${r.access.position||''}`+
-      (r.access.qadmin?` <span class="badge b-done">${LANG==='en'?'LPA QUALITY ADMIN':'ADMIN LPA QUALITY'}</span>`:'')+
-      (r.access.pilot?` <span class="badge b-pend">PILOT</span>`:'');
+      (r.access.qadmin?` <span class="badge b-done">${LANG==='en'?'LPA QUALITY ADMIN':'ADMIN LPA QUALITY'}</span>`:'');
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -3963,17 +3962,9 @@ async function generateLpaQPilotProgram(){
   else toast(r.error||'Error','err');
 }
 function openLpaQNew(){
-  LPAQ_PROGRAM_ID='';
-  if(!LPAQ_ACCESS){toast('Load LPA Quality first','err');return;}
-  if(LPAQ_ACCESS.qadmin){
-    toast(LANG==='en'?'LPA Quality administrators may only perform audits assigned to themselves in the official schedule.':'Los administradores de LPA Quality solo pueden realizar las auditorías que tengan asignadas a su propio nombre en el calendario oficial.','err');
-    return;
-  }
-  $('lpaq-area').innerHTML=(LPAQ_ACCESS.areas||[]).map(a=>`<option>${a}</option>`).join('');
-  $('lpaq-level').value=LPAQ_ACCESS.level||'N4';
-  $('lpaq-date').value=new Date().toISOString().slice(0,10);
-  $('lpaq-form-level').textContent=$('lpaq-level').value;
-  renderLpaQChecklist(); showView('lpa-quality-form');
+  toast(LANG==='en'
+    ?'Audits can only be started from the official schedule when their programmed date is reached.'
+    :'Las auditorías solo pueden iniciarse desde el programa oficial cuando llegue la fecha establecida.','err');
 }
 function openLpaQProgramAudit(id){
   const r=(LPAQ_DASH.program||[]).find(x=>x.id===id); if(!r)return;
@@ -3988,7 +3979,8 @@ function openLpaQProgramAudit(id){
   LPAQ_PROGRAM_ID=id;
   $('lpaq-area').innerHTML=`<option>${r.area}</option>`;
   $('lpaq-level').value=r.nivel;
-  $('lpaq-date').value=new Date().toISOString().slice(0,10);
+  $('lpaq-date').value=localDateKeyV843_();
+  $('lpaq-date').readOnly=true;
   $('lpaq-line').value=r.machine||'';
   $('lpaq-part').value='';
   $('lpaq-form-level').textContent=r.nivel;
@@ -4096,6 +4088,10 @@ function toggleLpaQNC(qid,on,clearWhenHidden=false){
   }
 }
 async function submitLpaQuality(){
+  if(!LPAQ_PROGRAM_ID){
+    toast(LANG==='en'?'Start the audit from the official schedule.':'Inicia la auditoría desde el programa oficial en su fecha establecida.','err');
+    return;
+  }
   const area=$('lpaq-area').value, level=$('lpaq-level').value, fecha=$('lpaq-date').value;
   if(!area||!level||!fecha){toast('Complete required fields / Completa los campos obligatorios','err');return;}
   const qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
@@ -5828,10 +5824,13 @@ function configureManagerDashboardTabs(){
   const canOps=canViewOperationsAnalytics();
   if($('tab-analytics'))$('tab-analytics').style.display=canOps?'':'none';
   if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none';
+  if($('manager-daily-readonly-note'))$('manager-daily-readonly-note').style.display=role==='manager'?'':'none';
+  if($('manager-analytics-readonly-note'))$('manager-analytics-readonly-note').style.display=role==='manager'?'':'none';
   if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
-  if($('tab-analytics'))$('tab-analytics').style.display='none';
-  if($('tab-daily-dash'))$('tab-daily-dash').style.display='none';
+  // Manager: Plan Diario + Analítica visibles únicamente en lectura.
+  if($('tab-analytics'))$('tab-analytics').style.display='';
+  if($('tab-daily-dash'))$('tab-daily-dash').style.display='';
   ['tab-sol','tab-compra','tab-lpa','tab-acc'].forEach(id=>{if($(id))$(id).style.display='';});
 }
 function switchTab(tab) {
@@ -5840,11 +5839,11 @@ function switchTab(tab) {
     tab='sol';
   }
   if(tab==='analytics'&&!canViewOperationsAnalytics()){
-    toast('La analítica operativa está disponible únicamente para Ingeniería y el técnico administrador.','err');
+    toast('La analítica operativa está disponible para Manager, Ingeniería y el técnico administrador en modo de consulta.','err');
     tab='sol';
   }
   if(tab==='daily-dash'&&!canViewOperationsAnalytics()){
-    toast('El Plan Diario del Dashboard está disponible únicamente para Ingeniería y el técnico administrador.','err');
+    toast('El Plan Diario del Dashboard está disponible para Manager, Ingeniería y el técnico administrador.','err');
     tab='sol';
   }
   ['sol','compra','lpa','acc','inv','daily-dash','analytics'].forEach(t=>{
