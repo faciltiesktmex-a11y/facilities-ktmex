@@ -192,6 +192,7 @@ thead th{background:#F5F8FC;color:#586980}
 
 <!-- V8.5A · Plataforma V2 integrada -->
 <!-- V8.5A.4 · LPA date lock + Manager readonly dashboard -->
+<!-- V8.5A.5 · Manager English-only -->
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
@@ -971,7 +972,7 @@ const LPA_AREAS = {
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
     <div class="card" style="padding:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-clipboard-check" style="color:#2563EB"></i><strong style="font-size:.9rem">Cumplimiento de auditorías / Audit Compliance</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-clipboard-check" style="color:#2563EB"></i><strong style="font-size:.9rem">Audit Compliance</strong></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
         <div><div style="font-size:.66rem;color:#64748B">Compliance</div><strong id="lpaq-kpi-program" class="mono" style="font-size:1.35rem">—</strong><div style="font-size:.62rem;color:#94A3B8">Target ≥90%</div></div>
         <div><div style="font-size:.66rem;color:#64748B">Grace Period</div><strong id="lpaq-kpi-grace" class="mono" style="font-size:1.35rem;color:#D97706">0</strong></div>
@@ -979,7 +980,7 @@ const LPA_AREAS = {
       </div>
     </div>
     <div class="card" style="padding:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-list-check" style="color:#16A34A"></i><strong style="font-size:.9rem">Cierre de acciones / Action Closure</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="fas fa-list-check" style="color:#16A34A"></i><strong style="font-size:.9rem">Action Closure</strong></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
         <div><div style="font-size:.66rem;color:#64748B">On-time Closure</div><strong id="lpaq-kpi-close" class="mono" style="font-size:1.35rem">—</strong><div style="font-size:.62rem;color:#94A3B8">Target ≥90%</div></div>
         <div><div style="font-size:.66rem;color:#64748B">Open NC</div><strong id="lpaq-kpi-open" class="mono" style="font-size:1.35rem">0</strong></div>
@@ -990,21 +991,21 @@ const LPA_AREAS = {
 
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div><strong style="font-size:.9rem">Audit schedule / Programa de auditorías</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
+      <div><strong style="font-size:.9rem">Audit Schedule</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
     </div>
 
     <div style="display:grid;grid-template-columns:minmax(230px,1fr) minmax(170px,.55fr);gap:10px;margin-top:14px;align-items:end">
       <div>
         <label style="font-size:.7rem;color:#64748B;font-weight:650">Auditor / Auditor</label>
         <select id="lpaq-auditor-filter" class="inp" onchange="renderLpaQProgram()">
-          <option value="">— Select auditor / Selecciona auditor —</option>
+          <option value="">— Select Auditor —</option>
         </select>
       </div>
       <div>
         <label style="font-size:.7rem;color:#64748B;font-weight:650">Status / Estatus</label>
         <select id="lpaq-program-status-filter" class="inp" onchange="renderLpaQProgram()">
-          <option value="">All / Todos</option>
-          <option value="Programada">Scheduled / Programada</option>
+          <option value="">All</option>
+          <option value="Programada">Scheduled</option>
           <option value="En tolerancia">Grace Period / En tolerancia</option>
           <option value="Vencida">Overdue / Vencida</option>
           <option value="Realizada">Completed / Realizada</option>
@@ -1031,7 +1032,7 @@ const LPA_AREAS = {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
       <div><label>Area *</label><select id="lpaq-area" class="inp"></select></div>
       <div><label>Level *</label><select id="lpaq-level" class="inp" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
-      <div><label>Date / Fecha de ejecución *</label><input id="lpaq-date" type="date" class="inp" readonly><div style="font-size:.62rem;color:#64748B;margin-top:3px">System date / Fecha controlada por el sistema</div></div>
+      <div><label>Execution Date *</label><input id="lpaq-date" type="date" class="inp" readonly><div style="font-size:.62rem;color:#64748B;margin-top:3px">System-controlled date</div></div>
       <div><label>Shift</label><select id="lpaq-shift" class="inp"><option value="">—</option><option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option></select></div>
       <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"></div>
       <div><label>Part Number</label><input id="lpaq-part" class="inp" placeholder="Part No."></div>
@@ -1856,8 +1857,7 @@ const LPA_AREAS = {
 
     <!-- TAB: Plan Diario — Manager lectura; Ingeniería/técnico administrador supervisión -->
     <div id="panel-daily-dash" style="display:none">
-      <div id="manager-daily-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de Manager: consulta de actividades únicamente. No puede cerrar, devolver, borrar ni modificar actividades.</div>
-      <div class="card" style="padding:14px 16px;margin-bottom:12px">
+<div class="card" style="padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div>
             <h3 style="font-size:.95rem;color:#0F2A4A;margin:0 0 3px"><i class="fas fa-calendar-check" style="margin-right:6px;color:#EA580C"></i>Actividades declaradas por los técnicos</h3>
@@ -1875,7 +1875,7 @@ const LPA_AREAS = {
 
     <!-- TAB: Analítica Operativa — Manager lectura; Ingeniería/técnico administrador -->
     <div id="panel-analytics" style="display:none">
-      <div id="manager-analytics-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de Manager: analítica en modo de solo lectura.</div>
+      <div id="manager-analytics-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Manager view: read-only analytics.</div>
       <div class="card" style="padding:14px 16px;margin-bottom:14px;border:1.5px solid #BFDBFE;background:#F8FBFF">
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
           <div>
@@ -2757,6 +2757,246 @@ Object.assign(TEXT_I18N,{
 });
 Object.assign(TEXT_I18N, {"Selecciona el área a auditar": "Select the Area to Audit", "5 áreas críticas · Checklist específico por área": "5 Critical Areas · Area-specific Checklist", "Datos de Auditoría": "Audit Information", "Puesto": "Position", "Acompañante (opcional)": "Accompanying Person (optional)", "Resultado en tiempo real": "Real-time Result", "Conformidad": "Compliance", "P = Cumple · NP = No cumple · N/A = No aplica": "P = Pass · NP = Fail · N/A = Not Applicable", "Punto a verificar / Estándar esperado": "Verification Point / Expected Standard", "Observaciones / Hallazgo": "Observations / Finding", "Resultados LPA": "LPA Results", "Plan de Acciones": "Action Plan", "Buscar por auditor…": "Search by auditor…", "Fecha compromiso": "Due Date", "Fecha cierre": "Close Date"});
 
+
+// V8.5A.5 — Manager profile is English-only.
+const MANAGER_EN_I18N = {
+  'Panel Administrativo':'Administration Dashboard',
+  'Generar QR':'Generate QR',
+  'Actualizar':'Refresh',
+  'Aprobaciones pendientes del Manager':'Pending Manager Approvals',
+  'Esta cola permanece visible aunque se actualicen Compras, LPA o Plan de Acciones.':'This queue remains visible while Purchases, LPA, or Action Plans are refreshed.',
+  '0 pendientes':'0 pending',
+  'Revisar':'Review',
+  'Total solicitudes':'Total Requests',
+  'Pendientes de Ingeniería':'Pending Engineering',
+  'Con Manager':'With Manager',
+  'Aprobadas':'Approved',
+  'Rechazadas':'Rejected',
+  'En ejecución':'In Progress',
+  'Solicitudes':'Requests',
+  'Compras':'Purchases',
+  'Resultados LPA':'LPA Results',
+  'Plan de Acciones':'Action Plan',
+  'Plan Diario':'Daily Plan',
+  'Analítica':'Analytics',
+  'Buscar folio, nombre, área…':'Search folio, name, area…',
+  'Todos los estatus':'All Statuses',
+  'Todos los departamentos':'All Departments',
+  'Todas las prioridades':'All Priorities',
+  'Todas las áreas':'All Areas',
+  'Fecha':'Date',
+  'Solicitante':'Requester',
+  'Departamento':'Department',
+  'Tipo':'Type',
+  'Estatus':'Status',
+  'Técnico':'Technician',
+  'Acción':'Action',
+  'Cantidad':'Quantity',
+  'F. Requerida':'Required Date',
+  'Área':'Area',
+  'Auditor':'Auditor',
+  'Turno':'Shift',
+  'Capa':'Layer',
+  'Punto':'Item',
+  'Hallazgo':'Finding',
+  'Acción correctiva':'Corrective Action',
+  'Responsable':'Responsible',
+  'F. Compromiso':'Due Date',
+  'F. Cierre':'Close Date',
+
+  'Actividades declaradas por los técnicos':'Technician Daily Activities',
+  'Muestra las 3 actividades mínimas del día y cualquier actividad adicional declarada.':'Shows the three minimum daily activities and any additional activities declared.',
+  'Técnicos con registro':'Technicians With Entries',
+  'Cumplieron mínimo 3':'Met Minimum of 3',
+  'Con menos de 3':'Fewer Than 3',
+  'Actividades declaradas':'Declared Activities',
+  'Pend. cierre Ingeniería':'Pending Engineering Closure',
+  'actividad(es) declarada(s)':'declared activity(ies)',
+  'mínimo':'minimum',
+  'Actividad':'Activity',
+  'Sin categoría':'No Category',
+  'Tiempo efectivo':'Effective Time',
+  'Pausas':'Pauses',
+  'Técnicos de apoyo':'Support Technicians',
+  'Apoyos':'Support',
+  'No hay actividades visibles para la fecha seleccionada. V8.5A.3 también recupera filas antiguas aunque les falte ID.':'No activities are visible for the selected date.',
+
+  'Analítica operativa Facilities':'Facilities Operational Analytics',
+  'Visible únicamente para Ingenieros Facilities y el técnico administrador. Los indicadores separan tiempo efectivo de tiempos de espera.':'Read-only for Manager. Indicators separate effective work time from waiting time.',
+  'Periodo':'Period',
+  'Calculando indicadores…':'Calculating indicators…',
+  'Checklists de cuartos':'Room Checklists',
+  'Actividades de técnicos':'Technician Activities',
+  'Cumplimiento por área':'Compliance by Area',
+  'NG por área':'NG by Area',
+  'Tendencia diaria de cumplimiento':'Daily Compliance Trend',
+  'Variable numérica del checklist':'Checklist Numeric Variable',
+  'Tendencia de lecturas capturadas':'Captured Readings Trend',
+  'Inspecciones':'Inspections',
+  'Cumplimiento':'Compliance',
+  'Standby / omitidos':'Standby / Omitted',
+  'No penalizan':'No Penalty',
+  'Sin variables numéricas en el periodo':'No Numeric Variables in This Period',
+  'Actividades':'Activities',
+  'Finalizadas':'Completed',
+  'Tiempo pausado':'Paused Time',
+  'Espera material':'Material Wait',
+  'Cambio de actividad':'Activity Change',
+  'Pausa operativa, no penaliza':'Operational Pause, No Penalty',
+  'Apoyo técnico':'Technical Support',
+  'Registro explícito':'Explicitly Recorded',
+  'Tiempo como apoyo':'Support Time',
+  'Validado por Ingeniería':'Validated by Engineering',
+  'Apoyo pendiente':'Pending Support',
+  'En curso o pendiente de validar':'In Progress or Pending Validation',
+  'Prom. efectivo (min)':'Avg. Effective (min)',
+  'Prom. pausa (min)':'Avg. Pause (min)',
+  'Minutos':'Minutes',
+  'Tiempo activo %':'Active Time %',
+  'Finalización %':'Completion %',
+  'Sin actividades en el periodo.':'No Activities in This Period.',
+  'Detalle por técnico':'Technician Detail',
+  'Actividades propias':'Own Activities',
+  'Finalización':'Completion',
+  'Prom. efectivo':'Avg. Effective',
+  'Prom. pausa':'Avg. Pause',
+  'Apoyo técnico/capacitación':'Technical Support / Training',
+  'Participaciones apoyo validadas':'Validated Support Participations',
+  'Tiempo apoyo validado':'Validated Support Time',
+  'Apoyos pendientes':'Pending Support Participations',
+  'Tiempo apoyo pendiente':'Pending Support Time',
+  'Contribución total':'Total Contribution',
+  'Inconformidades':'Nonconformities',
+  'Promedio por actividad: tiempo efectivo vs pausa':'Average per Activity: Effective Time vs Pause',
+  'Tiempo pausado por motivo':'Paused Time by Reason',
+  'Tiempo activo por técnico':'Active Time by Technician',
+  'Finalización de actividades':'Activity Completion',
+  'Interpretación:':'Interpretation:',
+  'el sistema no deduce “falta de habilidad” por tardar más tiempo. El indicador de apoyo técnico/capacitación solo aumenta cuando el técnico registra explícitamente ese motivo de pausa. Esto evita confundir trabajos complejos con falta de capacidad.':'the system does not infer “lack of skill” from longer task duration. The technical support/training indicator increases only when the technician explicitly records that pause reason. This avoids confusing complex work with lack of capability.',
+  'Tiempo efectivo ÷ (tiempo efectivo + pausas no productivas). Las pausas por cambio a otra actividad no penalizan este indicador.':'Effective time ÷ (effective time + nonproductive pauses). Pauses caused by switching to another activity do not reduce this indicator.',
+  'Reporte mensual del área':'Monthly Area Report',
+  'Tendencias, cumplimiento, NG y detalle de inspecciones.':'Trends, compliance, NG, and inspection details.',
+  'Detalle de inspección':'Inspection Detail',
+  'Historial de inspecciones':'Inspection History',
+  'Guardar inspección':'Save Inspection',
+
+  'Audit Schedule':'Audit Schedule',
+  'Audit Compliance':'Audit Compliance',
+  'Action Closure':'Action Closure',
+  'Auditor / Auditor':'Auditor',
+  'All':'All',
+  'Scheduled':'Scheduled',
+  '— Select Auditor —':'— Select Auditor —',
+  'Execution Date *':'Execution Date *',
+  'System-controlled date':'System-controlled date',
+  'La auditoría se realiza 100% en piso (Gemba). EPP completo requerido antes de iniciar.':'The audit is performed 100% on the shop floor (Gemba). Full PPE is required before starting.',
+  'Programa de auditorías':'Audit Schedule',
+  'Auditorías LPA':'LPA Audits',
+
+  'Trabajo en Alturas':'Working at Heights',
+  'Abrir Trabajo en Alturas →':'Open Working at Heights →',
+  'Trabajo en Alturas · Plataforma Genie Z45':'Working at Heights · Genie Z45 Platform',
+  'Plataforma V2 · Prioridades · Lista de espera · Carga de plataforma 1 h · Andrés Ramírez → Pedro Loya':'Platform V2 · Priorities · Waitlist · 1 h Platform Charging · Andrés Ramírez → Pedro Loya',
+  'Consultando estado de la plataforma…':'Checking platform status…',
+  'Disponibilidad / Availability':'Availability',
+  'Calendario / Calendar':'Calendar',
+  'Solicitar equipo / Request':'Request Equipment',
+  'Consultar folio / Status':'Check Folio Status',
+  'Gestión Facilities':'Facilities Management',
+  'Las reservaciones activas incluyen 1 hora de holgura para carga. La Lista de Espera no ocupa el calendario.':'Active reservations include one additional hour for platform charging. Waitlisted requests do not occupy the calendar.',
+  'Pendiente Andrés':'Pending Andrés',
+  'Pendiente Pedro':'Pending Pedro',
+  'Aprobada':'Approved',
+  'Lista de Espera':'Waitlist',
+  'Carga de plataforma · 1 h':'Platform Charging · 1 h',
+  'Mantenimiento':'Maintenance',
+  'Plataforma articulada Genie Z45':'Genie Z45 Articulating Platform',
+  'Revise alcance, condiciones del área, requisitos de seguridad y disponibilidad antes de emitir la solicitud.':'Review reach, work-area conditions, safety requirements, and availability before submitting the request.',
+  'Matriz de prioridades':'Priority Matrix',
+  '1 · Crítica — riesgo inminente':'1 · Critical — imminent risk',
+  '2 · Operativa — paro de línea':'2 · Operational — line stoppage',
+  '3 · Preventiva — TPM programado':'3 · Preventive — scheduled TPM',
+  '4 · Mejora — proyectos / estética':'4 · Improvement — projects / aesthetics',
+  'Nivel de prioridad / Priority *':'Priority Level *',
+  '1 - Crítica / Critical (Riesgo inminente de seguridad)':'1 - Critical (Imminent safety risk)',
+  '2 - Operativa / Operational (Falla con paro de línea)':'2 - Operational (Line stoppage)',
+  '3 - Preventiva / Preventive (Mantenimiento programado TPM)':'3 - Preventive (Scheduled TPM)',
+  '4 - Mejora / Improvement (Proyectos, estética)':'4 - Improvement (Projects / aesthetics)',
+  'Nombre del solicitante *':'Requester Name *',
+  'Área / departamento *':'Area / Department *',
+  'Área de trabajo *':'Work Area *',
+  'Descripción / propósito *':'Description / Purpose *',
+  'Fechas y horarios requeridos':'Required Dates and Times',
+  '+ Agregar otro día u horario':'+ Add Another Day or Time',
+  'La asignación se rige por prioridades: Crítica, Operativa, Preventiva y Mejora. Facilities podrá reasignar a una prioridad mayor y mover el área desplazada a Lista de Espera.':'Assignment follows the priority matrix: Critical, Operational, Preventive, and Improvement. Facilities may reassign the platform to a higher-priority request and move the displaced request to the Waitlist.',
+  'Según corresponda: llenar solicitud, checklist digital antes del uso y dejar credencial de la empresa mientras se utiliza la plataforma.':'As applicable: complete the request, complete the digital checklist before use, and leave the company credential while using the platform.',
+  'Robo o extravío de la plataforma o accesorios implica reposición del equipo/accesorio.':'Loss or theft of the platform or accessories requires replacement of the equipment/accessory.',
+  'Alteraciones no autorizadas que afecten seguridad pueden causar revocación de la credencial.':'Unauthorized modifications affecting safety may result in credential revocation.',
+  'Operar sin DC-3 en trabajos en altura implica revocación de la credencial.':'Operating without a DC-3 for work at height may result in credential revocation.',
+  'Regresar la plataforma al Cuarto de Máquinas para carga. El sistema reserva 1 hora para carga de la plataforma entre solicitudes.':'Return the platform to the Machine Room for charging. The system reserves one hour for platform charging between requests.',
+  'Notificar cualquier falla a Facilities, canal de radio 12.':'Report any failure to Facilities on radio channel 12.',
+  'Sí, acepto el reglamento / I accept.':'Yes, I accept the rules.',
+  'Emitir solicitud a Facilities':'Submit Request to Facilities',
+  'Consultar estatus por folio / Check request status':'Check Request Status by Folio',
+  'KTMEX · CHECK LIST - INSPECCIÓN PARA USO DE PLATAFORMA ARTICULADA':'KTMEX · ARTICULATING PLATFORM PRE-USE INSPECTION CHECKLIST',
+  'Punto de inspección':'Inspection Point',
+  'FIRMA DEL OPERADOR CALIFICADO':'QUALIFIED OPERATOR SIGNATURE',
+  'FIRMA OPERADOR AYUDANTE / BANDERERO':'ASSISTANT / SPOTTER SIGNATURE',
+  'FIRMA RESPONSABLE DE SEGURIDAD KTMEX':'KTMEX SAFETY RESPONSIBLE SIGNATURE',
+  'Guardar checklist':'Save Checklist',
+  'Imprimir / PDF':'Print / PDF',
+  'Volver a consulta':'Back to Status',
+  'El checklist se habilita únicamente para folios aprobados. Un punto MAL requiere comentario y fotografía. Las firmas guardadas quedan bloqueadas.':'The checklist is available only for approved folios. Any BAD item requires a comment and photograph. Saved signatures are locked.',
+  'Estado equipo':'Equipment Status',
+  'Gestión de solicitudes Plataforma V2':'Platform V2 Request Management',
+  'Prioridad, aprobaciones, lista de espera y liberación de fechas.':'Priority, approvals, waitlist, and schedule release.',
+  'Folio / Prioridad':'Folio / Priority',
+  'Área / Actividad':'Area / Activity',
+  'Fechas':'Dates',
+  'Estatus / Trazabilidad':'Status / Traceability',
+  'Hallazgos y liberación':'Findings and Release',
+  'Liberar plataforma':'Release Platform',
+  'Bloqueos / mantenimiento':'Blocks / Maintenance',
+  'Agregar bloqueo':'Add Block',
+
+  'Acceso Administrativo':'Administrative Access',
+  'Ingenieros y Manager — Facilities KTMEX':'Engineers and Manager — KTMEX Facilities',
+  'Usuario':'Username',
+  'Contraseña':'Password',
+  'Usuario o contraseña incorrectos':'Incorrect username or password',
+  'Ingresar':'Sign In',
+  '← Regresar':'← Back',
+  'Salir':'Log Out',
+  'Manager view: read-only analytics.':'Manager view: read-only analytics.'
+};
+Object.assign(TEXT_I18N, MANAGER_EN_I18N);
+
+Object.assign(TEXT_I18N,{
+  'Total compras':'Total Purchases',
+  'Autorizadas':'Authorized',
+  'En proceso de compra':'Purchasing in Progress',
+  'Técnicos con registro':'Technicians With Entries',
+  'Cumplieron mínimo 3':'Met Minimum of 3',
+  'Con menos de 3':'Fewer Than 3',
+  'Actividades declaradas':'Declared Activities',
+  'Pend. cierre Ingeniería':'Pending Engineering Closure'
+});
+
+
+function isManagerProfile_(){
+  return !!SESSION && SESSION.user && SESSION.user.rol==='manager';
+}
+
+function enforceManagerEnglish_(root=document){
+  if(!isManagerProfile_())return;
+  if(LANG!=='en'){
+    LANG='en';
+    localStorage.setItem('ktmex_lang','en');
+  }
+  if($('lang-switch'))$('lang-switch').style.display='none';
+  applyLanguage(root);
+}
+
 const STATUS_I18N = {
   'Pendiente de Ingeniería':'Pending Engineering Approval',
   'Rechazado por Ingeniería':'Rejected by Engineering',
@@ -2818,13 +3058,24 @@ function translateDynamicMessage(msg){
     'Tu sesión expiró. Inicia sesión de nuevo.':'Your session expired. Please sign in again.'
   };
   if(exact[msg]) return exact[msg];
-  return msg
+  let out=msg
     .replace(/^Bienvenido, /,'Welcome, ')
     .replace(/^Error al guardar: /,'Error saving: ')
     .replace(/^Error al cargar histórico: /,'Error loading history: ')
     .replace(/^Error de conexión: /,'Connection error: ')
+    .replace(/^Error al cargar analítica: /,'Error loading analytics: ')
+    .replace(/^Error Plan Diario: /,'Daily Plan error: ')
     .replace(/Pendiente de Manager/g,'Pending Manager Approval')
     .replace(/Pendiente de Ingeniería/g,'Pending Engineering Approval');
+  if(isManagerProfile_()){
+    if(MANAGER_EN_I18N[out])return MANAGER_EN_I18N[out];
+    out=out
+      .replace(/No se pudo cargar el Plan Diario/g,'Could not load the Daily Plan')
+      .replace(/La analítica requiere conexión\./g,'Analytics requires an internet connection.')
+      .replace(/No se pudo cargar la analítica\./g,'Could not load analytics.')
+      .replace(/Tu usuario no tiene permiso para acceder a esta sección\./g,'Your account does not have permission to access this section.');
+  }
+  return out;
 }
 
 function applyLanguage(root=document) {
@@ -2870,6 +3121,7 @@ function applyLanguage(root=document) {
 }
 
 function setLanguage(lang){
+  if(isManagerProfile_())lang='en';
   const next=lang==='en'?'en':'es';
   if(next===LANG){
     if($('view-lpa-quality-form')?.style.display!=='none') updateLpaQAuditLanguageFast();
@@ -3020,6 +3272,9 @@ function configureRoleUI() {
   ids.forEach(id=>{if($(id))$(id).style.display='';});
 
   if(role==='manager'){
+    LANG='en';
+    localStorage.setItem('ktmex_lang','en');
+    if($('lang-switch'))$('lang-switch').style.display='none';
     if($('manager-approval-box'))$('manager-approval-box').style.display='';
     // Manager: Dashboard + Auditorías LPA. El resto se gestiona desde Dashboard.
     ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
@@ -3029,12 +3284,15 @@ function configureRoleUI() {
       $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
     }
   }else if(role==='lpa'){
+    if($('lang-switch'))$('lang-switch').style.display='flex';
     ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-lpa'))$('nav-lpa').style.display='';
   }else if(role==='compras'){
+    if($('lang-switch'))$('lang-switch').style.display='flex';
     ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
   }else{
+    if($('lang-switch'))$('lang-switch').style.display='flex';
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Compras');
     if($('nav-compra'))$('nav-compra').style.display=(role==='tecnico'||role==='ingeniero'||!SESSION)?'':'none';
     if(role!=='tecnico'&&$('nav-recepcion'))$('nav-recepcion').style.display='none';
@@ -3045,7 +3303,7 @@ function configureRoleUI() {
     if(role==='tecnico'&&$('nav-admin'))$('nav-admin').style.display=hasAdminPrivilege()?'':'none';
   }
   configureManagerDashboardTabs();
-  setTimeout(()=>{applyLanguage();},0);
+  setTimeout(()=>{if(isManagerProfile_())enforceManagerEnglish_();else applyLanguage();},0);
 }
 
 function roleCanView(v) {
@@ -3077,6 +3335,7 @@ function showView(v) {
   const target=$('view-'+v);if(target)target.style.display='';
   $('btn-logout').style.display=SESSION?'':'none';
   configureRoleUI();
+  if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_(target||document),0);
 }
 
 // Vistas que requieren sesión iniciada.
@@ -5821,10 +6080,13 @@ async function registrarEntradaQR() {
 // ── Admin ────────────────────────────────────────────────────
 function configureManagerDashboardTabs(){
   const role=SESSION?.user?.rol||'';
+  if(role==='manager'){
+    LANG='en';
+    localStorage.setItem('ktmex_lang','en');
+  }
   const canOps=canViewOperationsAnalytics();
   if($('tab-analytics'))$('tab-analytics').style.display=canOps?'':'none';
   if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none';
-  if($('manager-daily-readonly-note'))$('manager-daily-readonly-note').style.display=role==='manager'?'':'none';
   if($('manager-analytics-readonly-note'))$('manager-analytics-readonly-note').style.display=role==='manager'?'':'none';
   if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
@@ -5860,6 +6122,7 @@ function switchTab(tab) {
   if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
   if(tab==='daily-dash')loadDashboardDaily();
   if(tab==='analytics')loadOperationsAnalytics();
+  if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
 }
 
 async function refreshAdmin() {
@@ -5894,6 +6157,7 @@ async function loadDashboardDaily(force){
       const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
       if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
       DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];DASH_DAILY_LAST_KEY=date;DASH_DAILY_LAST_AT=Date.now();renderDashboardDaily();
+      if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('panel-daily-dash')),0);
     }catch(e){toast('Error Plan Diario: '+e.message,'err');}
     finally{DASH_DAILY_LOADING=null;}
   })();
@@ -6086,6 +6350,7 @@ function renderOperationsAnalytics(){
   </tr>`).join(''):'<tr><td colspan="15" style="text-align:center;color:#94A3B8;padding:18px">Sin actividades en el periodo.</td></tr>';
 
   showOpsAnalyticsSubtab('check');
+  if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('panel-analytics')),0);
 }
 function drawOpsNumericTrend(){
   const r=OPS_ANALYTICS_DATA,sel=$('ops-numeric-point');if(!r||!sel)return;
@@ -6240,6 +6505,7 @@ async function loadSolicitudes() {
       renderSolicitudes();
       renderManagerApprovalQueue();
       if(dashboardActiveTab_()==='sol')renderDashboardKPIs_('sol');
+      if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
     }else toast(res.error,'err');
   }catch(e){toast('Error al cargar solicitudes','err');}
 }
@@ -6253,6 +6519,7 @@ async function loadCompras() {
       if(sel.options.length<=1) sel.innerHTML='<option value="">'+uiText('Todos los estatus')+'</option>'+ESTATUS_COMPRA.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
       renderCompras();
       if(dashboardActiveTab_()==='compra')renderDashboardKPIs_('compra');
+      if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
     } else toast(res.error,'err');
   } catch(e){ toast('Error al cargar solicitudes de compra','err'); }
 }
@@ -6260,14 +6527,14 @@ async function loadCompras() {
 async function loadLPA() {
   try {
     const res=await api({action:'getLPA',token:SESSION.token});
-    if(res.success){ LPA_DATA=res.data; renderLPA(); }
+    if(res.success){ LPA_DATA=res.data; renderLPA(); if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0); }
   } catch(e){ toast('Error al cargar LPA','err'); }
 }
 
 async function loadAcciones() {
   try {
     const res=await api({action:'getPlanAcciones',token:SESSION.token});
-    if(res.success){ ACC_DATA=res.acciones; renderAcciones(); }
+    if(res.success){ ACC_DATA=res.acciones; renderAcciones(); if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0); }
   } catch(e){ toast('Error al cargar plan de acciones','err'); }
 }
 
@@ -6279,7 +6546,7 @@ function setDashboardKpiLabels_(labels){
   const ids=['total','ing','mgr','apro','rech','ejec'];
   ids.forEach(function(id,i){
     const el=$('kpi-label-'+id);
-    if(el)el.textContent=labels[i]||'';
+    if(el)el.textContent=isManagerProfile_()?uiText(labels[i]||''):(labels[i]||'');
   });
 }
 function renderDashboardKPIs_(tab){
@@ -6356,7 +6623,7 @@ function renderManagerApprovalQueue(){
   const rows=(Array.isArray(SOL_DATA)?SOL_DATA:[])
     .filter(r=>String(r.estatus||'').trim()==='Pendiente de Manager')
     .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
-  if(count)count.textContent=rows.length+' pendiente'+(rows.length===1?'':'s');
+  if(count)count.textContent=LANG==='en'?(rows.length+' pending'):(rows.length+' pendiente'+(rows.length===1?'':'s'));
   if(!rows.length){
     tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:#64748B"><i class="fas fa-circle-check" style="color:#16A34A;margin-right:7px"></i>'+ (LANG==='en'?'No work requests pending Manager approval.':'No hay solicitudes de trabajo pendientes de aprobación del Manager.') +'</td></tr>';
     return;
