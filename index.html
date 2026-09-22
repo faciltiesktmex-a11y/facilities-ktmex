@@ -1449,9 +1449,10 @@ const LPA_AREAS = {
       <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En cotización</p>
       <p id="cr-kpi-cot" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
     </div>
-    <div class="card" style="padding:14px 16px">
+    <div class="card" style="padding:14px 16px;cursor:pointer" onclick="verComprasOrdenadas()" title="Ver las solicitudes ordenadas">
       <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Ordenadas</p>
       <p id="cr-kpi-ord" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
+      <p style="font-size:.62rem;color:#7C3AED;margin:2px 0 0"><i class="fas fa-eye-slash" style="margin-right:3px"></i>ocultas · clic para ver</p>
     </div>
     <div class="card" style="padding:14px 16px">
       <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Recibidas</p>
@@ -1464,7 +1465,10 @@ const LPA_AREAS = {
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <input id="cr-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante…" oninput="renderComprasRol()">
       <select id="cr-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
-        <option value="">Todos los estatus</option>
+        <!-- V8.6.3: por omisión las ORDENADAS quedan fuera de la lista.
+             Se ven eligiendo "Ordenada" o "Todas". -->
+        <option value="">Activas (sin ordenadas)</option>
+        <option value="__ALL__">Todas (incluye ordenadas)</option>
         <option>Autorizada para Compra</option>
         <option>En cotización</option>
         <option>Ordenada</option>
@@ -1753,7 +1757,7 @@ const LPA_AREAS = {
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
           <input id="fs-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, nombre, área…" oninput="renderSolicitudes()">
           <select id="fs-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
-            <option value="">Todos los estatus</option>
+            <option value="">Abiertas (sin cerradas)</option>
             <option value="Pendiente de Ingeniería">Pendiente de Ingeniería</option>
             <option value="Rechazado por Ingeniería">Rechazado por Ingeniería</option>
             <option value="Pendiente de Manager">Pendiente de Manager</option>
@@ -1764,11 +1768,18 @@ const LPA_AREAS = {
             <option value="Trabajo completado">Trabajo completado</option>
             <option value="Pendiente de cierre por Ingeniería">Pendiente de cierre por Ingeniería</option>
             <option value="Requiere revisión (auto-cierre)">Requiere revisión (auto-cierre)</option>
+            <!-- V8.6.3: las cerradas se ocultan por omisión; aquí se recuperan. -->
+            <option value="__CERRADAS__">Cerradas (todas)</option>
+            <option value="Cerrada">Cerrada</option>
+            <option value="Cerrada automáticamente — sin confirmación">Cerrada automáticamente — sin confirmación</option>
+            <option value="Cerrada automáticamente — sin evidencia de cierre">Cerrada automáticamente — sin evidencia</option>
+            <option value="__ALL__">Todas (incluye cerradas)</option>
           </select>
           <select id="fs-depto" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderSolicitudes()">
             <option value="">Todos los departamentos</option>
           </select>
         </div>
+        <div id="fs-ocultas" style="display:none;font-size:.72rem;color:#64748B;margin-top:8px"></div>
       </div>
       <div class="card" style="overflow:hidden">
         <div style="overflow-x:auto">
@@ -1863,6 +1874,10 @@ const LPA_AREAS = {
       <div id="inv-summary-banner" style="display:none;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px;padding:14px 18px;margin-bottom:14px">
         <p style="font-size:.85rem;color:#B91C1C;margin:0;font-weight:600"><i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><span id="inv-summary-text"></span></p>
       </div>
+      <!-- V8.6.4 — Semáforo de inventario: sin material / poco / óptimo -->
+      <div id="inv-semaforo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px"></div>
+      <div id="inv-semaforo-lista" class="card" style="display:none;padding:16px;margin-bottom:14px"></div>
+
       <div class="card" style="padding:18px">
         <h4 style="font-size:.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Consultar inventario</h4>
         <input id="admin-inv-search" class="inp" type="search" placeholder="Escribe parte del ID, código, nombre o ubicación..." oninput="filterAdminInventario()" style="margin-bottom:6px">
@@ -2328,6 +2343,38 @@ const LPA_AREAS = {
     <button class="btn-p" id="btn-pwd-save" onclick="submitPasswordChange()" style="width:100%">
       <i class="fas fa-shield-halved" style="margin-right:7px"></i>Guardar contraseña
     </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     V8.6.4 — MODAL: Motivo de eliminación de duplicado
+     El motivo es obligatorio. La actividad se respalda íntegra en la
+     hoja Actividades_Eliminadas antes de borrarse, y si la elimina
+     Ingeniería el técnico recibe un aviso con la razón.
+     ════════════════════════════════════════════════════════ -->
+<div id="modal-del-motivo" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:430px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h3 style="font-size:1rem;font-weight:700;color:#B91C1C;margin:0"><i class="fas fa-trash" style="margin-right:7px"></i>Eliminar actividad duplicada</h3>
+      <button onclick="closeModal('modal-del-motivo')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <div id="del-motivo-info" style="font-size:.76rem;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px;margin-bottom:12px"></div>
+
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Motivo de la eliminación *</label>
+    <textarea id="del-motivo-texto" class="inp" rows="3" maxlength="300"
+      placeholder="Ej. Duplicada del folio AD-20260922-02, el técnico la capturó dos veces por error."
+      oninput="delMotivoCheck_()" style="resize:vertical"></textarea>
+    <div id="del-motivo-contador" style="font-size:.68rem;color:#94A3B8;margin:4px 0 12px">Mínimo 10 caracteres.</div>
+
+    <div style="padding:9px 10px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:9px;font-size:.68rem;color:#92400E;margin-bottom:14px">
+      <i class="fas fa-circle-info" style="margin-right:5px"></i>Queda registrado quién eliminó la actividad, cuándo y por qué. El técnico recibirá un aviso con este motivo.
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" onclick="closeModal('modal-del-motivo')" style="flex:1">Cancelar</button>
+      <button class="btn-red" id="btn-del-motivo" onclick="confirmarEliminacionDuplicado()" style="flex:1" disabled>Eliminar</button>
+    </div>
   </div>
 </div>
 
@@ -4680,18 +4727,56 @@ function unifiedTimeInfo_(a){
   const eff=(a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!=='')?Number(a.tiempoEfectivoMinutos):live;
   return `<div style="font-size:.72rem;color:#475569;margin:7px 0"><b>Tiempo efectivo:</b> ${actFmtMin_(eff||0)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`;
 }
-function deleteDuplicateActivityUI(source,id){
-  if(!confirm('¿Eliminar esta actividad duplicada? Esta acción solo está disponible cuando todavía es seguro borrarla.'))return;
-  api({action:'deleteDuplicateActivity',token:SESSION.token,source:source,id:id}).then(function(r){
-    if(r.success){toast('Actividad duplicada eliminada');loadMisActividades();}
-    else toast(r.error||'No se pudo eliminar','err');
-  }).catch(function(e){toast('Error: '+e.message,'err');});
+// V8.6.4 — La eliminación exige un motivo escrito.
+let DEL_DUP_CTX = null;
+
+function deleteDuplicateActivityUI(source,id,folio,despues){
+  DEL_DUP_CTX = {source:source,id:id,folio:folio||'',despues:despues||'misActividades'};
+  $('del-motivo-texto').value='';
+  $('del-motivo-info').innerHTML = folio
+    ? `Vas a eliminar la actividad <b class="mono">${escapeHtml(folio)}</b>. Esta acción solo está disponible mientras todavía es seguro borrarla.`
+    : 'Esta acción solo está disponible mientras todavía es seguro borrar la actividad.';
+  delMotivoCheck_();
+  $('modal-del-motivo').style.display='flex';
+  setTimeout(()=>{try{$('del-motivo-texto').focus();}catch(e){}},120);
+}
+
+function delMotivoCheck_(){
+  const v=($('del-motivo-texto')?.value||'').trim();
+  const ok=v.length>=10;
+  const btn=$('btn-del-motivo');
+  if(btn)btn.disabled=!ok;
+  const c=$('del-motivo-contador');
+  if(c){
+    c.textContent = ok ? (v.length+' caracteres') : ('Mínimo 10 caracteres · faltan '+(10-v.length));
+    c.style.color = ok ? '#15803D' : '#94A3B8';
+  }
+}
+
+async function confirmarEliminacionDuplicado(){
+  if(!DEL_DUP_CTX)return;
+  const motivo=($('del-motivo-texto').value||'').trim();
+  if(motivo.length<10){toast('Explica el motivo con al menos 10 caracteres','err');return;}
+  const btn=$('btn-del-motivo');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Eliminando…';
+  try{
+    const r=await api({action:'deleteDuplicateActivity',token:SESSION.token,
+      source:DEL_DUP_CTX.source,id:DEL_DUP_CTX.id,motivo:motivo});
+    if(r.success){
+      toast('Actividad duplicada eliminada · motivo registrado');
+      closeModal('modal-del-motivo');
+      if(DEL_DUP_CTX.despues==='dashboardDaily')loadDashboardDaily();
+      else loadMisActividades();
+      DEL_DUP_CTX=null;
+    }else toast(r.error||'No se pudo eliminar','err');
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.innerHTML='Eliminar';delMotivoCheck_();}
 }
 function renderUnifiedDailyCard_(d){
   const a=d.actividad||null,st=dailyBucketUnified_(d,a),supports=a?parseActSupports_(a):v840FrontParse_(d.tecnicosApoyoJSON);
   let actions='';
   if(st.b==='PENDIENTE'&&!a){
-    actions=`<button class="btn-p" onclick='openDailyStartModal("${d.id}","${d.folio}",${JSON.stringify(supports)})'>Iniciar</button> <button class="btn-red" onclick="deleteDuplicateActivityUI('daily','${d.id}')"><i class="fas fa-trash"></i> Borrar duplicada</button>`;
+    actions=`<button class="btn-p" onclick='openDailyStartModal("${d.id}","${d.folio}",${JSON.stringify(supports)})'>Iniciar</button> <button class="btn-red" onclick="deleteDuplicateActivityUI('daily','${d.id}','${d.folio||''}')"><i class="fas fa-trash"></i> Borrar duplicada</button>`;
   }else if(st.b==='EN_CURSO'){
     actions=`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" onclick="openCerrarModal('${a.id}','${d.folio}')">Terminar</button><button class="btn-g" onclick="openPausaActividadModal('${a.id}','${d.folio}')">Pausar / cambiar</button><button class="btn-g" onclick="openActiveSupportModal('${a.id}','${d.folio}')"><i class="fas fa-users"></i> Apoyos</button></div>`;
   }else if(st.b==='PAUSADA'){
@@ -5209,18 +5294,25 @@ function renderDailyAdmin(){
   $('daily-kpis').innerHTML=opsKpiCard_('Registros',items.length)+opsKpiCard_('Planeadas',items.length-nEsp)+opsKpiCard_('Espontáneas',nEsp)+opsKpiCard_('Técnicos',techs.length)+opsKpiCard_('Pend. cierre',items.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length)+opsKpiCard_('Cerradas',items.filter(x=>x.estatus==='Cerrada').length);
   $('daily-list').innerHTML=items.length?items.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).map(x=>{
     const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON),finalSupports=v840FrontParse_(a.apoyosCierreJSON);
-    const actions=x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'
-      ?`<div style="display:flex;gap:7px;margin-top:8px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:'';
+    // V8.6.4: Ingeniería ya puede eliminar un duplicado desde su propio panel
+    // de supervisión, sin tener que pedírselo al técnico. Antes la función
+    // deleteDailyAdminDuplicateUI existía pero ningún botón la llamaba.
+    const esIng=SESSION.user.rol==='ingeniero';
+    const puedeBorrar=esIng&&x.estatus==='Declarada'&&!String(x.actividadId||'').trim();
+    let actions='';
+    if(x.estatus==='Pendiente de cierre por Ingeniería'&&esIng){
+      actions=`<div style="display:flex;gap:7px;margin-top:8px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`;
+    }else if(puedeBorrar){
+      actions=`<div style="display:flex;gap:7px;margin-top:8px"><button class="btn-red" onclick="deleteDailyAdminDuplicateUI('${x.id}','${(x.folio||'').replace(/'/g,'')}')"><i class="fas fa-trash" style="margin-right:5px"></i>Eliminar duplicada</button></div>`;
+    }
     const real=a&&a.horaInicio?dailyLiveMinutes_(a):0;
     const effective=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):real;
     return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo real efectivo:</b> ${actFmtMin_(effective)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${actions}</div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Sin actividades declaradas en el periodo.</div>';
 }
-async function deleteDailyAdminDuplicateUI(id){
-  if(!confirm('¿Eliminar esta actividad diaria duplicada antes de iniciar?'))return;
-  const r=await api({action:'deleteDuplicateActivity',token:SESSION.token,source:'daily',id:id});
-  if(r.success){toast('Actividad duplicada eliminada');loadDashboardDaily();}
-  else toast(r.error||'No se pudo eliminar','err');
+// V8.6.4: Ingeniería elimina desde el panel de supervisión, también con motivo.
+function deleteDailyAdminDuplicateUI(id,folio){
+  deleteDuplicateActivityUI('daily',id,folio||'','dashboardDaily');
 }
 async function closeDailyEngineeringUI(id){
   const r=await api({action:'closeDailyActivityEngineering',token:SESSION.token,id});
@@ -5353,6 +5445,20 @@ function platformEventColors_(x){
   if(x.status==='Lista de Espera')return {bg:'#64748B',bd:'#475569',tx:'#fff'};
   return {bg:'#94A3B8',bd:'#64748B',tx:'#fff'};
 }
+// V8.6.3: detalle completo al pasar el cursor sobre un evento del calendario.
+function platformTooltip_(x){
+  const l=[];
+  l.push('Folio: '+(x.folio||'—'));
+  l.push('Solicitante: '+(x.solicitante||'—'));
+  l.push('Área del solicitante: '+(x.areaSolicitante||'—'));
+  l.push('Área de trabajo: '+(x.areaTrabajo||'—'));
+  if(x.descripcion)l.push('Trabajo: '+x.descripcion);
+  l.push('Estatus: '+(x.status||'—'));
+  if(x.prioridadTexto)l.push('Prioridad: '+x.prioridadTexto);
+  l.push('Horario: '+(x.start||'')+' – '+(x.end||''));
+  return l.join('\n');
+}
+
 async function loadPlatformCalendar(){
   try{
     const r=await api({action:'getPlatformAvailability'});
@@ -5362,10 +5468,17 @@ async function loadPlatformCalendar(){
 
     const events=(r.events||[]).map(x=>{
       const c=platformEventColors_(x);
+      // V8.6.3: el título del evento ahora identifica a quién solicitó la
+      // plataforma y de qué área es, que era lo que no se veía al abrir el mes.
       let title='';
-      if(x.eventType==='BLOCK')title='Mantenimiento · '+(x.areaTrabajo||'');
-      else if(x.eventType==='BUFFER')title='Carga de plataforma · 1 h · '+x.folio;
-      else title=x.folio+' · '+x.status+' · P'+(x.prioridadCodigo||'-');
+      if(x.eventType==='BLOCK'){
+        title='Mantenimiento · '+(x.areaTrabajo||'');
+      }else if(x.eventType==='BUFFER'){
+        title='Carga de plataforma · 1 h · '+x.folio+(x.solicitante?' · '+x.solicitante:'');
+      }else{
+        const quien=[x.solicitante||'',x.areaSolicitante||''].filter(Boolean).join(' · ');
+        title=x.folio+(quien?' · '+quien:'')+' · P'+(x.prioridadCodigo||'-');
+      }
       return {
         title,
         start:x.date+'T'+x.start+':00',
@@ -5388,8 +5501,8 @@ async function loadPlatformCalendar(){
         events,
         eventDidMount:function(info){
           const x=info.event.extendedProps;
-          info.el.title=x.eventType==='REQUEST'
-            ? info.event.title+'\nÁrea: '+(x.areaTrabajo||'')+'\n'+(x.prioridadTexto||'')
+          info.el.title = x.eventType==='REQUEST'
+            ? platformTooltip_(x)
             : info.event.title;
         }
       });
@@ -6382,13 +6495,56 @@ async function refreshAdmin() {
     if($('fs-search'))$('fs-search').value='';
     if($('fs-depto'))$('fs-depto').value='';
     if($('manager-approval-box'))$('manager-approval-box').style.display='';
-    await Promise.allSettled([loadSolicitudes(),loadCompras(),loadLPA(),loadAcciones()]);
+    await loadAdminBootstrap();
     renderManagerApprovalQueue();
     switchTab('sol');
     renderSolicitudes();
     return;
   }
-  await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
+  await loadAdminBootstrap();
+}
+
+// V8.6.3 — CARGA RÁPIDA
+// Antes se lanzaban 3 o 4 peticiones en paralelo al entrar al panel. Apps
+// Script limita las ejecuciones simultáneas por usuario, así que se formaban
+// en fila y cada una volvía a pagar el arranque del script. Ahora todo llega
+// en una sola llamada, y las listas viajan sin el campo "historial", que era
+// lo más pesado del payload.
+async function loadAdminBootstrap(){
+  try{
+    const res=await api({action:'getAdminBootstrap',token:SESSION.token});
+    if(!res.success){
+      toast(res.error||'Error al cargar el panel','err');
+      // Respaldo: si el backend todavía no tiene la acción nueva, se usa el
+      // camino anterior para no dejar al usuario sin datos.
+      await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
+      return;
+    }
+
+    SOL_DATA=res.requests||[];
+    refreshWorkStatusFilterLabels();
+    renderSolicitudes();
+    renderManagerApprovalQueue();
+
+    COMPRA_DATA=res.compras||[];
+    const selC=$('fc-est');
+    if(selC&&selC.options.length<=1)selC.innerHTML='<option value="">'+uiText('Todos los estatus')+'</option>'+ESTATUS_COMPRA.map(s=>`<option value="${s}">${statusLabel(s)}</option>`).join('');
+    renderCompras();
+
+    if(res.inventarioResponse)aplicarInventarioAdmin_(res.inventarioResponse);
+    else{try{await loadAdminInventario();}catch(e){}}
+
+    if(res.lpa){LPA_DATA=res.lpa;try{renderLPA();}catch(e){}}
+    if(res.acciones){ACC_DATA=res.acciones;try{renderAcciones();}catch(e){}}
+
+    const tab=dashboardActiveTab_();
+    if(tab==='sol')renderDashboardKPIs_('sol');
+    if(tab==='compra')renderDashboardKPIs_('compra');
+    if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
+  }catch(e){
+    toast('Error al cargar el panel: '+e.message,'err');
+    await Promise.allSettled([loadSolicitudes(),loadCompras(),loadAdminInventario()]);
+  }
 }
 
 
@@ -6628,10 +6784,23 @@ let ADMIN_INV_DATA=[];
 async function loadAdminInventario() {
   try{
     const res=await api({action:'getInventario',token:SESSION.token});
-    if(!res.success){
+    aplicarInventarioAdmin_(res);
+  }catch(e){
+    ADMIN_INV_DATA=[];
+    if($('admin-inv-select'))$('admin-inv-select').innerHTML='<option value="">Error de conexión</option>';
+    toast('Error al cargar inventario: '+e.message,'err');
+  }
+}
+
+// V8.6.3: separado de la petición, para que el arranque combinado
+// (getAdminBootstrap) pueda reutilizar exactamente el mismo render sin
+// lanzar una segunda llamada al servidor.
+function aplicarInventarioAdmin_(res) {
+  try{
+    if(!res||!res.success){
       ADMIN_INV_DATA=[];
       if($('admin-inv-select'))$('admin-inv-select').innerHTML='<option value="">Error al cargar inventario</option>';
-      toast(res.error||'Error al cargar inventario','err');
+      toast((res&&res.error)||'Error al cargar inventario','err');
       return;
     }
 
@@ -6667,6 +6836,9 @@ async function loadAdminInventario() {
       }else banner.style.display='none';
     }
 
+    // V8.6.4: actualiza el semáforo con cada carga de inventario.
+    try{renderInventarioSemaforo_();}catch(e){}
+
     filterAdminInventario();
     if($('admin-inv-detail')){
       $('admin-inv-detail').style.display='none';
@@ -6679,6 +6851,112 @@ async function loadAdminInventario() {
     toast('Error al cargar inventario: '+e.message,'err');
   }
 }
+// ══════════════════════════════════════════════════════════════
+// V8.6.4 — SEMÁFORO DE INVENTARIO
+//
+// Clasificación:
+//   SIN MATERIAL → stock actual en 0 o menos
+//   POCO         → stock por encima de 0 pero en el mínimo o por debajo
+//   ÓPTIMO       → todo lo demás
+//
+// Los materiales sin stock mínimo definido no se pueden evaluar, así que
+// se cuentan aparte en lugar de darlos por buenos.
+// ══════════════════════════════════════════════════════════════
+function clasificarInventario_(items){
+  const g={sin:[],poco:[],optimo:[],sinMinimo:[]};
+  (items||[]).forEach(function(it){
+    const stock=Number(it.stockActual)||0;
+    if(stock<=0){g.sin.push(it);return;}
+    if(!it.stockMinimoValido){g.sinMinimo.push(it);return;}
+    if(it.bajoMinimo){g.poco.push(it);return;}
+    g.optimo.push(it);
+  });
+  return g;
+}
+
+let INV_GRUPO_ABIERTO = '';
+
+function renderInventarioSemaforo_(){
+  const box=$('inv-semaforo'); if(!box) return;
+  const g=clasificarInventario_(ADMIN_INV_DATA);
+  const card=(key,titulo,n,color,fondo,borde,icono,nota)=>`
+    <div class="card" style="padding:14px 16px;cursor:pointer;border:1.5px solid ${borde};background:${fondo}"
+         onclick="toggleInventarioGrupo_('${key}')" title="Clic para ver la lista">
+      <p style="font-size:.66rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">
+        <i class="fas ${icono}" style="margin-right:5px;color:${color}"></i>${titulo}</p>
+      <p class="mono" style="font-size:1.8rem;font-weight:700;color:${color};margin:0">${n}</p>
+      <p style="font-size:.62rem;color:#64748B;margin:2px 0 0">${nota}</p>
+    </div>`;
+
+  box.innerHTML =
+    card('sin','Sin material',g.sin.length,'#B91C1C','#FEF2F2','#FECACA','fa-circle-xmark','Stock en cero') +
+    card('poco','Poco inventario',g.poco.length,'#B45309','#FFFBEB','#FDE68A','fa-triangle-exclamation','En el mínimo o por debajo') +
+    card('optimo','Óptimo',g.optimo.length,'#15803D','#F0FDF4','#BBF7D0','fa-circle-check','Por encima del mínimo') +
+    (g.sinMinimo.length
+      ? card('sinMinimo','Sin mínimo definido',g.sinMinimo.length,'#475569','#F8FAFC','#E2E8F0','fa-circle-question','No se puede evaluar')
+      : '');
+
+  if(INV_GRUPO_ABIERTO)pintarGrupoInventario_(INV_GRUPO_ABIERTO,g);
+}
+
+function toggleInventarioGrupo_(key){
+  INV_GRUPO_ABIERTO = (INV_GRUPO_ABIERTO===key) ? '' : key;
+  const box=$('inv-semaforo-lista');
+  if(!INV_GRUPO_ABIERTO){box.style.display='none';box.innerHTML='';return;}
+  pintarGrupoInventario_(INV_GRUPO_ABIERTO,clasificarInventario_(ADMIN_INV_DATA));
+}
+
+function pintarGrupoInventario_(key,g){
+  const box=$('inv-semaforo-lista'); if(!box) return;
+  const meta={
+    sin:{t:'Sin material',c:'#B91C1C',items:g.sin},
+    poco:{t:'Poco inventario',c:'#B45309',items:g.poco},
+    optimo:{t:'Óptimo',c:'#15803D',items:g.optimo},
+    sinMinimo:{t:'Sin mínimo definido',c:'#475569',items:g.sinMinimo}
+  }[key];
+  if(!meta){box.style.display='none';return;}
+
+  const rows=meta.items.slice().sort((a,b)=>String(a.codigo||'').localeCompare(String(b.codigo||''),undefined,{numeric:true}));
+  box.style.display='';
+  box.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <h4 style="font-size:.85rem;font-weight:700;color:${meta.c};margin:0">${meta.t} · ${rows.length} material${rows.length===1?'':'es'}</h4>
+      <div style="display:flex;gap:7px">
+        <button class="btn-g" style="padding:5px 10px" onclick="copiarListaInventario_('${key}')"><i class="fas fa-copy" style="margin-right:5px"></i>Copiar lista</button>
+        <button class="btn-g" style="padding:5px 10px" onclick="toggleInventarioGrupo_('${key}')">Cerrar</button>
+      </div>
+    </div>
+    ${rows.length ? `<div style="max-height:340px;overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.74rem">
+        <thead><tr style="background:#F1F5F9">
+          <th style="text-align:left;padding:6px">Código</th>
+          <th style="text-align:left;padding:6px">Descripción</th>
+          <th style="text-align:left;padding:6px">Ubicación</th>
+          <th style="text-align:right;padding:6px">Stock</th>
+          <th style="text-align:right;padding:6px">Mín.</th>
+          <th style="text-align:right;padding:6px">Máx.</th>
+        </tr></thead>
+        <tbody>${rows.map(it=>`<tr style="border-bottom:1px solid #E2E8F0">
+          <td style="padding:6px" class="mono">${escapeHtml(it.codigo||'—')}</td>
+          <td style="padding:6px">${escapeHtml(it.descripcion||'—')}${it.sobreMaximo?' <span class="badge" style="background:#EFF6FF;color:#1D4ED8">sobrestock</span>':''}</td>
+          <td style="padding:6px;color:#64748B">${escapeHtml(it.ubicacionGaveta||'—')}</td>
+          <td style="padding:6px;text-align:right;font-weight:700;color:${meta.c}">${it.stockActual??'—'} ${escapeHtml(it.unidad||'')}</td>
+          <td style="padding:6px;text-align:right;color:#64748B">${it.stockMinimo!==''&&it.stockMinimo!=null?it.stockMinimo:'—'}</td>
+          <td style="padding:6px;text-align:right;color:#64748B">${it.stockMaximo!==''&&it.stockMaximo!=null?it.stockMaximo:'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    : '<p style="color:#94A3B8;font-size:.78rem;margin:0">No hay materiales en esta categoría.</p>'}`;
+}
+
+// Copia la lista en texto plano, lista para pegar en un correo o WhatsApp.
+function copiarListaInventario_(key){
+  const g=clasificarInventario_(ADMIN_INV_DATA);
+  const items=({sin:g.sin,poco:g.poco,optimo:g.optimo,sinMinimo:g.sinMinimo})[key]||[];
+  const txt=items.map(it=>`${it.codigo||'—'} · ${it.descripcion||''} · stock ${it.stockActual} ${it.unidad||''} · mín ${it.stockMinimo??'—'}`).join('\n');
+  if(typeof copiarTexto_==='function')copiarTexto_(txt);
+  else{try{navigator.clipboard.writeText(txt);toast('Copiado','ok');}catch(e){toast('No se pudo copiar','err');}}
+}
+
 function renderAdminInventarioSeleccionado(){
   const id=$('admin-inv-select')?.value||'',it=ADMIN_INV_DATA.find(x=>String(x.id)===String(id)),box=$('admin-inv-detail');
   if(!box)return;
@@ -6739,10 +7017,25 @@ function printInventoryQR() {
 }
 function refreshWorkStatusFilterLabels(){
   const sel=$('fs-est'); if(!sel) return;
+  // V8.6.3: las opciones agregadas (__ALL__, __CERRADAS__) y la opción por
+  // omisión conservan su etiqueta propia; el resto se traduce como siempre.
+  const fijas={
+    '':{es:'Abiertas (sin cerradas)',en:'Open (closed hidden)'},
+    '__ALL__':{es:'Todas (incluye cerradas)',en:'All (including closed)'},
+    '__CERRADAS__':{es:'Cerradas (todas)',en:'Closed (all)'}
+  };
   [...sel.options].forEach(o=>{
-    if(!o.value) o.textContent=uiText('Todos los estatus');
-    else o.textContent=statusLabel(o.value);
+    const f=fijas[o.value];
+    if(f){o.textContent=(LANG==='en'?f.en:f.es);return;}
+    o.textContent=statusLabel(o.value);
   });
+}
+
+// V8.6.3: atajo del aviso para mostrar las cerradas.
+function verSolicitudesCerradas(){
+  const sel=$('fs-est'); if(!sel) return;
+  sel.value='__CERRADAS__';
+  renderSolicitudes();
 }
 
 async function loadSolicitudes() {
@@ -6886,16 +7179,43 @@ function renderManagerApprovalQueue(){
     <td style="text-align:center"><button class="btn-p" style="padding:6px 10px" onclick="event.stopPropagation();openSolicitudModal('${r.id}')"><i class="fas fa-eye" style="margin-right:5px"></i>${LANG==='en'?'Review':'Revisar'}</button></td>
   </tr>`).join('');
 }
+// V8.6.3: los estatus que se consideran CERRADOS y se ocultan por omisión.
+const ESTATUS_CERRADOS = [
+  'Cerrada',
+  'Cerrada automáticamente — sin confirmación',
+  'Cerrada automáticamente — sin evidencia de cierre'
+];
+const esSolicitudCerrada_ = r => ESTATUS_CERRADOS.includes(String(r.estatus||'')) ||
+  String(r.estatus||'').toLowerCase().startsWith('cerrada');
+
 function renderSolicitudes() {
   const q=($('fs-search')?.value||'').toLowerCase();
   const fe=$('fs-est')?.value||'';
   const fd=$('fs-depto')?.value||'';
   const source=Array.isArray(SOL_DATA)?SOL_DATA:[];
-  const list=source.filter(r=>
-    (!q||[r.folio,r.nombre,r.departamento,r.tipoSolicitud].some(v=>(v||'').toLowerCase().includes(q)))&&
-    (!fe||r.estatus===fe)&&
-    (!fd||r.departamento===fd)
-  ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  // Por omisión se muestran solo las solicitudes abiertas. Las cerradas
+  // aparecen al elegirlas en el desplegable.
+  const verTodas   = fe==='__ALL__';
+  const soloCerradas = fe==='__CERRADAS__';
+
+  const list=source.filter(r=>{
+    if(q && ![r.folio,r.nombre,r.departamento,r.tipoSolicitud].some(v=>(v||'').toLowerCase().includes(q))) return false;
+    if(fd && r.departamento!==fd) return false;
+    if(verTodas) return true;
+    if(soloCerradas) return esSolicitudCerrada_(r);
+    if(fe) return r.estatus===fe;
+    return !esSolicitudCerrada_(r);
+  }).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+
+  const ocultas = (!fe) ? source.filter(esSolicitudCerrada_).length : 0;
+  const aviso=$('fs-ocultas');
+  if(aviso){
+    aviso.style.display = ocultas ? '' : 'none';
+    aviso.innerHTML = ocultas
+      ? `<i class="fas fa-eye-slash" style="margin-right:5px"></i>${ocultas} solicitud${ocultas===1?'':'es'} cerrada${ocultas===1?'':'s'} oculta${ocultas===1?'':'s'}. <a href="javascript:void(0)" onclick="verSolicitudesCerradas()" style="color:#2563EB;font-weight:600">Ver cerradas</a>`
+      : '';
+  }
 
   const tbody=$('sol-tbody');
   if(!list.length){
@@ -7025,9 +7345,24 @@ function renderSolicitudFotosAdicionales(r){
   box.innerHTML=archivos.map((f,i)=>{const pdf=String(f.tipo||'').toLowerCase()==='pdf'||String(f.nombre||'').toLowerCase().endsWith('.pdf');return `<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.72rem;text-decoration:none"><i class="fas ${pdf?'fa-file-pdf':'fa-image'}" style="margin-right:5px;${pdf?'color:#DC2626':''}"></i>${escapeHtml(f.nombre||(pdf?'PDF':'Imagen '+(i+1)))}</a>`;}).join('');
 }
 
+// V8.6.3: la lista ya no trae el historial (era el campo más pesado).
+// Se pide al abrir el detalle, que es el único lugar donde se lee.
+async function cargarHistorialSolicitud_(r){
+  if(!r||r.historial!==undefined)return;
+  try{
+    const res=await api({action:'getRequestDetail',token:SESSION.token,id:r.id});
+    if(res.success&&res.request){
+      Object.assign(r,res.request);
+      renderHistorial(r);
+      if(typeof renderSolicitudFotosAdicionales==='function'){try{renderSolicitudFotosAdicionales(r);}catch(e){}}
+    }
+  }catch(e){}
+}
+
 function openSolicitudModal(id) {
   CUR_SOL=SOL_DATA.find(r=>r.id===id);
   if(!CUR_SOL)return;
+  cargarHistorialSolicitud_(CUR_SOL);
   const r=CUR_SOL,rol=SESSION?.user?.rol||'';
 
   $('ms-folio').textContent=r.folio||'—';
@@ -7131,6 +7466,13 @@ function translateHistoryAction(txt){
 }
 
 function renderHistorial(r) {
+  // V8.6.3: si el historial aún no ha llegado del servidor, se avisa.
+  if(r && r.historial===undefined){
+    const box=$('ms-historial');
+    if(box)box.innerHTML='<div style="padding:14px;color:#94A3B8;font-size:.76rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando historial…</div>';
+    if(r.tieneHistorial===false&&box)box.innerHTML='<div style="padding:14px;color:#94A3B8;font-size:.76rem">Sin movimientos registrados</div>';
+    return;
+  }
   let hist=[];
   try{ hist=JSON.parse(r.historial||'[]'); }catch{}
   const icons={created:'fa-circle-plus',status:'fa-arrows-rotate',comment:'fa-comment',tech:'fa-user-gear'};
@@ -7377,14 +7719,26 @@ function renderComprasRolKPIs() {
   $('cr-kpi-rec').textContent   = CR_DATA.filter(r=>r.estatus==='Recibida').length;
 }
 
+// V8.6.3: atajo desde el KPI "Ordenadas" para mostrarlas sin buscar el filtro.
+function verComprasOrdenadas(){
+  const sel=$('cr-est'); if(!sel) return;
+  sel.value = sel.value==='Ordenada' ? '' : 'Ordenada';
+  renderComprasRol();
+}
+
 function renderComprasRol() {
   const q   = $('cr-search').value.toLowerCase();
   const fe  = $('cr-est').value;
   const fp  = $('cr-prio').value;
 
+  // V8.6.3: las solicitudes ya ORDENADAS se ocultan por omisión para que la
+  // lista muestre solo lo que requiere gestión. Aparecen al elegir "Ordenada"
+  // en el desplegable, o "Todas (incluye ordenadas)".
+  const verTodas = fe === '__ALL__';
   const list = CR_DATA.filter(r =>
     (!q  || [r.folio,r.nombre].some(v=>(v||'').toLowerCase().includes(q))) &&
-    (!fe || r.estatus===fe) &&
+    (verTodas || !fe ? true : r.estatus===fe) &&
+    (verTodas || fe ? true : r.estatus!=='Ordenada') &&
     (!fp || r.prioridad===fp)
   ).sort((a,b) => {
     const pd = (prioOrder[a.prioridad]??3) - (prioOrder[b.prioridad]??3);
@@ -7393,7 +7747,10 @@ function renderComprasRol() {
 
   const tbody = $('cr-tbody');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra</td></tr>';
+    const ordenadas = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra'+
+      ((!fe&&ordenadas)?'<div style="font-size:.74rem;color:#7C3AED;margin-top:8px">Hay '+ordenadas+' ordenada'+(ordenadas===1?'':'s')+' oculta'+(ordenadas===1?'':'s')+'. Elige “Ordenada” en el filtro para verlas.</div>':'')+
+      '</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(r => `
