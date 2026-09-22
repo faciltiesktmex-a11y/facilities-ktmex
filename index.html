@@ -1003,6 +1003,10 @@ const LPA_AREAS = {
       </div>
       <div>
         <label style="font-size:.7rem;color:#64748B;font-weight:650">Status / Estatus</label>
+        <input id="lpaq-month" type="month" class="inp" onchange="loadLpaQDashboard()" title="Mes del programa">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.7rem;color:#475569;white-space:nowrap">
+          <input id="lpaq-scope-all" type="checkbox" onchange="loadLpaQDashboard()"> Ver año completo
+        </label>
         <select id="lpaq-program-status-filter" class="inp" onchange="renderLpaQProgram()">
           <option value="">All</option>
           <option value="Programada">Scheduled</option>
@@ -1020,6 +1024,24 @@ const LPA_AREAS = {
   <div class="card" style="padding:16px">
     <strong style="font-size:.9rem">Nonconformities / No conformidades</strong>
     <div id="lpaq-nc-table" style="margin-top:12px;overflow-x:auto"></div>
+  </div>
+
+  <!-- V8.6.0 — Administración de contraseñas LPA (solo LPA Quality Admin) -->
+  <div id="lpaq-admin-pwd-panel" class="card" style="display:none;padding:16px;margin-top:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div>
+        <h3 style="font-size:.9rem;color:var(--navy);margin:0"><i class="fas fa-user-shield" style="color:#2563EB;margin-right:6px"></i>Contraseñas de auditores LPA</h3>
+        <p style="font-size:.68rem;color:#64748B;margin:3px 0 0"><b>Reiniciar</b>: el auditor conserva su contraseña y el sistema le pedirá cambiarla al entrar. &nbsp;·&nbsp; <b>Generar temporal</b>: le asignas una contraseña nueva que puedes leer y comunicarle.</p>
+        <p style="font-size:.66rem;color:#92400E;margin:5px 0 0;background:#FEF3C7;border:1px solid #FDE68A;border-radius:7px;padding:6px 8px"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>Las contraseñas se muestran en texto legible, igual que en la hoja <b>Usuarios</b> de Google Sheets. Cualquiera con acceso de lectura al spreadsheet puede verlas: comparte ese archivo únicamente con quien lo necesite. Si alguna aparece como <b>no legible</b>, se perdió al cifrarse y solo se recupera generando una temporal.</p>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-g" onclick="loadLpaPasswordPanel()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+        <button class="btn-p" onclick="resetAllLpaPasswords()" style="background:#B45309"><i class="fas fa-key" style="margin-right:5px"></i>Reiniciar todos</button>
+      </div>
+    </div>
+    <div id="pwd-temp-result" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px;margin-top:11px"></div>
+    <div id="lpaq-pwd-summary" style="font-size:.72rem;color:#475569;margin-top:10px"></div>
+    <div id="lpaq-pwd-table" style="margin-top:10px;max-height:340px;overflow:auto"></div>
   </div>
 </div>
 
@@ -1130,7 +1152,7 @@ const LPA_AREAS = {
 
   <div class="card" style="padding:14px;margin-bottom:14px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div><label style="font-size:.72rem;font-weight:700;color:#475569">Origen</label><select id="act-source-filter" class="inp" onchange="renderMisActividades()" style="margin-top:5px"><option value="TODAS">Todas</option><option value="PLAN">Plan Diario</option><option value="ASIGNADA">Solicitudes asignadas</option><option value="ESPONTANEA">Espontáneas</option><option value="APOYO">Soy técnico de apoyo</option></select></div>
+      <div><label style="font-size:.72rem;font-weight:700;color:#475569">Origen</label><select id="act-source-filter" class="inp" onchange="renderMisActividades()" style="margin-top:5px"><option value="TODAS">Todas</option><option value="PLAN">Plan Diario</option><option value="ESPONTANEA">Espontáneas</option><option value="ASIGNADA">Solicitudes asignadas</option><option value="ESPONTANEA">Espontáneas</option><option value="APOYO">Soy técnico de apoyo</option></select></div>
       <div><label style="font-size:.72rem;font-weight:700;color:#475569">Estatus</label><select id="act-status-filter" class="inp" onchange="renderMisActividades()" style="margin-top:5px"><option value="TODAS">Todos</option><option value="PENDIENTE">Por iniciar</option><option value="EN_CURSO">En ejecución</option><option value="PAUSADA">Pausadas</option><option value="MATERIAL">Falta de material</option><option value="PEND_ING">Pend. cierre Ingeniería</option><option value="CONFIRMACION">Confirmación usuario</option><option value="CERRADA">Cerradas</option><option value="SUSPENDIDA">Suspendidas</option><option value="RECHAZADA">Rechazadas</option><option value="INCONFORMIDAD">Inconformidad</option></select></div>
     </div>
   </div><div id="act-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px"></div><div id="act-list" style="display:flex;flex-direction:column;gap:14px"></div>
@@ -2274,6 +2296,41 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════
+     V8.6.0 — MODAL: Cambio de contraseña
+     Se abre de forma obligatoria en la primera sesión tras un
+     reinicio, y de forma voluntaria desde el menú del usuario.
+     ════════════════════════════════════════════════════════ -->
+<div id="modal-password" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:420px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-key" style="color:#2563EB;margin-right:7px"></i><span id="pwd-modal-title">Cambiar contraseña</span></h3>
+      <button id="pwd-modal-close" onclick="closeModal('modal-password')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div id="pwd-forced-note" style="display:none;padding:10px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:9px;font-size:.73rem;color:#92400E;margin-bottom:12px">
+      <i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>Por seguridad debes definir una nueva contraseña antes de continuar. Escribe la contraseña con la que acabas de entrar y elige una nueva.
+    </div>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Contraseña actual *</label>
+    <input type="password" id="pwd-actual" class="inp" autocomplete="current-password" style="margin-bottom:11px">
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Nueva contraseña *</label>
+    <input type="password" id="pwd-nueva" class="inp" autocomplete="new-password" oninput="pwdCheckStrength_()" style="margin-bottom:5px">
+    <div id="pwd-rules" style="font-size:.68rem;color:#64748B;margin-bottom:11px;line-height:1.6">
+      <div id="pwd-rule-len">• Mínimo 8 caracteres</div>
+      <div id="pwd-rule-letter">• Al menos una letra</div>
+      <div id="pwd-rule-digit">• Al menos un número</div>
+    </div>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Confirmar nueva contraseña *</label>
+    <input type="password" id="pwd-confirma" class="inp" autocomplete="new-password" style="margin-bottom:14px">
+
+    <button class="btn-p" id="btn-pwd-save" onclick="submitPasswordChange()" style="width:100%">
+      <i class="fas fa-shield-halved" style="margin-right:7px"></i>Guardar contraseña
+    </button>
+  </div>
+</div>
+
 <!-- MODAL: Crear Actividad Espontánea -->
 <div id="modal-act-nueva" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:420px;padding:24px">
@@ -2281,10 +2338,14 @@ const LPA_AREAS = {
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-bolt" style="color:#7C3AED;margin-right:7px"></i>Actividad Espontánea</h3>
       <button onclick="closeModal('modal-act-nueva')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
     </div>
-    <p style="font-size:.78rem;color:#64748B;margin:0 0 12px">Para trabajo que surge en el momento, sin una solicitud previa. Si ya existe un folio, no generes otra actividad: el técnico responsable debe agregar a los técnicos de apoyo en la misma actividad.</p>
+    <p style="font-size:.78rem;color:#64748B;margin:0 0 12px">Para trabajo que surge en el momento, sin una solicitud previa. Si ya existe un folio, no generes otra actividad: el técnico responsable debe agregar a los técnicos de apoyo en la misma actividad.
+    <div style="padding:9px 10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:9px;font-size:.7rem;color:#9A3412;margin-bottom:12px"><i class="fas fa-calendar-day" style="margin-right:5px"></i>Se registra en tu <b>Plan Diario</b> con folio AE-. No genera solicitud y no cuenta para el mínimo de 3 actividades planeadas.</div></p>
     <div style="padding:9px 10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;font-size:.7rem;color:#1D4ED8;margin-bottom:12px"><i class="fas fa-users" style="margin-right:5px"></i>Los apoyos ya no generan folios o actividades duplicadas.</div>
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-align-left" style="color:#7C3AED;margin-right:5px"></i>¿Qué vas a hacer? *</label>
     <textarea id="act-nueva-desc" class="inp" rows="3" placeholder="Describe la actividad…" style="margin-bottom:12px"></textarea>
+
+    <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-location-dot" style="color:#7C3AED;margin-right:5px"></i>Área *</label>
+    <input type="text" id="act-nueva-area" class="inp" placeholder="Ej. Welding, Blanking, Oficinas…" style="margin-bottom:12px">
 
     <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-tag" style="color:#7C3AED;margin-right:5px"></i>Tipo (opcional)</label>
     <input type="text" id="act-nueva-tipo" class="inp" placeholder="Ej. Fuga de aire, falla eléctrica…" style="margin-bottom:12px">
@@ -3807,6 +3868,15 @@ async function performLogin() {
     }
 
     SESSION={token:String(res.token),user:res.user};
+    // V8.6.0: primera sesión tras un reinicio -> cambio de contraseña obligatorio.
+    if(res.mustChangePassword||res.user?.mustChangePassword){
+      saveSession();
+      $('log-err').style.display='none';
+      $('log-pwd').value='';
+      toast('Debes definir una nueva contraseña para continuar','err');
+      openPasswordModal(true);
+      return;
+    }
     if(SESSION.user.rol==='manager'){
       LANG='en';
       localStorage.setItem('ktmex_lang','en');
@@ -4149,13 +4219,27 @@ async function goLpaQuality(){
   await loadLpaQDashboard();
 }
 async function loadLpaQDashboard(){
+  // V8.6.0: por omisión se pide solo el mes en curso (más lo vencido de meses
+  // anteriores). El backend ya no escribe en la hoja al consultar, por lo que
+  // la carga pasó de más de 2 minutos a unos pocos segundos.
+  const tbl=$('lpaq-program-table');
+  if(tbl)tbl.innerHTML='<div style="padding:18px;text-align:center;color:#64748B;font-size:.8rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando programa…</div>';
   try{
-    const r=await api({action:'getLpaQualityDashboard',token:SESSION.token});
-    if(!r.success){toast(r.error||'LPA Quality error','err');return;}
+    if($('lpaq-month')&&!$('lpaq-month').value){
+      const n=new Date();
+      $('lpaq-month').value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+    }
+    const month=$('lpaq-month')?.value||'';
+    const scope=$('lpaq-scope-all')?.checked?'all':'month';
+    const r=await api({action:'getLpaQualityDashboard',token:SESSION.token,month,scope});
+    if(!r.success){toast(r.error||'LPA Quality error','err');if(tbl)tbl.innerHTML='';return;}
     LPAQ_ACCESS=r.access; LPAQ_DASH=r;
     $('lpaq-access-note').innerHTML=(LANG==='en'?'Assigned areas: ':'Áreas asignadas: ')+
       `<strong>${(r.access.areas||[]).join(', ')||'—'}</strong> · ${r.access.level||'—'} · ${r.access.position||''}`+
-      (r.access.qadmin?` <span class="badge b-done">${LANG==='en'?'LPA QUALITY ADMIN':'ADMIN LPA QUALITY'}</span>`:'');
+      (r.access.qadmin?` <span class="badge b-done">${LANG==='en'?'LPA QUALITY ADMIN':'ADMIN LPA QUALITY'}</span>`:'')+
+      (r.programaTotal!==undefined?`<div style="font-size:.68rem;color:#1E40AF;margin-top:5px">Mostrando <b>${r.programaMostrado}</b> de <b>${r.programaTotal}</b> auditorías del programa · ${r.scope==='all'?'año completo':'mes '+(r.month||'')} + pendientes anteriores</div>`:'')+
+      (r.avisoCanal?`<div style="font-size:.66rem;color:#475569;margin-top:3px"><i class="fas fa-bell" style="margin-right:4px"></i>${r.avisoCanal}</div>`:'');
+    if($('lpaq-admin-pwd-panel'))$('lpaq-admin-pwd-panel').style.display=r.access.qadmin?'':'none';
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -4165,6 +4249,7 @@ async function loadLpaQDashboard(){
     if($('lpaq-kpi-overdue')) $('lpaq-kpi-overdue').textContent=k.overdueAudits||0;
     populateLpaQAuditorFilter();
     renderLpaQProgram(); renderLpaQNC();
+    if(r.access.qadmin)loadLpaPasswordPanel();
     requestAnimationFrame(()=>applyLanguage($('view-lpa-quality')));
   }catch(e){toast('LPA Quality: '+e.message,'err');}
 }
@@ -4537,8 +4622,15 @@ async function loadMisActividades(force){
       const res=await api({action:'getMisActividades',token:SESSION.token,fechaLocal:localDateKeyV843_()});
       if(res.success){
         ACT_DATA=res;
-        const totalDaily=(res.daily||[]).length;
-        if($('daily-progress')){$('daily-progress').textContent=totalDaily+' / 3';$('daily-progress').className='badge '+(totalDaily>=3?'b-done':'b-ejec');}
+        // V8.6.0: el mínimo de 3 solo cuenta actividades PLANEADAS.
+        // Las espontáneas se muestran aparte y no inflan el cumplimiento.
+        const pd=res.planDiario||{};
+        const totalPlan=pd.totalPlaneadas!==undefined?pd.totalPlaneadas:(res.daily||[]).filter(x=>String(x.origen||'PLAN')!=='ESPONTANEA').length;
+        const totalEsp=pd.totalEspontaneas!==undefined?pd.totalEspontaneas:(res.daily||[]).filter(x=>String(x.origen||'')==='ESPONTANEA').length;
+        if($('daily-progress')){
+          $('daily-progress').textContent=totalPlan+' / 3'+(totalEsp?' (+'+totalEsp+' esp.)':'');
+          $('daily-progress').className='badge '+(totalPlan>=3?'b-done':'b-ejec');
+        }
         if($('act-daily-form'))$('act-daily-form').style.display=SESSION.user.rol==='tecnico'?'':'none';
         if(SESSION.user.rol==='tecnico'&&!(SUPPORT_STATE.daily||[]).length)resetSupportPicker('daily');
         renderMisActividades();
@@ -4609,8 +4701,9 @@ function renderUnifiedDailyCard_(d){
   }else if(st.b==='PEND_ING'){
     actions='<div style="padding:8px;background:#FFF7ED;border-radius:8px;color:#9A3412;font-size:.72rem">Trabajo terminado; esperando cierre de Ingeniería.</div>';
   }
-  return `<div class="card" style="padding:16px;border-left:4px solid #EA580C">
-    <div style="display:flex;justify-content:space-between;gap:8px"><div><span class="badge" style="background:#FFF7ED;color:#C2410C">Plan Diario</span> <b class="mono">${escapeHtml(d.folio||'')}</b></div><span class="badge">${escapeHtml(st.t)}</span></div>
+  const esp=!!(d.esEspontanea||String(d.origen||'')==='ESPONTANEA');
+  return `<div class="card" style="padding:16px;border-left:4px solid ${esp?'#7C3AED':'#EA580C'}">
+    <div style="display:flex;justify-content:space-between;gap:8px"><div><span class="badge" style="background:${esp?'#F3E8FF':'#FFF7ED'};color:${esp?'#6D28D9':'#C2410C'}">${esp?'Espontánea · Plan Diario':'Plan Diario'}</span> <b class="mono">${escapeHtml(d.folio||'')}</b></div><span class="badge">${escapeHtml(st.t)}</span></div>
     <div style="font-weight:700;margin-top:7px">${escapeHtml(d.descripcion||'')}</div>
     <div style="font-size:.7rem;color:#64748B">${escapeHtml(d.area||'')} · ${escapeHtml(d.categoria||'Sin categoría')}</div>
     ${unifiedTimeInfo_(a)}
@@ -4679,7 +4772,8 @@ function renderMisActividades(){
   });
   daily.forEach(function(d){
     const st=dailyBucketUnified_(d,d.actividad||null);
-    items.push({source:'PLAN',b:st.b,html:renderUnifiedDailyCard_(d)});
+    const esp=!!(d.esEspontanea||String(d.origen||'')==='ESPONTANEA');
+    items.push({source:esp?'ESPONTANEA':'PLAN',b:st.b,html:renderUnifiedDailyCard_(d)});
   });
   apoyos.forEach(function(x){
     const st=actBucketUnified_(x.solicitud||{},x.actividad||{});
@@ -4798,11 +4892,15 @@ function openActividadEspontaneaModal() {
 }
 function toggleActividadFolio(){}
 
+// V8.6.0: la actividad espontánea se registra en Plan Diario (folio AE-),
+// ya no crea una solicitud FAC- ni aparece en la ventana de Solicitudes.
 async function confirmActividadEspontanea() {
   const descripcion=$('act-nueva-desc').value.trim();
   const tipo=$('act-nueva-tipo').value.trim();
+  const area=$('act-nueva-area')?.value.trim()||'';
   const fotoFile=SPONT_SELECTED_FILE;
   if(!descripcion){toast('Describe la actividad que vas a realizar','err');return;}
+  if(!area){toast('Indica el área donde realizarás la actividad','err');return;}
   if(!fotoFile){toast('Selecciona una fotografía desde cámara o galería','err');return;}
   if(fotoFile.size>5*1024*1024){toast('La foto supera 5 MB. Comprime la imagen.','err');return;}
 
@@ -4810,13 +4908,160 @@ async function confirmActividadEspontanea() {
   btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
   try{
     const fotoBase64=await fileToBase64(fotoFile),fotoName=fotoFile.name;
-    const res=await api({action:'crearActividadEspontanea',token:SESSION.token,descripcion,tipo,folioMode:'NO',fotoBase64,fotoName,tecnicosApoyo:SUPPORT_STATE.spont});
+    const res=await api({action:'crearActividadEspontanea',token:SESSION.token,
+      descripcion,tipo,area,fecha:localDateKeyV843_(),folioMode:'NO',
+      fotoBase64,fotoName,tecnicosApoyo:SUPPORT_STATE.spont});
     if(res.success){
-      toast('Actividad espontánea iniciada — folio '+res.folio);
+      toast('Actividad espontánea agregada a tu Plan Diario — folio '+res.folio);
+      if($('act-nueva-area'))$('act-nueva-area').value='';
       closeModal('modal-act-nueva');loadMisActividades();
     }else toast(res.error||'Error','err');
   }catch(e){toast('Error de conexión: '+e.message,'err');}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-play" style="margin-right:7px"></i>Iniciar Ahora';}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V8.6.0 — GESTIÓN DE CONTRASEÑAS
+// ══════════════════════════════════════════════════════════════
+let PWD_FORCED = false;
+
+function openPasswordModal(forced){
+  PWD_FORCED=!!forced;
+  $('pwd-actual').value='';$('pwd-nueva').value='';$('pwd-confirma').value='';
+  $('pwd-forced-note').style.display=forced?'':'none';
+  $('pwd-modal-close').style.display=forced?'none':'';
+  $('pwd-modal-title').textContent=forced?'Define tu nueva contraseña':'Cambiar contraseña';
+  pwdCheckStrength_();
+  $('modal-password').style.display='flex';
+  setTimeout(()=>{try{$('pwd-actual').focus();}catch(e){}},120);
+}
+
+function pwdCheckStrength_(){
+  const v=$('pwd-nueva')?.value||'';
+  const set=(id,ok)=>{const el=$(id);if(el){el.style.color=ok?'#15803D':'#64748B';el.style.fontWeight=ok?'700':'400';}};
+  set('pwd-rule-len',v.length>=8);
+  set('pwd-rule-letter',/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(v));
+  set('pwd-rule-digit',/[0-9]/.test(v));
+}
+
+async function submitPasswordChange(){
+  const actual=$('pwd-actual').value,nueva=$('pwd-nueva').value,confirma=$('pwd-confirma').value;
+  if(!actual||!nueva||!confirma){toast('Completa los tres campos','err');return;}
+  if(nueva!==confirma){toast('La nueva contraseña y su confirmación no coinciden','err');return;}
+  if(nueva.length<8||!/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(nueva)||!/[0-9]/.test(nueva)){
+    toast('La contraseña debe tener mínimo 8 caracteres, con al menos una letra y un número','err');return;
+  }
+  const btn=$('btn-pwd-save');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
+  try{
+    const r=await api({action:'changePassword',token:SESSION.token,
+      passwordActual:actual,passwordNueva:nueva,passwordConfirma:confirma});
+    if(r.success){
+      toast('Contraseña actualizada correctamente','ok');
+      if(SESSION&&SESSION.user)SESSION.user.mustChangePassword=false;
+      saveSession();
+      PWD_FORCED=false;
+      $('pwd-modal-close').style.display='';
+      closeModal('modal-password');
+    }else toast(r.error||'No se pudo cambiar la contraseña','err');
+  }catch(e){toast('Error de conexión: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-shield-halved" style="margin-right:7px"></i>Guardar contraseña';}
+}
+
+// ── Panel de administración (Dulce Rangel) ───────────────────
+async function loadLpaPasswordPanel(){
+  const box=$('lpaq-pwd-table');if(!box)return;
+  box.innerHTML='<div style="padding:12px;color:#64748B;font-size:.76rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando usuarios…</div>';
+  try{
+    const r=await api({action:'adminListLpaUsers',token:SESSION.token});
+    if(!r.success){box.innerHTML='';toast(r.error||'No se pudo cargar','err');return;}
+    $('lpaq-pwd-summary').innerHTML=`<b>${r.total}</b> auditores LPA · <b style="color:#B45309">${r.pendientes}</b> con cambio de contraseña pendiente`+
+      (r.sinPassword?` · <b style="color:#B91C1C">${r.sinPassword}</b> sin contraseña legible (genérales una temporal)`:'');
+    box.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.72rem">
+      <thead><tr style="background:#F1F5F9">
+        <th style="text-align:left;padding:6px">Auditor</th>
+        <th style="text-align:left;padding:6px">Usuario</th>
+        <th style="text-align:left;padding:6px">Estado</th>
+        <th style="text-align:left;padding:6px">Contraseña actual</th>
+        <th style="text-align:left;padding:6px">Contraseña temporal</th>
+        <th style="text-align:left;padding:6px">Último cambio</th>
+        <th style="padding:6px"></th>
+      </tr></thead><tbody>${
+      r.usuarios.map(u=>`<tr style="border-bottom:1px solid #E2E8F0">
+        <td style="padding:6px">${escapeHtml(u.nombre)}</td>
+        <td style="padding:6px" class="mono">${escapeHtml(u.username)}</td>
+        <td style="padding:6px">${u.debeCambiarPassword
+            ?'<span class="badge b-wait">Cambio pendiente</span>'
+            :'<span class="badge b-done">Al corriente</span>'}${u.tieneHash?'':' <span class="badge" style="background:#FEE2E2;color:#B91C1C">Sin cifrar</span>'}</td>
+        <td style="padding:6px">${u.passwordActual
+            ? `<span class="mono" style="background:#EFF6FF;padding:2px 6px;border-radius:5px">${escapeHtml(u.passwordActual)}</span>
+               <button class="btn-g" style="padding:2px 6px;margin-left:4px" title="Copiar" onclick="copiarTexto_('${escapeHtml(u.passwordActual)}')"><i class="fas fa-copy"></i></button>`
+            : '<span style="color:#94A3B8" title="Solo queda el hash: no es recuperable">— no legible</span>'}</td>
+        <td style="padding:6px">${u.passwordTemporal
+            ? `<span class="mono" style="background:#FEF3C7;padding:2px 6px;border-radius:5px;font-weight:700">${escapeHtml(u.passwordTemporal)}</span>
+               <button class="btn-g" style="padding:2px 6px;margin-left:4px" title="Copiar" onclick="copiarTexto_('${escapeHtml(u.passwordTemporal)}')"><i class="fas fa-copy"></i></button>`
+            : '<span style="color:#94A3B8">—</span>'}</td>
+        <td style="padding:6px">${escapeHtml((u.fechaCambioPassword||'').slice(0,10)||'—')}</td>
+        <td style="padding:6px;text-align:right;white-space:nowrap">
+          <button class="btn-g" style="padding:4px 8px" onclick="resetOneLpaPassword('${escapeHtml(u.username)}')">Reiniciar</button>
+          <button class="btn-g" style="padding:4px 8px;background:#DBEAFE;color:#1D4ED8" onclick="generarPasswordTemporal('${escapeHtml(u.username)}','${escapeHtml(u.nombre)}')">Generar temporal</button>
+        </td>
+      </tr>`).join('')}</tbody></table>`;
+  }catch(e){box.innerHTML='';toast('Error: '+e.message,'err');}
+}
+
+async function resetAllLpaPasswords(){
+  if(!confirm('Se obligará a TODOS los auditores LPA a definir una contraseña nueva en su próximo inicio de sesión.\n\nSus contraseñas actuales NO cambian y sus sesiones abiertas se cerrarán.\n\n¿Continuar?'))return;
+  try{
+    const r=await api({action:'adminResetLpaPasswords',token:SESSION.token});
+    if(r.success){toast(r.message||'Reinicio aplicado','ok');loadLpaPasswordPanel();}
+    else toast(r.error||'No se pudo aplicar','err');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// V8.6.1 — Genera una contraseña temporal legible y la muestra al
+// administrador para que se la comunique al auditor.
+async function generarPasswordTemporal(username,nombre){
+  if(!confirm('Se asignará una contraseña temporal NUEVA a "'+(nombre||username)+'".\n\nSu contraseña actual dejará de funcionar y deberá cambiarla al entrar.\n\n¿Continuar?'))return;
+  try{
+    const r=await api({action:'adminGenerateTempPassword',token:SESSION.token,username});
+    if(!r.success){toast(r.error||'No se pudo generar','err');return;}
+    await loadLpaPasswordPanel();
+    mostrarPasswordTemporal_(nombre||username,username,r.passwordTemporal);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+function mostrarPasswordTemporal_(nombre,username,pwd){
+  const box=$('pwd-temp-result');if(!box)return;
+  box.style.display='';
+  box.innerHTML=`<div style="font-size:.74rem;color:#166534;font-weight:700;margin-bottom:6px"><i class="fas fa-circle-check" style="margin-right:5px"></i>Contraseña temporal generada</div>
+    <div style="font-size:.72rem;color:#334155;margin-bottom:8px">Entrégasela a <b>${escapeHtml(nombre)}</b> (usuario <span class="mono">${escapeHtml(username)}</span>). El sistema le pedirá cambiarla en cuanto entre.</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="mono" style="font-size:1.15rem;font-weight:700;letter-spacing:1px;background:#FFFFFF;border:2px dashed #16A34A;border-radius:8px;padding:8px 14px">${escapeHtml(pwd)}</span>
+      <button class="btn-g" onclick="copiarTexto_('${escapeHtml(pwd)}')"><i class="fas fa-copy" style="margin-right:5px"></i>Copiar</button>
+      <button class="btn-g" onclick="$('pwd-temp-result').style.display='none'">Cerrar</button>
+    </div>`;
+  try{box.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}
+}
+
+function copiarTexto_(txt){
+  try{
+    navigator.clipboard.writeText(txt);
+    toast('Copiado al portapapeles','ok');
+  }catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+    ta.select();try{document.execCommand('copy');toast('Copiado','ok');}catch(x){toast('No se pudo copiar','err');}
+    document.body.removeChild(ta);
+  }
+}
+
+async function resetOneLpaPassword(username){
+  if(!confirm('¿Obligar a "'+username+'" a definir una contraseña nueva al entrar?'))return;
+  try{
+    const r=await api({action:'adminResetUserPassword',token:SESSION.token,username});
+    if(r.success){toast(r.message||'Usuario reiniciado','ok');loadLpaPasswordPanel();}
+    else toast(r.error||'No se pudo aplicar','err');
+  }catch(e){toast('Error: '+e.message,'err');}
 }
 
 function fmtDateTime(iso) {
@@ -4929,8 +5174,11 @@ function dailyStatusBadge_(s){
   return `<span class="badge ${cls}">${escapeHtml(s||'')}</span>`;
 }
 function renderDailyTech(r){
-  const total=r.total||0;
-  $('daily-kpis').innerHTML=opsKpiCard_('Actividades declaradas',total,total>=3?'Mínimo cumplido':'Faltan '+Math.max(0,3-total))+
+  // V8.6.0: "declaradas" = planeadas. Las espontáneas se reportan aparte.
+  const total=r.totalPlaneadas!==undefined?r.totalPlaneadas:(r.total||0);
+  const esp=r.totalEspontaneas||0;
+  $('daily-kpis').innerHTML=opsKpiCard_('Planeadas declaradas',total,total>=3?'Mínimo cumplido':'Faltan '+Math.max(0,3-total))+
+    opsKpiCard_('Espontáneas del día',esp,'No cuentan al mínimo')+
     opsKpiCard_('Pendientes de iniciar',DAILY_DATA.filter(x=>x.estatus==='Declarada'||x.estatus==='Devuelta por Ingeniería').length)+
     opsKpiCard_('En curso',DAILY_DATA.filter(x=>x.actividad?.estatusActividad==='En curso').length)+
     opsKpiCard_('Pausadas',DAILY_DATA.filter(x=>x.actividad?.estatusActividad==='Pausada'||x.actividad?.estatusActividad==='En espera de material').length)+
@@ -4957,7 +5205,8 @@ function v840FrontParse_(v){try{const x=JSON.parse(String(v||'[]'));return Array
 function renderDailyAdmin(){
   const items=DAILY_DATA||[];
   const techs=[...new Set(items.map(x=>x.tecnico).filter(Boolean))];
-  $('daily-kpis').innerHTML=opsKpiCard_('Registros',items.length)+opsKpiCard_('Técnicos',techs.length)+opsKpiCard_('Pend. cierre',items.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length)+opsKpiCard_('Cerradas',items.filter(x=>x.estatus==='Cerrada').length);
+  const nEsp=items.filter(x=>x.esEspontanea||String(x.origen||'')==='ESPONTANEA').length;
+  $('daily-kpis').innerHTML=opsKpiCard_('Registros',items.length)+opsKpiCard_('Planeadas',items.length-nEsp)+opsKpiCard_('Espontáneas',nEsp)+opsKpiCard_('Técnicos',techs.length)+opsKpiCard_('Pend. cierre',items.filter(x=>x.estatus==='Pendiente de cierre por Ingeniería').length)+opsKpiCard_('Cerradas',items.filter(x=>x.estatus==='Cerrada').length);
   $('daily-list').innerHTML=items.length?items.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).map(x=>{
     const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON),finalSupports=v840FrontParse_(a.apoyosCierreJSON);
     const actions=x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'
