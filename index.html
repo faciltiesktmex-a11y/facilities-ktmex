@@ -4820,6 +4820,29 @@ async function submitSolicitud() {
 }
 
 function showSolicitudTab(tab){const n=tab==='new';$('sol-new-panel').style.display=n?'':'none';$('sol-status-panel').style.display=n?'none':'';$('sol-tab-new').className=n?'btn-p':'btn-g';$('sol-tab-status').className=n?'btn-g':'btn-p';}
+// ══════════════════════════════════════════════════════════════
+// V8.8.1 — Recorrido de la solicitud para quien consulta por folio.
+//
+// Muestra los cambios de estatus con su fecha y los comentarios
+// dirigidos al solicitante. Las notas internas entre técnicos e
+// Ingeniería no se incluyen: el servidor ya las filtra antes de enviar.
+// ══════════════════════════════════════════════════════════════
+function renderHistorialPublico_(hist){
+  if(!Array.isArray(hist)||!hist.length)return '';
+  const filas=hist.slice().reverse().map(h=>`
+    <div class="st-item st-info">
+      <div>
+        <p style="font-size:.8rem;color:#334155;margin:0 0 2px;font-weight:600">${escapeHtml(h.accion||'Movimiento')}</p>
+        <p style="font-size:.7rem;color:#94A3B8;margin:0">${escapeHtml(fmtDateTime(h.fecha||''))}</p>
+        ${h.comentario?`<p style="font-size:.74rem;color:#475569;margin:3px 0 0">${escapeHtml(h.comentario)}</p>`:''}
+      </div>
+    </div>`).join('');
+  return `<details open style="margin-top:14px">
+    <summary style="cursor:pointer;font-size:.8rem;font-weight:700;color:#2563EB">Seguimiento de tu solicitud (${hist.length})</summary>
+    <div class="status-timeline" style="display:flex;flex-direction:column;margin-top:9px">${filas}</div>
+  </details>`;
+}
+
 async function consultarSolicitudFolio(){
   const folio=$('sol-status-folio').value.trim();
   if(!folio){toast('Ingresa el folio','err');return;}
@@ -4831,6 +4854,7 @@ async function consultarSolicitudFolio(){
     box.innerHTML=`<div class="card" style="padding:18px">
       <div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${s.folio}</b>${estatusBadge(s.estatus)}</div>
       <div style="font-size:.82rem;line-height:1.7;margin-top:10px"><div><b>Técnico:</b> ${s.tecnico||'Pendiente de asignación'}</div><div><b>Tipo:</b> ${s.tipoSolicitud||'—'}</div></div>
+      ${renderHistorialPublico_(s.historial)}
       ${rej?`<div style="padding:11px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;margin-top:12px"><b>Motivo del rechazo / Comentario de Ingeniería</b><br>${escapeHtml(s.motivoRechazo||s.comentarioIngenieria||'Sin comentario')}</div>`:''}
       ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><div style="margin-top:9px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><label style="display:block;font-size:.76rem;font-weight:700;color:#334155;margin-bottom:5px"><i class="fas fa-paperclip" style="margin-right:5px;color:#2563EB"></i>Archivos adicionales (opcionales)</label><p style="font-size:.68rem;color:#64748B;margin:0 0 7px">Hasta 3 imágenes + 1 PDF. Puedes responder únicamente con texto.</p><input id="sol-info-imagenes" type="file" accept="image/*" multiple class="inp" style="padding:7px;margin-bottom:6px"><input id="sol-info-pdf" type="file" accept="application/pdf,.pdf" class="inp" style="padding:7px"></div><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
       ${(!rej&&!susp&&s.comentarioIngenieria)?`<div style="padding:10px;background:#EFF6FF;border-radius:8px;margin-top:12px"><b>Comentario de Ingeniería</b><br>${escapeHtml(s.comentarioIngenieria)}</div>`:''}
