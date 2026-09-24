@@ -1962,6 +1962,14 @@ const LPA_AREAS = {
           </div>
           <div id="weekend-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px"></div>
         </div>
+
+        <!-- V8.8.0 — Cadena de firmas -->
+        <div class="card" style="padding:14px;margin-bottom:12px">
+          <h4 style="font-size:.86rem;color:var(--navy);margin:0 0 4px"><i class="fas fa-signature" style="color:#DC2626;margin-right:6px"></i>Cadena de aprobación</h4>
+          <div id="ww-flujo-cabecera" style="font-size:.72rem;color:#475569;margin-bottom:10px"></div>
+          <div id="ww-flujo-lista"></div>
+        </div>
+
         <div id="weekend-list"></div>
       </div>
 
@@ -2545,6 +2553,56 @@ const LPA_AREAS = {
       <button onclick="closeModal('modal-historial')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
     </div>
     <div id="hist-modal-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     V8.8.0 — MODAL DE FIRMA DEL WEEKEND WORK
+     Reproduce las pantallas de la herramienta, pero cada persona firma
+     desde su propia sesión en lugar de las cuatro de corrido.
+     ══════════════════════════════════════════════════════════ -->
+<div id="modal-ww-firma" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:640px;padding:0;overflow:hidden;background:#152238">
+    <div style="padding:20px 22px 12px;text-align:center;color:#fff">
+      <div style="font-size:.66rem;letter-spacing:.14em;font-weight:700;color:#94A3B8" id="ww-firma-paso">APPROVAL SIGNATURE</div>
+      <div style="font-size:1.6rem;font-weight:800;margin:4px 0 2px" id="ww-firma-titulo">Originator</div>
+      <div style="font-size:.85rem;color:#CBD5E1" id="ww-firma-nombre"></div>
+      <div style="font-size:.76rem;color:#94A3B8;margin-top:6px">Firma dentro del recuadro con el mouse o el dedo.</div>
+    </div>
+    <div id="ww-firma-resumen" style="margin:0 18px 10px;padding:9px 11px;background:#1E293B;border-radius:9px;font-size:.7rem;color:#CBD5E1"></div>
+    <div style="padding:0 18px 14px">
+      <canvas id="ww-firma-canvas" style="width:100%;height:230px;display:block;background:#fff;border-radius:10px;touch-action:none;cursor:crosshair"></canvas>
+    </div>
+    <div style="display:flex;gap:10px;padding:0 18px 18px">
+      <button class="btn-g" style="flex:1" onclick="wwFirmaLimpiar()">Limpiar</button>
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-firma')">Cancelar</button>
+      <button class="btn-p" id="btn-ww-firmar" style="flex:1.4;background:#DC2626" onclick="wwFirmaAceptar()">Guardar y aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- V8.8.0 — MODAL: datos generales y guardias (paso de Pedro) -->
+<div id="modal-ww-organizador" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:460px;padding:24px">
+    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px">Información general del fin de semana</h3>
+    <p style="font-size:.72rem;color:#64748B;margin:0 0 14px">Estos datos encabezan el documento consolidado.</p>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Organizador *</label>
+    <input id="ww-org-nombre" class="inp" style="margin-bottom:11px">
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Líder de guardia · Sábado *</label>
+    <select id="ww-org-sabado" class="inp" style="margin-bottom:11px"></select>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Líder de guardia · Domingo</label>
+    <select id="ww-org-domingo" class="inp" style="margin-bottom:11px"></select>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Líder de guardia · Día festivo</label>
+    <select id="ww-org-festivo" class="inp" style="margin-bottom:16px"></select>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-organizador')">Cancelar</button>
+      <button class="btn-p" style="flex:1" onclick="wwGuardarOrganizador()">Continuar</button>
+    </div>
   </div>
 </div>
 
@@ -3899,6 +3957,7 @@ function roleCanView(v) {
   // la tiene bloqueada.
   if(v==='weekend')return true;
   if(role==='manager'){
+    // V8.8.0: Inagaki y Kojima entran al panel para firmar su etapa.
     return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login'].includes(v);
   }
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
@@ -6041,6 +6100,66 @@ async function resetOneLpaPassword(username){
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
+// ══════════════════════════════════════════════════════════════
+// V8.8.0 — FORMATO DE TEXTO AL ESCRIBIR
+//
+// Mismo criterio que el backend: si el texto viene TODO EN MAYÚSCULAS o
+// todo en minúsculas se normaliza; si ya trae una mezcla razonable solo
+// se asegura la mayúscula inicial. Nunca se tocan códigos con números
+// (FAC200, KTR1) ni siglas conocidas (TPM, LPA, NG).
+//
+// Se aplica al SALIR del campo, no mientras se teclea: transformar letra
+// por letra hace que quien escribe "KTR1" vea deshacerse su texto.
+// ══════════════════════════════════════════════════════════════
+const UI_SIGLAS=['TPM','LPA','NG','OK','NA','EPP','JSA','QR','PDF','AC','DC','HVAC','UPS',
+  'PLC','VFD','TC','GL','FES','KTMEX','KTR','FAC','SEPAM','WC','LED','PPE','MTTO','RH','TI',
+  'SMD','SMT','CNC','PM','IT'];
+
+function uiEsSigla_(w){return UI_SIGLAS.includes(String(w||'').replace(/[^A-Za-zÁÉÍÓÚÑ]/g,'').toUpperCase());}
+function uiEsToken_(w){const p=String(w||'');return /\d/.test(p)||p.includes('@')||p.includes('/');}
+function uiNecesitaFormato_(t){
+  t=String(t||'').trim(); if(t.length<3)return false;
+  const l=t.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g,''); if(l.length<3)return false;
+  return l===l.toUpperCase()||l===l.toLowerCase();
+}
+// Primera LETRA del texto, sea cual sea su caso. Buscar la primera
+// minúscula convertía "Se revisó" en "SE revisó".
+function uiPrimeraMayus_(t){return String(t||'').replace(/[A-Za-zÁÉÍÓÚÑáéíóúñ]/,c=>c.toUpperCase());}
+
+function uiSentenceCase_(texto){
+  const t=String(texto||'').trim(); if(!t)return '';
+  if(!uiNecesitaFormato_(t))return uiPrimeraMayus_(t);
+  const o=t.split(/(\s+)/).map(w=>{
+    if(!w.trim())return w;
+    if(uiEsToken_(w)||uiEsSigla_(w))return w.toUpperCase();
+    return w.toLowerCase();
+  }).join('');
+  return uiPrimeraMayus_(o);
+}
+
+// Campos que NO se tocan nunca: contraseñas, correos, códigos, búsquedas
+// y cualquier cosa marcada con data-sin-formato.
+function uiCampoFormateable_(el){
+  if(!el||el.dataset.sinFormato==='1')return false;
+  const tipo=(el.type||'').toLowerCase();
+  if(['password','email','number','date','time','month','file','search','url','tel'].includes(tipo))return false;
+  const id=(el.id||'').toLowerCase();
+  if(/pwd|password|contrasen|codigo|qr|folio|search|buscar|correo|email/.test(id))return false;
+  if(el.tagName==='SELECT')return false;
+  return el.tagName==='TEXTAREA'||tipo==='text'||tipo==='';
+}
+
+// Un solo escuchador para toda la aplicación, incluidos los campos que se
+// crean después: se engancha en la fase de captura sobre el documento.
+document.addEventListener('focusout',function(ev){
+  const el=ev.target;
+  if(!uiCampoFormateable_(el))return;
+  const v=el.value;
+  if(!v||!v.trim())return;
+  const nuevo=uiSentenceCase_(v);
+  if(nuevo!==v)el.value=nuevo;
+},true);
+
 function fmtDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -7405,6 +7524,241 @@ function configureManagerDashboardTabs(){
   ['tab-sol','tab-compra','tab-lpa','tab-acc'].forEach(id=>{if($(id))$(id).style.display='';});
 }
 // ══════════════════════════════════════════════════════════════
+// V8.8.0 — FLUJO DE APROBACIÓN DEL WEEKEND WORK
+//
+// Cada firmante entra a su propia sesión, ve lo que le toca y firma.
+// El documento avanza solo al siguiente responsable.
+// ══════════════════════════════════════════════════════════════
+let WW_FLUJO=null, WW_DOC_ACTUAL=null, WW_FIRMA_CTX=null;
+let wwPad=null, wwPintando=false, wwHayTrazo=false;
+
+async function loadWeekendFlujo(){
+  const box=$('ww-flujo-lista'); if(!box)return;
+  box.innerHTML='<div class="card" style="padding:20px;text-align:center;color:#64748B;font-size:.8rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando flujo…</div>';
+  try{
+    const r=await api({action:'getWeekendFlujo',token:SESSION.token});
+    if(!r.success){box.innerHTML='';toast(r.error||'Sin acceso al flujo','err');return;}
+    WW_FLUJO=r;
+    renderWeekendFlujo();
+  }catch(e){box.innerHTML='';toast('Error: '+e.message,'err');}
+}
+
+function renderWeekendFlujo(){
+  const r=WW_FLUJO; if(!r)return;
+  const box=$('ww-flujo-lista');
+
+  const cab=$('ww-flujo-cabecera');
+  if(cab){
+    cab.innerHTML = r.miEtapa
+      ? `<i class="fas fa-pen-nib" style="margin-right:6px;color:#DC2626"></i>Firmas como <b>${escapeHtml(r.tituloEtapa)}</b>. Tienes <b>${r.pendientes.length}</b> documento(s) esperando tu firma.`
+      : `<i class="fas fa-eye" style="margin-right:6px"></i>Consulta de documentos. Tu usuario no forma parte de la cadena de firmas.`;
+  }
+
+  const etapas=['ORIGINATOR','ENGINEER','SENIOR_MANAGER','PRESIDENT'];
+  const nombres={ORIGINATOR:'Originator',ENGINEER:'Engineer',SENIOR_MANAGER:'Senior Manager',PRESIDENT:'President'};
+
+  if(!r.documentos.length){
+    box.innerHTML='<div class="card" style="padding:28px;text-align:center;color:#94A3B8;font-size:.82rem">Todavía no hay documentos de fin de semana.</div>';
+    return;
+  }
+
+  box.innerHTML=r.documentos.map(d=>{
+    const pasos=etapas.map((e,k)=>{
+      const firmada=!!(d.firmas&&d.firmas[e]);
+      const enCurso=d.etapa===e;
+      const color=firmada?'#16A34A':(enCurso?'#DC2626':'#E2E8F0');
+      const txt=firmada?'#166534':(enCurso?'#B91C1C':'#94A3B8');
+      return `<div style="flex:1;text-align:center">
+        <div style="width:24px;height:24px;margin:0 auto 3px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${color};color:${firmada||enCurso?'#fff':'#94A3B8'};font-size:.64rem">
+          ${firmada?'<i class="fas fa-check"></i>':k+1}</div>
+        <div style="font-size:.6rem;color:${txt};font-weight:${enCurso?'700':'400'}">${nombres[e]}</div>
+        ${firmada?`<div style="font-size:.55rem;color:#94A3B8">${escapeHtml((d.firmas[e].nombre||'').split(' ')[0])}</div>`:''}
+      </div>`;
+    }).join('<div style="width:12px;height:1px;background:#E2E8F0;align-self:flex-start;margin-top:12px"></div>');
+
+    const acciones=[];
+    if(d.esMiTurno){
+      if(r.miEtapa==='ENGINEER'&&(!d.organizador||!d.guardias.sabado)){
+        acciones.push(`<button class="btn-p" onclick="wwAbrirOrganizador('${d.id}')"><i class="fas fa-users-gear" style="margin-right:5px"></i>Asignar guardias y continuar</button>`);
+      }else{
+        acciones.push(`<button class="btn-p" style="background:#DC2626" onclick="wwAbrirFirma('${d.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Sign weekend work</button>`);
+      }
+    }
+    acciones.push(`<button class="btn-g" onclick="wwVerDocumento('${d.id}')"><i class="fas fa-list" style="margin-right:5px"></i>Ver actividades</button>`);
+
+    return `<div class="card" style="padding:15px;margin-bottom:10px;${d.esMiTurno?'border:1.5px solid #FCA5A5;background:#FFFBFB':''}">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div>
+          <b style="color:#0F2A4A">Fin de semana del ${escapeHtml(d.sabado)} al ${escapeHtml(d.domingo)}</b>
+          ${d.numero>1?`<span class="badge" style="background:#FEF3C7;color:#92400E;margin-left:6px">Extemporáneo ${d.numero}</span>`:''}
+          <div style="font-size:.7rem;color:#64748B;margin-top:3px">
+            ${d.activas} actividad(es) activas${d.canceladas?` · <span style="color:#B91C1C">${d.canceladas} cancelada(s)</span>`:''}
+            ${d.organizador?` · Organiza: ${escapeHtml(d.organizador)}`:''}
+          </div>
+          <div style="font-size:.66rem;color:#94A3B8">Corte de recepción: ${escapeHtml(d.corte)}</div>
+        </div>
+        <span class="badge ${d.etapa==='APROBADO'?'b-done':'b-wait'}">${escapeHtml(d.etiquetaEtapa)}</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;margin:13px 0">${pasos}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${acciones.join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Consola de Pedro: guardias desde el catálogo de técnicos ──
+async function wwAbrirOrganizador(id){
+  try{
+    const r=await api({action:'getWeekendDocumento',token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No disponible','err');return;}
+    WW_DOC_ACTUAL=r;
+    const tecnicos=r.catalogoTecnicos||[];
+    const opts='<option value="">— Selecciona —</option>'+
+      tecnicos.map(t=>`<option value="${escapeHtml(t.nombre||t)}">${escapeHtml(t.nombre||t)}</option>`).join('');
+    ['ww-org-sabado','ww-org-domingo','ww-org-festivo'].forEach(x=>{ if($(x))$(x).innerHTML=opts; });
+    $('ww-org-nombre').value=r.documento.organizador||SESSION.user.nombre;
+    if($('ww-org-sabado'))$('ww-org-sabado').value=r.documento.guardiaSabado||'';
+    if($('ww-org-domingo'))$('ww-org-domingo').value=r.documento.guardiaDomingo||'';
+    if($('ww-org-festivo'))$('ww-org-festivo').value=r.documento.guardiaFestivo||'';
+    $('modal-ww-organizador').style.display='flex';
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function wwGuardarOrganizador(){
+  if(!WW_DOC_ACTUAL)return;
+  const payload={action:'weekendGuardarOrganizador',token:SESSION.token,
+    id:WW_DOC_ACTUAL.documento.id,
+    organizador:$('ww-org-nombre').value,
+    guardiaSabado:$('ww-org-sabado').value,
+    guardiaDomingo:$('ww-org-domingo').value,
+    guardiaFestivo:$('ww-org-festivo').value};
+  try{
+    const r=await api(payload);
+    if(!r.success){toast(r.error||'No se pudo guardar','err');return;}
+    toast('Guardias asignadas');
+    closeModal('modal-ww-organizador');
+    await loadWeekendFlujo();
+    wwAbrirFirma(payload.id);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ── Firma ────────────────────────────────────────────────────
+async function wwAbrirFirma(id){
+  try{
+    const r=await api({action:'getWeekendDocumento',token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No disponible','err');return;}
+    if(!r.esMiTurno){toast('No es tu turno de firmar','err');return;}
+    WW_FIRMA_CTX={id:id,doc:r.documento};
+
+    const nombres={ORIGINATOR:'Originator',ENGINEER:'Engineer',SENIOR_MANAGER:'Senior Manager',PRESIDENT:'President'};
+    const orden={ORIGINATOR:1,ENGINEER:2,SENIOR_MANAGER:3,PRESIDENT:4};
+    const et=r.miEtapa;
+    $('ww-firma-paso').textContent='APPROVAL SIGNATURE ('+(orden[et]||1)+' OF 4)';
+    $('ww-firma-titulo').textContent=nombres[et]||et;
+    $('ww-firma-nombre').textContent=SESSION.user.nombre;
+
+    const act=(r.documento.actividades||[]).filter(a=>!a.cancelada);
+    const can=(r.documento.actividades||[]).filter(a=>a.cancelada);
+    $('ww-firma-resumen').innerHTML=
+      `Fin de semana del <b>${escapeHtml(r.documento.sabado)}</b> al <b>${escapeHtml(r.documento.domingo)}</b> · `+
+      `<b>${act.length}</b> actividad(es)`+
+      (can.length?` · <span style="color:#FCA5A5">${can.length} cancelada(s)</span>`:'')+
+      (r.documento.guardiaSabado?`<br>Guardia sábado: <b>${escapeHtml(r.documento.guardiaSabado)}</b>`:'')+
+      (r.documento.guardiaDomingo?` · domingo: <b>${escapeHtml(r.documento.guardiaDomingo)}</b>`:'');
+
+    $('modal-ww-firma').style.display='flex';
+    setTimeout(wwPadInit,120);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+function wwPadInit(){
+  const c=$('ww-firma-canvas'); if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr; c.height=rect.height*dpr;
+  wwPad=c.getContext('2d');
+  wwPad.scale(dpr,dpr);
+  wwPad.lineWidth=2.6; wwPad.lineCap='round'; wwPad.lineJoin='round';
+  wwPad.strokeStyle='#152238';
+  wwPad.clearRect(0,0,rect.width,rect.height);
+  wwHayTrazo=false;
+
+  const pos=ev=>{
+    const r=c.getBoundingClientRect();
+    const p=ev.touches?ev.touches[0]:ev;
+    return {x:p.clientX-r.left,y:p.clientY-r.top};
+  };
+  const start=ev=>{ev.preventDefault();wwPintando=true;wwHayTrazo=true;const p=pos(ev);wwPad.beginPath();wwPad.moveTo(p.x,p.y);};
+  const move=ev=>{if(!wwPintando)return;ev.preventDefault();const p=pos(ev);wwPad.lineTo(p.x,p.y);wwPad.stroke();};
+  const end=()=>{wwPintando=false;};
+
+  c.onmousedown=start; c.onmousemove=move; c.onmouseup=end; c.onmouseleave=end;
+  c.ontouchstart=start; c.ontouchmove=move; c.ontouchend=end;
+}
+
+function wwFirmaLimpiar(){
+  const c=$('ww-firma-canvas'); if(!c||!wwPad)return;
+  const r=c.getBoundingClientRect();
+  wwPad.clearRect(0,0,r.width,r.height);
+  wwHayTrazo=false;
+}
+
+async function wwFirmaAceptar(){
+  if(!WW_FIRMA_CTX)return;
+  if(!wwHayTrazo){toast('Dibuja tu firma antes de aceptar','err');return;}
+  const btn=$('btn-ww-firmar');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Guardando…';
+  try{
+    const dataUrl=$('ww-firma-canvas').toDataURL('image/png');
+    const r=await api({action:'weekendFirmar',token:SESSION.token,id:WW_FIRMA_CTX.id,firmaBase64:dataUrl});
+    if(!r.success){toast(r.error||'No se pudo firmar','err');return;}
+    closeModal('modal-ww-firma');
+    toast(r.aprobado
+      ? 'Documento aprobado con las cuatro firmas'
+      : 'Firma registrada · ahora le toca a '+(r.siguiente||'el siguiente responsable'));
+    WW_FIRMA_CTX=null;
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-pen-nib" style="margin-right:5px"></i>Guardar y aceptar';}
+}
+
+// ── Detalle de actividades, con eliminar y editar ─────────────
+async function wwVerDocumento(id){
+  try{
+    const r=await api({action:'getWeekendDocumento',token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No disponible','err');return;}
+    WW_DOC_ACTUAL=r;
+    const d=r.documento;
+    const box=$('hist-modal-body');
+    $('hist-modal-folio').textContent=d.sabado+' → '+d.domingo;
+    box.innerHTML=
+      (r.tieneFirmas?`<div style="padding:9px 11px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;font-size:.7rem;color:#92400E;margin-bottom:11px"><i class="fas fa-circle-info" style="margin-right:5px"></i>Este documento ya tiene firmas. Una actividad que se dé de baja <b>no se borra</b>: queda marcada como cancelada, para que las firmas sigan respaldando lo que se firmó.</div>`:'')+
+      ((d.actividades||[]).length
+        ? (d.actividades||[]).map(a=>`
+          <div style="padding:10px 0;border-bottom:1px solid #F1F5F9;${a.cancelada?'opacity:.62':''}">
+            <div style="font-size:.78rem;font-weight:650;color:#0F2A4A;${a.cancelada?'text-decoration:line-through':''}">${escapeHtml(a.actividad||'—')}</div>
+            <div style="font-size:.68rem;color:#64748B">${escapeHtml(a.departamento||'')}${a.jobLeader?' · '+escapeHtml(a.jobLeader):''}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}</div>
+            ${a.cancelada?`<div style="font-size:.66rem;color:#B91C1C;margin-top:3px"><b>Cancelada:</b> ${escapeHtml(a.motivoCancelacion||'')} · ${escapeHtml(a.canceladaPor||'')}</div>`:''}
+            ${(!a.cancelada&&r.puedeEliminar)?`<button class="btn-g" style="padding:4px 9px;font-size:.68rem;margin-top:6px;color:#B91C1C" onclick="wwEliminarActividad('${d.id}','${a.id}')"><i class="fas fa-trash" style="margin-right:4px"></i>Dar de baja</button>`:''}
+          </div>`).join('')
+        : '<div style="padding:16px;color:#94A3B8;font-size:.78rem">Sin actividades en este documento.</div>');
+    $('modal-historial').style.display='flex';
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function wwEliminarActividad(docId,actId){
+  const motivo=prompt('Motivo de la baja (mínimo 10 caracteres).\nEj.: El proveedor canceló su asistencia.');
+  if(motivo===null)return;
+  if(String(motivo).trim().length<10){toast('El motivo debe tener al menos 10 caracteres','err');return;}
+  try{
+    const r=await api({action:'weekendEliminarActividad',token:SESSION.token,id:docId,actividadId:actId,motivo});
+    if(!r.success){toast(r.error||'No se pudo','err');return;}
+    toast(r.mensaje||'Actividad dada de baja');
+    await wwVerDocumento(docId);
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ══════════════════════════════════════════════════════════════
 // V8.7.3 — Weekend Works en el panel administrativo
 // ══════════════════════════════════════════════════════════════
 let WEEKEND_DATA=[];
@@ -7496,7 +7850,7 @@ function switchTab(tab) {
   if(tab==='acc'&&ACC_DATA.length===0)loadAcciones();
   if(tab==='inv'&&SESSION?.user?.rol!=='manager')loadAdminInventario();
   if(tab==='daily-dash')loadDashboardDaily();
-  if(tab==='weekend')loadWeekendWorks();
+  if(tab==='weekend'){loadWeekendWorks();loadWeekendFlujo();}
   if(tab==='analytics')loadOperationsAnalytics();
   if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
 }
@@ -8851,6 +9205,7 @@ function openCompraModal(id) {
   renderCompraCotizaciones(r);
 
   renderCompraHistorial(r);
+  cargarHistorialCompra_(r);
   $('modal-compra').style.display='flex';
   if(SESSION?.user?.rol==='manager')applyLanguage($('modal-compra'));
 }
@@ -8902,7 +9257,34 @@ async function sendCompraCotizacionesUI(){
   finally{if(btn)btn.disabled=false;}
 }
 
+// ══════════════════════════════════════════════════════════════
+// V8.7.6 — CORRECCIÓN: el historial del modal de compras salía vacío.
+//
+// Desde la versión 8.6.3 la lista de compras viaja sin el campo
+// "historial" para aligerar la carga, y el detalle debe pedirse al
+// abrir. Eso lo implementé para las solicitudes de trabajo, pero me
+// faltó hacerlo aquí: el modal seguía leyendo r.historial de memoria,
+// que ya no existe, y siempre mostraba "Sin historial".
+// ══════════════════════════════════════════════════════════════
+async function cargarHistorialCompra_(r){
+  if(!r || r.historial!==undefined) return;
+  try{
+    const res=await api({action:'getCompraDetail',token:SESSION.token,id:r.id});
+    if(res.success&&res.compra){
+      Object.assign(r,res.compra);
+      renderCompraHistorial(r);
+      try{renderCompraCotizaciones(r);}catch(e){}
+    }
+  }catch(e){}
+}
+
 function renderCompraHistorial(r) {
+  // Si el historial aún no llegó del servidor, se avisa en vez de
+  // afirmar que no hay movimientos.
+  if(r && r.historial===undefined){
+    $('mc-historial').innerHTML='<p style="font-size:.78rem;color:#94A3B8"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando historial…</p>';
+    return;
+  }
   let hist=[];
   try{ hist=JSON.parse(r.historial||'[]'); }catch{}
   $('mc-historial').innerHTML=hist.length?[...hist].reverse().map(h=>`
@@ -9054,6 +9436,7 @@ function openCompraModalDesde(event, id, origen) {
   renderCompraCotizaciones(r);
 
   renderCompraHistorial(r);
+  cargarHistorialCompra_(r);
   $('modal-compra').style.display = 'flex';
 }
 
