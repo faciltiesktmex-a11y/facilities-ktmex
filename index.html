@@ -7614,7 +7614,7 @@ function renderWeekendFlujo(){
       <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div>
           <b style="color:#0F2A4A">Fin de semana del ${escapeHtml(d.sabado)} al ${escapeHtml(d.domingo)}</b>
-          ${d.numero>1?`<span class="badge" style="background:#FEF3C7;color:#92400E;margin-left:6px">Extemporáneo ${d.numero}</span>`:''}
+          ${d.fueraDeTiempo?`<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px"><i class="fas fa-clock" style="margin-right:4px"></i>${d.fueraDeTiempo} fuera de tiempo</span>`:''}
           <div style="font-size:.7rem;color:#64748B;margin-top:3px">
             ${d.activas} actividad(es) activas${d.canceladas?` · <span style="color:#B91C1C">${d.canceladas} cancelada(s)</span>`:''}
             ${d.organizador?` · Organiza: ${escapeHtml(d.organizador)}`:''}
@@ -7682,10 +7682,12 @@ async function wwAbrirFirma(id){
 
     const act=(r.documento.actividades||[]).filter(a=>!a.cancelada);
     const can=(r.documento.actividades||[]).filter(a=>a.cancelada);
+    const fuera=act.filter(a=>a.fueraDeTiempo);
     $('ww-firma-resumen').innerHTML=
       `Fin de semana del <b>${escapeHtml(r.documento.sabado)}</b> al <b>${escapeHtml(r.documento.domingo)}</b> · `+
       `<b>${act.length}</b> actividad(es)`+
       (can.length?` · <span style="color:#FCA5A5">${can.length} cancelada(s)</span>`:'')+
+      (fuera.length?`<br><span style="color:#FCA5A5"><i class="fas fa-clock" style="margin-right:4px"></i><b>${fuera.length}</b> se registraron fuera de tiempo (después del corte del jueves): ${fuera.map(a=>escapeHtml(a.actividad||'')).join(', ')}</span>`:'')+
       (r.documento.guardiaSabado?`<br>Guardia sábado: <b>${escapeHtml(r.documento.guardiaSabado)}</b>`:'')+
       (r.documento.guardiaDomingo?` · domingo: <b>${escapeHtml(r.documento.guardiaDomingo)}</b>`:'');
 
@@ -7758,9 +7760,12 @@ async function wwVerDocumento(id){
       (r.tieneFirmas?`<div style="padding:9px 11px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;font-size:.7rem;color:#92400E;margin-bottom:11px"><i class="fas fa-circle-info" style="margin-right:5px"></i>Este documento ya tiene firmas. Una actividad que se dé de baja <b>no se borra</b>: queda marcada como cancelada, para que las firmas sigan respaldando lo que se firmó.</div>`:'')+
       ((d.actividades||[]).length
         ? (d.actividades||[]).map(a=>`
-          <div style="padding:10px 0;border-bottom:1px solid #F1F5F9;${a.cancelada?'opacity:.62':''}">
-            <div style="font-size:.78rem;font-weight:650;color:#0F2A4A;${a.cancelada?'text-decoration:line-through':''}">${escapeHtml(a.actividad||'—')}</div>
-            <div style="font-size:.68rem;color:#64748B">${escapeHtml(a.departamento||'')}${a.jobLeader?' · '+escapeHtml(a.jobLeader):''}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}</div>
+          <div style="padding:10px 0;border-bottom:1px solid #F1F5F9;${a.cancelada?'opacity:.62':''}${a.fueraDeTiempo&&!a.cancelada?';border-left:3px solid #DC2626;padding-left:9px':''}">
+            <div style="font-size:.78rem;font-weight:650;color:${a.fueraDeTiempo&&!a.cancelada?'#B91C1C':'#0F2A4A'};${a.cancelada?'text-decoration:line-through':''}">
+              ${escapeHtml(a.actividad||'—')}
+              ${a.fueraDeTiempo?'<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px;font-size:.6rem">FUERA DE TIEMPO</span>':''}
+            </div>
+            <div style="font-size:.68rem;color:#64748B">${escapeHtml(a.departamento||'')}${a.jobLeader?' · '+escapeHtml(a.jobLeader):''}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}${a.dias?' · '+escapeHtml(a.dias):''}</div>
             ${a.cancelada?`<div style="font-size:.66rem;color:#B91C1C;margin-top:3px"><b>Cancelada:</b> ${escapeHtml(a.motivoCancelacion||'')} · ${escapeHtml(a.canceladaPor||'')}</div>`:''}
             ${(!a.cancelada&&r.puedeEliminar)?`<button class="btn-g" style="padding:4px 9px;font-size:.68rem;margin-top:6px;color:#B91C1C" onclick="wwEliminarActividad('${d.id}','${a.id}')"><i class="fas fa-trash" style="margin-right:4px"></i>Dar de baja</button>`:''}
           </div>`).join('')
