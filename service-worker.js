@@ -15,7 +15,11 @@
    4. Soporte de SKIP_WAITING para actualizar sin cerrar la app.
    ============================================================ */
 
-const CACHE = 'ktmex-facilities-v9-8.6.0-20260921';
+const CACHE = 'ktmex-facilities-v10-8.7.4-20260924';
+// V8.7.4: weekend-work.html se sirve aparte de index.html. No entra en el
+// APP_SHELL a propósito: pesa 800 KB y solo lo necesita quien abre ese
+// formulario. La estrategia stale-while-revalidate de más abajo lo cachea
+// la primera vez que alguien lo usa.
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
