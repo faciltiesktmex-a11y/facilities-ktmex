@@ -2456,18 +2456,24 @@
                 <p class="text-sm text-gray-500 mt-1">Your request has been sent for review by the Weekend Work Organizer.</p>
                 <div class="mt-3" id="afterSendActions"></div>`;
 
+            // ───────────────────────────────────────────────────────────
+            // V8.8.1-KTMEX — El formulario termina aquí.
+            //
+            // Antes, al recibir dos solicitudes, esta pantalla ofrecía
+            // abrir la consola del organizador y desde ahí se firmaban
+            // las cuatro aprobaciones de corrido. Eso permitía que una
+            // sola persona firmara por Andrés, Pedro, Inagaki y Kojima.
+            //
+            // La consolidación, la asignación de guardias y las cuatro
+            // firmas ahora viven en el panel del sistema, donde cada
+            // quien entra con su propia sesión y firma únicamente su
+            // etapa. Aquí solo se registran actividades.
+            // ───────────────────────────────────────────────────────────
             const actionsEl = document.getElementById('afterSendActions');
-            if (totalRequestsReceived < 2) {
-                actionsEl.innerHTML = `
-                    <p class="text-sm text-gray-500 mb-2">This simulation needs a second area's request before the organizer console can open. Simulate the next request:</p>
-                    <button type="button" id="registerAnotherBtn" class="wizard-btn wizard-btn-primary w-full sm:w-auto sm:px-8">➕ Register another area's request</button>`;
-                document.getElementById('registerAnotherBtn').addEventListener('click', resetWizardForNextRegistrant);
-            } else {
-                actionsEl.innerHTML = `
-                    <p class="status-ok text-sm font-semibold mb-2">✅ ${totalRequestsReceived} requests received. The Weekend Work Organizer console is ready.</p>
-                    <button type="button" id="openOrganizerBtn" class="wizard-btn wizard-btn-submit w-full sm:w-auto sm:px-8">Open Organizer Console →</button>`;
-                document.getElementById('openOrganizerBtn').addEventListener('click', enterOrganizerMode);
-            }
+            actionsEl.innerHTML = `
+                <p class="status-ok text-sm font-semibold mb-2">✅ Your request was received. Facilities Engineering will consolidate it and collect the approval signatures.</p>
+                <button type="button" id="registerAnotherBtn" class="wizard-btn wizard-btn-primary w-full sm:w-auto sm:px-8">➕ Register another activity</button>`;
+            document.getElementById('registerAnotherBtn').addEventListener('click', resetWizardForNextRegistrant);
         }
 
         // Resets the requester wizard so the simulator's operator can play
@@ -2498,7 +2504,16 @@
             return pendingActivities.some(a => a[dayField]) || tasks.some(t => t[dayField]);
         }
 
+        // V8.8.1-KTMEX — Bloqueo de seguridad. Si alguna ruta antigua
+        // intentara abrir la consola, no se abre: el flujo de firmas es
+        // responsabilidad del sistema, no de este formulario.
+        const ORGANIZER_CONSOLE_DISABLED = true;
+
         function enterOrganizerMode() {
+            if (ORGANIZER_CONSOLE_DISABLED) {
+                alert('The approval flow is handled in the KTMEX Facilities system. Each approver signs their own stage from their own session.');
+                return;
+            }
             (function populateGuardLeaderSelects() {
                 const opts = '<option value="">-- Select --</option>' + GUARD_LEADER_NAMES.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
                 ['orgGuardSat', 'orgGuardSun', 'orgGuardHoliday'].forEach(id => {
