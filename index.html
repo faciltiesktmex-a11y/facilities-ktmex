@@ -2534,6 +2534,20 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- V8.7.5 — MODAL: Historial de un registro (solicitud o compra) -->
+<div id="modal-historial" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:520px;padding:22px;max-height:88vh;overflow:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
+      <h3 style="font-size:.98rem;font-weight:700;color:var(--navy);margin:0">
+        <i class="fas fa-clock-rotate-left" style="color:#2563EB;margin-right:7px"></i>Historial
+        <span id="hist-modal-folio" class="mono" style="font-weight:600;color:#64748B;font-size:.82rem;margin-left:6px"></span>
+      </h3>
+      <button onclick="closeModal('modal-historial')" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div id="hist-modal-body"></div>
+  </div>
+</div>
+
 <!-- MODAL: Crear Actividad Espontánea -->
 <div id="modal-act-nueva" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:420px;padding:24px">
@@ -4292,14 +4306,32 @@ function initWeekendBridge_(){
 // ══════════════════════════════════════════════════════════════
 let WEEKEND_HTML_CACHE=null;
 
+// V8.7.5: se prueban varios nombres y se informa la URL exacta que se
+// intentó, para que el 404 se pueda diagnosticar sin adivinar.
+const WEEKEND_RUTAS = [
+  './weekend-work.html',
+  'weekend-work.html',
+  './weekend_work.html',
+  './Weekend_Work_Request_KTMEX.html'
+];
+
 async function obtenerWeekendHtml_(){
   if(WEEKEND_HTML_CACHE)return WEEKEND_HTML_CACHE;
-  const r=await fetch('./weekend-work.html',{cache:'no-cache'});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  const txt=await r.text();
-  if(txt.indexOf('Weekend Work Request')<0)throw new Error('archivo incompleto');
-  WEEKEND_HTML_CACHE=txt;
-  return txt;
+  const intentos=[];
+  for(const ruta of WEEKEND_RUTAS){
+    const abs=new URL(ruta,window.location.href).href;
+    try{
+      const r=await fetch(ruta,{cache:'no-cache'});
+      if(!r.ok){intentos.push(abs+' → HTTP '+r.status);continue;}
+      const txt=await r.text();
+      if(txt.indexOf('Weekend Work Request')<0){intentos.push(abs+' → archivo incompleto');continue;}
+      WEEKEND_HTML_CACHE=txt;
+      return txt;
+    }catch(e){intentos.push(abs+' → '+String(e.message||e));}
+  }
+  const err=new Error('No se encontró el archivo del formulario.');
+  err.intentos=intentos;
+  throw err;
 }
 
 async function cargarWeekendWorkTool_(){
@@ -4317,9 +4349,16 @@ async function cargarWeekendWorkTool_(){
   }catch(e){
     if(cargando){
       cargando.style.display='';
-      cargando.innerHTML='<div style="color:#991B1B"><b>No se pudo cargar el formulario.</b><br>'+
-        'Verifica que el archivo <b>weekend-work.html</b> esté publicado junto a la aplicación.<br>'+
-        '<span style="font-size:.68rem">Detalle: '+escapeHtml(String(e.message||e))+'</span></div>';
+      const intentos=(e&&e.intentos)||[];
+      cargando.innerHTML='<div style="color:#991B1B;text-align:left">'+
+        '<b>No se pudo cargar el formulario.</b><br>'+
+        'El archivo <b>weekend-work.html</b> debe estar publicado en la misma carpeta que <b>index.html</b>.<br><br>'+
+        '<span style="font-size:.7rem;color:#475569">Rutas que se intentaron:</span><br>'+
+        '<span style="font-size:.66rem;color:#64748B;font-family:monospace">'+
+        (intentos.length?intentos.map(escapeHtml).join('<br>'):escapeHtml(String(e.message||e)))+
+        '</span><br><br>'+
+        '<span style="font-size:.68rem;color:#475569">Copia la primera ruta en el navegador: si también da 404, el archivo no está subido o quedó con otro nombre.</span>'+
+        '</div>';
     }
   }
 }
@@ -4901,10 +4940,48 @@ async function loadMisCompras(){
   $('compra-notice').innerHTML=unread.length?`<div style="padding:12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;margin-bottom:10px"><b>Tienes ${unread.length} notificación(es)</b><br>${unread.map(x=>`${x.folio}: ${x.notificacionSolicitante}`).join('<br>')}</div>`:'';
   if(unread.length) api({action:'markCompraNotificationsRead',token:SESSION.token}).catch(()=>{});
 }
+// ══════════════════════════════════════════════════════════════
+// V8.7.5 — Historial visible para Ingeniería, técnico administrativo
+// y técnicos, tanto en solicitudes de trabajo como en compras.
+// ══════════════════════════════════════════════════════════════
+async function verHistorialRegistro(tipo,id,folio){
+  const box=$('hist-modal-body');
+  $('hist-modal-folio').textContent=folio||'';
+  box.innerHTML='<div style="padding:18px;text-align:center;color:#64748B;font-size:.78rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando historial…</div>';
+  $('modal-historial').style.display='flex';
+  try{
+    const r=await api({action:'getHistorialRegistro',token:SESSION.token,tipo,id});
+    if(!r.success){box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.78rem">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    const c=r.cabecera||{};
+    const datos=[
+      ['Solicitante',c.solicitante],['Área / Departamento',c.area],['Gerente',c.gerente],
+      ['Tipo',c.tipoSolicitud],['Técnico asignado',c.tecnico],
+      ['Descripción',c.descripcion],['Estatus actual',c.estatus],['Fecha',String(c.fecha||'').slice(0,10)]
+    ].filter(x=>String(x[1]||'').trim());
+
+    const filas=(r.historial||[]).slice().reverse().map(h=>`
+      <div style="padding:9px 0;border-bottom:1px solid #F1F5F9">
+        <div style="font-size:.76rem;color:#0F2A4A;font-weight:650">${escapeHtml(h.estatus||h.accion||'Movimiento')}</div>
+        <div style="font-size:.68rem;color:#64748B">${escapeHtml(fmtDateTime(h.fecha||h.timestamp||''))}${h.usuario?' · '+escapeHtml(h.usuario):''}</div>
+        ${h.comentario?`<div style="font-size:.72rem;color:#475569;margin-top:3px">${escapeHtml(h.comentario)}</div>`:''}
+      </div>`).join('');
+
+    box.innerHTML=
+      `<div style="padding:11px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;font-size:.73rem;color:#475569;line-height:1.75;margin-bottom:12px">
+        ${datos.map(d=>`<div><b>${d[0]}:</b> ${escapeHtml(String(d[1]))}</div>`).join('')}
+      </div>`+
+      (filas
+        ? `<div style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:5px">Movimientos (${r.total})</div><div style="max-height:320px;overflow:auto">${filas}</div>`
+        : '<div style="padding:14px;color:#94A3B8;font-size:.76rem">Sin movimientos registrados.</div>');
+  }catch(e){
+    box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.78rem">Error: ${escapeHtml(e.message||String(e))}</div>`;
+  }
+}
+
 function renderMisCompras(){
   const f=$('compra-status-filter')?.value||'';
   const rows=MIS_COMPRAS.filter(r=>!f||(f==='Pendiente'&&String(r.estatus).includes('Pendiente'))||(f==='Aprobada'&&String(r.estatus).includes('Autorizada'))||(f==='Rechazada'&&String(r.estatus).includes('Rechazada'))||(f==='Compra'&&['En cotización','Ordenada'].includes(r.estatus))||(f==='Recibida'&&r.estatus==='Recibida'));
-  $('compra-status-list').innerHTML=rows.length?rows.map(r=>`<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${r.folio}</b>${estatusBadge(r.estatus)}</div><div style="font-size:.8rem;margin-top:8px"><b>${r.descripcion||r.materialNuevoNombre||'—'}</b><br>Cantidad: ${r.cantidad||'—'} ${r.unidad||''}</div>${String(r.estatus).includes('Rechazada')?`<div style="margin-top:10px;padding:9px;background:#FEF2F2;border-radius:8px"><b>Motivo:</b> ${r.motivoRechazo||r.notificacionSolicitante||'Sin comentario'}</div>`:''}${r.altaInventarioEstatus==='Pendiente alta'?'<div style="margin-top:8px;font-size:.73rem;color:#92400E">Material nuevo: Pendiente de alta en inventario</div>':''}</div>`).join(''):'<div class="card" style="padding:22px;text-align:center;color:#94A3B8">No hay solicitudes para este filtro.</div>';
+  $('compra-status-list').innerHTML=rows.length?rows.map(r=>`<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><b class="mono">${r.folio}</b>${estatusBadge(r.estatus)}</div><div style="font-size:.8rem;margin-top:8px"><b>${r.descripcion||r.materialNuevoNombre||'—'}</b><br>Cantidad: ${r.cantidad||'—'} ${r.unidad||''}</div><div style="margin-top:8px"><button class="btn-g" style="padding:5px 10px;font-size:.72rem" onclick="verHistorialRegistro('compra','${r.id}','${r.folio}')"><i class="fas fa-clock-rotate-left" style="margin-right:5px"></i>Ver historial</button></div>${String(r.estatus).includes('Rechazada')?`<div style="margin-top:10px;padding:9px;background:#FEF2F2;border-radius:8px"><b>Motivo:</b> ${r.motivoRechazo||r.notificacionSolicitante||'Sin comentario'}</div>`:''}${r.altaInventarioEstatus==='Pendiente alta'?'<div style="margin-top:8px;font-size:.73rem;color:#92400E">Material nuevo: Pendiente de alta en inventario</div>':''}</div>`).join(''):'<div class="card" style="padding:22px;text-align:center;color:#94A3B8">No hay solicitudes para este filtro.</div>';
 }
 
 let selPrioCompra = '';
@@ -5576,8 +5653,14 @@ function renderUnifiedWorkCard_(s,a,st,isSpont){
   if(st.b==='SUSPENDIDA')action='<div style="padding:8px;background:#FFFBEB;border-radius:8px;font-size:.72rem">Actividad suspendida.</div>';
   if(st.b==='RECHAZADA')action='<div style="padding:8px;background:#FEF2F2;border-radius:8px;font-size:.72rem">Actividad rechazada.</div>';
   if(st.b==='INCONFORMIDAD')action='<div style="padding:8px;background:#FEF2F2;border-radius:8px;font-size:.72rem">Devuelta por inconformidad.</div>';
-  // V8.7.3: datos del solicitante + historial desplegable.
-  if(!isSpont)action=solicitudDatosHtml_(s)+historialSolicitudHtml_(s)+action;
+  // V8.7.3/8.7.5: datos del solicitante + historial. Si la solicitud trae el
+  // historial en memoria se despliega en la tarjeta; si no, se pide al servidor.
+  if(!isSpont){
+    const hist = (s.historial!==undefined)
+      ? historialSolicitudHtml_(s)
+      : `<div style="margin-top:8px"><button class="btn-g" style="padding:5px 10px;font-size:.72rem" onclick="verHistorialRegistro('solicitud','${s.id}','${s.folio}')"><i class="fas fa-clock-rotate-left" style="margin-right:5px"></i>Ver historial</button></div>`;
+    action=solicitudDatosHtml_(s)+hist+action;
+  }
 
   const closeFiles=a?parseActCloseFiles_(a):[];
   return `<div class="card" style="padding:16px;border-left:4px solid ${isSpont?'#7C3AED':'#2563EB'}">
@@ -8345,7 +8428,7 @@ function renderManagerApprovalQueue(){
     <td style="font-weight:600;color:var(--navy)">${r.nombre||'—'}</td>
     <td>${r.departamento||'—'}</td><td>${r.tipoSolicitud||'—'}</td>
     <td>${estatusBadge(r.estatus)}</td>
-    <td style="text-align:center"><button class="btn-p" style="padding:6px 10px" onclick="event.stopPropagation();openSolicitudModal('${r.id}')"><i class="fas fa-eye" style="margin-right:5px"></i>${LANG==='en'?'Review':'Revisar'}</button></td>
+    <td style="text-align:center"><button class="btn-p" style="padding:6px 10px" onclick="event.stopPropagation();verHistorialRegistro('solicitud','${r.id}','${r.folio}')" title="Ver historial" style="margin-right:5px"><i class="fas fa-clock-rotate-left"></i></button><button class="btn-g" style="padding:6px 10px" onclick="event.stopPropagation();openSolicitudModal('${r.id}')"><i class="fas fa-eye" style="margin-right:5px"></i>${LANG==='en'?'Review':'Revisar'}</button></td>
   </tr>`).join('');
 }
 // V8.6.3: los estatus que se consideran CERRADOS y se ocultan por omisión.
@@ -8440,7 +8523,7 @@ function renderCompras() {
       <td style="color:#64748B">${r.cantidad||'—'} ${r.unidad||''}</td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
       <td>${compraBadge(r.estatus)}${String(r.cotizacionesEstado||'')==='Enviadas a Ingeniería'?'<div style="font-size:.62rem;color:#15803D;margin-top:3px"><i class="fas fa-paper-plane"></i> Cotizaciones enviadas</div>':(r.cotizacionesPDF&&r.cotizacionesPDF!=='[]'?'<div style="font-size:.62rem;color:#B45309;margin-top:3px"><i class="fas fa-file-pdf"></i> Pendientes de enviar</div>':'')}</td>
-      <td style="text-align:center"><button onclick="event.stopPropagation();openCompraModal('${r.id}')" style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
+      <td style="text-align:center"><button onclick="event.stopPropagation();verHistorialRegistro('compra','${r.id}','${r.folio}')" title="Ver historial" style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB;margin-right:4px"><i class="fas fa-clock-rotate-left" style="font-size:.72rem"></i></button><button onclick="event.stopPropagation();openCompraModal('${r.id}')" style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
     </tr>`).join('');
 }
 
