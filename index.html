@@ -1965,7 +1965,8 @@ const LPA_AREAS = {
 
         <!-- V8.8.0 — Cadena de firmas -->
         <div class="card" style="padding:14px;margin-bottom:12px">
-          <h4 style="font-size:.86rem;color:var(--navy);margin:0 0 4px"><i class="fas fa-signature" style="color:#DC2626;margin-right:6px"></i>Cadena de aprobación</h4>
+          <h4 style="font-size:.86rem;color:var(--navy);margin:0 0 4px"><i class="fas fa-signature" style="color:#DC2626;margin-right:6px"></i>Cadena de aprobación
+            <span id="ww-build" style="font-size:.6rem;font-weight:500;color:#94A3B8;margin-left:8px"></span></h4>
           <div id="ww-flujo-cabecera" style="font-size:.72rem;color:#475569;margin-bottom:10px"></div>
           <div id="ww-flujo-lista"></div>
         </div>
@@ -2737,6 +2738,10 @@ let ACC_DATA    = [];     // cached plan acciones
 let CUR_SOL     = null;   // request open in modal
 let CUR_COMPRA  = null;   // compra open in modal
 let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURRENT=null; let NOTIF_SOUND_ENABLED=(localStorage.getItem('ktmex_notif_sound')!=='off');
+
+// V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
+// distinguir un problema real de una copia vieja en caché del navegador.
+const FRONTEND_BUILD = '8.8.3';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -6322,6 +6327,48 @@ function renderDailyTech(r){
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Todavía no has declarado actividades hoy.</div>';
 }
 function v840FrontParse_(v){try{const x=JSON.parse(String(v||'[]'));return Array.isArray(x)?x:[];}catch(e){return [];}}
+// ══════════════════════════════════════════════════════════════
+// V8.8.3 — EVIDENCIA FOTOGRÁFICA EN EL PANEL DE INGENIERÍA
+//
+// La tarjeta de supervisión mostraba folio, tiempos y apoyos, pero
+// ninguna de las fotografías que toma el técnico. Para validar un cierre
+// había que abrir la hoja de cálculo y buscar los enlaces a mano.
+// ══════════════════════════════════════════════════════════════
+function evidenciasDailyHtml_(x){
+  const ev=x.evidencias||{};
+  const fotos=[];
+  if(ev.antes)  fotos.push({url:ev.antes,  etiqueta:'Antes',  color:'#B45309'});
+  if(ev.despues)fotos.push({url:ev.despues,etiqueta:'Después',color:'#15803D'});
+  (ev.archivos||[]).forEach(f=>{
+    if(!f||!f.url)return;
+    if(f.url===ev.antes||f.url===ev.despues)return;   // ya listadas
+    const esImagen=String(f.tipo||'')==='imagen'||/\.(jpe?g|png|webp|gif)$/i.test(String(f.nombre||''));
+    fotos.push({url:f.url,
+      etiqueta:esImagen?(f.etapa==='antes'?'Antes':'Evidencia'):'Archivo',
+      color:esImagen?'#2563EB':'#64748B', archivo:!esImagen, nombre:f.nombre||''});
+  });
+
+  if(!fotos.length){
+    return '<div style="font-size:.68rem;color:#94A3B8;margin-top:7px"><i class="fas fa-image" style="margin-right:5px"></i>Sin evidencia fotográfica registrada</div>';
+  }
+
+  return `<div style="margin-top:9px">
+    <b style="font-size:.68rem;color:#64748B">Evidencia (${fotos.length}):</b>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:5px">
+      ${fotos.map(f=>f.archivo
+        ? `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:#F1F5F9;border-radius:8px;font-size:.68rem;color:#475569;text-decoration:none"><i class="fas fa-file-lines"></i>${escapeHtml(f.nombre||'Archivo')}</a>`
+        : `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" title="Abrir en Drive" style="display:block;text-decoration:none">
+             <div style="width:74px;height:74px;border-radius:9px;overflow:hidden;border:2px solid ${f.color};background:#F8FAFC">
+               <img src="${escapeHtml(f.url)}" alt="${escapeHtml(f.etiqueta)}" loading="lazy"
+                    style="width:100%;height:100%;object-fit:cover"
+                    onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:.62rem\'>Ver en Drive</div>'">
+             </div>
+             <div style="font-size:.6rem;color:${f.color};text-align:center;margin-top:2px;font-weight:650">${escapeHtml(f.etiqueta)}</div>
+           </a>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderDailyAdmin(){
   const items=DAILY_DATA||[];
   const techs=[...new Set(items.map(x=>x.tecnico).filter(Boolean))];
@@ -6342,7 +6389,7 @@ function renderDailyAdmin(){
     }
     const real=a&&a.horaInicio?dailyLiveMinutes_(a):0;
     const effective=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):real;
-    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo real efectivo:</b> ${actFmtMin_(effective)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${actions}</div>`;
+    return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b class="mono">${escapeHtml(x.folio)}</b> · <b>${escapeHtml(x.tecnico)}</b><div style="font-size:.7rem;color:#64748B">${escapeHtml(x.fecha)} · ${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'')}</div></div>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><p style="font-size:.82rem;margin:8px 0">${escapeHtml(x.descripcion||'')}</p><div style="font-size:.72rem;color:#475569"><b>Tiempo real efectivo:</b> ${actFmtMin_(effective)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div><div style="margin-top:6px"><b style="font-size:.68rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||'')}</span>`).join(''):'<span style="font-size:.68rem;color:#94A3B8">Sin apoyos</span>'}</div>${finalSupports.length?`<div style="font-size:.68rem;color:#166534;margin-top:4px">Tiempo de apoyo validado: ${finalSupports.map(s=>escapeHtml(s.nombre)+' '+actFmtMin_(s.minutosEfectivos)).join(' · ')}</div>`:''}${evidenciasDailyHtml_(x)}${actions}</div>`;
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Sin actividades declaradas en el periodo.</div>';
 }
 // V8.6.4: Ingeniería elimina desde el panel de supervisión, también con motivo.
@@ -7563,6 +7610,11 @@ async function loadWeekendFlujo(){
     const r=await api({action:'getWeekendFlujo',token:SESSION.token});
     if(!r.success){box.innerHTML='';toast(r.error||'Sin acceso al flujo','err');return;}
     WW_FLUJO=r;
+    // V8.8.3: se muestra qué versión está cargada. Si la pantalla no
+    // coincide con lo esperado, este dato dice si el navegador está
+    // sirviendo una copia vieja desde la caché.
+    const b=$('ww-build');
+    if(b)b.textContent='interfaz '+FRONTEND_BUILD;
     renderWeekendFlujo();
   }catch(e){box.innerHTML='';toast('Error: '+e.message,'err');}
 }
@@ -7571,11 +7623,25 @@ function renderWeekendFlujo(){
   const r=WW_FLUJO; if(!r)return;
   const box=$('ww-flujo-lista');
 
+  // V8.8.3 — El aviso de firma pendiente va arriba del todo, con su propio
+  // botón. Así la acción queda accesible aunque una tarjeta se recorte o el
+  // navegador tenga en caché una versión anterior de la pantalla.
   const cab=$('ww-flujo-cabecera');
   if(cab){
-    cab.innerHTML = r.miEtapa
-      ? `<i class="fas fa-pen-nib" style="margin-right:6px;color:#DC2626"></i>Firmas como <b>${escapeHtml(r.tituloEtapa)}</b>. Tienes <b>${r.pendientes.length}</b> documento(s) esperando tu firma.`
-      : `<i class="fas fa-eye" style="margin-right:6px"></i>Consulta de documentos. Tu usuario no forma parte de la cadena de firmas.`;
+    if(r.miEtapa&&r.pendientes.length){
+      cab.innerHTML=`
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:11px">
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:.86rem;font-weight:700;color:#B91C1C"><i class="fas fa-pen-nib" style="margin-right:7px"></i>Tienes ${r.pendientes.length} documento(s) esperando tu firma</div>
+            <div style="font-size:.72rem;color:#7F1D1D;margin-top:2px">Firmas como <b>${escapeHtml(r.tituloEtapa)}</b>.</div>
+          </div>
+          ${r.pendientes.map(p=>`<button class="btn-p" style="background:#DC2626" onclick="wwAbrirFirma('${p.id}')"><i class="fas fa-pen-nib" style="margin-right:6px"></i>Firmar ${escapeHtml(p.sabado)}</button>`).join('')}
+        </div>`;
+    }else{
+      cab.innerHTML = r.miEtapa
+        ? `<i class="fas fa-circle-check" style="margin-right:6px;color:#16A34A"></i>Firmas como <b>${escapeHtml(r.tituloEtapa)}</b>. No tienes documentos pendientes.`
+        : `<i class="fas fa-eye" style="margin-right:6px"></i>Consulta de documentos. Tu usuario no forma parte de la cadena de firmas.`;
+    }
   }
 
   const etapas=['ORIGINATOR','ENGINEER','SENIOR_MANAGER','PRESIDENT'];
