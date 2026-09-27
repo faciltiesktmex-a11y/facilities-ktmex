@@ -2607,6 +2607,94 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     V8.9.0 — REVISIÓN DEL DOCUMENTO
+     Se proyecta en la reunión del jueves con las áreas. Muestra la tabla
+     tal como saldrá en el documento final, y permite editar, agregar y
+     cancelar antes de que empiecen las firmas.
+     ══════════════════════════════════════════════════════════ -->
+<div id="modal-ww-revision" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:1180px;padding:0;max-height:92vh;display:flex;flex-direction:column">
+    <div style="padding:18px 22px 12px;border-bottom:1px solid #E2E8F0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <h3 style="font-size:1.02rem;font-weight:700;color:var(--navy);margin:0">
+            <i class="fas fa-clipboard-check" style="color:#DC2626;margin-right:8px"></i>Revisión del documento
+          </h3>
+          <div id="ww-rev-sub" style="font-size:.74rem;color:#64748B;margin-top:3px"></div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn-p" id="btn-ww-rev-agregar" onclick="wwRevNuevaActividad()"><i class="fas fa-plus" style="margin-right:5px"></i>Agregar actividad</button>
+          <button class="btn-g" onclick="closeModal('modal-ww-revision')">Cerrar</button>
+        </div>
+      </div>
+      <div id="ww-rev-aviso" style="font-size:.72rem;margin-top:10px"></div>
+    </div>
+
+    <div style="flex:1;overflow:auto;padding:14px 18px">
+      <div id="ww-rev-tabla" style="overflow-x:auto"></div>
+    </div>
+
+    <div id="ww-rev-pie" style="padding:12px 18px;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"></div>
+  </div>
+</div>
+
+<!-- V8.9.0 — MODAL: capturar o editar una actividad -->
+<div id="modal-ww-actividad" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:520px;padding:24px;max-height:90vh;overflow:auto">
+    <h3 id="ww-act-titulo" style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px">Agregar actividad</h3>
+    <p id="ww-act-sub" style="font-size:.72rem;color:#64748B;margin:0 0 14px"></p>
+
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Actividad *</label>
+    <textarea id="ww-act-actividad" class="inp" rows="2" style="margin-bottom:10px;resize:vertical"></textarea>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Solicitante *</label>
+        <input id="ww-act-solicitante" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Departamento</label>
+        <input id="ww-act-departamento" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Job leader</label>
+        <input id="ww-act-jobleader" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Supervisor</label>
+        <input id="ww-act-supervisor" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Área de trabajo</label>
+        <input id="ww-act-area" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Riesgo</label>
+        <select id="ww-act-riesgo" class="inp" style="margin-bottom:10px">
+          <option value="">—</option><option>Low</option><option>Medium</option><option>High</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Contratista</label>
+        <input id="ww-act-contratista" class="inp" style="margin-bottom:10px">
+      </div>
+      <div>
+        <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Personas</label>
+        <input id="ww-act-cuadrilla" class="inp" type="number" min="1" style="margin-bottom:10px">
+      </div>
+    </div>
+
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Días</label>
+    <input id="ww-act-dias" class="inp" placeholder="Sábado, Domingo" style="margin-bottom:16px">
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-actividad')">Cancelar</button>
+      <button class="btn-p" id="btn-ww-act-guardar" style="flex:1" onclick="wwActGuardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Crear Actividad Espontánea -->
 <div id="modal-act-nueva" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:420px;padding:24px">
@@ -2741,7 +2829,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.8.3';
+const FRONTEND_BUILD = '8.9.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -7674,6 +7762,9 @@ function renderWeekendFlujo(){
         acciones.push(`<button class="btn-p" style="background:#DC2626" onclick="wwAbrirFirma('${d.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Sign weekend work</button>`);
       }
     }
+    // V8.9.0: vista previa del documento, con edición si aún no hay firmas.
+    const revisable=!d.firmas||!Object.keys(d.firmas).length;
+    acciones.push(`<button class="btn-p" style="background:${revisable?'#0F2A4A':'#64748B'}" onclick="wwAbrirRevision('${d.id}')"><i class="fas fa-${revisable?'clipboard-check':'file-lines'}" style="margin-right:5px"></i>${revisable?'Revisar documento':'Ver documento'}</button>`);
     acciones.push(`<button class="btn-g" onclick="wwVerDocumento('${d.id}')"><i class="fas fa-list" style="margin-right:5px"></i>Ver actividades</button>`);
 
     return `<div class="card" style="padding:15px;margin-bottom:10px;${d.esMiTurno?'border:1.5px solid #FCA5A5;background:#FFFBFB':''}">
@@ -7681,6 +7772,8 @@ function renderWeekendFlujo(){
         <div>
           <b style="color:#0F2A4A">Fin de semana del ${escapeHtml(d.sabado)} al ${escapeHtml(d.domingo)}</b>
           ${d.fueraDeTiempo?`<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px"><i class="fas fa-clock" style="margin-right:4px"></i>${d.fueraDeTiempo} fuera de tiempo</span>`:''}
+          ${d.etapa==='REVISION'?`<span class="badge" style="background:#EFF6FF;color:#1D4ED8;margin-left:6px"><i class="fas fa-clipboard-check" style="margin-right:4px"></i>En revisión</span>`:''}
+          ${d.agregadasEnRevision?`<span class="badge" style="background:#EDE9FE;color:#6D28D9;margin-left:6px">${d.agregadasEnRevision} agregada(s) en reunión</span>`:''}
           <div style="font-size:.7rem;color:#64748B;margin-top:3px">
             ${d.activas} actividad(es) activas${d.canceladas?` · <span style="color:#B91C1C">${d.canceladas} cancelada(s)</span>`:''}
             ${d.organizador?` · Organiza: ${escapeHtml(d.organizador)}`:''}
@@ -7811,6 +7904,199 @@ async function wwFirmaAceptar(){
     await loadWeekendFlujo();
   }catch(e){toast('Error: '+e.message,'err');}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-pen-nib" style="margin-right:5px"></i>Guardar y aceptar';}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V8.9.0 — REVISIÓN DEL DOCUMENTO
+//
+// Pantalla para la reunión del jueves. Muestra la tabla tal como saldrá
+// en el documento final y permite ajustarla antes de que empiece la
+// cadena de firmas, que es justo el punto en que los cambios todavía no
+// invalidan nada.
+// ══════════════════════════════════════════════════════════════
+let WW_REV=null;
+
+async function wwAbrirRevision(id){
+  try{
+    const r=await api({action:'getWeekendDocumento',token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No disponible','err');return;}
+    WW_REV=r;
+    renderWwRevision();
+    $('modal-ww-revision').style.display='flex';
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+function renderWwRevision(){
+  const r=WW_REV; if(!r)return;
+  const d=r.documento;
+  const editable=r.enRevision&&r.esIngenieriaFacilities;
+  const act=(d.actividades||[]);
+  const activas=act.filter(a=>!a.cancelada);
+
+  $('ww-rev-sub').innerHTML=
+    `Fin de semana del <b>${escapeHtml(d.sabado)}</b> al <b>${escapeHtml(d.domingo)}</b> · `+
+    `<b>${activas.length}</b> actividad(es) activas de ${act.length} · ${escapeHtml(weekendEtiqueta_(d.etapa))}`;
+
+  const btnAgregar=$('btn-ww-rev-agregar');
+  if(btnAgregar)btnAgregar.style.display=editable?'':'none';
+
+  $('ww-rev-aviso').innerHTML = editable
+    ? `<div style="padding:9px 11px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;color:#1E40AF"><i class="fas fa-circle-info" style="margin-right:6px"></i>Estás en la etapa de revisión: todavía no hay firmas, así que cualquier cambio es limpio. En cuanto Andrés firme, el documento queda en firme y los cambios posteriores se marcan en lugar de aplicarse en silencio.</div>`
+    : (r.tieneFirmas
+       ? `<div style="padding:9px 11px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;color:#92400E"><i class="fas fa-lock" style="margin-right:6px"></i>El documento ya tiene firmas. Esta es una vista de consulta.</div>`
+       : `<div style="padding:9px 11px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;color:#475569"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de consulta.</div>`);
+
+  const cols=['No','Solicitante','Depto.','Job leader','Actividad','Área de trabajo','Riesgo','Contratista','Personas','Días','Origen'];
+  $('ww-rev-tabla').innerHTML=act.length?`
+    <table style="width:100%;border-collapse:collapse;font-size:.73rem;min-width:960px">
+      <thead><tr style="background:#0F2A4A;color:#fff">
+        ${cols.map(c=>`<th style="text-align:left;padding:7px 8px;font-weight:600">${c}</th>`).join('')}
+        ${editable?'<th style="padding:7px 8px"></th>':''}
+      </tr></thead>
+      <tbody>${act.map((a,i)=>{
+        const rojo=a.fueraDeTiempo&&!a.cancelada;
+        const gris=a.cancelada;
+        return `<tr style="border-bottom:1px solid #E2E8F0;${gris?'opacity:.55;background:#FAFAFA':''}${rojo?';background:#FEF2F2':''}">
+          <td style="padding:7px 8px;color:#64748B">${i+1}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.solicitante||'—')}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.departamento||'—')}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.jobLeader||'—')}</td>
+          <td style="padding:7px 8px;font-weight:600;${gris?'text-decoration:line-through':''}${rojo?';color:#B91C1C':''}">
+            ${escapeHtml(a.actividad||'—')}
+            ${a.cancelada?`<div style="font-size:.64rem;color:#B91C1C;font-weight:400;text-decoration:none">Cancelada: ${escapeHtml(a.motivoCancelacion||'')}</div>`:''}
+          </td>
+          <td style="padding:7px 8px">${escapeHtml(a.areaTrabajo||'—')}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.riesgo||'—')}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.contratista||'—')}</td>
+          <td style="padding:7px 8px;text-align:center">${escapeHtml(String(a.cuadrilla||'—'))}</td>
+          <td style="padding:7px 8px">${escapeHtml(a.dias||'—')}</td>
+          <td style="padding:7px 8px">
+            ${a.agregadaEnRevision?`<span class="badge" style="background:#EDE9FE;color:#6D28D9;font-size:.6rem">En revisión</span><div style="font-size:.58rem;color:#94A3B8">${escapeHtml(a.agregadaPor||'')}</div>`
+              :a.fueraDeTiempo?'<span class="badge" style="background:#FEE2E2;color:#B91C1C;font-size:.6rem">Fuera de tiempo</span>'
+              :`<span style="font-size:.64rem;color:#94A3B8">${escapeHtml(a.requestNo||'—')}</span>`}
+          </td>
+          ${editable?`<td style="padding:7px 8px;white-space:nowrap;text-align:right">
+            ${a.cancelada?'':`<button class="btn-g" style="padding:3px 8px;font-size:.66rem" onclick="wwActEditar('${a.id}')"><i class="fas fa-pen"></i></button>
+            <button class="btn-g" style="padding:3px 8px;font-size:.66rem;color:#B91C1C" onclick="wwRevCancelar('${a.id}')"><i class="fas fa-trash"></i></button>`}
+          </td>`:''}
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`
+    : '<div style="padding:30px;text-align:center;color:#94A3B8;font-size:.82rem">El documento no tiene actividades.</div>';
+
+  // Pie: acciones que mueven el documento de etapa.
+  const pie=$('ww-rev-pie');
+  const acciones=[];
+  if(r.esIngenieriaFacilities&&d.etapa==='RECEPCION'&&act.length){
+    acciones.push(`<button class="btn-p" onclick="wwCambiarEtapa('weekendAbrirRevision','${d.id}')"><i class="fas fa-clipboard-check" style="margin-right:6px"></i>Abrir revisión</button>`);
+  }
+  if(r.esIngenieriaFacilities&&d.etapa==='REVISION'&&!r.tieneFirmas){
+    acciones.push(`<button class="btn-g" onclick="wwCambiarEtapa('weekendReabrirRecepcion','${d.id}')">Volver a recepción</button>`);
+  }
+  if(r.esMiTurno){
+    acciones.push(`<button class="btn-p" style="background:#DC2626" onclick="closeModal('modal-ww-revision');wwAbrirFirma('${d.id}')"><i class="fas fa-pen-nib" style="margin-right:6px"></i>Documento listo · firmar</button>`);
+  }
+  pie.innerHTML=`<div style="font-size:.7rem;color:#64748B">${activas.length} activas · ${act.filter(a=>a.cancelada).length} canceladas · ${act.filter(a=>a.fueraDeTiempo&&!a.cancelada).length} fuera de tiempo</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">${acciones.join('')}</div>`;
+}
+
+function weekendEtiqueta_(e){
+  return {RECEPCION:'Recibiendo solicitudes',REVISION:'En revisión con las áreas',
+    ORIGINATOR:'Esperando firma de Originator',ENGINEER:'Esperando firma de Engineer',
+    SENIOR_MANAGER:'Esperando firma de Senior Manager',PRESIDENT:'Esperando firma de President',
+    APROBADO:'Aprobado y cerrado'}[e]||e;
+}
+
+async function wwCambiarEtapa(accion,id){
+  try{
+    const r=await api({action:accion,token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No se pudo','err');return;}
+    toast(r.mensaje||'Etapa actualizada');
+    await wwAbrirRevision(id);
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function wwRevCancelar(actId){
+  if(!WW_REV)return;
+  const motivo=prompt('Motivo de la baja (mínimo 10 caracteres).\nEj.: El área la canceló en la reunión del jueves.');
+  if(motivo===null)return;
+  if(String(motivo).trim().length<10){toast('El motivo debe tener al menos 10 caracteres','err');return;}
+  try{
+    const r=await api({action:'weekendEliminarActividad',token:SESSION.token,
+      id:WW_REV.documento.id,actividadId:actId,motivo});
+    if(!r.success){toast(r.error||'No se pudo','err');return;}
+    toast(r.mensaje||'Actividad dada de baja');
+    await wwAbrirRevision(WW_REV.documento.id);
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ── Capturar o editar una actividad ──────────────────────────
+let WW_ACT_CTX=null;
+
+function wwRevNuevaActividad(){
+  if(!WW_REV)return;
+  WW_ACT_CTX={modo:'nueva',id:WW_REV.documento.id};
+  $('ww-act-titulo').textContent='Agregar actividad';
+  $('ww-act-sub').textContent='Quedará marcada como capturada en la revisión, con tu nombre, porque no viene de una solicitud del formulario.';
+  ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla','dias']
+    .forEach(k=>{const el=$('ww-act-'+k); if(el)el.value='';});
+  $('ww-act-riesgo').value='';
+  $('modal-ww-actividad').style.display='flex';
+}
+
+function wwActEditar(actId){
+  if(!WW_REV)return;
+  const a=(WW_REV.documento.actividades||[]).find(x=>String(x.id)===String(actId));
+  if(!a){toast('Actividad no encontrada','err');return;}
+  WW_ACT_CTX={modo:'editar',id:WW_REV.documento.id,actividadId:actId};
+  $('ww-act-titulo').textContent='Editar actividad';
+  $('ww-act-sub').textContent=a.requestNo?('Solicitud '+a.requestNo):'Capturada en revisión';
+  $('ww-act-actividad').value=a.actividad||'';
+  $('ww-act-solicitante').value=a.solicitante||'';
+  $('ww-act-departamento').value=a.departamento||'';
+  $('ww-act-jobleader').value=a.jobLeader||'';
+  $('ww-act-supervisor').value=a.supervisor||'';
+  $('ww-act-area').value=a.areaTrabajo||'';
+  $('ww-act-riesgo').value=a.riesgo||'';
+  $('ww-act-contratista').value=a.contratista||'';
+  $('ww-act-cuadrilla').value=a.cuadrilla||'';
+  $('ww-act-dias').value=a.dias||'';
+  $('modal-ww-actividad').style.display='flex';
+}
+
+async function wwActGuardar(){
+  if(!WW_ACT_CTX)return;
+  const campos={
+    actividad:$('ww-act-actividad').value.trim(),
+    solicitante:$('ww-act-solicitante').value.trim(),
+    departamento:$('ww-act-departamento').value.trim(),
+    jobLeader:$('ww-act-jobleader').value.trim(),
+    supervisor:$('ww-act-supervisor').value.trim(),
+    areaTrabajo:$('ww-act-area').value.trim(),
+    riesgo:$('ww-act-riesgo').value,
+    contratista:$('ww-act-contratista').value.trim(),
+    cuadrilla:$('ww-act-cuadrilla').value.trim(),
+    dias:$('ww-act-dias').value.trim()
+  };
+  if(!campos.actividad){toast('Describe la actividad','err');return;}
+  if(WW_ACT_CTX.modo==='nueva'&&!campos.solicitante){toast('Indica a nombre de quién se registra','err');return;}
+
+  const btn=$('btn-ww-act-guardar');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Guardando…';
+  try{
+    const accion=WW_ACT_CTX.modo==='nueva'?'weekendAgregarActividadManual':'weekendEditarActividad';
+    const payload={action:accion,token:SESSION.token,id:WW_ACT_CTX.id,campos};
+    if(WW_ACT_CTX.modo==='editar')payload.actividadId=WW_ACT_CTX.actividadId;
+    const r=await api(payload);
+    if(!r.success){toast(r.error||'No se pudo guardar','err');return;}
+    toast(r.mensaje||'Guardado');
+    closeModal('modal-ww-actividad');
+    await wwAbrirRevision(WW_ACT_CTX.id);
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='Guardar';}
 }
 
 // ── Detalle de actividades, con eliminar y editar ─────────────
