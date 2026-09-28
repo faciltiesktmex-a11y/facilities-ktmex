@@ -1659,6 +1659,13 @@ const LPA_AREAS = {
     <div style="flex:1"></div>
     <div style="font-size:.68rem;color:#64748B"><i class="fas fa-unlock" style="margin-right:5px"></i>Acceso libre · no requiere usuario</div>
   </div>
+  <!-- ══════════════════════════════════════════════════════════
+       V8.9.2 — CONFIRMACIÓN DE TRABAJOS REALIZADOS
+       Aparece el lunes a las 06:30 siguiente al fin de semana. Cada
+       persona confirma su propia actividad con nombre y firma.
+       ══════════════════════════════════════════════════════════ -->
+  <div id="ww-confirm-panel" style="display:none;margin-bottom:12px"></div>
+
   <div id="weekend-cargando" class="card" style="display:none;padding:22px;text-align:center;color:#64748B;font-size:.82rem;margin-bottom:10px"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando formulario…</div>
   <iframe id="weekend-frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-downloads allow-popups"
           style="width:100%;height:84vh;min-height:720px;border:1px solid #CBD5E1;border-radius:14px;background:#fff"></iframe>
@@ -2695,6 +2702,29 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- V8.9.2 — MODAL: confirmar una actividad realizada -->
+<div id="modal-ww-confirmar" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:520px;padding:22px">
+    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px">
+      <i class="fas fa-circle-check" style="color:#16A34A;margin-right:8px"></i>Confirmar trabajo realizado
+    </h3>
+    <div id="ww-conf-actividad" style="font-size:.78rem;color:#334155;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;margin:10px 0 14px"></div>
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Tu nombre completo *</label>
+    <input id="ww-conf-nombre" class="inp" placeholder="Nombre y apellidos" style="margin-bottom:12px">
+
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Tu firma *</label>
+    <canvas id="ww-conf-canvas" style="width:100%;height:190px;display:block;background:#fff;border:2px dashed #CBD5E1;border-radius:10px;touch-action:none;cursor:crosshair"></canvas>
+    <div style="font-size:.68rem;color:#94A3B8;margin:5px 0 14px">Firma con el dedo o el mouse dentro del recuadro.</div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" style="flex:1" onclick="wwConfLimpiar()">Limpiar</button>
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-confirmar')">Cancelar</button>
+      <button class="btn-p" id="btn-ww-conf" style="flex:1.3;background:#16A34A" onclick="wwConfGuardar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Crear Actividad Espontánea -->
 <div id="modal-act-nueva" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:420px;padding:24px">
@@ -2829,7 +2859,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.0';
+const FRONTEND_BUILD = '8.9.2';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4076,7 +4106,7 @@ function showView(v) {
   const target=$('view-'+v);if(target)target.style.display='';
   // V8.7.1: la herramienta se carga al entrar y se descarga al salir,
   // para no dejar un iframe de 800 KB vivo en segundo plano.
-  if(v==='weekend')cargarWeekendWorkTool_();
+  if(v==='weekend'){cargarWeekendWorkTool_();cargarConfirmacionWeekend_();}
   else if($('weekend-frame')&&$('weekend-frame').srcdoc)$('weekend-frame').srcdoc='';
   $('btn-logout').style.display=SESSION?'':'none';
   configureRoleUI();
@@ -7762,6 +7792,12 @@ function renderWeekendFlujo(){
         acciones.push(`<button class="btn-p" style="background:#DC2626" onclick="wwAbrirFirma('${d.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Sign weekend work</button>`);
       }
     }
+    // V8.9.2: estado de confirmaciones y cierre del ciclo.
+    const cf=d.confirmacion||{};
+    if(d.etapa==='APROBADO'){
+      acciones.push(`<button class="btn-p" style="background:#16A34A" onclick="wwCerrarCiclo('${d.id}')"><i class="fas fa-lock" style="margin-right:5px"></i>Cerrar ciclo</button>`);
+    }
+
     // V8.9.0: vista previa del documento, con edición si aún no hay firmas.
     const revisable=!d.firmas||!Object.keys(d.firmas).length;
     acciones.push(`<button class="btn-p" style="background:${revisable?'#0F2A4A':'#64748B'}" onclick="wwAbrirRevision('${d.id}')"><i class="fas fa-${revisable?'clipboard-check':'file-lines'}" style="margin-right:5px"></i>${revisable?'Revisar documento':'Ver documento'}</button>`);
@@ -7774,6 +7810,8 @@ function renderWeekendFlujo(){
           ${d.fueraDeTiempo?`<span class="badge" style="background:#FEE2E2;color:#B91C1C;margin-left:6px"><i class="fas fa-clock" style="margin-right:4px"></i>${d.fueraDeTiempo} fuera de tiempo</span>`:''}
           ${d.etapa==='REVISION'?`<span class="badge" style="background:#EFF6FF;color:#1D4ED8;margin-left:6px"><i class="fas fa-clipboard-check" style="margin-right:4px"></i>En revisión</span>`:''}
           ${d.agregadasEnRevision?`<span class="badge" style="background:#EDE9FE;color:#6D28D9;margin-left:6px">${d.agregadasEnRevision} agregada(s) en reunión</span>`:''}
+          ${(d.confirmacion&&d.confirmacion.total&&(d.etapa==='APROBADO'||d.etapa==='CERRADO'))?`<span class="badge" style="background:${d.confirmacion.pendientes?'#FEF3C7':'#DCFCE7'};color:${d.confirmacion.pendientes?'#92400E':'#166534'};margin-left:6px"><i class="fas fa-circle-check" style="margin-right:4px"></i>${d.confirmacion.confirmadas}/${d.confirmacion.total} confirmadas</span>`:''}
+          ${(d.confirmacion&&d.confirmacion.apertura&&d.etapa==='APROBADO'&&!d.confirmacion.abierta)?`<div style="font-size:.66rem;color:#94A3B8;margin-top:3px">La confirmación abre el ${escapeHtml(d.confirmacion.apertura)}</div>`:''}
           <div style="font-size:.7rem;color:#64748B;margin-top:3px">
             ${d.activas} actividad(es) activas${d.canceladas?` · <span style="color:#B91C1C">${d.canceladas} cancelada(s)</span>`:''}
             ${d.organizador?` · Organiza: ${escapeHtml(d.organizador)}`:''}
@@ -7907,6 +7945,114 @@ async function wwFirmaAceptar(){
 }
 
 // ══════════════════════════════════════════════════════════════
+// V8.9.2 — CONFIRMACIÓN DE TRABAJOS REALIZADOS
+//
+// Se muestra en la ventana pública, sin sesión, igual que el formulario
+// de registro. Abre el lunes a las 06:30 siguiente al fin de semana.
+// ══════════════════════════════════════════════════════════════
+let WW_CONF=null, WW_CONF_CTX=null, wwConfPad=null, wwConfTrazo=false, wwConfPintando=false;
+
+async function cargarConfirmacionWeekend_(){
+  const box=$('ww-confirm-panel'); if(!box)return;
+  try{
+    const r=await api({action:'getWeekendConfirmacion'});
+    if(!r.success||!(r.documentos||[]).length){box.style.display='none';return;}
+    WW_CONF=r;
+    box.style.display='';
+    box.innerHTML=r.documentos.map(d=>{
+      const res=d.resumen||{};
+      return `<div class="card" style="padding:16px;border-left:4px solid #16A34A">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start">
+          <div>
+            <h3 style="font-size:.95rem;font-weight:700;color:var(--navy);margin:0">
+              <i class="fas fa-circle-check" style="color:#16A34A;margin-right:7px"></i>Confirma tu trabajo del fin de semana
+            </h3>
+            <div style="font-size:.74rem;color:#64748B;margin-top:3px">
+              Sábado ${escapeHtml(d.sabado)} y domingo ${escapeHtml(d.domingo)}${d.organizador?' · Organizó: '+escapeHtml(d.organizador):''}
+            </div>
+          </div>
+          <span class="badge ${res.pendientes?'b-wait':'b-done'}">${res.confirmadas} de ${res.total} confirmadas</span>
+        </div>
+        <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y confirma que sí la realizaste. Se te pedirá tu nombre y tu firma.</p>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          ${d.actividades.map(a=>`
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:${a.confirmada?'#F0FDF4':'#F8FAFC'};border:1px solid ${a.confirmada?'#BBF7D0':'#E2E8F0'}">
+              <div style="flex:1;min-width:210px">
+                <div style="font-size:.8rem;font-weight:650;color:#0F2A4A">${escapeHtml(a.actividad||'—')}</div>
+                <div style="font-size:.68rem;color:#64748B">
+                  ${escapeHtml(a.solicitante||'—')}${a.departamento?' · '+escapeHtml(a.departamento):''}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}${a.dias?' · '+escapeHtml(a.dias):''}
+                </div>
+                ${a.confirmada?`<div style="font-size:.68rem;color:#15803D;margin-top:3px"><i class="fas fa-check" style="margin-right:4px"></i>Confirmada por <b>${escapeHtml(a.confirmadaPor)}</b> · ${escapeHtml(fmtDateTime(a.fechaConfirmacion))}</div>`:''}
+              </div>
+              ${a.confirmada
+                ? (a.firmaURL?`<a href="${escapeHtml(a.firmaURL)}" target="_blank" rel="noopener" style="font-size:.7rem;color:#15803D;font-weight:650;text-decoration:none">Ver firma</a>`:'')
+                : `<button class="btn-p" style="background:#16A34A;padding:8px 14px;font-size:.76rem" onclick="wwConfAbrir('${d.id}','${a.id}')">Confirmar</button>`}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){box.style.display='none';}
+}
+
+function wwConfAbrir(docId,actId){
+  const doc=(WW_CONF&&WW_CONF.documentos||[]).find(x=>String(x.id)===String(docId));
+  const act=doc&&(doc.actividades||[]).find(x=>String(x.id)===String(actId));
+  if(!act){toast('Actividad no encontrada','err');return;}
+  WW_CONF_CTX={docId,actId};
+  $('ww-conf-actividad').innerHTML=
+    `<b>${escapeHtml(act.actividad||'')}</b><br>`+
+    `<span style="font-size:.72rem;color:#64748B">${escapeHtml(act.solicitante||'')}${act.areaTrabajo?' · '+escapeHtml(act.areaTrabajo):''}${act.dias?' · '+escapeHtml(act.dias):''}</span>`;
+  $('ww-conf-nombre').value=act.solicitante||'';
+  $('modal-ww-confirmar').style.display='flex';
+  setTimeout(wwConfPadInit,120);
+}
+
+function wwConfPadInit(){
+  const c=$('ww-conf-canvas'); if(!c)return;
+  const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr; c.height=rect.height*dpr;
+  wwConfPad=c.getContext('2d'); wwConfPad.scale(dpr,dpr);
+  wwConfPad.lineWidth=2.4; wwConfPad.lineCap='round'; wwConfPad.lineJoin='round';
+  wwConfPad.strokeStyle='#0F2A4A';
+  wwConfPad.clearRect(0,0,rect.width,rect.height);
+  wwConfTrazo=false;
+
+  const pos=ev=>{const r=c.getBoundingClientRect();const p=ev.touches?ev.touches[0]:ev;return {x:p.clientX-r.left,y:p.clientY-r.top};};
+  const start=ev=>{ev.preventDefault();wwConfPintando=true;wwConfTrazo=true;const p=pos(ev);wwConfPad.beginPath();wwConfPad.moveTo(p.x,p.y);};
+  const move=ev=>{if(!wwConfPintando)return;ev.preventDefault();const p=pos(ev);wwConfPad.lineTo(p.x,p.y);wwConfPad.stroke();};
+  const end=()=>{wwConfPintando=false;};
+  c.onmousedown=start;c.onmousemove=move;c.onmouseup=end;c.onmouseleave=end;
+  c.ontouchstart=start;c.ontouchmove=move;c.ontouchend=end;
+}
+
+function wwConfLimpiar(){
+  const c=$('ww-conf-canvas'); if(!c||!wwConfPad)return;
+  const r=c.getBoundingClientRect();
+  wwConfPad.clearRect(0,0,r.width,r.height);
+  wwConfTrazo=false;
+}
+
+async function wwConfGuardar(){
+  if(!WW_CONF_CTX)return;
+  const nombre=$('ww-conf-nombre').value.trim();
+  if(nombre.length<4){toast('Escribe tu nombre completo','err');return;}
+  if(!wwConfTrazo){toast('Dibuja tu firma antes de confirmar','err');return;}
+  const btn=$('btn-ww-conf');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Guardando…';
+  try{
+    const r=await api({action:'weekendConfirmarActividad',
+      id:WW_CONF_CTX.docId, actividadId:WW_CONF_CTX.actId,
+      nombre, firmaBase64:$('ww-conf-canvas').toDataURL('image/png')});
+    if(!r.success){toast(r.error||'No se pudo confirmar','err');return;}
+    toast(r.mensaje||'Confirmación registrada');
+    closeModal('modal-ww-confirmar');
+    WW_CONF_CTX=null;
+    await cargarConfirmacionWeekend_();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='Confirmar';}
+}
+
+// ══════════════════════════════════════════════════════════════
 // V8.9.0 — REVISIÓN DEL DOCUMENTO
 //
 // Pantalla para la reunión del jueves. Muestra la tabla tal como saldrá
@@ -8005,6 +8151,21 @@ function weekendEtiqueta_(e){
     ORIGINATOR:'Esperando firma de Originator',ENGINEER:'Esperando firma de Engineer',
     SENIOR_MANAGER:'Esperando firma de Senior Manager',PRESIDENT:'Esperando firma de President',
     APROBADO:'Aprobado y cerrado'}[e]||e;
+}
+
+async function wwCerrarCiclo(id){
+  const doc=(WW_FLUJO&&WW_FLUJO.documentos||[]).find(x=>String(x.id)===String(id));
+  const cf=(doc&&doc.confirmacion)||{};
+  const aviso=cf.pendientes
+    ? `Quedan ${cf.pendientes} actividad(es) sin confirmar.\nSe cerrarán registradas como tales.\n\n¿Cerrar el ciclo de todas formas?`
+    : '¿Cerrar el ciclo de este fin de semana?';
+  if(!confirm(aviso))return;
+  try{
+    const r=await api({action:'weekendCerrarCiclo',token:SESSION.token,id});
+    if(!r.success){toast(r.error||'No se pudo cerrar','err');return;}
+    toast(r.mensaje||'Ciclo cerrado');
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
 }
 
 async function wwCambiarEtapa(accion,id){
@@ -10041,21 +10202,33 @@ function goChecklists(){
   showView('checklists');
   loadChecklistV80();
 }
+// V8.9.1 — Una sola llamada en lugar de tres.
+//
+// Antes se pedían por separado el catálogo, el tablero y el historial.
+// Apps Script las formaba en fila y cada una pagaba otra vez el arranque
+// del script; además el tablero y el historial leían dos veces la misma
+// hoja de inspecciones. Ahora todo llega junto y el historial viene
+// acotado al mes en curso.
 async function loadChecklistV80(){
   try{
     if(navigator.onLine){
-      const res=await api({action:'getChecklistCatalog',token:SESSION.token});
+      const res=await api({action:'getChecklistBootstrap',token:SESSION.token});
       if(!res.success)throw new Error(res.error||'No fue posible cargar los checklists');
+
       CHK_CATALOG=res.catalogo||[];
       await offlineDbSet('catalogo','facilities_checklist_catalog',CHK_CATALOG);
-    }else{
-      CHK_CATALOG=(await offlineDbGet('catalogo','facilities_checklist_catalog'))||[];
-      if(!CHK_CATALOG.length)throw new Error('No hay catálogo disponible sin conexión. Abre Inspecciones una vez con Internet para descargarlo.');
-      toast('Modo sin conexión: usando el último catálogo descargado.','ok');
+
+      renderChkAreas();
+      if(res.dashboard)aplicarChkDashboard_(res.dashboard);
+      if(res.historial)aplicarChkHistory_(res.historial);
+      return;
     }
+
+    CHK_CATALOG=(await offlineDbGet('catalogo','facilities_checklist_catalog'))||[];
+    if(!CHK_CATALOG.length)throw new Error('No hay catálogo disponible sin conexión. Abre Inspecciones una vez con Internet para descargarlo.');
+    toast('Modo sin conexión: usando el último catálogo descargado.','ok');
     renderChkAreas();
-    if(navigator.onLine){ loadChkDashboard(); loadChkHistory(); }
-    else{ renderOfflineChecklistNotice(); }
+    renderOfflineChecklistNotice();
   }catch(e){
     const cached=(await offlineDbGet('catalogo','facilities_checklist_catalog'))||[];
     if(cached.length){ CHK_CATALOG=cached; renderChkAreas(); renderOfflineChecklistNotice(); toast('Sin conexión: catálogo local cargado.','ok'); }
@@ -10229,10 +10402,19 @@ async function submitChecklistV80(){
   }catch(e){toast(e.message||'Error al guardar','err');}
   btn.disabled=false; btn.innerHTML='<i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección';
 }
+// V8.9.1 — la petición y el dibujado quedan separados, para que el
+// arranque combinado reutilice exactamente el mismo render.
 async function loadChkDashboard(){
   if(!SESSION)return;
   try{
-    const r=await api({action:'getChecklistDashboard',token:SESSION.token}); if(!r.success)return;
+    const r=await api({action:'getChecklistDashboard',token:SESSION.token});
+    if(!r.success)return;
+    aplicarChkDashboard_(r);
+  }catch(e){}
+}
+
+function aplicarChkDashboard_(r){
+  try{
     $('chk-kpis').innerHTML=[
       ['Inspecciones hoy',r.inspeccionesHoy||0,'fa-clipboard-check'],
       ['Desviaciones NG hoy',r.ngHoy||0,'fa-triangle-exclamation'],
@@ -10240,17 +10422,28 @@ async function loadChkDashboard(){
     ].map(x=>`<div class="card" style="padding:13px"><div style="font-size:.68rem;color:#64748B">${x[0]}</div><div style="font-size:1.35rem;font-weight:800;color:#0F172A">${x[1]}</div></div>`).join('');
   }catch(e){}
 }
+
 let CHK_REPORT_DATA=null;
-async function loadChkHistory(){
+async function loadChkHistory(month){
   if(!SESSION)return;
   try{
-    const r=await api({action:'getChecklistHistory',token:SESSION.token}); if(!r.success)return;
+    const payload={action:'getChecklistHistory',token:SESSION.token};
+    if(month)payload.month=month;
+    const r=await api(payload);
+    if(!r.success)return;
+    aplicarChkHistory_(r);
+  }catch(e){}
+}
+
+function aplicarChkHistory_(r){
+  try{
     const a=(r.inspecciones||[]).slice(0,100),areas=r.responsibleAreas||[],canAll=!!r.canSeeAll;
     if($('chk-history-access'))$('chk-history-access').textContent=canAll?'Acceso a todas las inspecciones':areas.length?'Responsable: '+areas.join(', '):'Tus inspecciones';
     configureChecklistReports(canAll,areas);
     $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Área</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(checklistDate(x.fecha))}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td><td><button class="btn-g" style="padding:5px 8px;width:auto" onclick="openChecklistDetail('${chkEsc(x.id)}')">Ver</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
   }catch(e){}
 }
+
 function checklistDate(v){
   if(!v)return '—';
   const s=String(v).trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
