@@ -2578,21 +2578,38 @@
             }
         }
 
-        // Deja el formulario en blanco conservando la pantalla de confirmación.
+        // ───────────────────────────────────────────────────────────
+        // V8.9.6-KTMEX — Deja el formulario en blanco conservando la
+        // confirmación con el folio.
+        //
+        // La versión anterior solo vaciaba los campos marcados con
+        // data-field. Las casillas de tipo de riesgo (.riskType) y de método
+        // de confirmación (.confirmMethod) no llevan esa marca, así que se
+        // quedaban palomeadas, igual que la zona dibujada en el plano.
+        //
+        // Ahora se retiran por completo los pasos de actividad, como hace el
+        // propio reinicio de la herramienta. La confirmación vive en un
+        // elemento aparte (#finalizeStatus), así que sigue visible.
+        // ───────────────────────────────────────────────────────────
         function limpiarFormularioSolicitud() {
-            document.querySelectorAll('#activityStepsContainer [data-field]').forEach(function (el) {
-                if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
-                else el.value = '';
-                el.classList.remove('invalid-field');
-            });
-            document.querySelectorAll('#activityStepsContainer [data-zone-status]').forEach(function (el) {
-                el.textContent = '';
-                el.style.display = 'none';
-            });
+            const pasos = document.getElementById('activityStepsContainer');
+            if (pasos) pasos.innerHTML = '';
+
+            const progreso = document.getElementById('progressWrap');
+            if (progreso) progreso.classList.add('hidden');
+
             const nombre = document.getElementById('registrantName');
             const depto = document.getElementById('registrantDept');
+            const cantidad = document.getElementById('activityCount');
             if (nombre) nombre.value = '';
             if (depto) depto.value = '';
+            if (cantidad) cantidad.value = '1';
+
+            ['stepRegistrant', 'stepCount'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+            currentStep = 0;
         }
 
         // Resets the requester wizard so the simulator's operator can play
