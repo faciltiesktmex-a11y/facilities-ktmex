@@ -2873,7 +2873,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.5';
+const FRONTEND_BUILD = '8.9.6';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -6705,7 +6705,13 @@ async function loadPlatformCalendar(){
       if(x.eventType==='BLOCK'){
         title='Mantenimiento · '+(x.areaTrabajo||'');
       }else if(x.eventType==='BUFFER'){
-        title='Carga de plataforma · 1 h · '+x.folio+(x.solicitante?' · '+x.solicitante:'');
+        // V8.9.6: desde la 8.8.0 la carga dura 1 h u 8 h según el uso; la
+        // etiqueta seguía diciendo "1 h" siempre. Se calcula del propio evento.
+        const ini=String(x.start||'0:0').split(':').map(Number);
+        const fin=String(x.end||'0:0').split(':').map(Number);
+        const mins=Math.max(0,((fin[0]||0)*60+(fin[1]||0))-((ini[0]||0)*60+(ini[1]||0)));
+        const dur=mins>=60?(Math.round(mins/60)+' h'):(mins+' min');
+        title='Carga de plataforma · '+dur+' · '+x.folio+(x.solicitante?' · '+x.solicitante:'');
       }else{
         const quien=[x.solicitante||'',x.areaSolicitante||''].filter(Boolean).join(' · ');
         title=x.folio+(quien?' · '+quien:'')+' · P'+(x.prioridadCodigo||'-');
@@ -8500,6 +8506,10 @@ function renderWeekendWorks(){
     return;
   }
 
+  // V8.9.6: las firmas viven en el documento consolidado, no en cada
+  // solicitud. La barra de cuatro pasos por solicitud decía "Falta la firma
+  // de Originator" sin ofrecer dónde firmar, y hacía pensar que el botón se
+  // había perdido. Ahora cada tarjeta dice si ya está dentro del documento.
   const etapas=['Originator','Ingeniería Facilities','Senior Manager','Presidente'];
   box.innerHTML=rows.map(x=>{
     const n=Number(x.firmadas)||0;
@@ -8521,10 +8531,11 @@ function renderWeekendWorks(){
           </div>
           <div style="font-size:.68rem;color:#64748B">${escapeHtml(x.actividades||0)} actividad(es)${x.dias?' · '+escapeHtml(x.dias):''} · ${escapeHtml((x.fechaEnvio||'').slice(0,10))}</div>
         </div>
-        <span class="badge ${n>=4?'b-done':'b-wait'}">${escapeHtml(x.etapa||'')}</span>
+        <span class="badge ${x.enDocumento?'b-done':'b-wait'}">${x.enDocumento?'En el documento':'Sin incorporar'}</span>
       </div>
-      <div style="display:flex;align-items:flex-start;margin-top:12px">${pasos}</div>
-      ${n<4&&x.siguienteFirma?`<div style="margin-top:9px;padding:7px 9px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:.7rem;color:#92400E"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Falta la firma de <b>${escapeHtml(x.siguienteFirma)}</b>.</div>`:''}
+      ${x.enDocumento
+        ? `<div style="margin-top:10px;padding:7px 9px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:.7rem;color:#166534"><i class="fas fa-circle-check" style="margin-right:5px"></i>Incluida en el documento del fin de semana. Las firmas se recaban en el documento de arriba, no por solicitud.</div>`
+        : `<div style="margin-top:10px;padding:7px 9px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;font-size:.7rem;color:#991B1B"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>Esta solicitud <b>no está en el documento</b> del fin de semana. Ejecuta <code>reincorporarSolicitudesWeekend()</code> para unirla.</div>`}
     </div>`;
   }).join('');
 }
