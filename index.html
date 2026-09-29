@@ -2640,6 +2640,20 @@ const LPA_AREAS = {
 
     <div style="flex:1;overflow:auto;padding:14px 18px">
       <div id="ww-rev-tabla" style="overflow-x:auto"></div>
+
+      <!-- V8.9.3 — Plano de planta con las zonas marcadas por cada área.
+           Se dibuja sobre layout-planta.jpg, el mismo archivo que usa el
+           formulario, para no duplicar medio mega de imagen. -->
+      <div id="ww-rev-mapa-wrap" style="display:none;margin-top:18px">
+        <h4 style="font-size:.82rem;font-weight:700;color:#334155;margin:0 0 3px">Plano de planta · zonas de trabajo</h4>
+        <p style="font-size:.68rem;color:#64748B;margin:0 0 9px">Cada recuadro es la zona que marcó el área al declarar su actividad.</p>
+        <div id="ww-rev-mapa" style="position:relative;border:1px solid #CBD5E1;border-radius:10px;overflow:hidden;background:#F8FAFC">
+          <img id="ww-rev-mapa-img" src="./layout-planta.jpg" alt="Plano de planta" style="width:100%;display:block">
+        </div>
+      </div>
+
+      <!-- V8.9.3 — Canceladas, fuera de la lista principal pero conservadas. -->
+      <div id="ww-rev-canceladas" style="display:none;margin-top:18px"></div>
     </div>
 
     <div id="ww-rev-pie" style="padding:12px 18px;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"></div>
@@ -2859,7 +2873,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.2';
+const FRONTEND_BUILD = '8.9.3';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4791,6 +4805,12 @@ async function performLogin() {
     }
 
     SESSION={token:String(res.token),user:res.user};
+    // V8.9.3: el presidente solo participa en Weekend Work, así que entra
+    // directo a esa pantalla y en inglés.
+    if(res.soloWeekendWork){
+      SESSION.user.soloWeekendWork=true;
+      setLanguage('en');
+    }
     // V8.6.0: primera sesión tras un reinicio -> cambio de contraseña obligatorio.
     if(res.mustChangePassword||res.user?.mustChangePassword){
       saveSession();
@@ -4798,6 +4818,13 @@ async function performLogin() {
       $('log-pwd').value='';
       toast('Debes definir una nueva contraseña para continuar','err');
       openPasswordModal(true);
+      return;
+    }
+    if(SESSION.user.soloWeekendWork){
+      saveSession();
+      showApp();
+      showView('admin');
+      setTimeout(()=>{try{switchTab('weekend');}catch(e){}},120);
       return;
     }
     if(SESSION.user.rol==='manager'){
@@ -8130,6 +8157,35 @@ function renderWwRevision(){
     </table>`
     : '<div style="padding:30px;text-align:center;color:#94A3B8;font-size:.82rem">El documento no tiene actividades.</div>';
 
+  // ── Plano con las zonas marcadas ──
+  renderWwMapa_(act);
+
+  // ── Canceladas: fuera de la tabla, conservadas aparte ──
+  const canceladas=(r.canceladas||[]);
+  const boxCan=$('ww-rev-canceladas');
+  if(boxCan){
+    boxCan.style.display=canceladas.length?'':'none';
+    boxCan.innerHTML=canceladas.length?`
+      <details>
+        <summary style="cursor:pointer;font-size:.8rem;font-weight:700;color:#B91C1C">
+          Actividades dadas de baja (${canceladas.length})
+        </summary>
+        <p style="font-size:.68rem;color:#64748B;margin:6px 0 8px">Se conservan para el documento final: explican por qué un trabajo no se realizó y respaldan las firmas que ya estaban recabadas.</p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${canceladas.map(a=>`
+            <div style="padding:9px 11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px">
+              <div style="font-size:.76rem;font-weight:650;color:#7F1D1D;text-decoration:line-through">${escapeHtml(a.actividad||'—')}</div>
+              <div style="font-size:.67rem;color:#991B1B;margin-top:2px">
+                ${escapeHtml(a.solicitante||'')}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}
+              </div>
+              <div style="font-size:.67rem;color:#B91C1C;margin-top:3px">
+                <b>Motivo:</b> ${escapeHtml(a.motivoCancelacion||'—')} · ${escapeHtml(a.canceladaPor||'')} · ${escapeHtml(String(a.fechaConfirmacion||a.fechaCancelacion||'').slice(0,10))}
+              </div>
+            </div>`).join('')}
+        </div>
+      </details>`:'';
+  }
+
   // Pie: acciones que mueven el documento de etapa.
   const pie=$('ww-rev-pie');
   const acciones=[];
@@ -8144,6 +8200,40 @@ function renderWwRevision(){
   }
   pie.innerHTML=`<div style="font-size:.7rem;color:#64748B">${activas.length} activas · ${act.filter(a=>a.cancelada).length} canceladas · ${act.filter(a=>a.fueraDeTiempo&&!a.cancelada).length} fuera de tiempo</div>
     <div style="display:flex;gap:7px;flex-wrap:wrap">${acciones.join('')}</div>`;
+}
+
+// V8.9.3 — Dibuja las zonas sobre el plano. Las coordenadas vienen
+// normalizadas (0 a 1), así que el recuadro se coloca en porcentajes y
+// acompaña a la imagen sea cual sea su tamaño en pantalla.
+const WW_ZONA_COLORES=['#DC2626','#2563EB','#16A34A','#D97706','#7C3AED','#0891B2','#DB2777','#65A30D'];
+
+function renderWwMapa_(actividades){
+  const wrap=$('ww-rev-mapa-wrap'), cont=$('ww-rev-mapa');
+  if(!wrap||!cont)return;
+
+  const conZona=(actividades||[]).filter(a=>a.layoutZone&&typeof a.layoutZone.xf==='number');
+  if(!conZona.length){wrap.style.display='none';return;}
+  wrap.style.display='';
+
+  // Se conserva la imagen y se redibujan solo los recuadros.
+  cont.querySelectorAll('.ww-zona').forEach(el=>el.remove());
+
+  conZona.forEach((a,i)=>{
+    const z=a.layoutZone, color=WW_ZONA_COLORES[i%WW_ZONA_COLORES.length];
+    const caja=document.createElement('div');
+    caja.className='ww-zona';
+    caja.style.cssText=`position:absolute;left:${(z.xf*100).toFixed(2)}%;top:${(z.yf*100).toFixed(2)}%;`+
+      `width:${(z.wf*100).toFixed(2)}%;height:${(z.hf*100).toFixed(2)}%;`+
+      `border:2px solid ${color};background:${color}22;border-radius:3px;`+
+      `display:flex;align-items:flex-start;justify-content:center;overflow:hidden`;
+    caja.title=`${a.actividad||''}\n${a.solicitante||''}${a.areaTrabajo?' · '+a.areaTrabajo:''}`;
+    const et=document.createElement('div');
+    et.textContent=z.label||a.areaTrabajo||a.actividad||'';
+    et.style.cssText=`background:${color};color:#fff;font-size:9px;line-height:1.25;padding:1px 4px;`+
+      `border-radius:0 0 3px 0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis`;
+    caja.appendChild(et);
+    cont.appendChild(caja);
+  });
 }
 
 function weekendEtiqueta_(e){
