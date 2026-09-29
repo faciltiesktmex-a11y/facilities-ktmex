@@ -1585,10 +1585,16 @@
                 // V8.9.3-KTMEX: el botón se bloquea mientras se envía, para que
                 // un segundo clic no genere una solicitud duplicada, y se
                 // libera al terminar.
-                const btnEnviar = this;
+                // V8.9.4-KTMEX — CORRECCIÓN. En la versión anterior esta línea era
+                // "const btnEnviar = this". El escuchador está delegado en el
+                // contenedor del formulario, así que "this" NO era el botón sino
+                // el contenedor completo. Al poner su innerHTML en "Sending…" se
+                // borraba el formulario entero antes de leer los datos: por eso
+                // se limpiaba y no se enviaba nada. "btn" sí es el botón pulsado.
+                const btnEnviar = btn;
                 const textoOriginal = btnEnviar.innerHTML;
                 btnEnviar.disabled = true;
-                btnEnviar.innerHTML = 'Sending…';
+                btnEnviar.textContent = 'Sending…';
                 Promise.resolve(handleSendToReview()).finally(function () {
                     btnEnviar.disabled = false;
                     btnEnviar.innerHTML = textoOriginal;
@@ -2499,6 +2505,7 @@
             // Shared database: every requester using this same published
             // portal has their requests concentrated here.
             let savedOk = false;
+            let saveErrorMessage = '';
             try {
                 const submissionId = `submission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
                 const record = {
@@ -2520,7 +2527,11 @@
                 await window.storage.set('submissions_index', JSON.stringify(index), true);
                 savedOk = true;
             } catch (err) {
+                // V8.9.4-KTMEX: antes el error solo iba a la consola y la persona
+                // veía la pantalla de confirmación como si todo hubiera salido
+                // bien. Ahora se guarda el motivo para mostrarlo en pantalla.
                 console.error('Could not save to the shared database:', err);
+                saveErrorMessage = String((err && err.message) || err || 'Unknown error');
             }
 
             // Make these activities available for the organizer to pull
@@ -2531,7 +2542,11 @@
             statusEl.innerHTML =
                 (savedOk
                     ? `<p class="status-ok font-semibold">✅ Request saved to the shared Facilities database.</p>`
-                    : `<p class="status-pending font-semibold">⚠️ Could not save to the shared database.</p>`) +
+                    : `<div style="padding:12px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:10px;margin-bottom:8px">
+                         <p style="color:#B91C1C;font-weight:700;margin:0 0 4px">⚠️ Your request was NOT saved.</p>
+                         <p style="color:#7F1D1D;font-size:.85rem;margin:0">Your data is still in the form. Please try again, or tell Facilities Engineering.</p>
+                         <p style="color:#991B1B;font-size:.75rem;margin:6px 0 0;font-family:monospace">${escapeHtml(saveErrorMessage)}</p>
+                       </div>`) +
                 `<p class="text-sm text-gray-700 mt-2">Request number: <strong>${escapeHtml(requestNo)}</strong></p>
                 <p class="text-sm text-gray-500 mt-1">Your request has been sent for review by the Weekend Work Organizer.</p>
                 <div class="mt-3" id="afterSendActions"></div>`;
@@ -2555,11 +2570,12 @@
                 <button type="button" id="registerAnotherBtn" class="wizard-btn wizard-btn-primary w-full sm:w-auto sm:px-8">➕ Register another activity</button>`;
             document.getElementById('registerAnotherBtn').addEventListener('click', resetWizardForNextRegistrant);
 
-            // V8.9.3-KTMEX: el formulario se limpia solo en cuanto la solicitud
-            // queda registrada. Antes conservaba los datos del envío anterior y
-            // el siguiente usuario tenía que borrarlos a mano, con el riesgo de
-            // dejar algún campo del anterior.
-            try { limpiarFormularioSolicitud(); } catch (e) {}
+            // V8.9.4-KTMEX: el formulario se limpia SOLO si la solicitud quedó
+            // guardada. Si el guardado falló, se conservan los datos para que la
+            // persona pueda reintentar sin volver a capturar todo.
+            if (savedOk) {
+                try { limpiarFormularioSolicitud(); } catch (e) {}
+            }
         }
 
         // Deja el formulario en blanco conservando la pantalla de confirmación.
