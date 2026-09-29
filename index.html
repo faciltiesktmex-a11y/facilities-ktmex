@@ -2873,7 +2873,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.3';
+const FRONTEND_BUILD = '8.9.4';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4820,13 +4820,11 @@ async function performLogin() {
       openPasswordModal(true);
       return;
     }
-    if(SESSION.user.soloWeekendWork){
-      saveSession();
-      showApp();
-      showView('admin');
-      setTimeout(()=>{try{switchTab('weekend');}catch(e){}},120);
-      return;
-    }
+    // V8.9.4 — CORRECCIÓN. La versión anterior tenía aquí una rama propia para
+    // el presidente que llamaba a showApp(), una función que no existe. Al
+    // entrar Kojima eso lanzaba un error y abortaba el inicio de sesión: por
+    // eso no podía acceder. Ahora pasa por el mismo camino que cualquier
+    // manager, y solo al final se le lleva a Weekend Work.
     if(SESSION.user.rol==='manager'){
       LANG='en';
       localStorage.setItem('ktmex_lang','en');
@@ -6170,9 +6168,15 @@ async function submitPasswordChange(){
       toast('Contraseña actualizada correctamente','ok');
       if(SESSION&&SESSION.user)SESSION.user.mustChangePassword=false;
       saveSession();
+      const eraForzado=PWD_FORCED;
       PWD_FORCED=false;
       $('pwd-modal-close').style.display='';
       closeModal('modal-password');
+      // V8.9.4: tras el cambio OBLIGATORIO la persona se quedaba en la pantalla
+      // de inicio sin entrar al sistema, porque el inicio de sesión se había
+      // detenido para pedir la contraseña. Recargando, el sistema valida la
+      // sesión ya sin el cambio pendiente y la lleva a su pantalla.
+      if(eraForzado){ setTimeout(()=>location.reload(),600); }
     }else toast(r.error||'No se pudo cambiar la contraseña','err');
   }catch(e){toast('Error de conexión: '+e.message,'err');}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-shield-halved" style="margin-right:7px"></i>Guardar contraseña';}
@@ -8119,12 +8123,15 @@ function renderWwRevision(){
        ? `<div style="padding:9px 11px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;color:#92400E"><i class="fas fa-lock" style="margin-right:6px"></i>El documento ya tiene firmas. Esta es una vista de consulta.</div>`
        : `<div style="padding:9px 11px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;color:#475569"><i class="fas fa-eye" style="margin-right:6px"></i>Vista de consulta.</div>`);
 
+  // V8.9.4: la última columna es SIEMPRE visible y trae el botón para ver la
+  // actividad completa. Antes esa columna solo existía para quien podía
+  // editar, así que el resto de los administradores no podía abrir el detalle.
   const cols=['No','Solicitante','Depto.','Job leader','Actividad','Área de trabajo','Riesgo','Contratista','Personas','Días','Origen'];
   $('ww-rev-tabla').innerHTML=act.length?`
     <table style="width:100%;border-collapse:collapse;font-size:.73rem;min-width:960px">
       <thead><tr style="background:#0F2A4A;color:#fff">
         ${cols.map(c=>`<th style="text-align:left;padding:7px 8px;font-weight:600">${c}</th>`).join('')}
-        ${editable?'<th style="padding:7px 8px"></th>':''}
+        <th style="padding:7px 8px"></th>
       </tr></thead>
       <tbody>${act.map((a,i)=>{
         const rojo=a.fueraDeTiempo&&!a.cancelada;
@@ -8148,10 +8155,11 @@ function renderWwRevision(){
               :a.fueraDeTiempo?'<span class="badge" style="background:#FEE2E2;color:#B91C1C;font-size:.6rem">Fuera de tiempo</span>'
               :`<span style="font-size:.64rem;color:#94A3B8">${escapeHtml(a.requestNo||'—')}</span>`}
           </td>
-          ${editable?`<td style="padding:7px 8px;white-space:nowrap;text-align:right">
-            ${a.cancelada?'':`<button class="btn-g" style="padding:3px 8px;font-size:.66rem" onclick="wwActEditar('${a.id}')"><i class="fas fa-pen"></i></button>
-            <button class="btn-g" style="padding:3px 8px;font-size:.66rem;color:#B91C1C" onclick="wwRevCancelar('${a.id}')"><i class="fas fa-trash"></i></button>`}
-          </td>`:''}
+          <td style="padding:7px 8px;white-space:nowrap;text-align:right">
+            <button class="btn-g" title="Ver actividad declarada" style="padding:3px 8px;font-size:.66rem;color:#1D4ED8" onclick="wwVerActividad('${d.id}','${a.id}')"><i class="fas fa-eye"></i></button>
+            ${(editable&&!a.cancelada)?`<button class="btn-g" title="Editar" style="padding:3px 8px;font-size:.66rem" onclick="wwActEditar('${a.id}')"><i class="fas fa-pen"></i></button>
+            <button class="btn-g" title="Dar de baja" style="padding:3px 8px;font-size:.66rem;color:#B91C1C" onclick="wwRevCancelar('${a.id}')"><i class="fas fa-trash"></i></button>`:''}
+          </td>
         </tr>`;
       }).join('')}</tbody>
     </table>`
@@ -8234,6 +8242,71 @@ function renderWwMapa_(actividades){
     caja.appendChild(et);
     cont.appendChild(caja);
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// V8.9.4 — DETALLE DE LA ACTIVIDAD DECLARADA
+//
+// Muestra todo lo que el área capturó, recuperado de la solicitud
+// original: horarios, riesgos, contratista, jefe TC/GL y la zona marcada.
+// ══════════════════════════════════════════════════════════════
+async function wwVerActividad(docId,actId){
+  const box=$('hist-modal-body');
+  $('hist-modal-folio').textContent='';
+  box.innerHTML='<div style="padding:18px;text-align:center;color:#64748B;font-size:.8rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando actividad…</div>';
+  $('modal-historial').style.display='flex';
+  try{
+    const r=await api({action:'getWeekendActividadDetalle',token:SESSION.token,id:docId,actividadId:actId});
+    if(!r.success){box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.8rem">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    const a=r.actividad||{}, o=r.original||{}, sol=r.solicitud||{};
+    $('hist-modal-folio').textContent=a.requestNo||'';
+
+    const horario=[];
+    if(o.daySat)horario.push('Sábado '+(o.satDate||'')+' · '+(o.satStart||'--:--')+'–'+(o.satEnd||'--:--'));
+    if(o.daySun)horario.push('Domingo '+(o.sunDate||'')+' · '+(o.sunStart||'--:--')+'–'+(o.sunEnd||'--:--'));
+    if(o.dayHoliday)horario.push('Festivo '+(o.holidayDate||'')+' · '+(o.holidayStart||'--:--')+'–'+(o.holidayEnd||'--:--'));
+
+    const filas=[
+      ['Actividad',a.actividad],
+      ['Solicitante',a.solicitante||sol.solicitante],
+      ['Registró',sol.registrante],
+      ['Departamento',a.departamento||sol.departamento],
+      ['Job leader',a.jobLeader],
+      ['Supervisor',a.supervisor],
+      ['Chief TC / GL',o.chiefTcGl],
+      ['Área de trabajo',a.areaTrabajo],
+      ['Horario',horario.join('<br>')],
+      ['Riesgo',a.riesgo],
+      ['Tipos de riesgo',Array.isArray(o.riskTypes)?o.riskTypes.join(', '):o.riskTypes],
+      ['Rango',o.rank],
+      ['Contratista',a.contratista],
+      ['Personas',a.cuadrilla],
+      ['Métodos de confirmación',Array.isArray(o.confirmationMethods)?o.confirmationMethods.join(', '):o.confirmationMethods],
+      ['Enviada',sol.enviada?fmtDateTime(sol.enviada):'']
+    ].filter(x=>String(x[1]||'').trim());
+
+    const marcas=[];
+    if(a.fueraDeTiempo)marcas.push('<span class="badge" style="background:#FEE2E2;color:#B91C1C">Fuera de tiempo</span>');
+    if(a.agregadaEnRevision)marcas.push(`<span class="badge" style="background:#EDE9FE;color:#6D28D9">Capturada en revisión por ${escapeHtml(a.agregadaPor||'')}</span>`);
+    if(a.editadaPor)marcas.push(`<span class="badge" style="background:#EFF6FF;color:#1D4ED8">Editada por ${escapeHtml(a.editadaPor)}</span>`);
+
+    box.innerHTML=
+      (marcas.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${marcas.join('')}</div>`:'')+
+      `<table style="width:100%;border-collapse:collapse;font-size:.76rem">${filas.map(f=>`
+        <tr style="border-bottom:1px solid #F1F5F9">
+          <td style="padding:7px 8px;color:#64748B;font-weight:600;width:38%;vertical-align:top">${f[0]}</td>
+          <td style="padding:7px 8px;color:#0F2A4A">${f[0]==='Horario'?f[1]:escapeHtml(String(f[1]))}</td>
+        </tr>`).join('')}</table>`+
+      (a.layoutZone&&typeof a.layoutZone.xf==='number'
+        ? `<div style="margin-top:12px">
+             <div style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:5px">Zona marcada en el plano</div>
+             <div style="position:relative;border:1px solid #CBD5E1;border-radius:9px;overflow:hidden">
+               <img src="./layout-planta.jpg" style="width:100%;display:block" alt="Plano">
+               <div style="position:absolute;left:${(a.layoutZone.xf*100).toFixed(2)}%;top:${(a.layoutZone.yf*100).toFixed(2)}%;width:${(a.layoutZone.wf*100).toFixed(2)}%;height:${(a.layoutZone.hf*100).toFixed(2)}%;border:2px solid #DC2626;background:#DC262633;border-radius:3px"></div>
+             </div>
+           </div>`
+        : '<div style="margin-top:10px;font-size:.7rem;color:#94A3B8">Esta actividad no tiene zona marcada en el plano.</div>');
+  }catch(e){box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.8rem">Error: ${escapeHtml(e.message||String(e))}</div>`;}
 }
 
 function weekendEtiqueta_(e){
@@ -8494,11 +8567,15 @@ async function refreshAdmin() {
     if($('fs-est'))$('fs-est').value='';
     if($('fs-search'))$('fs-search').value='';
     if($('fs-depto'))$('fs-depto').value='';
-    if($('manager-approval-box'))$('manager-approval-box').style.display='';
+    // V8.9.4: el presidente puede CONSULTAR todo, pero no autoriza nada salvo
+    // Weekend Work. Por eso se oculta su bandeja de aprobaciones —aunque el
+    // servidor igual rechazaría cualquier intento— y aterriza en Weekend Work.
+    const esPresidente=!!(SESSION.user&&SESSION.user.soloWeekendWork);
+    if($('manager-approval-box'))$('manager-approval-box').style.display=esPresidente?'none':'';
     await loadAdminBootstrap();
-    renderManagerApprovalQueue();
-    switchTab('sol');
+    if(!esPresidente)renderManagerApprovalQueue();
     renderSolicitudes();
+    switchTab(esPresidente?'weekend':'sol');
     return;
   }
   await loadAdminBootstrap();
@@ -10160,6 +10237,13 @@ function init() {
             if(m)m.textContent=(SESSION.user.rol||'usuario')+' · Facilities';
           },0);
           startNotificationPolling();
+          // V8.9.4: el presidente vuelve directo a su panel, en inglés; al
+          // cargarse, refreshAdmin lo deja en la pestaña de Weekend Work.
+          if(SESSION.user&&SESSION.user.soloWeekendWork){
+            if(LANG!=='en')setLanguage('en');
+            showView('admin');
+            setTimeout(()=>{try{refreshAdmin();}catch(e){}},50);
+          }
         } else {
           sessionStorage.removeItem('ktmex_session');
         }
