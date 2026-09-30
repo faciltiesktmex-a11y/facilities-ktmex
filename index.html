@@ -1114,7 +1114,7 @@ const LPA_AREAS = {
   </div>
   <div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
   <div id="chk-report-card" class="card" style="display:none;padding:18px;margin-top:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto" onchange="energiaToggleSelectores_()"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><span id="energia-selectores" style="display:none;gap:7px"><select id="energia-subestacion" class="inp" style="width:auto"><option>Subestación 1</option><option>Subestación 2</option></select><select id="energia-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select></span><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
     <div id="chk-report-actions" style="display:none;gap:7px;margin-top:12px;flex-wrap:wrap"><button class="btn-g" style="width:auto" onclick="printChecklistMonthlyReport()"><i class="fas fa-file-pdf" style="margin-right:5px"></i>Imprimir / PDF</button><button class="btn-g" style="width:auto" onclick="exportChecklistMonthlyExcel()"><i class="fas fa-file-excel" style="margin-right:5px"></i>Descargar Excel</button></div>
     <div id="chk-report-content" style="margin-top:12px"></div>
   </div>
@@ -2707,7 +2707,20 @@ const LPA_AREAS = {
     </div>
 
     <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Días</label>
-    <input id="ww-act-dias" class="inp" placeholder="Sábado, Domingo" style="margin-bottom:16px">
+    <input id="ww-act-dias" class="inp" placeholder="Sábado, Domingo" style="margin-bottom:14px">
+
+    <!-- V8.9.8 — Zona en el plano. Faltaba al capturar desde el panel: la
+         actividad quedaba registrada pero sin marca en el mapa. -->
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Zona de trabajo en el plano</label>
+    <p style="font-size:.66rem;color:#64748B;margin:0 0 6px">Arrastra sobre el plano para marcar dónde se trabajará. Opcional.</p>
+    <div id="ww-act-mapa" style="position:relative;border:1px solid #CBD5E1;border-radius:9px;overflow:hidden;touch-action:none;cursor:crosshair;user-select:none">
+      <img src="./layout-planta.jpg" alt="Plano" draggable="false" style="width:100%;display:block;pointer-events:none">
+      <div id="ww-act-zona" style="display:none;position:absolute;border:2px solid #DC2626;background:#DC262633;border-radius:3px;pointer-events:none"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px">
+      <span id="ww-act-zona-estado" style="font-size:.66rem;color:#94A3B8">Sin zona marcada</span>
+      <button type="button" class="btn-g" style="padding:3px 9px;font-size:.66rem" onclick="wwZonaLimpiar()">Quitar zona</button>
+    </div>
 
     <div style="display:flex;gap:8px">
       <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-actividad')">Cancelar</button>
@@ -2873,7 +2886,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.7';
+const FRONTEND_BUILD = '9.0.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -6530,6 +6543,29 @@ function v840FrontParse_(v){try{const x=JSON.parse(String(v||'[]'));return Array
 // ninguna de las fotografías que toma el técnico. Para validar un cierre
 // había que abrir la hoja de cálculo y buscar los enlaces a mano.
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// V8.9.8 — CORRECCIÓN: LAS FOTOS NO SE VEÍAN
+//
+// El sistema guarda cada foto con un enlace de la forma
+//     https://drive.google.com/file/d/ID/view
+// Ese enlace abre la PÁGINA visor de Drive, no la imagen. En la 8.8.3 lo
+// usé directamente como fuente de la miniatura: el navegador intentaba
+// mostrar una página web como si fuera foto, fallaba, y aparecía el
+// recuadro "Ver en Drive".
+//
+// Para mostrarla se usa el servicio de miniaturas de Drive, que sí entrega
+// la imagen. El clic sigue abriendo el visor, con la foto a tamaño completo.
+// ══════════════════════════════════════════════════════════════
+function driveIdDe_(url){
+  const u=String(url||'');
+  const m=u.match(/\/d\/([A-Za-z0-9_-]{10,})/) || u.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
+  return m?m[1]:'';
+}
+function driveMiniatura_(url,ancho){
+  const id=driveIdDe_(url);
+  return id?('https://drive.google.com/thumbnail?id='+id+'&sz=w'+(ancho||600)):String(url||'');
+}
+
 function evidenciasDailyHtml_(x){
   const ev=x.evidencias||{};
   const fotos=[];
@@ -6555,7 +6591,7 @@ function evidenciasDailyHtml_(x){
         ? `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:#F1F5F9;border-radius:8px;font-size:.68rem;color:#475569;text-decoration:none"><i class="fas fa-file-lines"></i>${escapeHtml(f.nombre||'Archivo')}</a>`
         : `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" title="Abrir en Drive" style="display:block;text-decoration:none">
              <div style="width:74px;height:74px;border-radius:9px;overflow:hidden;border:2px solid ${f.color};background:#F8FAFC">
-               <img src="${escapeHtml(f.url)}" alt="${escapeHtml(f.etiqueta)}" loading="lazy"
+               <img src="${escapeHtml(driveMiniatura_(f.url,300))}" alt="${escapeHtml(f.etiqueta)}" loading="lazy"
                     style="width:100%;height:100%;object-fit:cover"
                     onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:.62rem\'>Ver en Drive</div>'">
              </div>
@@ -8407,6 +8443,54 @@ async function wwRevCancelar(actId){
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
+// ── Zona en el plano al capturar o editar ────────────────────
+// Coordenadas relativas (0 a 1) al tamaño de la imagen, igual que las que
+// guarda el formulario público, para que se dibujen en el mismo lugar.
+let WW_ZONA=null, wwZonaIni=null;
+
+function wwZonaPintar_(){
+  const caja=$('ww-act-zona'), est=$('ww-act-zona-estado');
+  if(!WW_ZONA){
+    if(caja)caja.style.display='none';
+    if(est){est.textContent='Sin zona marcada';est.style.color='#94A3B8';}
+    return;
+  }
+  caja.style.display='block';
+  caja.style.left=(WW_ZONA.xf*100)+'%'; caja.style.top=(WW_ZONA.yf*100)+'%';
+  caja.style.width=(WW_ZONA.wf*100)+'%'; caja.style.height=(WW_ZONA.hf*100)+'%';
+  if(est){est.textContent='Zona marcada';est.style.color='#15803D';}
+}
+
+function wwZonaLimpiar(){WW_ZONA=null;wwZonaPintar_();}
+
+function wwZonaInit_(){
+  const m=$('ww-act-mapa'); if(!m||m.dataset.listo)return;
+  m.dataset.listo='1';
+  const punto=ev=>{
+    const r=m.getBoundingClientRect(), p=ev.touches?ev.touches[0]:ev;
+    return {x:Math.min(1,Math.max(0,(p.clientX-r.left)/r.width)),
+            y:Math.min(1,Math.max(0,(p.clientY-r.top)/r.height))};
+  };
+  const inicio=ev=>{ev.preventDefault();wwZonaIni=punto(ev);};
+  const mover=ev=>{
+    if(!wwZonaIni)return; ev.preventDefault();
+    const p=punto(ev);
+    WW_ZONA={xf:Math.min(wwZonaIni.x,p.x),yf:Math.min(wwZonaIni.y,p.y),
+             wf:Math.abs(p.x-wwZonaIni.x),hf:Math.abs(p.y-wwZonaIni.y)};
+    wwZonaPintar_();
+  };
+  const fin=()=>{
+    // Un toque sin arrastrar no cuenta como zona.
+    if(WW_ZONA&&(WW_ZONA.wf<0.005||WW_ZONA.hf<0.005))WW_ZONA=null;
+    wwZonaIni=null; wwZonaPintar_();
+  };
+  m.addEventListener('mousedown',inicio); m.addEventListener('mousemove',mover);
+  window.addEventListener('mouseup',fin);
+  m.addEventListener('touchstart',inicio,{passive:false});
+  m.addEventListener('touchmove',mover,{passive:false});
+  m.addEventListener('touchend',fin);
+}
+
 // ── Capturar o editar una actividad ──────────────────────────
 let WW_ACT_CTX=null;
 
@@ -8418,6 +8502,7 @@ function wwRevNuevaActividad(){
   ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla','dias']
     .forEach(k=>{const el=$('ww-act-'+k); if(el)el.value='';});
   $('ww-act-riesgo').value='';
+  WW_ZONA=null; wwZonaInit_(); wwZonaPintar_();
   $('modal-ww-actividad').style.display='flex';
 }
 
@@ -8438,6 +8523,8 @@ function wwActEditar(actId){
   $('ww-act-contratista').value=a.contratista||'';
   $('ww-act-cuadrilla').value=a.cuadrilla||'';
   $('ww-act-dias').value=a.dias||'';
+  WW_ZONA=(a.layoutZone&&typeof a.layoutZone.xf==='number')?Object.assign({},a.layoutZone):null;
+  wwZonaInit_(); wwZonaPintar_();
   $('modal-ww-actividad').style.display='flex';
 }
 
@@ -8453,7 +8540,10 @@ async function wwActGuardar(){
     riesgo:$('ww-act-riesgo').value,
     contratista:$('ww-act-contratista').value.trim(),
     cuadrilla:$('ww-act-cuadrilla').value.trim(),
-    dias:$('ww-act-dias').value.trim()
+    dias:$('ww-act-dias').value.trim(),
+    // V8.9.8: la zona marcada en el plano (o null si se quitó).
+    layoutZone:WW_ZONA?{xf:WW_ZONA.xf,yf:WW_ZONA.yf,wf:WW_ZONA.wf,hf:WW_ZONA.hf,
+      label:$('ww-act-area').value.trim()}:null
   };
   if(!campos.actividad){toast('Describe la actividad','err');return;}
   if(WW_ACT_CTX.modo==='nueva'&&!campos.solicitante){toast('Indica a nombre de quién se registra','err');return;}
@@ -10695,7 +10785,7 @@ function checklistMonthLabel(v){
 function checklistTime(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v).slice(11,16):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function configureChecklistReports(canAll,areas){
   const card=$('chk-report-card');if(!card)return;const allowed=canAll?['Subestaciones','Cuarto de Bombas','Cuarto de Máquinas','Compresores','Inspección General']:areas;
-  if(!allowed.length){card.style.display='none';return;}card.style.display='';$('chk-report-area').innerHTML=allowed.map(a=>`<option>${chkEsc(a)}</option>`).join('');if(!$('chk-report-month').value)$('chk-report-month').value=new Date().toISOString().slice(0,7);
+  if(!allowed.length){card.style.display='none';return;}card.style.display='';$('chk-report-area').innerHTML=allowed.map(a=>`<option>${chkEsc(a)}</option>`).join('');try{energiaToggleSelectores_();}catch(e){}if(!$('chk-report-month').value)$('chk-report-month').value=new Date().toISOString().slice(0,7);
 }
 async function openChecklistDetail(id){
   if(!SESSION||!navigator.onLine){toast('El detalle histórico requiere conexión','err');return;}
@@ -10707,10 +10797,228 @@ async function openChecklistDetail(id){
 async function loadChecklistMonthlyReport(){
   if(!SESSION||!navigator.onLine){toast('El reporte mensual requiere conexión','err');return;}
   const area=$('chk-report-area').value,month=$('chk-report-month').value;if(!area||!month){toast('Selecciona área y mes','err');return;}
+  // V9.0.0: el área de Subestaciones tiene su propio reporte de energía.
+  if(area==='Subestaciones'){return loadReporteEnergia_(month);}
   $('chk-report-content').innerHTML='<p>Generando reporte…</p>';
   const r=await api({action:'getChecklistMonthlyReport',token:SESSION.token,area,month});if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
-  CHK_REPORT_DATA=r;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
+  CHK_REPORT_DATA=r;ENERGIA_DATA=null;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
 }
+// ══════════════════════════════════════════════════════════════
+// V9.0.0 — REPORTE DE ENERGÍA DE SUBESTACIONES
+//
+// Reproduce el formato de Excel que llevaba Facilities: encabezado con
+// lecturas anteriores y total mensual, tabla diaria con lecturas y
+// consumos, total y promedio, y la gráfica de consumo diario con la
+// línea del promedio. El técnico responsable lo genera por subestación y
+// por turno, cada combinación por separado.
+// ══════════════════════════════════════════════════════════════
+let ENERGIA_DATA=null;
+
+function energiaToggleSelectores_(){
+  const s=$('energia-selectores');
+  if(s)s.style.display=($('chk-report-area').value==='Subestaciones')?'inline-flex':'none';
+}
+
+function energiaFmt_(n,dec){
+  if(n===null||n===undefined||isNaN(n))return '—';
+  return Number(n).toLocaleString('es-MX',{minimumFractionDigits:dec??2,maximumFractionDigits:dec??2});
+}
+
+const ENERGIA_MESES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+
+async function loadReporteEnergia_(month){
+  $('chk-report-content').innerHTML='<p>Generando reporte de energía…</p>';
+  try{
+    const r=await api({action:'getReporteSubestacion',token:SESSION.token,month,
+      subestacion:$('energia-subestacion').value,turno:$('energia-turno').value});
+    if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
+    ENERGIA_DATA=r;
+    CHK_REPORT_DATA=null;               // la impresión usa el reporte de energía
+    renderReporteEnergia_(r);
+    $('chk-report-actions').style.display='flex';
+  }catch(e){$('chk-report-content').innerHTML='';toast('Error: '+e.message,'err');}
+}
+
+function renderReporteEnergia_(r){
+  const mesNum=Number(String(r.mes).slice(5,7))-1, anio=String(r.mes).slice(0,4);
+  const titulo=`Consumo Diario – ${ENERGIA_MESES[mesNum]||''} ${anio}`;
+  const fechaMx=f=>{const p=String(f).split('-');return p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):f;};
+
+  const filas=(r.filas||[]).map((x,i)=>`
+    <tr style="background:${i%2?'#F8FAFC':'#FFFFFF'}">
+      <td style="padding:5px 8px;text-align:center">${fechaMx(x.fecha)}</td>
+      <td style="padding:5px 8px;text-align:center">${escapeHtml(x.dia)}</td>
+      <td style="padding:5px 8px;text-align:right;background:#EEF6EC">${energiaFmt_(x.activo)}</td>
+      <td style="padding:5px 8px;text-align:right;background:#E4EEF8;font-weight:700;color:#1E3A6B">${energiaFmt_(x.consumoActivo)}</td>
+      <td style="padding:5px 8px;text-align:right;background:#FBEFE3">${energiaFmt_(x.reactivo)}</td>
+      <td style="padding:5px 8px;text-align:right;background:#E4EEF8;font-weight:700;color:#8B1E1E">${energiaFmt_(x.consumoReactivo)}</td>
+      <td style="padding:5px 8px;font-size:.66rem;color:#64748B">${escapeHtml(x.observaciones||'')}</td>
+    </tr>`).join('');
+
+  $('chk-report-content').innerHTML=`<div id="chk-print-area">
+    <div style="border-bottom:2px solid #0F2A4A;padding-bottom:8px;margin-bottom:12px">
+      <b style="font-size:1.02rem">KTMEX · Facilities — Registro de energía</b>
+      <div style="font-size:.76rem;color:#475569">${escapeHtml(r.subestacion)} · ${escapeHtml(r.turno)} · ${ENERGIA_MESES[mesNum]||''} ${anio}</div>
+    </div>
+
+    ${(r.avisos||[]).map(a=>`<div style="padding:8px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:.72rem;color:#92400E;margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
+
+    ${(r.filas||[]).length?`
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1 1 560px;overflow-x:auto">
+        <table style="border-collapse:collapse;font-size:.7rem;min-width:560px;width:100%;border:1px solid #1E2A44">
+          <thead>
+            <tr>
+              <th colspan="2"></th>
+              <th style="padding:4px;background:#DCEBD8;color:#3F6B35;font-size:.6rem">Lec. Activo Anterior →</th>
+              <th></th>
+              <th style="padding:4px;background:#FBE3CD;color:#9A4A12;font-size:.6rem">Lec. Reactivo Anterior →</th>
+              <th style="padding:4px;background:#DCEBD8;color:#3F6B35;font-size:.6rem">MENSUAL kWh</th>
+              <th></th>
+            </tr>
+            <tr>
+              <th colspan="2"></th>
+              <th style="padding:4px;background:#DCEBD8;text-align:center;font-weight:700">${energiaFmt_(r.lecturaActivoAnterior)}</th>
+              <th></th>
+              <th style="padding:4px;background:#FBE3CD;text-align:center;font-weight:700">${energiaFmt_(r.lecturaReactivoAnterior)}</th>
+              <th style="padding:4px;background:#E4EEF8;text-align:center;font-weight:700">${energiaFmt_(r.mensualActivo)}</th>
+              <th></th>
+            </tr>
+            <tr style="background:#1E2A44;color:#fff">
+              <th style="padding:6px">FECHA</th><th style="padding:6px">DÍA</th>
+              <th style="padding:6px;background:#3F6B35">E. ACTIVO<br>MES ACTUAL<br>(kWh)</th>
+              <th style="padding:6px">CONSUMO<br>ACTIVO<br>(kWh)</th>
+              <th style="padding:6px;background:#8B3A1E">E. REACTIVO<br>MES ACTUAL<br>(kVARh)</th>
+              <th style="padding:6px">CONSUMO<br>REACTIVO<br>(kVARh)</th>
+              <th style="padding:6px">OBSERVACIONES</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+          <tfoot>
+            <tr style="background:#1E2A44;color:#fff;font-weight:700">
+              <td colspan="3" style="padding:6px;text-align:center">TOTAL MES</td>
+              <td style="padding:6px;text-align:center">${energiaFmt_(r.totalActivo)}</td>
+              <td></td>
+              <td style="padding:6px;text-align:center">${energiaFmt_(r.totalReactivo)}</td>
+              <td></td>
+            </tr>
+            <tr style="background:#4A2458;color:#fff;font-weight:700">
+              <td colspan="3" style="padding:6px;text-align:center">PROMEDIO DIARIO</td>
+              <td style="padding:6px;text-align:center;background:#E4EEF8;color:#1E3A6B">${energiaFmt_(r.promedioActivo)}</td>
+              <td></td>
+              <td style="padding:6px;text-align:center;background:#E4EEF8;color:#8B1E1E">${energiaFmt_(r.promedioReactivo)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div style="flex:1 1 420px;border:1px solid #CBD5E1;border-radius:6px;padding:10px;background:#fff">
+        <div style="text-align:center;font-weight:700;font-size:.9rem;color:#0F172A;margin-bottom:6px">${titulo}</div>
+        <canvas id="energia-chart" style="width:100%;height:320px"></canvas>
+      </div>
+    </div>`
+    :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay lecturas registradas para esta subestación y turno en el mes seleccionado.</div>'}
+  </div>`;
+  if((r.filas||[]).length)setTimeout(()=>dibujarGraficaEnergia_(r),0);
+}
+
+// Gráfica de barras del consumo diario con la línea roja del promedio,
+// igual que la del Excel. Se dibuja en canvas, sin librerías externas,
+// para que también salga al imprimir.
+function dibujarGraficaEnergia_(r){
+  const c=$('energia-chart'); if(!c)return;
+  const datos=(r.filas||[]).filter(x=>x.consumoActivo!==null);
+  const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  const w=Math.max(360,rect.width), h=320;
+  c.width=w*dpr; c.height=h*dpr;
+  const g=c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+
+  const pL=38,pR=90,pT=10,pB=46;
+  const maxV=Math.max(5,...datos.map(x=>x.consumoActivo),r.promedioActivo||0);
+  const tope=Math.ceil(maxV/5)*5;
+  const yFor=v=>pT+(tope-v)*(h-pT-pB)/tope;
+  const anchoArea=w-pL-pR, paso=anchoArea/Math.max(1,datos.length);
+
+  // Rejilla y eje Y
+  g.font='10px sans-serif'; g.textAlign='right';
+  for(let v=0;v<=tope;v+=5){
+    const y=yFor(v);
+    g.strokeStyle='#E2E8F0'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(pL,y); g.lineTo(w-pR,y); g.stroke();
+    g.fillStyle='#475569'; g.fillText(String(v),pL-6,y+3);
+  }
+  g.save(); g.translate(11,pT+(h-pT-pB)/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.fillStyle='#334155'; g.fillText('kWh',0,0); g.restore();
+
+  // Barras
+  datos.forEach((x,i)=>{
+    const bw=Math.max(4,paso*0.55), bx=pL+i*paso+(paso-bw)/2, by=yFor(x.consumoActivo);
+    g.fillStyle='#3B64A8'; g.fillRect(bx,by,bw,(h-pB)-by);
+    g.strokeStyle='#27477E'; g.lineWidth=0.8; g.strokeRect(bx,by,bw,(h-pB)-by);
+    // Etiqueta de fecha, inclinada como en el Excel
+    const p=String(x.fecha).split('-');
+    g.save(); g.translate(bx+bw/2,h-pB+8); g.rotate(-Math.PI/4);
+    g.textAlign='right'; g.fillStyle='#334155'; g.font='9px sans-serif';
+    g.fillText(p[2]+'/'+p[1],0,0); g.restore();
+  });
+
+  // Línea del promedio
+  const yp=yFor(r.promedioActivo||0);
+  g.strokeStyle='#C0392B'; g.lineWidth=2;
+  g.beginPath(); g.moveTo(pL,yp); g.lineTo(w-pR,yp); g.stroke();
+
+  // Leyenda
+  g.textAlign='left'; g.font='10px sans-serif';
+  g.fillStyle='#3B64A8'; g.fillRect(w-pR+10,h/2-16,12,10);
+  g.fillStyle='#334155'; g.fillText('Consumo kWh',w-pR+26,h/2-7);
+  g.strokeStyle='#C0392B'; g.lineWidth=2;
+  g.beginPath(); g.moveTo(w-pR+10,h/2+6); g.lineTo(w-pR+22,h/2+6); g.stroke();
+  g.fillStyle='#334155'; g.fillText('Promedio',w-pR+26,h/2+9);
+}
+
+// Al copiar el HTML a la ventana de impresión, el contenido del canvas NO
+// viaja: la gráfica saldría en blanco. Por eso se convierte primero en una
+// imagen y se sustituye en la copia.
+function imprimirReporteEnergia_(){
+  const area=$('chk-print-area'); if(!area)return;
+  const copia=area.cloneNode(true);
+  const c=$('energia-chart'), cc=copia.querySelector('#energia-chart');
+  if(c&&cc){
+    const img=document.createElement('img');
+    img.src=c.toDataURL('image/png');
+    img.style.cssText='width:100%;max-width:560px';
+    cc.parentNode.replaceChild(img,cc);
+  }
+  const r=ENERGIA_DATA;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Energía ${escapeHtml(r.subestacion)} ${escapeHtml(r.turno)} ${escapeHtml(r.mes)}</title>
+    <style>body{font-family:Arial,sans-serif;padding:18px;color:#172033}
+    table{border-collapse:collapse}th,td{border:1px solid #94A3B8}
+    @page{size:landscape;margin:12mm}</style></head>
+    <body>${copia.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// Exporta el reporte de energía a Excel con las mismas columnas del formato.
+function exportarReporteEnergia_(){
+  const r=ENERGIA_DATA; if(!r)return;
+  const e=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const n=v=>(v===null||v===undefined)?'':v;
+  const filas=[
+    ['Subestación',r.subestacion],['Turno',r.turno],['Mes',r.mes],[],
+    ['Lec. Activo Anterior',n(r.lecturaActivoAnterior),'Lec. Reactivo Anterior',n(r.lecturaReactivoAnterior),'Mensual kWh',n(r.mensualActivo)],[],
+    ['Fecha','Día','E. Activo Mes Actual (kWh)','Consumo Activo (kWh)','E. Reactivo Mes Actual (kVARh)','Consumo Reactivo (kVARh)','Observaciones']
+  ].concat((r.filas||[]).map(x=>[x.fecha,x.dia,n(x.activo),n(x.consumoActivo),n(x.reactivo),n(x.consumoReactivo),x.observaciones||'']))
+   .concat([[],['TOTAL MES','','',n(r.totalActivo),'',n(r.totalReactivo)],['PROMEDIO DIARIO','','',n(r.promedioActivo),'',n(r.promedioReactivo)]]);
+  const html='<html><head><meta charset="utf-8"></head><body><table>'+
+    filas.map(f=>'<tr>'+f.map(c=>'<td>'+e(c)+'</td>').join('')+'</tr>').join('')+'</table></body></html>';
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Energia_${r.subestacion.replace(/\s+/g,'')}_${(r.turno||'Todos').replace(/\s+/g,'')}_${r.mes}.xls`;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
 function renderChecklistMonthlyReport(r){
   const ins=(r.inspecciones||[]).slice().sort((a,b)=>{const ka=checklistDateKey(a.fecha),kb=checklistDateKey(b.fecha);if(ka!==kb)return ka.localeCompare(kb);return new Date(a.cierre||0)-new Date(b.cierre||0)}),pts=r.puntos||[],ok=ins.reduce((s,x)=>s+Number(x.ok||0),0),ng=ins.reduce((s,x)=>s+Number(x.ng||0),0),avg=ins.length?Math.round(ins.reduce((s,x)=>s+Number(x.cumplimiento||0),0)/ins.length*10)/10:0;
   const topNg=pts.filter(x=>x.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,10);
@@ -10730,8 +11038,13 @@ function drawChecklistMonthChart(ins){
   g.strokeStyle='#2563EB';g.lineWidth=2;g.beginPath();data.forEach((x,i)=>{const px=xFor(i),py=yFor(x.v);if(i===0)g.moveTo(px,py);else g.lineTo(px,py)});if(data.length>1)g.stroke();
   data.forEach((x,i)=>{const px=xFor(i),py=yFor(x.v);g.fillStyle='#2563EB';g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();g.fillStyle='#334155';g.font='10px sans-serif';g.fillText(x.label,px-5,h-10);g.fillText(String(x.v)+'%',Math.max(pL,px-13),Math.max(10,py-8));});
 }
-function printChecklistMonthlyReport(){if(!CHK_REPORT_DATA)return;const content=$('chk-print-area').innerHTML,w=window.open('','_blank');w.document.write(`<html><head><title>Reporte ${chkEsc(CHK_REPORT_DATA.area)} ${chkEsc(CHK_REPORT_DATA.month)}</title><style>body{font-family:Arial;padding:22px;color:#172033}table{border-collapse:collapse;width:100%}th,td{border:1px solid #CBD5E1;padding:6px;text-align:left}.card{border:1px solid #CBD5E1}</style></head><body>${content}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
+function printChecklistMonthlyReport(){
+  // V9.0.0: el reporte de energía tiene su propia impresión.
+  if(ENERGIA_DATA&&!CHK_REPORT_DATA){return imprimirReporteEnergia_();}
+  if(!CHK_REPORT_DATA)return;const content=$('chk-print-area').innerHTML,w=window.open('','_blank');w.document.write(`<html><head><title>Reporte ${chkEsc(CHK_REPORT_DATA.area)} ${chkEsc(CHK_REPORT_DATA.month)}</title><style>body{font-family:Arial;padding:22px;color:#172033}table{border-collapse:collapse;width:100%}th,td{border:1px solid #CBD5E1;padding:6px;text-align:left}.card{border:1px solid #CBD5E1}</style></head><body>${content}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 function exportChecklistMonthlyExcel(){
+  // V9.0.0: el reporte de energía exporta su propio formato.
+  if(ENERGIA_DATA&&!CHK_REPORT_DATA){return exportarReporteEnergia_();}
   const r=CHK_REPORT_DATA;if(!r)return;const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const rows=[['Área',r.area],['Mes',r.month],[],['ID','Fecha','Hora','Turno','Realizó','Estatus','OK','NG','N/A','Cumplimiento']].concat((r.inspecciones||[]).map(x=>[x.id,checklistDate(x.fecha),checklistTime(x.cierre),x.turno,x.tecnicoNombre,x.estatus,x.ok,x.ng,x.na,x.cumplimiento]));
   let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Resumen"><Table>'+rows.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet>';
