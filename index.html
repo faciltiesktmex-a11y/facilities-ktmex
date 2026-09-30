@@ -815,7 +815,7 @@ const LPA_AREAS = {
       <div style="margin-bottom:20px">
         <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-image" style="color:#D97706;margin-right:5px"></i>Fotografías de referencia *</label>
         <input type="file" id="c-foto" accept="image/*" class="inp" style="padding:8px">
-        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG. Máx. 5 MB. Se guardará en Google Drive.</p>
+        <p style="font-size:.72rem;color:#94A3B8;margin-top:4px">Formatos: JPG, PNG. Las fotos se optimizan automáticamente. Se guardará en Google Drive.</p>
       </div>
       <button class="btn-p" id="btn-compra-submit" onclick="submitCompra()" style="width:100%;background:#D97706" onmouseover="this.style.background='#B45309'" onmouseout="this.style.background='#D97706'">
         <i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud de Compra
@@ -2427,7 +2427,7 @@ const LPA_AREAS = {
         <div style="display:flex;gap:7px"><select id="support-start-select" class="inp"></select><button type="button" class="btn-g" onclick="supportPickerAdd('start')">Agregar</button></div>
         <div id="support-start-list" style="margin-top:5px"></div>
       </div>
-      <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">1 fotografía · Máx. 5 MB. Tú eliges cámara o galería.</p>
+      <p style="font-size:.72rem;color:#94A3B8;margin:0 0 14px">1 fotografía · se optimiza automáticamente. Tú eliges cámara o galería.</p>
     </div>
     <div id="act-foto-cierre-extra" style="display:none;margin-bottom:10px">
 
@@ -2455,7 +2455,7 @@ const LPA_AREAS = {
       <input type="file" id="act-cierre-pdf" accept="application/pdf,.pdf" class="inp" style="padding:8px;margin-bottom:10px">
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Comentario de cierre (opcional)</label>
       <textarea id="act-foto-comentario" class="inp" rows="2" placeholder="Detalles del trabajo realizado…"></textarea>
-      <p style="font-size:.72rem;color:#94A3B8;margin:8px 0 0">Máximo 3 fotografías de 5 MB cada una y 1 PDF de hasta 10 MB. Los archivos quedan ligados al folio.</p>
+      <p style="font-size:.72rem;color:#94A3B8;margin:8px 0 0">Máximo 3 fotografías (se optimizan automáticamente) y 1 PDF de hasta 10 MB. Los archivos quedan ligados al folio.</p>
     </div>
     <button class="btn-p" id="btn-act-foto-confirm" onclick="confirmActividadFoto()" style="width:100%;background:#7C3AED" onmouseover="this.style.background='#5B21B6'" onmouseout="this.style.background='#7C3AED'">
       <i class="fas fa-check" style="margin-right:7px"></i>Confirmar
@@ -2646,7 +2646,7 @@ const LPA_AREAS = {
            formulario, para no duplicar medio mega de imagen. -->
       <div id="ww-rev-mapa-wrap" style="display:none;margin-top:18px">
         <h4 style="font-size:.82rem;font-weight:700;color:#334155;margin:0 0 3px">Plano de planta · zonas de trabajo</h4>
-        <p style="font-size:.68rem;color:#64748B;margin:0 0 9px">Cada recuadro es la zona que marcó el área al declarar su actividad.</p>
+        <p style="font-size:.68rem;color:#64748B;margin:0 0 9px">Cada recuadro es la zona que marcó el área al declarar su actividad. Pasa el cursor sobre una zona —o tócala en el iPad— para ver sus datos.</p>
         <div id="ww-rev-mapa" style="position:relative;border:1px solid #CBD5E1;border-radius:10px;overflow:hidden;background:#F8FAFC">
           <img id="ww-rev-mapa-img" src="./layout-planta.jpg" alt="Plano de planta" style="width:100%;display:block">
         </div>
@@ -2873,7 +2873,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '8.9.6';
+const FRONTEND_BUILD = '8.9.7';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3367,7 +3367,7 @@ const TEXT_I18N_EXTRA = {
   "Fecha requerida de recepción *": "Required Receipt Date *",
   "Propósito del material o servicio *": "Purpose of Material or Service *",
   "Fotografías de referencia *": "Reference Photos *",
-  "Formatos: JPG, PNG. Máx. 5 MB. Se guardará en Google Drive.": "Formats: JPG, PNG. Max. 5 MB. It will be saved to Google Drive.",
+  "Formatos: JPG, PNG. Las fotos se optimizan automáticamente. Se guardará en Google Drive.": "Formats: JPG, PNG. Max. 5 MB. It will be saved to Google Drive.",
   "Enviar Solicitud de Compra": "Submit Purchase Request",
   "¡Solicitud de Compra Enviada!": "Purchase Request Submitted!",
   "Facilities revisará tu solicitud de compra a la brevedad.": "Facilities will review your purchase request shortly.",
@@ -4944,7 +4944,7 @@ function previewSolicitudFiles(){
 async function buildSolicitudAttachments(imageFiles,pdfFile){
   if(imageFiles.length>3)throw new Error('Se permiten máximo 3 imágenes.');
   const imagenes=[];
-  for(const f of imageFiles){if(f.size>5*1024*1024)throw new Error('Cada imagen debe ser menor a 5 MB: '+f.name);imagenes.push({name:f.name,base64:await fileToBase64(f)});}
+  for(const f of imageFiles){if(f.size>FOTO_TAM_ORIGINAL_MAX)throw new Error('Cada imagen debe ser menor a 40 MB: '+f.name);imagenes.push({name:f.name,base64:await fileToBase64(f)});}
   let pdf=null;if(pdfFile){if(pdfFile.size>10*1024*1024)throw new Error('El PDF debe ser menor a 10 MB.');pdf={name:pdfFile.name,base64:await fileToBase64(pdfFile)};}
   return {imagenes,pdf};
 }
@@ -5231,7 +5231,7 @@ async function submitCompra() {
   if(!fecha||!invId||!desc||!cantidad||!unidad||!fechaReq||!proposito){toast('Completa todos los campos obligatorios','err');return;}
   if(invId==='__NUEVO__'&&!materialNuevo){toast('Indica el nombre provisional del material nuevo','err');return;}
   if(!fotoFile){toast('Adjunta una fotografía de referencia','err');return;}
-  if(fotoFile.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
+  if(fotoFile.size>FOTO_TAM_ORIGINAL_MAX){toast('La foto supera 40 MB.','err');return;}
   const btn=$('btn-compra-submit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Enviando…';
   try{
     const fotoBase64=await fileToBase64(fotoFile);
@@ -5249,12 +5249,59 @@ function resetCompra() {
   $('c-fecha').value=new Date().toISOString().slice(0,10);
 }
 
-function fileToBase64(file) {
+// ══════════════════════════════════════════════════════════════
+// V8.9.7 — COMPRESIÓN DE FOTOGRAFÍAS EN EL NAVEGADOR
+//
+// Las fotos del iPad pesan fácilmente de 4 a 12 MB, y el sistema rechazaba
+// todo lo que pasara de 5 MB. Subir el límite no era la salida: una foto
+// de 12 MB tarda en viajar por la red de planta y Apps Script tiene límite
+// de tamaño por petición.
+//
+// Ahora toda imagen se redimensiona a 1920 px en su lado mayor y se
+// guarda como JPEG de calidad 0.82 ANTES de enviarse. Una foto de iPad de
+// 8 MB queda en unos cientos de KB, con detalle de sobra para evidencia.
+// Los PDF y otros archivos se envían tal cual.
+// ══════════════════════════════════════════════════════════════
+const FOTO_LADO_MAX = 1920;
+const FOTO_CALIDAD  = 0.82;
+const FOTO_TAM_ORIGINAL_MAX = 40*1024*1024;   // 40 MB antes de comprimir
+
+function esImagen_(file){
+  return !!file && /^image\//.test(String(file.type||'')) && !/svg/.test(String(file.type||''));
+}
+
+function leerComoDataUrl_(file){
   return new Promise((res,rej)=>{
     const r=new FileReader();
     r.onload=()=>res(r.result);
     r.onerror=rej;
     r.readAsDataURL(file);
+  });
+}
+
+async function fileToBase64(file) {
+  if(!esImagen_(file))return leerComoDataUrl_(file);
+  const original=await leerComoDataUrl_(file);
+  return new Promise((resolve)=>{
+    const img=new Image();
+    // Si el navegador no puede decodificarla (formato raro), se envía original.
+    img.onerror=()=>resolve(original);
+    img.onload=()=>{
+      try{
+        const escala=Math.min(1,FOTO_LADO_MAX/Math.max(img.width,img.height));
+        const c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(img.width*escala));
+        c.height=Math.max(1,Math.round(img.height*escala));
+        const ctx=c.getContext('2d');
+        // Fondo blanco: un PNG con transparencia se vería negro en JPEG.
+        ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,c.width,c.height);
+        ctx.drawImage(img,0,0,c.width,c.height);
+        const comprimida=c.toDataURL('image/jpeg',FOTO_CALIDAD);
+        // Nunca se entrega algo más pesado que el original.
+        resolve(comprimida.length<original.length?comprimida:original);
+      }catch(e){resolve(original);}
+    };
+    img.src=original;
   });
 }
 
@@ -5506,7 +5553,7 @@ async function submitLpaQuality(){
       const file=card.querySelector('.lpaq-photo')?.files?.[0];
       if(!finding||!respArea||!file){toast(`${q.id}: Finding, responsible area and photo are required / Hallazgo, área responsable y foto son obligatorios`,'err');return;}
       if(q.reaction==='D' && !(card.querySelector('.lpaq-just')?.value.trim())){toast(`${q.id}: Technical justification required`,'err');return;}
-      if(file.size>5*1024*1024){toast(`${q.id}: Photo exceeds 5 MB`,'err');return;}
+      if(file.size>FOTO_TAM_ORIGINAL_MAX){toast(`${q.id}: Photo exceeds 40 MB`,'err');return;}
       resp.finding=finding;resp.responsable=owner;resp.areaResponsable=respArea;
       resp.justificacion=card.querySelector('.lpaq-just')?.value.trim()||'';
       resp.fotoName=file.name;resp.fotoBase64=await fileToBase64(file);
@@ -5534,7 +5581,7 @@ function openLpaQNC(id){
 }
 async function saveLpaQNC(mode){
   const id=$('lpaqn-id').value,file=$('lpaqn-photo').files?.[0];let fotoBase64='',fotoName='';
-  if(file){if(file.size>5*1024*1024){toast('Photo exceeds 5 MB','err');return;}fotoBase64=await fileToBase64(file);fotoName=file.name;}
+  if(file){if(file.size>FOTO_TAM_ORIGINAL_MAX){toast('Photo exceeds 40 MB','err');return;}fotoBase64=await fileToBase64(file);fotoName=file.name;}
   const r=await api({action:'updateLpaQualityNC',token:SESSION.token,id,mode,accion:$('lpaqn-action').value,responsable:$('lpaqn-owner').value,fechaCompromiso:$('lpaqn-due').value,comentario:$('lpaqn-comment').value,fotoBase64,fotoName});
   if(r.success){$('modal-lpaq-nc').style.display='none';toast(r.status,'ok');loadLpaQDashboard();}else toast(r.error||'Error','err');
 }
@@ -6027,7 +6074,7 @@ async function confirmActividadFoto() {
       const f=ACT_START_SELECTED_FILE;
       let base='',nombre='';
       if(f){
-        if(f.size>5*1024*1024){toast('La foto supera 5 MB.','err');return;}
+        if(f.size>FOTO_TAM_ORIGINAL_MAX){toast('La foto supera 40 MB.','err');return;}
         base=await fileToBase64(f);nombre=f.name;
       }
       if(ACT_FOTO_MODE==='daily-start'){
@@ -6041,12 +6088,12 @@ async function confirmActividadFoto() {
       if(!ACT_ANTES_URL&&!antesFile){
         toast('Falta la fotografía del ANTES. Adjúntala para poder cerrar.','err');return;
       }
-      if(antesFile&&antesFile.size>5*1024*1024){toast('La fotografía del ANTES supera 5 MB','err');return;}
+      if(antesFile&&antesFile.size>FOTO_TAM_ORIGINAL_MAX){toast('La fotografía del ANTES supera 40 MB','err');return;}
 
       const fotos=Array.from($('act-cierre-fotos').files||[]),pdf=$('act-cierre-pdf').files[0]||null;
       if(fotos.length<1){toast('Adjunta al menos una fotografía del DESPUÉS','err');return;}
       if(fotos.length>3){toast('Se permiten máximo 3 fotografías del DESPUÉS','err');return;}
-      for(const f of fotos){if(f.size>5*1024*1024){toast('Cada fotografía debe pesar máximo 5 MB','err');return;}}
+      for(const f of fotos){if(f.size>FOTO_TAM_ORIGINAL_MAX){toast('Cada fotografía debe pesar máximo 40 MB','err');return;}}
       if(pdf&&pdf.size>10*1024*1024){toast('El PDF debe pesar máximo 10 MB','err');return;}
 
       const imagenes=[];for(const f of fotos)imagenes.push({base64:await fileToBase64(f),name:f.name});
@@ -6109,7 +6156,7 @@ async function confirmActividadEspontanea() {
   if(!descripcion){toast('Describe la actividad que vas a realizar','err');return;}
   if(!area){toast('Indica el área donde realizarás la actividad','err');return;}
   // V8.6.7: la fotografía deja de ser obligatoria para iniciar.
-  if(fotoFile&&fotoFile.size>5*1024*1024){toast('La foto supera 5 MB. Comprime la imagen.','err');return;}
+  if(fotoFile&&fotoFile.size>FOTO_TAM_ORIGINAL_MAX){toast('La foto supera 40 MB.','err');return;}
 
   const btn=$('btn-act-nueva-confirm');
   btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
@@ -6933,7 +6980,7 @@ function platformCheckChanged(id){
 }
 function platformMalFileSelected(id,input){
   const f=input.files?.[0]||null;if(!f)return;
-  if(f.size>5*1024*1024){toast('La fotografía debe pesar máximo 5 MB','err');input.value='';return;}
+  if(f.size>FOTO_TAM_ORIGINAL_MAX){toast('La fotografía debe pesar máximo 40 MB','err');input.value='';return;}
   PLATFORM_MAL_FILES[id]=f;
   const el=$('pchk-mal-file-'+id);if(el)el.textContent=f.name;
 }
@@ -8229,90 +8276,88 @@ function renderWwMapa_(actividades){
   if(!conZona.length){wrap.style.display='none';return;}
   wrap.style.display='';
 
-  // Se conserva la imagen y se redibujan solo los recuadros.
   cont.querySelectorAll('.ww-zona').forEach(el=>el.remove());
+  wwOcultarTip_();
 
+  // ══════════════════════════════════════════════════════════
+  // V8.9.7 — El recuadro ya no lleva texto encima. En recuadros chicos
+  // el nombre se cortaba y tapaba el plano. Ahora queda solo la marca, con
+  // un número, y los datos aparecen en una ventana al pasar el cursor o,
+  // en iPad, al tocar la zona (en tablet no existe el "pasar el cursor").
+  // ══════════════════════════════════════════════════════════
   conZona.forEach((a,i)=>{
     const z=a.layoutZone, color=WW_ZONA_COLORES[i%WW_ZONA_COLORES.length];
     const caja=document.createElement('div');
     caja.className='ww-zona';
     caja.style.cssText=`position:absolute;left:${(z.xf*100).toFixed(2)}%;top:${(z.yf*100).toFixed(2)}%;`+
       `width:${(z.wf*100).toFixed(2)}%;height:${(z.hf*100).toFixed(2)}%;`+
-      `border:2px solid ${color};background:${color}22;border-radius:3px;`+
-      `display:flex;align-items:flex-start;justify-content:center;overflow:hidden`;
-    caja.title=`${a.actividad||''}\n${a.solicitante||''}${a.areaTrabajo?' · '+a.areaTrabajo:''}`;
-    const et=document.createElement('div');
-    et.textContent=z.label||a.areaTrabajo||a.actividad||'';
-    et.style.cssText=`background:${color};color:#fff;font-size:9px;line-height:1.25;padding:1px 4px;`+
-      `border-radius:0 0 3px 0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis`;
-    caja.appendChild(et);
+      `border:2px solid ${color};background:${color}2E;border-radius:3px;cursor:pointer;`+
+      `transition:background .15s`;
+
+    // Número pequeño en la esquina, para ligar la zona con su renglón.
+    const num=document.createElement('div');
+    num.textContent=String(i+1);
+    num.style.cssText=`position:absolute;top:-1px;left:-1px;background:${color};color:#fff;`+
+      `font-size:9px;font-weight:700;line-height:1;padding:2px 4px;border-radius:0 0 3px 0`;
+    caja.appendChild(num);
+
+    const mostrar=(ev)=>{caja.style.background=color+'55';wwMostrarTip_(a,color,caja,ev);};
+    const ocultar=()=>{caja.style.background=color+'2E';wwOcultarTip_();};
+    caja.addEventListener('mouseenter',mostrar);
+    caja.addEventListener('mouseleave',ocultar);
+    caja.addEventListener('click',(ev)=>{ev.stopPropagation();mostrar(ev);});
     cont.appendChild(caja);
   });
+
+  // Tocar fuera del plano cierra la ventana en iPad.
+  if(!cont.dataset.tipListener){
+    cont.dataset.tipListener='1';
+    document.addEventListener('click',()=>wwOcultarTip_());
+  }
 }
 
-// ══════════════════════════════════════════════════════════════
-// V8.9.4 — DETALLE DE LA ACTIVIDAD DECLARADA
-//
-// Muestra todo lo que el área capturó, recuperado de la solicitud
-// original: horarios, riesgos, contratista, jefe TC/GL y la zona marcada.
-// ══════════════════════════════════════════════════════════════
-async function wwVerActividad(docId,actId){
-  const box=$('hist-modal-body');
-  $('hist-modal-folio').textContent='';
-  box.innerHTML='<div style="padding:18px;text-align:center;color:#64748B;font-size:.8rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando actividad…</div>';
-  $('modal-historial').style.display='flex';
-  try{
-    const r=await api({action:'getWeekendActividadDetalle',token:SESSION.token,id:docId,actividadId:actId});
-    if(!r.success){box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.8rem">${escapeHtml(r.error||'No disponible')}</div>`;return;}
-    const a=r.actividad||{}, o=r.original||{}, sol=r.solicitud||{};
-    $('hist-modal-folio').textContent=a.requestNo||'';
+// Ventana emergente con los datos de la actividad, en inglés.
+function wwMostrarTip_(a,color,caja,ev){
+  let tip=$('ww-zona-tip');
+  if(!tip){
+    tip=document.createElement('div');
+    tip.id='ww-zona-tip';
+    tip.style.cssText='position:fixed;z-index:9999;max-width:290px;background:#0F2A4A;color:#fff;'+
+      'border-radius:10px;padding:11px 13px;font-size:.74rem;line-height:1.5;'+
+      'box-shadow:0 10px 28px rgba(15,42,74,.35);pointer-events:none;display:none';
+    document.body.appendChild(tip);
+  }
+  const horario=(a.horario||[]).map(h=>{
+    const f=h.fecha?(' '+h.fecha):'';
+    const t=(h.inicio||h.fin)?(' · '+(h.inicio||'--:--')+'–'+(h.fin||'--:--')):'';
+    return escapeHtml(h.dia+f+t);
+  });
+  const fila=(k,v)=>v?`<div><span style="color:#94A3B8">${k}:</span> ${v}</div>`:'';
+  tip.innerHTML=
+    `<div style="font-weight:700;font-size:.8rem;border-left:3px solid ${color};padding-left:7px;margin-bottom:6px">${escapeHtml(a.actividad||'Activity')}</div>`+
+    fila('Responsible',escapeHtml(a.jobLeader||a.solicitante||''))+
+    fila('Requested by',escapeHtml(a.solicitante||''))+
+    fila('Department',escapeHtml(a.departamento||''))+
+    fila('Work area',escapeHtml(a.areaTrabajo||''))+
+    (horario.length?fila('Schedule',horario.join('<br>')):fila('Days',escapeHtml(a.dias||'')))+
+    fila('Risk',escapeHtml(a.riesgo||''))+
+    fila('Contractor',escapeHtml(a.contratista||''))+
+    fila('Crew',escapeHtml(String(a.cuadrilla||'')))+
+    (a.requestNo?`<div style="color:#94A3B8;font-size:.66rem;margin-top:5px">${escapeHtml(a.requestNo)}</div>`:'');
 
-    const horario=[];
-    if(o.daySat)horario.push('Sábado '+(o.satDate||'')+' · '+(o.satStart||'--:--')+'–'+(o.satEnd||'--:--'));
-    if(o.daySun)horario.push('Domingo '+(o.sunDate||'')+' · '+(o.sunStart||'--:--')+'–'+(o.sunEnd||'--:--'));
-    if(o.dayHoliday)horario.push('Festivo '+(o.holidayDate||'')+' · '+(o.holidayStart||'--:--')+'–'+(o.holidayEnd||'--:--'));
+  // Posición: junto a la zona, sin salirse de la pantalla.
+  tip.style.display='block';
+  const r=caja.getBoundingClientRect();
+  const tw=tip.offsetWidth, th=tip.offsetHeight;
+  let x=r.right+10, y=r.top;
+  if(x+tw>window.innerWidth-8)x=Math.max(8,r.left-tw-10);
+  if(y+th>window.innerHeight-8)y=Math.max(8,window.innerHeight-th-8);
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
 
-    const filas=[
-      ['Actividad',a.actividad],
-      ['Solicitante',a.solicitante||sol.solicitante],
-      ['Registró',sol.registrante],
-      ['Departamento',a.departamento||sol.departamento],
-      ['Job leader',a.jobLeader],
-      ['Supervisor',a.supervisor],
-      ['Chief TC / GL',o.chiefTcGl],
-      ['Área de trabajo',a.areaTrabajo],
-      ['Horario',horario.join('<br>')],
-      ['Riesgo',a.riesgo],
-      ['Tipos de riesgo',Array.isArray(o.riskTypes)?o.riskTypes.join(', '):o.riskTypes],
-      ['Rango',o.rank],
-      ['Contratista',a.contratista],
-      ['Personas',a.cuadrilla],
-      ['Métodos de confirmación',Array.isArray(o.confirmationMethods)?o.confirmationMethods.join(', '):o.confirmationMethods],
-      ['Enviada',sol.enviada?fmtDateTime(sol.enviada):'']
-    ].filter(x=>String(x[1]||'').trim());
-
-    const marcas=[];
-    if(a.fueraDeTiempo)marcas.push('<span class="badge" style="background:#FEE2E2;color:#B91C1C">Fuera de tiempo</span>');
-    if(a.agregadaEnRevision)marcas.push(`<span class="badge" style="background:#EDE9FE;color:#6D28D9">Capturada en revisión por ${escapeHtml(a.agregadaPor||'')}</span>`);
-    if(a.editadaPor)marcas.push(`<span class="badge" style="background:#EFF6FF;color:#1D4ED8">Editada por ${escapeHtml(a.editadaPor)}</span>`);
-
-    box.innerHTML=
-      (marcas.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${marcas.join('')}</div>`:'')+
-      `<table style="width:100%;border-collapse:collapse;font-size:.76rem">${filas.map(f=>`
-        <tr style="border-bottom:1px solid #F1F5F9">
-          <td style="padding:7px 8px;color:#64748B;font-weight:600;width:38%;vertical-align:top">${f[0]}</td>
-          <td style="padding:7px 8px;color:#0F2A4A">${f[0]==='Horario'?f[1]:escapeHtml(String(f[1]))}</td>
-        </tr>`).join('')}</table>`+
-      (a.layoutZone&&typeof a.layoutZone.xf==='number'
-        ? `<div style="margin-top:12px">
-             <div style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:5px">Zona marcada en el plano</div>
-             <div style="position:relative;border:1px solid #CBD5E1;border-radius:9px;overflow:hidden">
-               <img src="./layout-planta.jpg" style="width:100%;display:block" alt="Plano">
-               <div style="position:absolute;left:${(a.layoutZone.xf*100).toFixed(2)}%;top:${(a.layoutZone.yf*100).toFixed(2)}%;width:${(a.layoutZone.wf*100).toFixed(2)}%;height:${(a.layoutZone.hf*100).toFixed(2)}%;border:2px solid #DC2626;background:#DC262633;border-radius:3px"></div>
-             </div>
-           </div>`
-        : '<div style="margin-top:10px;font-size:.7rem;color:#94A3B8">Esta actividad no tiene zona marcada en el plano.</div>');
-  }catch(e){box.innerHTML=`<div style="padding:16px;color:#B91C1C;font-size:.8rem">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+function wwOcultarTip_(){
+  const tip=$('ww-zona-tip');
+  if(tip)tip.style.display='none';
 }
 
 function weekendEtiqueta_(e){
@@ -10482,7 +10527,7 @@ async function fileToDataUrlChk(f){
       const img=new Image(); img.onerror=()=>resolve(fr.result);
       img.onload=()=>{
         try{
-          const max=1600, scale=Math.min(1,max/Math.max(img.width,img.height));
+          const max=FOTO_LADO_MAX, scale=Math.min(1,max/Math.max(img.width,img.height));
           const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
           c.getContext('2d').drawImage(img,0,0,c.width,c.height); resolve(c.toDataURL('image/jpeg',0.72));
         }catch(_){resolve(fr.result);}
@@ -10833,7 +10878,42 @@ async function syncOfflineChecklists(){
 async function openOfflineQueuePanel(){const items=await offlineQueueAll();const msg=items.length?items.map(x=>`${x.localId}\n${new Date(x.createdAt).toLocaleString()}\n${x.lastError||'Pendiente de envío'}`).join('\n\n'):'No hay registros pendientes.';if(items.length&&navigator.onLine&&confirm(msg+'\n\n¿Sincronizar ahora?'))syncOfflineChecklists();else if(!items)toast('Todo está sincronizado','ok');else alert(msg);}
 window.addEventListener('online',()=>{updateOfflineStatus();setTimeout(syncOfflineChecklists,700);});
 window.addEventListener('offline',updateOfflineStatus);
-window.addEventListener('load',()=>{updateOfflineStatus();if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(e=>console.warn('SW',e));}setTimeout(syncOfflineChecklists,1800);});
+// ══════════════════════════════════════════════════════════════
+// V8.9.7 — ACTUALIZACIÓN AUTOMÁTICA DE LA APLICACIÓN
+//
+// El problema: al publicar una versión nueva, los equipos seguían con la
+// configuración anterior hasta que alguien hacía Ctrl+Shift+R. Tres causas:
+//
+//  1. El navegador guardaba en su caché HTTP el propio service-worker.js
+//     hasta 24 horas, así que ni siquiera se enteraba de que había uno nuevo.
+//     Se corrige registrándolo con updateViaCache:'none'.
+//  2. Nadie le pedía al navegador que revisara si había versión nueva. Ahora
+//     se revisa al abrir la aplicación y cada 30 minutos.
+//  3. Aunque el service worker nuevo se activara, la pestaña abierta seguía
+//     mostrando la interfaz vieja. Ahora, en cuanto toma el control, la
+//     página se recarga una sola vez sola.
+// ══════════════════════════════════════════════════════════════
+function registrarServiceWorker_(){
+  if(!('serviceWorker' in navigator))return;
+  // Solo se recarga si ya había una versión controlando la página. En la
+  // primera visita de un equipo no hay nada que reemplazar, y recargar ahí
+  // sería un parpadeo sin motivo.
+  const habiaVersionPrevia=!!navigator.serviceWorker.controller;
+  let recargando=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!habiaVersionPrevia||recargando)return;   // evita recarga inicial y ciclos
+    recargando=true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'})
+    .then(reg=>{
+      try{reg.update();}catch(e){}
+      setInterval(()=>{try{reg.update();}catch(e){}},30*60*1000);
+    })
+    .catch(e=>console.warn('SW',e));
+}
+
+window.addEventListener('load',()=>{updateOfflineStatus();if('serviceWorker' in navigator){registrarServiceWorker_();}setTimeout(syncOfflineChecklists,1800);});
 setInterval(()=>{if(navigator.onLine)syncOfflineChecklists();},30000);
 // Después de un login exitoso, intentar vaciar automáticamente la cola.
 if(typeof window.performLogin==='function'){const __offLogin=window.performLogin;window.performLogin=async function(){const r=await __offLogin.apply(this,arguments);setTimeout(syncOfflineChecklists,500);return r;};}
