@@ -2738,8 +2738,29 @@ const LPA_AREAS = {
       </div>
     </div>
 
-    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Días</label>
-    <input id="ww-act-dias" class="inp" placeholder="Sábado, Domingo" style="margin-bottom:14px">
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Horario</label>
+    <p style="font-size:.66rem;color:#64748B;margin:0 0 6px">Marca los días en que se trabaja y su hora de inicio y fin.</p>
+    <div id="ww-act-horario" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      <div class="ww-hdia" data-dia="Saturday" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;min-width:96px;font-size:.76rem;font-weight:600;color:#334155"><input type="checkbox" class="ww-hchk" onchange="wwHorarioToggle_(this)">Sábado</label>
+        <input type="time" class="inp ww-hini" style="width:auto;padding:6px 8px" disabled>
+        <span style="font-size:.72rem;color:#64748B">a</span>
+        <input type="time" class="inp ww-hfin" style="width:auto;padding:6px 8px" disabled>
+      </div>
+      <div class="ww-hdia" data-dia="Sunday" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;min-width:96px;font-size:.76rem;font-weight:600;color:#334155"><input type="checkbox" class="ww-hchk" onchange="wwHorarioToggle_(this)">Domingo</label>
+        <input type="time" class="inp ww-hini" style="width:auto;padding:6px 8px" disabled>
+        <span style="font-size:.72rem;color:#64748B">a</span>
+        <input type="time" class="inp ww-hfin" style="width:auto;padding:6px 8px" disabled>
+      </div>
+      <div class="ww-hdia" data-dia="Holiday" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;min-width:96px;font-size:.76rem;font-weight:600;color:#334155"><input type="checkbox" class="ww-hchk" onchange="wwHorarioToggle_(this)">Festivo</label>
+        <input type="date" class="inp ww-hfecha" style="width:auto;padding:6px 8px" disabled>
+        <input type="time" class="inp ww-hini" style="width:auto;padding:6px 8px" disabled>
+        <span style="font-size:.72rem;color:#64748B">a</span>
+        <input type="time" class="inp ww-hfin" style="width:auto;padding:6px 8px" disabled>
+      </div>
+    </div>
 
     <!-- V8.9.8 — Zona en el plano. Faltaba al capturar desde el panel: la
          actividad quedaba registrada pero sin marca en el mapa. -->
@@ -2918,7 +2939,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.0.2';
+const FRONTEND_BUILD = '9.0.3';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -8275,8 +8296,9 @@ function wwCeldaDia_(a,dc){
   const conHora=!!(ini&&fin);
   const izq=Math.min(99,wwFraccionHora_(ini)*100);
   const ancho=Math.max(1.8,(wwFraccionHora_(fin)-wwFraccionHora_(ini))*100);
+  // V9.0.3: la fecha ya no se repite dentro de la celda; va en el encabezado
+  // de la columna. Queda solo la barra y el rango de horas.
   return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:96px">
-    <div style="font-size:.7rem;font-weight:700;color:#0F1F3D;white-space:nowrap">${escapeHtml(fecha?wwFechaLargaEn_(fecha):'(sin fecha)')}</div>
     <div style="position:relative;width:100%;height:13px;border-radius:999px;background:#DBE0EA;overflow:hidden" title="${escapeHtml(conHora?(ini+'–'+fin):'Sin horario')}">
       ${conHora?`<div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#2563EB"></div>`:''}
     </div>
@@ -8603,6 +8625,56 @@ function wwZonaInit_(){
   m.addEventListener('touchend',fin);
 }
 
+// ══════════════════════════════════════════════════════════════
+// V9.0.3 — HORARIO EDITABLE EN EL FORMULARIO
+//
+// Antes el formulario tenía un solo campo de texto para los días, sin
+// horas. Ahora cada día se marca con su hora de inicio y fin, y eso es lo
+// que dibuja la barra en la columna del día. Las fechas de sábado y domingo
+// salen del documento; la del festivo se captura.
+// ══════════════════════════════════════════════════════════════
+function wwHorarioToggle_(chk){
+  const fila=chk.closest('.ww-hdia');
+  fila.querySelectorAll('.ww-hini,.ww-hfin,.ww-hfecha').forEach(el=>{el.disabled=!chk.checked;});
+}
+
+function wwHorarioCargar_(a){
+  const lista=(a&&a.horario)||[];
+  const diasTexto=String((a&&a.dias)||'').toLowerCase();
+  const respaldoTexto={Saturday:'sábado',Sunday:'domingo',Holiday:'festivo'};
+  document.querySelectorAll('#ww-act-horario .ww-hdia').forEach(fila=>{
+    const dia=fila.dataset.dia;
+    const h=lista.find(x=>x.dia===dia);
+    // Si no hay horario guardado pero el texto de días lo menciona, se marca
+    // el día sin horas, para que solo falte capturarlas.
+    const activo=!!h||(!lista.length&&diasTexto.indexOf(respaldoTexto[dia])>=0);
+    const chk=fila.querySelector('.ww-hchk');
+    chk.checked=activo;
+    fila.querySelector('.ww-hini').value=(h&&h.inicio)||'';
+    fila.querySelector('.ww-hfin').value=(h&&h.fin)||'';
+    const fe=fila.querySelector('.ww-hfecha'); if(fe)fe.value=(h&&h.fecha)||'';
+    wwHorarioToggle_(chk);
+  });
+}
+
+// Devuelve el horario capturado, o un mensaje si algo falta.
+function wwHorarioLeer_(){
+  const out=[];
+  const filas=[...document.querySelectorAll('#ww-act-horario .ww-hdia')];
+  const nombres={Saturday:'Sábado',Sunday:'Domingo',Holiday:'Festivo'};
+  for(const fila of filas){
+    if(!fila.querySelector('.ww-hchk').checked)continue;
+    const dia=fila.dataset.dia;
+    const ini=fila.querySelector('.ww-hini').value, fin=fila.querySelector('.ww-hfin').value;
+    const fe=fila.querySelector('.ww-hfecha');
+    if(!ini||!fin)return {error:'Indica la hora de inicio y de fin del '+nombres[dia].toLowerCase()+'.'};
+    if(fin<=ini)return {error:'En '+nombres[dia].toLowerCase()+' la hora de fin debe ser posterior a la de inicio.'};
+    if(fe&&!fe.value)return {error:'Indica la fecha del día festivo.'};
+    out.push({dia:dia,inicio:ini,fin:fin,fecha:fe?fe.value:''});
+  }
+  return {horario:out};
+}
+
 // ── Capturar o editar una actividad ──────────────────────────
 let WW_ACT_CTX=null;
 
@@ -8611,8 +8683,9 @@ function wwRevNuevaActividad(){
   WW_ACT_CTX={modo:'nueva',id:WW_REV.documento.id};
   $('ww-act-titulo').textContent='Agregar actividad';
   $('ww-act-sub').textContent='Quedará marcada como capturada en la revisión, con tu nombre, porque no viene de una solicitud del formulario.';
-  ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla','dias']
+  ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla']
     .forEach(k=>{const el=$('ww-act-'+k); if(el)el.value='';});
+  wwHorarioCargar_(null);
   $('ww-act-riesgo').value='';
   WW_ZONA=null; wwZonaInit_(); wwZonaPintar_();
   $('modal-ww-actividad').style.display='flex';
@@ -8634,7 +8707,7 @@ function wwActEditar(actId){
   $('ww-act-riesgo').value=a.riesgo||'';
   $('ww-act-contratista').value=a.contratista||'';
   $('ww-act-cuadrilla').value=a.cuadrilla||'';
-  $('ww-act-dias').value=a.dias||'';
+  wwHorarioCargar_(a);
   WW_ZONA=(a.layoutZone&&typeof a.layoutZone.xf==='number')?Object.assign({},a.layoutZone):null;
   wwZonaInit_(); wwZonaPintar_();
   $('modal-ww-actividad').style.display='flex';
@@ -8652,12 +8725,15 @@ async function wwActGuardar(){
     riesgo:$('ww-act-riesgo').value,
     contratista:$('ww-act-contratista').value.trim(),
     cuadrilla:$('ww-act-cuadrilla').value.trim(),
-    dias:$('ww-act-dias').value.trim(),
     // V8.9.8: la zona marcada en el plano (o null si se quitó).
     layoutZone:WW_ZONA?{xf:WW_ZONA.xf,yf:WW_ZONA.yf,wf:WW_ZONA.wf,hf:WW_ZONA.hf,
       label:$('ww-act-area').value.trim()}:null
   };
   if(!campos.actividad){toast('Describe la actividad','err');return;}
+  // V9.0.3: horario por día, validado antes de enviar.
+  const hl=wwHorarioLeer_();
+  if(hl.error){toast(hl.error,'err');return;}
+  campos.horario=hl.horario;
   if(WW_ACT_CTX.modo==='nueva'&&!campos.solicitante){toast('Indica a nombre de quién se registra','err');return;}
 
   const btn=$('btn-ww-act-guardar');
