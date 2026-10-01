@@ -193,6 +193,38 @@ thead th{background:#F5F8FC;color:#586980}
 <!-- V8.5A · Plataforma V2 integrada -->
 <!-- V8.5A.4 · LPA date lock + Manager readonly dashboard -->
 <!-- V8.5A.5 · Manager English-only -->
+<style id="v901-ventanas-centradas">
+/* ══════════════════════════════════════════════════════════════
+   V9.0.1 — VENTANAS CENTRADAS EN CELULAR, iPAD, LAPTOP Y COMPUTADORA
+
+   Tres problemas que había:
+   1. Dos ventanas (detalle de inspección y material) usaban la clase
+      "modal", que no tenía ningún estilo: se dibujaban dentro de la
+      página en lugar de encima, sin centrar.
+   2. Con align-items:center, una ventana más alta que la pantalla perdía
+      su parte de arriba: quedaba cortada y no se podía desplazar hasta ella.
+   3. En iPhone y iPad, "vh" incluye la barra del navegador, así que una
+      ventana del 92vh se salía de la pantalla visible.
+
+   La técnica: el fondo se desplaza y la ventana usa margin:auto. Si cabe,
+   queda centrada en ambos ejes; si es más alta que la pantalla, empieza
+   arriba y se puede recorrer completa. Se respetan las zonas seguras de
+   los equipos con muesca.
+   ══════════════════════════════════════════════════════════════ */
+.modal-bg, .modal{
+  position:fixed; inset:0; z-index:60;
+  display:flex; align-items:flex-start; justify-content:center;
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+          max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.modal{ background:rgba(8,18,36,.62); }
+.modal-bg, .modal{ -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px); }
+.modal-bg > *, .modal > *{ margin:auto; flex-shrink:0; }
+@supports (height: 100dvh){
+  .modal-bg > .card, .modal > .modal-box{ max-height:calc(100dvh - 24px) !important; }
+}
+</style>
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
@@ -2886,7 +2918,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.0.0';
+const FRONTEND_BUILD = '9.0.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4553,7 +4585,14 @@ async function cargarWeekendWorkTool_(){
   if(cargando)cargando.style.display='';
   try{
     const html=await obtenerWeekendHtml_();
-    frame.srcdoc=html.replace('</body>',weekendBridgeScript_(esFacilities)+'</body>');
+    // V9.0.1: el formulario se carga dentro de un marco "srcdoc". Safari, el
+    // navegador del iPad, resuelve las rutas relativas de ese tipo de marco
+    // de forma distinta a Chrome, y "./layout-planta.jpg" podía no
+    // encontrarse aunque el archivo existiera. Con <base> el marco sabe
+    // desde qué carpeta se resuelven las rutas, en cualquier navegador.
+    const baseUrl=new URL('./',window.location.href).href;
+    let conBase=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+baseUrl+'">');
+    frame.srcdoc=conBase.replace('</body>',weekendBridgeScript_(esFacilities)+'</body>');
     if(cargando)cargando.style.display='none';
   }catch(e){
     if(cargando){
@@ -10839,6 +10878,9 @@ async function loadReporteEnergia_(month){
   }catch(e){$('chk-report-content').innerHTML='';toast('Error: '+e.message,'err');}
 }
 
+// V9.0.1: en los encabezados el color va en CADA celda, no en la fila. La
+// hoja de estilos general tiene "thead th { color:#586980 }", que le ganaba
+// al blanco de la fila y dejaba texto gris sobre fondo oscuro, ilegible.
 function renderReporteEnergia_(r){
   const mesNum=Number(String(r.mes).slice(5,7))-1, anio=String(r.mes).slice(0,4);
   const titulo=`Consumo Diario – ${ENERGIA_MESES[mesNum]||''} ${anio}`;
@@ -10869,28 +10911,29 @@ function renderReporteEnergia_(r){
         <table style="border-collapse:collapse;font-size:.7rem;min-width:560px;width:100%;border:1px solid #1E2A44">
           <thead>
             <tr>
-              <th colspan="2"></th>
-              <th style="padding:4px;background:#DCEBD8;color:#3F6B35;font-size:.6rem">Lec. Activo Anterior →</th>
-              <th></th>
-              <th style="padding:4px;background:#FBE3CD;color:#9A4A12;font-size:.6rem">Lec. Reactivo Anterior →</th>
-              <th style="padding:4px;background:#DCEBD8;color:#3F6B35;font-size:.6rem">MENSUAL kWh</th>
+              <th colspan="2" style="background:transparent"></th>
+              <th style="padding:4px;background:#DCEBD8;color:#2E5226;font-size:.6rem">Lec. Activo Anterior →</th>
+              <th style="background:transparent"></th>
+              <th style="padding:4px;background:#FBE3CD;color:#7A3A0E;font-size:.6rem">Lec. Reactivo Anterior →</th>
+              <th style="padding:4px;background:#DCEBD8;color:#2E5226;font-size:.6rem">MENSUAL kWh</th>
               <th></th>
             </tr>
             <tr>
-              <th colspan="2"></th>
-              <th style="padding:4px;background:#DCEBD8;text-align:center;font-weight:700">${energiaFmt_(r.lecturaActivoAnterior)}</th>
-              <th></th>
-              <th style="padding:4px;background:#FBE3CD;text-align:center;font-weight:700">${energiaFmt_(r.lecturaReactivoAnterior)}</th>
-              <th style="padding:4px;background:#E4EEF8;text-align:center;font-weight:700">${energiaFmt_(r.mensualActivo)}</th>
+              <th colspan="2" style="background:transparent"></th>
+              <th style="padding:4px;background:#DCEBD8;color:#1E2A44;text-align:center;font-weight:700">${energiaFmt_(r.lecturaActivoAnterior)}</th>
+              <th style="background:transparent"></th>
+              <th style="padding:4px;background:#FBE3CD;color:#1E2A44;text-align:center;font-weight:700">${energiaFmt_(r.lecturaReactivoAnterior)}</th>
+              <th style="padding:4px;background:#E4EEF8;color:#1E2A44;text-align:center;font-weight:700">${energiaFmt_(r.mensualActivo)}</th>
               <th></th>
             </tr>
-            <tr style="background:#1E2A44;color:#fff">
-              <th style="padding:6px">FECHA</th><th style="padding:6px">DÍA</th>
-              <th style="padding:6px;background:#3F6B35">E. ACTIVO<br>MES ACTUAL<br>(kWh)</th>
-              <th style="padding:6px">CONSUMO<br>ACTIVO<br>(kWh)</th>
-              <th style="padding:6px;background:#8B3A1E">E. REACTIVO<br>MES ACTUAL<br>(kVARh)</th>
-              <th style="padding:6px">CONSUMO<br>REACTIVO<br>(kVARh)</th>
-              <th style="padding:6px">OBSERVACIONES</th>
+            <tr>
+              <th style="padding:6px;background:#1E2A44;color:#FFFFFF">FECHA</th>
+              <th style="padding:6px;background:#1E2A44;color:#FFFFFF">DÍA</th>
+              <th style="padding:6px;background:#3F6B35;color:#FFFFFF">E. ACTIVO<br>MES ACTUAL<br>(kWh)</th>
+              <th style="padding:6px;background:#1E2A44;color:#FFFFFF">CONSUMO<br>ACTIVO<br>(kWh)</th>
+              <th style="padding:6px;background:#8B3A1E;color:#FFFFFF">E. REACTIVO<br>MES ACTUAL<br>(kVARh)</th>
+              <th style="padding:6px;background:#1E2A44;color:#FFFFFF">CONSUMO<br>REACTIVO<br>(kVARh)</th>
+              <th style="padding:6px;background:#1E2A44;color:#FFFFFF">OBSERVACIONES</th>
             </tr>
           </thead>
           <tbody>${filas}</tbody>
@@ -11206,17 +11249,49 @@ window.addEventListener('offline',updateOfflineStatus);
 //     mostrando la interfaz vieja. Ahora, en cuanto toma el control, la
 //     página se recarga una sola vez sola.
 // ══════════════════════════════════════════════════════════════
+function mostrarAvisoVersionNueva_(){
+  if($('aviso-version-nueva'))return;
+  const a=document.createElement('div');
+  a.id='aviso-version-nueva';
+  a.style.cssText='position:fixed;left:50%;transform:translateX(-50%);'+
+    'bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9998;'+
+    'background:#0F2A4A;color:#fff;border-radius:12px;padding:11px 14px;'+
+    'display:flex;align-items:center;gap:12px;box-shadow:0 10px 28px rgba(15,42,74,.35);'+
+    'font-size:.8rem;max-width:calc(100vw - 24px)';
+  a.innerHTML='<span><i class="fas fa-rotate" style="margin-right:7px"></i>Hay una versión nueva del sistema.</span>'+
+    '<button class="btn-p" style="padding:6px 12px;font-size:.76rem;white-space:nowrap" '+
+    'onclick="actualizarVersionAhora_()">Actualizar</button>'+
+    '<button onclick="this.parentElement.remove()" aria-label="Cerrar" '+
+    'style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:1rem">&times;</button>';
+  document.body.appendChild(a);
+}
+
+// Antes de recargar se avisa si hay un formulario con datos, para que la
+// persona no pierda una captura a medias por un clic.
+function actualizarVersionAhora_(){
+  const abiertos=[...document.querySelectorAll('.modal-bg,.modal')].filter(m=>getComputedStyle(m).display!=='none');
+  const enChecklist=!!(CHK_AREA&&$('chk-form-wrap')&&getComputedStyle($('chk-form-wrap')).display!=='none');
+  if((abiertos.length||enChecklist)&&
+     !confirm('Tienes una captura abierta. Si actualizas ahora se perderá lo que no hayas guardado.\n\n¿Actualizar de todos modos?'))return;
+  window.location.reload();
+}
+
 function registrarServiceWorker_(){
   if(!('serviceWorker' in navigator))return;
   // Solo se recarga si ya había una versión controlando la página. En la
   // primera visita de un equipo no hay nada que reemplazar, y recargar ahí
   // sería un parpadeo sin motivo.
+  // ══════════════════════════════════════════════════════════
+  // V9.0.1 — CORRECCIÓN. La versión 8.9.7 recargaba la página sola en
+  // cuanto detectaba una versión nueva. Al recargar volvía a la pantalla
+  // de inicio, y si el técnico iba a mitad del checklist perdía lo que
+  // llevaba capturado. Ahora solo se muestra un aviso, y la persona
+  // actualiza cuando termina lo que está haciendo.
+  // ══════════════════════════════════════════════════════════
   const habiaVersionPrevia=!!navigator.serviceWorker.controller;
-  let recargando=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(!habiaVersionPrevia||recargando)return;   // evita recarga inicial y ciclos
-    recargando=true;
-    window.location.reload();
+    if(!habiaVersionPrevia)return;           // primera visita: nada que avisar
+    mostrarAvisoVersionNueva_();
   });
   navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'})
     .then(reg=>{
