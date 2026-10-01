@@ -212,7 +212,10 @@ thead th{background:#F5F8FC;color:#586980}
    los equipos con muesca.
    ══════════════════════════════════════════════════════════════ */
 .modal-bg, .modal{
-  position:fixed; inset:0; z-index:60;
+  /* V9.1.2: 90, por encima del menú lateral de escritorio (80) y por debajo
+     de los avisos (99). Con 60, el menú tapaba la parte izquierda de las
+     ventanas anchas: revisión, reporte y documento final. */
+  position:fixed; inset:0; z-index:90;
   display:flex; align-items:flex-start; justify-content:center;
   overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding:max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
@@ -2671,6 +2674,7 @@ const LPA_AREAS = {
     </div>
 
     <div style="flex:1;overflow:auto;padding:14px 18px">
+      <div id="ww-rev-guardias"></div>
       <div id="ww-rev-tabla" style="overflow-x:auto"></div>
 
       <!-- V8.9.3 — Plano de planta con las zonas marcadas por cada área.
@@ -2782,13 +2786,68 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- V9.1.1 — MODAL: documento final del Weekend Work -->
+<div id="modal-ww-final" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:1260px;padding:0;display:flex;flex-direction:column">
+    <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-file-signature" style="color:#DC2626;margin-right:8px"></i>Documento final</h3>
+      <div style="display:flex;gap:7px">
+        <button class="btn-p" id="btn-wwf-pdf" style="background:#DC2626" onclick="wwFinalPdf()"><i class="fas fa-file-pdf" style="margin-right:6px"></i>Descargar PDF</button>
+        <button class="btn-g" onclick="closeModal('modal-ww-final')">Cerrar</button>
+      </div>
+    </div>
+    <div style="padding:16px;overflow:auto;background:#EEF1F6">
+      <div id="wwf-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- V9.1.0 — MODAL: firma por ausencia -->
+<div id="modal-ww-ausencia" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:520px;padding:22px">
+    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px">
+      <i class="fas fa-user-clock" style="color:#B45309;margin-right:8px"></i>Firmar por ausencia
+    </h3>
+    <div id="ww-aus-info" style="font-size:.76rem;color:#334155;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:10px 12px;margin:10px 0 14px"></div>
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Motivo de la ausencia *</label>
+    <textarea id="ww-aus-motivo" class="inp" rows="2" placeholder="Ej.: De viaje en junta corporativa, sin acceso al sistema." style="margin-bottom:12px;resize:vertical"></textarea>
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Tu firma *</label>
+    <canvas id="ww-aus-canvas" style="width:100%;height:170px;display:block;background:#fff;border:2px dashed #CBD5E1;border-radius:10px;touch-action:none;cursor:crosshair"></canvas>
+    <div style="font-size:.68rem;color:#94A3B8;margin:5px 0 14px">Quedará registrado que firmaste tú, en nombre de la persona ausente, y se le avisará.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" style="flex:1" onclick="wwAusLimpiar()">Limpiar</button>
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-ww-ausencia')">Cancelar</button>
+      <button class="btn-p" id="btn-ww-aus" style="flex:1.4;background:#B45309" onclick="wwAusGuardar()">Firmar por ausencia</button>
+    </div>
+  </div>
+</div>
+
+<!-- V9.1.0 — MODAL: reporte de confirmaciones -->
+<div id="modal-ww-reporte" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:1180px;padding:0;display:flex;flex-direction:column">
+    <div style="padding:16px 20px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-clipboard-list" style="color:#16A34A;margin-right:8px"></i>Reporte de confirmaciones</h3>
+      <div style="display:flex;gap:7px">
+        <button class="btn-g" onclick="wwReporteImprimir()"><i class="fas fa-print" style="margin-right:5px"></i>Imprimir</button>
+        <button class="btn-g" onclick="wwReporteExcel()"><i class="fas fa-file-excel" style="margin-right:5px"></i>Excel</button>
+        <button class="btn-g" onclick="closeModal('modal-ww-reporte')">Cerrar</button>
+      </div>
+    </div>
+    <div id="ww-reporte-body" style="padding:16px 20px;overflow:auto"></div>
+  </div>
+</div>
+
 <!-- V8.9.2 — MODAL: confirmar una actividad realizada -->
 <div id="modal-ww-confirmar" class="modal-bg" style="display:none">
-  <div class="card slide" style="width:100%;max-width:520px;padding:22px">
+  <div class="card slide" style="width:100%;max-width:560px;padding:22px">
     <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px">
       <i class="fas fa-circle-check" style="color:#16A34A;margin-right:8px"></i>Confirmar trabajo realizado
     </h3>
     <div id="ww-conf-actividad" style="font-size:.78rem;color:#334155;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;margin:10px 0 14px"></div>
+
+    <!-- V9.1.0 — Por cada día programado: si se realizó, con su horario real;
+         si no, el motivo. -->
+    <div id="ww-conf-dias" style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px"></div>
 
     <label style="display:block;font-size:.78rem;font-weight:600;color:#334155;margin-bottom:5px">Tu nombre completo *</label>
     <input id="ww-conf-nombre" class="inp" placeholder="Nombre y apellidos" style="margin-bottom:12px">
@@ -2939,7 +2998,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.0.3';
+const FRONTEND_BUILD = '9.1.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -7960,7 +8019,9 @@ function renderWeekendFlujo(){
         <div style="width:24px;height:24px;margin:0 auto 3px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${color};color:${firmada||enCurso?'#fff':'#94A3B8'};font-size:.64rem">
           ${firmada?'<i class="fas fa-check"></i>':k+1}</div>
         <div style="font-size:.6rem;color:${txt};font-weight:${enCurso?'700':'400'}">${nombres[e]}</div>
-        ${firmada?`<div style="font-size:.55rem;color:#94A3B8">${escapeHtml((d.firmas[e].nombre||'').split(' ')[0])}</div>`:''}
+        ${firmada?(d.firmas[e].porAusencia
+          ? `<div style="font-size:.55rem;color:#B45309;font-weight:600" title="${escapeHtml('Por ausencia de '+(d.firmas[e].ausente||'')+' · firmó '+(d.firmas[e].nombre||'')+' · '+(d.firmas[e].motivo||''))}">Por ausencia · ${escapeHtml((d.firmas[e].nombre||'').split(' ')[0])}</div>`
+          : `<div style="font-size:.55rem;color:#94A3B8">${escapeHtml((d.firmas[e].nombre||'').split(' ')[0])}</div>`):''}
       </div>`;
     }).join('<div style="width:12px;height:1px;background:#E2E8F0;align-self:flex-start;margin-top:12px"></div>');
 
@@ -7972,15 +8033,30 @@ function renderWeekendFlujo(){
         acciones.push(`<button class="btn-p" style="background:#DC2626" onclick="wwAbrirFirma('${d.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Sign weekend work</button>`);
       }
     }
+    // V9.1.0: firma por ausencia, cuando la etapa pendiente es de otra persona.
+    if(d.puedeFirmarAusencia&&!d.esMiTurno){
+      acciones.push(`<button class="btn-g" style="color:#B45309;border-color:#FCD34D" onclick="wwAbrirAusencia('${d.id}')"><i class="fas fa-user-clock" style="margin-right:5px"></i>Firmar por ausencia</button>`);
+    }
+    // V9.1.0: guardias desde la recepción, para verlas en la reunión del jueves.
+    if(r.esIngenieriaFacilities&&d.etapa!=='CERRADO'){
+      acciones.push(`<button class="btn-g" onclick="wwAbrirOrganizador('${d.id}')"><i class="fas fa-users-gear" style="margin-right:5px"></i>${d.guardias&&d.guardias.sabado?'Guardias':'Asignar guardias'}</button>`);
+    }
     // V8.9.2: estado de confirmaciones y cierre del ciclo.
     const cf=d.confirmacion||{};
+    if(d.etapa==='APROBADO'||d.etapa==='CERRADO'){
+      acciones.push(`<button class="btn-g" onclick="wwVerReporte('${d.id}')"><i class="fas fa-clipboard-list" style="margin-right:5px"></i>Reporte de confirmaciones</button>`);
+    }
     if(d.etapa==='APROBADO'){
       acciones.push(`<button class="btn-p" style="background:#16A34A" onclick="wwCerrarCiclo('${d.id}')"><i class="fas fa-lock" style="margin-right:5px"></i>Cerrar ciclo</button>`);
     }
 
     // V8.9.0: vista previa del documento, con edición si aún no hay firmas.
     const revisable=!d.firmas||!Object.keys(d.firmas).length;
-    acciones.push(`<button class="btn-p" style="background:${revisable?'#0F2A4A':'#64748B'}" onclick="wwAbrirRevision('${d.id}')"><i class="fas fa-${revisable?'clipboard-check':'file-lines'}" style="margin-right:5px"></i>${revisable?'Revisar documento':'Ver documento'}</button>`);
+    // V9.1.1: con firmas, "Ver documento" abre el documento final con sus
+    // firmas y la descarga en PDF; sin firmas sigue la revisión editable.
+    acciones.push(revisable
+      ? `<button class="btn-p" style="background:#0F2A4A" onclick="wwAbrirRevision('${d.id}')"><i class="fas fa-clipboard-check" style="margin-right:5px"></i>Revisar documento</button>`
+      : `<button class="btn-p" style="background:#0F2A4A" onclick="wwVerDocumentoFinal('${d.id}')"><i class="fas fa-file-signature" style="margin-right:5px"></i>Ver documento</button>`);
     acciones.push(`<button class="btn-g" onclick="wwVerDocumento('${d.id}')"><i class="fas fa-list" style="margin-right:5px"></i>Ver actividades</button>`);
 
     return `<div class="card" style="padding:15px;margin-bottom:10px;${d.esMiTurno?'border:1.5px solid #FCA5A5;background:#FFFBFB':''}">
@@ -7997,6 +8073,9 @@ function renderWeekendFlujo(){
             ${d.organizador?` · Organiza: ${escapeHtml(d.organizador)}`:''}
           </div>
           <div style="font-size:.66rem;color:#94A3B8">Corte de recepción: ${escapeHtml(d.corte)}</div>
+          ${(d.guardias&&(d.guardias.sabado||d.guardias.domingo||d.guardias.festivo))
+            ?`<div style="font-size:.68rem;color:#1E40AF;margin-top:3px"><i class="fas fa-user-shield" style="margin-right:5px"></i>Guardia: ${[d.guardias.sabado?'sáb. '+escapeHtml(d.guardias.sabado):'',d.guardias.domingo?'dom. '+escapeHtml(d.guardias.domingo):'',d.guardias.festivo?'fest. '+escapeHtml(d.guardias.festivo):''].filter(Boolean).join(' · ')}</div>`
+            :`<div style="font-size:.68rem;color:#B45309;margin-top:3px"><i class="fas fa-user-shield" style="margin-right:5px"></i>Guardias sin asignar</div>`}
         </div>
         <span class="badge ${d.etapa==='APROBADO'?'b-done':'b-wait'}">${escapeHtml(d.etiquetaEtapa)}</span>
       </div>
@@ -8038,7 +8117,14 @@ async function wwGuardarOrganizador(){
     toast('Guardias asignadas');
     closeModal('modal-ww-organizador');
     await loadWeekendFlujo();
-    wwAbrirFirma(payload.id);
+    // V9.1.0: solo se pasa a la firma si es el turno de Pedro como Engineer.
+    // Ahora las guardias también se asignan en la reunión, antes de las
+    // firmas; ahí basta con refrescar la revisión si está abierta.
+    if(WW_DOC_ACTUAL.esMiTurno&&WW_DOC_ACTUAL.miEtapa==='ENGINEER'){
+      wwAbrirFirma(payload.id);
+    }else if($('modal-ww-revision')&&$('modal-ww-revision').style.display==='flex'){
+      wwAbrirRevision(payload.id);
+    }
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
@@ -8153,7 +8239,8 @@ async function cargarConfirmacionWeekend_(){
           </div>
           <span class="badge ${res.pendientes?'b-wait':'b-done'}">${res.confirmadas} de ${res.total} confirmadas</span>
         </div>
-        <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y confirma que sí la realizaste. Se te pedirá tu nombre y tu firma.</p>
+        <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y confírmala al terminar. Indica a qué hora trabajaste realmente, o por qué no se realizó, con tu nombre y tu firma.
+          <br><b style="color:#B45309"><i class="fas fa-clock" style="margin-right:4px"></i>Las confirmaciones cierran el ${escapeHtml(wwFmtCierre_(res.cierre))}.</b></p>
         <div style="display:flex;flex-direction:column;gap:7px">
           ${d.actividades.map(a=>`
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:${a.confirmada?'#F0FDF4':'#F8FAFC'};border:1px solid ${a.confirmada?'#BBF7D0':'#E2E8F0'}">
@@ -8162,16 +8249,26 @@ async function cargarConfirmacionWeekend_(){
                 <div style="font-size:.68rem;color:#64748B">
                   ${escapeHtml(a.solicitante||'—')}${a.departamento?' · '+escapeHtml(a.departamento):''}${a.areaTrabajo?' · '+escapeHtml(a.areaTrabajo):''}${a.dias?' · '+escapeHtml(a.dias):''}
                 </div>
-                ${a.confirmada?`<div style="font-size:.68rem;color:#15803D;margin-top:3px"><i class="fas fa-check" style="margin-right:4px"></i>Confirmada por <b>${escapeHtml(a.confirmadaPor)}</b> · ${escapeHtml(fmtDateTime(a.fechaConfirmacion))}</div>`:''}
+                ${a.confirmada?`<div style="font-size:.68rem;color:${a.resultadoFinal==='NO_REALIZADA'?'#B91C1C':(a.resultadoFinal==='PARCIAL'?'#B45309':'#15803D')};margin-top:3px"><i class="fas fa-check" style="margin-right:4px"></i>${({REALIZADA:'Realizada',PARCIAL:'Realizada en parte',NO_REALIZADA:'No realizada'})[a.resultadoFinal]||'Confirmada'} · confirmó <b>${escapeHtml(a.confirmadaPor)}</b> · ${escapeHtml(fmtDateTime(a.fechaConfirmacion))}</div>`:''}
               </div>
               ${a.confirmada
                 ? (a.firmaURL?`<a href="${escapeHtml(a.firmaURL)}" target="_blank" rel="noopener" style="font-size:.7rem;color:#15803D;font-weight:650;text-decoration:none">Ver firma</a>`:'')
-                : `<button class="btn-p" style="background:#16A34A;padding:8px 14px;font-size:.76rem" onclick="wwConfAbrir('${d.id}','${a.id}')">Confirmar</button>`}
+                : (a.abierta
+                    ? `<button class="btn-p" style="background:#16A34A;padding:8px 14px;font-size:.76rem" onclick="wwConfAbrir('${d.id}','${a.id}')">Confirmar</button>`
+                    : `<span style="font-size:.7rem;color:#64748B;text-align:right"><i class="fas fa-hourglass-half" style="margin-right:4px"></i>${a.estado==='AUN_NO'?'Se habilita al terminar:<br><b>'+escapeHtml(wwFmtCierre_(a.abreEn))+'</b>':'No disponible'}</span>`)}
             </div>`).join('')}
         </div>
       </div>`;
     }).join('');
   }catch(e){box.style.display='none';}
+}
+
+// "2026-10-05 08:00" → "lunes 5 de octubre, 08:00"
+function wwFmtCierre_(txt){
+  const m=String(txt||'').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+  if(!m)return String(txt||'');
+  const f=new Date(m[1]+'T12:00:00');
+  return f.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})+', '+m[2];
 }
 
 function wwConfAbrir(docId,actId){
@@ -8183,8 +8280,68 @@ function wwConfAbrir(docId,actId){
     `<b>${escapeHtml(act.actividad||'')}</b><br>`+
     `<span style="font-size:.72rem;color:#64748B">${escapeHtml(act.solicitante||'')}${act.areaTrabajo?' · '+escapeHtml(act.areaTrabajo):''}${act.dias?' · '+escapeHtml(act.dias):''}</span>`;
   $('ww-conf-nombre').value=act.solicitante||'';
+
+  // V9.1.0: un bloque por día. Las horas reales vienen precargadas con las
+  // planeadas, para que solo corrija lo que cambió.
+  const nombresDia={Saturday:'Sábado',Sunday:'Domingo',Holiday:'Festivo'};
+  const dias=act.diasProgramados||[];
+  $('ww-conf-dias').innerHTML=dias.length?dias.map(x=>`
+    <div class="ww-cdia" data-dia="${escapeHtml(x.dia)}" style="border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-size:.8rem;font-weight:700;color:#0F2A4A">${nombresDia[x.dia]||x.dia} ${escapeHtml(wwFechaLargaEn_(x.fecha))}
+          <span style="font-weight:400;color:#64748B;font-size:.72rem"> · planeado ${escapeHtml(x.inicio||'--:--')}–${escapeHtml(x.fin||'--:--')}</span></div>
+        <div style="display:flex;gap:5px">
+          <button type="button" class="btn-g ww-cbtn-si" style="padding:5px 10px;font-size:.72rem" onclick="wwConfDia_(this,true)">Sí se realizó</button>
+          <button type="button" class="btn-g ww-cbtn-no" style="padding:5px 10px;font-size:.72rem" onclick="wwConfDia_(this,false)">No se realizó</button>
+        </div>
+      </div>
+      <div class="ww-csi" style="display:none;margin-top:9px;align-items:center;gap:7px;flex-wrap:wrap">
+        <span style="font-size:.72rem;color:#475569">Hora real:</span>
+        <input type="time" class="inp ww-cini" value="${escapeHtml(x.inicio||'')}" style="width:auto;padding:6px 8px">
+        <span style="font-size:.72rem;color:#64748B">a</span>
+        <input type="time" class="inp ww-cfin" value="${escapeHtml(x.fin||'')}" style="width:auto;padding:6px 8px">
+      </div>
+      <div class="ww-cno" style="display:none;margin-top:9px">
+        <textarea class="inp ww-cmotivo" rows="2" placeholder="¿Por qué no se realizó? (obligatorio)" style="resize:vertical"></textarea>
+      </div>
+    </div>`).join('')
+    :'<div style="font-size:.74rem;color:#94A3B8">Esta actividad no tiene días programados.</div>';
+
   $('modal-ww-confirmar').style.display='flex';
   setTimeout(wwConfPadInit,120);
+}
+
+// Marca un día como realizado o no, y muestra los campos que tocan.
+function wwConfDia_(btn,realizado){
+  const caja=btn.closest('.ww-cdia');
+  caja.dataset.realizado=realizado?'1':'0';
+  caja.querySelector('.ww-csi').style.display=realizado?'flex':'none';
+  caja.querySelector('.ww-cno').style.display=realizado?'none':'block';
+  const si=caja.querySelector('.ww-cbtn-si'), no=caja.querySelector('.ww-cbtn-no');
+  si.style.background=realizado?'#16A34A':''; si.style.color=realizado?'#fff':'';
+  no.style.background=realizado?'':'#DC2626'; no.style.color=realizado?'':'#fff';
+  if(!realizado)setTimeout(()=>{try{caja.querySelector('.ww-cmotivo').focus();}catch(e){}},50);
+}
+
+// Lee los días capturados; devuelve un mensaje si falta algo.
+function wwConfLeerDias_(){
+  const nombresDia={Saturday:'sábado',Sunday:'domingo',Holiday:'festivo'};
+  const out=[];
+  for(const caja of document.querySelectorAll('#ww-conf-dias .ww-cdia')){
+    const dia=caja.dataset.dia, n=nombresDia[dia]||dia;
+    if(caja.dataset.realizado===undefined)return {error:'Indica si se realizó la actividad el '+n+'.'};
+    if(caja.dataset.realizado==='1'){
+      const ini=caja.querySelector('.ww-cini').value, fin=caja.querySelector('.ww-cfin').value;
+      if(!ini||!fin)return {error:'Indica la hora real de inicio y de fin del '+n+'.'};
+      if(fin<=ini)return {error:'El '+n+' la hora de fin debe ser posterior a la de inicio.'};
+      out.push({dia:dia,realizado:true,inicio:ini,fin:fin});
+    }else{
+      const motivo=caja.querySelector('.ww-cmotivo').value.trim();
+      if(motivo.length<10)return {error:'Explica por qué no se realizó el '+n+' (mínimo 10 caracteres).'};
+      out.push({dia:dia,realizado:false,motivo:motivo});
+    }
+  }
+  return {dias:out};
 }
 
 function wwConfPadInit(){
@@ -8214,6 +8371,9 @@ function wwConfLimpiar(){
 
 async function wwConfGuardar(){
   if(!WW_CONF_CTX)return;
+  // V9.1.0: primero los días, luego nombre y firma.
+  const ld=wwConfLeerDias_();
+  if(ld.error){toast(ld.error,'err');return;}
   const nombre=$('ww-conf-nombre').value.trim();
   if(nombre.length<4){toast('Escribe tu nombre completo','err');return;}
   if(!wwConfTrazo){toast('Dibuja tu firma antes de confirmar','err');return;}
@@ -8222,7 +8382,7 @@ async function wwConfGuardar(){
   try{
     const r=await api({action:'weekendConfirmarActividad',
       id:WW_CONF_CTX.docId, actividadId:WW_CONF_CTX.actId,
-      nombre, firmaBase64:$('ww-conf-canvas').toDataURL('image/png')});
+      nombre, dias:ld.dias, firmaBase64:$('ww-conf-canvas').toDataURL('image/png')});
     if(!r.success){toast(r.error||'No se pudo confirmar','err');return;}
     toast(r.mensaje||'Confirmación registrada');
     closeModal('modal-ww-confirmar');
@@ -8388,6 +8548,19 @@ function renderWwRevision(){
     </table>`
     : '<div style="padding:30px;text-align:center;color:#94A3B8;font-size:.82rem">El documento no tiene actividades.</div>';
 
+  // V9.1.0: las guardias se ven en la revisión, para la reunión del jueves.
+  const boxG=$('ww-rev-guardias');
+  if(boxG){
+    const g=[['Sábado',d.guardiaSabado],['Domingo',d.guardiaDomingo],['Festivo',d.guardiaFestivo]].filter(x=>x[1]);
+    boxG.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;background:${g.length?'#EFF6FF':'#FFFBEB'};border:1px solid ${g.length?'#BFDBFE':'#FDE68A'};border-radius:9px;margin-bottom:12px">
+      <i class="fas fa-user-shield" style="color:${g.length?'#1D4ED8':'#B45309'}"></i>
+      <div style="flex:1;font-size:.76rem;color:#334155">${g.length
+        ? '<b>Técnicos de guardia:</b> '+g.map(x=>x[0]+': <b>'+escapeHtml(x[1])+'</b>').join(' · ')
+        : '<b>Guardias sin asignar.</b> Asígnalas para que se vean en la reunión.'}</div>
+      ${(r.esIngenieriaFacilities&&d.etapa!=='CERRADO')?`<button class="btn-g" style="padding:5px 11px;font-size:.72rem" onclick="wwAbrirOrganizador('${d.id}')">${g.length?'Cambiar':'Asignar guardias'}</button>`:''}
+    </div>`;
+  }
+
   // ── Plano con las zonas marcadas ──
   renderWwMapa_(act);
 
@@ -8550,6 +8723,421 @@ async function wwCerrarCiclo(id){
     toast(r.mensaje||'Ciclo cerrado');
     await loadWeekendFlujo();
   }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.1.0 — FIRMA POR AUSENCIA
+//
+// Cuando quien debe firmar no puede, Ingeniería firma en su lugar. El
+// documento lo muestra a la vista y al ausente le llega un aviso.
+// ══════════════════════════════════════════════════════════════
+let WW_AUS_CTX=null, wwAusPad=null, wwAusTrazo=false, wwAusPintando=false;
+
+function wwAbrirAusencia(id){
+  const d=(WW_FLUJO&&WW_FLUJO.documentos||[]).find(x=>String(x.id)===String(id));
+  if(!d){toast('Documento no encontrado','err');return;}
+  WW_AUS_CTX={id:id};
+  const nombres={ORIGINATOR:'Originator',ENGINEER:'Engineer',SENIOR_MANAGER:'Senior Manager',PRESIDENT:'President'};
+  $('ww-aus-info').innerHTML=
+    `Vas a firmar la etapa <b>${escapeHtml(nombres[d.etapaPendiente]||d.etapaPendiente||'')}</b> en nombre de <b>${escapeHtml(d.titularPendiente||'')}</b>.<br>`+
+    `El documento mostrará que firmaste por ausencia, con el motivo, y a ${escapeHtml((d.titularPendiente||'esa persona').split(' ')[0])} le llegará un aviso.`;
+  $('ww-aus-motivo').value='';
+  $('modal-ww-ausencia').style.display='flex';
+  setTimeout(wwAusPadInit_,120);
+}
+
+function wwAusPadInit_(){
+  const c=$('ww-aus-canvas'); if(!c)return;
+  const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr; c.height=rect.height*dpr;
+  wwAusPad=c.getContext('2d'); wwAusPad.scale(dpr,dpr);
+  wwAusPad.lineWidth=2.4; wwAusPad.lineCap='round'; wwAusPad.lineJoin='round'; wwAusPad.strokeStyle='#0F2A4A';
+  wwAusPad.clearRect(0,0,rect.width,rect.height); wwAusTrazo=false;
+  const pos=ev=>{const r=c.getBoundingClientRect();const p=ev.touches?ev.touches[0]:ev;return {x:p.clientX-r.left,y:p.clientY-r.top};};
+  const ini=ev=>{ev.preventDefault();wwAusPintando=true;wwAusTrazo=true;const p=pos(ev);wwAusPad.beginPath();wwAusPad.moveTo(p.x,p.y);};
+  const mov=ev=>{if(!wwAusPintando)return;ev.preventDefault();const p=pos(ev);wwAusPad.lineTo(p.x,p.y);wwAusPad.stroke();};
+  const fin=()=>{wwAusPintando=false;};
+  c.onmousedown=ini;c.onmousemove=mov;c.onmouseup=fin;c.onmouseleave=fin;
+  c.ontouchstart=ini;c.ontouchmove=mov;c.ontouchend=fin;
+}
+
+function wwAusLimpiar(){
+  const c=$('ww-aus-canvas'); if(!c||!wwAusPad)return;
+  const r=c.getBoundingClientRect(); wwAusPad.clearRect(0,0,r.width,r.height); wwAusTrazo=false;
+}
+
+async function wwAusGuardar(){
+  if(!WW_AUS_CTX)return;
+  const motivo=$('ww-aus-motivo').value.trim();
+  if(motivo.length<10){toast('Indica el motivo de la ausencia (mínimo 10 caracteres)','err');return;}
+  if(!wwAusTrazo){toast('Dibuja tu firma','err');return;}
+  const btn=$('btn-ww-aus');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Guardando…';
+  try{
+    const r=await api({action:'weekendFirmarPorAusencia',token:SESSION.token,id:WW_AUS_CTX.id,
+      motivo:motivo,firmaBase64:$('ww-aus-canvas').toDataURL('image/png')});
+    if(!r.success){toast(r.error||'No se pudo firmar','err');return;}
+    toast(r.mensaje||'Firma por ausencia registrada');
+    closeModal('modal-ww-ausencia');
+    WW_AUS_CTX=null;
+    await loadWeekendFlujo();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='Firmar por ausencia';}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.1.0 — REPORTE DE CONFIRMACIONES
+//
+// Lo que Ingeniería enviaba armado a mano el lunes a las 08:00.
+// ══════════════════════════════════════════════════════════════
+let WW_REPORTE=null;
+const WW_RES_ETQ={REALIZADA:'Realizada',PARCIAL:'Realizada en parte',NO_REALIZADA:'No realizada',SIN_CONFIRMAR:'Sin confirmar'};
+const WW_RES_COLOR={REALIZADA:'#15803D',PARCIAL:'#B45309',NO_REALIZADA:'#B91C1C',SIN_CONFIRMAR:'#64748B'};
+const WW_DIA_ES={Saturday:'Sábado',Sunday:'Domingo',Holiday:'Festivo'};
+
+async function wwVerReporte(id){
+  $('ww-reporte-body').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Generando reporte…</div>';
+  $('modal-ww-reporte').style.display='flex';
+  try{
+    const r=await api({action:'getWeekendReporteConfirmaciones',token:SESSION.token,id});
+    if(!r.success){$('ww-reporte-body').innerHTML=`<div style="padding:16px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    WW_REPORTE=r; wwRenderReporte_(r);
+  }catch(e){$('ww-reporte-body').innerHTML=`<div style="padding:16px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
+function wwRenderReporte_(r){
+  const doc=r.documento||{}, res=r.resumen||{};
+  const sinConf=(r.filas||[]).filter(f=>f.resultado==='SIN_CONFIRMAR').length;
+  const chip=(t,v,c)=>`<div style="padding:9px 13px;border-radius:9px;background:#F8FAFC;border:1px solid #E2E8F0;min-width:110px"><div style="font-size:1.15rem;font-weight:800;color:${c}">${v}</div><div style="font-size:.66rem;color:#64748B">${t}</div></div>`;
+  const filas=(r.filas||[]).map((f,i)=>{
+    const dias=f.dias||[];
+    const celdaDias=k=>dias.map(x=>`<div style="padding:2px 0">${k(x)}</div>`).join('')||'—';
+    return `<tr style="border-bottom:1px solid #E2E8F0;vertical-align:top">
+      <td style="padding:7px 8px;color:#64748B">${i+1}</td>
+      <td style="padding:7px 8px;color:#64748B;white-space:nowrap">${escapeHtml(f.requestNo||'—')}</td>
+      <td style="padding:7px 8px;font-weight:600">${escapeHtml(f.actividad)}<div style="font-weight:400;font-size:.64rem;color:#64748B">${escapeHtml(f.solicitante)}${f.departamento?' · '+escapeHtml(f.departamento):''}</div></td>
+      <td style="padding:7px 8px">${escapeHtml(f.areaTrabajo||'—')}</td>
+      <td style="padding:7px 8px;white-space:nowrap">${celdaDias(x=>escapeHtml(WW_DIA_ES[x.dia]||x.dia))}</td>
+      <td style="padding:7px 8px;white-space:nowrap">${celdaDias(x=>escapeHtml((x.inicioPlaneado||'--:--')+'–'+(x.finPlaneado||'--:--')))}</td>
+      <td style="padding:7px 8px;white-space:nowrap">${celdaDias(x=>x.realizado===true
+          ?`<b style="color:#15803D">${escapeHtml(x.inicioReal+'–'+x.finReal)}</b>`
+          :(x.realizado===false?'<span style="color:#B91C1C">No se realizó</span>':'<span style="color:#94A3B8">—</span>'))}</td>
+      <td style="padding:7px 8px;font-weight:700;color:${WW_RES_COLOR[f.resultado]||'#334155'};white-space:nowrap">${escapeHtml(WW_RES_ETQ[f.resultado]||f.resultado)}</td>
+      <td style="padding:7px 8px;font-size:.66rem;color:#7F1D1D">${dias.filter(x=>x.motivo).map(x=>'<b>'+escapeHtml(WW_DIA_ES[x.dia]||x.dia)+':</b> '+escapeHtml(x.motivo)).join('<br>')||''}</td>
+      <td style="padding:7px 8px;font-size:.66rem">${f.confirmadaPor?escapeHtml(f.confirmadaPor)+'<br><span style="color:#94A3B8">'+escapeHtml(fmtDateTime(f.fechaConfirmacion))+'</span>':'<span style="color:#94A3B8">—</span>'}</td>
+    </tr>`;}).join('');
+
+  const th=t=>`<th style="text-align:left;padding:8px;background:#0F1F3D;color:#FFFFFF;font-weight:600">${t}</th>`;
+  $('ww-reporte-body').innerHTML=`<div id="ww-reporte-print">
+    <div style="border-bottom:2px solid #0F2A4A;padding-bottom:8px;margin-bottom:12px">
+      <b style="font-size:1.02rem">KTMEX · Facilities — Reporte de confirmaciones del Weekend Work</b>
+      <div style="font-size:.76rem;color:#475569">Fin de semana ${escapeHtml(wwFechaLargaEn_(doc.sabado))} – ${escapeHtml(wwFechaLargaEn_(doc.domingo))}
+        ${doc.organizador?' · Organizó: '+escapeHtml(doc.organizador):''} · Generado: ${escapeHtml(r.generado||'')}</div>
+      ${(doc.guardiaSabado||doc.guardiaDomingo)?`<div style="font-size:.72rem;color:#475569">Guardia: ${[doc.guardiaSabado?'sáb. '+escapeHtml(doc.guardiaSabado):'',doc.guardiaDomingo?'dom. '+escapeHtml(doc.guardiaDomingo):'',doc.guardiaFestivo?'fest. '+escapeHtml(doc.guardiaFestivo):''].filter(Boolean).join(' · ')}</div>`:''}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${chip('Actividades',res.total||0,'#0F2A4A')}
+      ${chip('Realizadas',res.realizadas||0,'#15803D')}
+      ${chip('Realizadas en parte',res.parciales||0,'#B45309')}
+      ${chip('No realizadas',res.noRealizadas||0,'#B91C1C')}
+      ${chip('Sin confirmar',sinConf,'#64748B')}
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:1050px">
+        <thead><tr>${['No','Folio','Actividad','Área','Día','Planeado','Real','Resultado','Motivo','Confirmó'].map(th).join('')}</tr></thead>
+        <tbody>${filas||'<tr><td colspan="10" style="padding:18px;text-align:center;color:#94A3B8">Sin actividades.</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${(r.canceladas||[]).length?`<div style="margin-top:14px;font-size:.72rem;color:#7F1D1D"><b>Dadas de baja antes del fin de semana:</b> ${(r.canceladas||[]).map(c=>escapeHtml(c.actividad)+(c.motivo?' ('+escapeHtml(c.motivo)+')':'')).join(' · ')}</div>`:''}
+  </div>`;
+}
+
+function wwReporteImprimir(){
+  const area=$('ww-reporte-print'); if(!area)return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Reporte de confirmaciones Weekend Work</title>
+    <style>body{font-family:Arial,sans-serif;padding:16px;color:#172033}table{border-collapse:collapse}th,td{border:1px solid #CBD5E1}@page{size:landscape;margin:10mm}</style>
+    </head><body>${area.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+function wwReporteExcel(){
+  const r=WW_REPORTE; if(!r)return;
+  const e=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const filas=[['Folio','Actividad','Solicitante','Departamento','Área','Día','Fecha','Inicio planeado','Fin planeado','Realizado','Inicio real','Fin real','Motivo','Resultado','Confirmó','Fecha de confirmación']];
+  (r.filas||[]).forEach(f=>{
+    const dias=(f.dias&&f.dias.length)?f.dias:[{}];
+    dias.forEach(x=>filas.push([f.requestNo,f.actividad,f.solicitante,f.departamento,f.areaTrabajo,
+      WW_DIA_ES[x.dia]||x.dia||'',x.fecha||'',x.inicioPlaneado||'',x.finPlaneado||'',
+      x.realizado===true?'Sí':(x.realizado===false?'No':''),x.inicioReal||'',x.finReal||'',x.motivo||'',
+      WW_RES_ETQ[f.resultado]||f.resultado,f.confirmadaPor||'',f.fechaConfirmacion||'']));
+  });
+  const html='<html><head><meta charset="utf-8"></head><body><table>'+
+    filas.map(f=>'<tr>'+f.map(c=>'<td>'+e(c)+'</td>').join('')+'</tr>').join('')+'</table></body></html>';
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Confirmaciones_WeekendWork_'+((r.documento||{}).sabado||'')+'.xls';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.1.1 — DOCUMENTO FINAL DEL WEEKEND WORK
+//
+// Reproduce el documento final de la herramienta: encabezado con el logo y
+// el QR de acceso, datos del fin de semana, recuadro de firmas de
+// aprobación, tabla de actividades con sus barras de horario y la columna
+// de confirmación, y el plano con las zonas. Las firmas llegan ya
+// incrustadas desde el servidor, así que también salen en el PDF.
+// ══════════════════════════════════════════════════════════════
+let WW_FINAL=null;
+
+async function wwVerDocumentoFinal(id){
+  $('wwf-body').innerHTML='<div style="padding:40px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Preparando el documento con sus firmas…</div>';
+  $('modal-ww-final').style.display='flex';
+  try{
+    const r=await api({action:'getWeekendDocumentoFinal',token:SESSION.token,id});
+    if(!r.success){$('wwf-body').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    WW_FINAL=r; wwRenderFinal_(r);
+  }catch(e){$('wwf-body').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
+function wwFinalBadge_(txt,bg,fg){
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:999px;background:${bg};color:${fg};font-weight:700;font-size:.72rem">${escapeHtml(txt)}</span>`;
+}
+function wwFinalRisk_(v){
+  if(v==='High')return wwFinalBadge_('High','#FEE2E2','#B91C1C');
+  if(v==='Medium')return wwFinalBadge_('Medium','#FEF3C7','#B45309');
+  if(v==='Low')return wwFinalBadge_('Low','#E0F2FE','#0369A1');
+  return '-';
+}
+function wwFinalRank_(v){
+  const m={A:['#FEE2E2','#B91C1C'],B:['#FEF3C7','#B45309'],C:['#DCFCE7','#15803D']}[v]||['#E5E7EB','#374151'];
+  return v?wwFinalBadge_(v,m[0],m[1]):'-';
+}
+function wwFinalDia_(a,key,fechaCol){
+  const h=(a.dias||[]).find(x=>x.dia===key);
+  if(!h)return '<div style="text-align:center;color:#C7CDDA">—</div>';
+  const conHora=!!(h.inicio&&h.fin);
+  const izq=Math.min(99,wwFraccionHora_(h.inicio)*100);
+  const ancho=Math.max(1.8,(wwFraccionHora_(h.fin)-wwFraccionHora_(h.inicio))*100);
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:110px">
+    <div style="font-size:.74rem;font-weight:700;color:#0F1F3D;white-space:nowrap">${escapeHtml(wwFechaLargaEn_(h.fecha||fechaCol))}</div>
+    <div style="position:relative;width:100%;height:15px;border-radius:999px;background:#DBE0EA;overflow:hidden">
+      ${conHora?`<div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#2563EB"></div>`:''}
+    </div>
+    <div style="font-size:.7rem;color:#64748B;white-space:nowrap">${escapeHtml(conHora?(h.inicio+'–'+h.fin):'—')}</div>
+  </div>`;
+}
+function wwFinalDosNombres_(n){return String(n||'').trim().split(/\s+/).slice(0,2).join(' ');}
+
+function wwRenderFinal_(r){
+  const d=r.documento||{}, acts=r.actividades||[], f=r.firmas||{};
+  const diaLargo=(iso,nombre)=>iso?(nombre+' '+wwFechaLargaEn_(iso)):'';
+
+  // Días presentes, igual que las columnas del documento.
+  const DEF=[{key:'Saturday',t:'Saturday',fecha:d.sabado},{key:'Sunday',t:'Sunday',fecha:d.domingo},{key:'Holiday',t:'Holiday',fecha:''}];
+  const cols=DEF.filter(c=>acts.some(a=>(a.dias||[]).some(x=>x.dia===c.key))).map(c=>{
+    let fecha=c.fecha; acts.forEach(a=>{const h=(a.dias||[]).find(x=>x.dia===c.key&&x.fecha);if(h&&!fecha)fecha=h.fecha;});
+    return Object.assign({},c,{fecha:fecha});
+  });
+
+  // Firmas, de izquierda a derecha: President, Senior Manager, Engineer, Originator.
+  const slot=k=>{
+    const x=f[k]||{};
+    const nombre=wwFinalDosNombres_(x.titular)+(x.empresa?' · '+x.empresa:'');
+    return `<div style="flex:1;min-width:150px;text-align:center">
+      <div style="height:58px;display:flex;align-items:flex-end;justify-content:center">
+        ${x.imagen?`<img src="${x.imagen}" alt="${escapeHtml(x.titulo)}" style="max-height:56px;max-width:150px;object-fit:contain">`:''}
+      </div>
+      <div style="height:1.5px;background:#94A3B8;margin:2px 10px 5px"></div>
+      <div style="font-size:.8rem;font-weight:700;color:#0F1F3D">${escapeHtml(x.titulo||k)}</div>
+      <div style="font-size:.68rem;color:#64748B">${escapeHtml(nombre)}</div>
+      ${x.porAusencia?`<div style="font-size:.62rem;color:#B45309;font-weight:600;margin-top:2px">Signed on behalf (absence) by ${escapeHtml(wwFinalDosNombres_(x.firmo))}</div>`:''}
+    </div>`;
+  };
+
+  const guardias=[];
+  if(cols.some(c=>c.key==='Saturday'))guardias.push(`<span><b>Saturday Guard Leader:</b> ${escapeHtml(d.guardiaSabado||'-')}</span>`);
+  if(cols.some(c=>c.key==='Sunday'))guardias.push(`<span><b>Sunday Guard Leader:</b> ${escapeHtml(d.guardiaDomingo||'-')}</span>`);
+  if(cols.some(c=>c.key==='Holiday'))guardias.push(`<span><b>Holiday Guard Leader:</b> ${escapeHtml(d.guardiaFestivo||'-')}</span>`);
+
+  const fila='padding:8px 0;border-bottom:1px dashed #E6E9F0;font-size:.86rem;color:#1E293B';
+  const th='padding:11px 9px;background:#0F1F3D;color:#FFFFFF;font-weight:700;font-size:.78rem;text-align:center';
+  const td='padding:11px 9px;font-size:.84rem;color:#1E293B;text-align:center;border-bottom:1px solid #EEF1F6;vertical-align:middle';
+  const resultadoEn={REALIZADA:'Done',PARCIAL:'Partially done',NO_REALIZADA:'Not done'};
+
+  const filas=acts.map(a=>`<tr class="wwf-fila">
+      <td style="${td}">${escapeHtml(a.no)}</td>
+      <td style="${td}">${a.deptCode?wwFinalBadge_(a.deptCode,'#E0E7FF','#1E3A8A'):'-'}</td>
+      <td style="${td}">${escapeHtml(a.jobLeader||'-')}</td>
+      <td style="${td}">${a.fueraDeTiempo?`<span style="color:#DC2626;font-weight:700">${escapeHtml(a.actividad)}</span><br>${wwFinalBadge_('Out of time','#FEE2E2','#B91C1C')}`:escapeHtml(a.actividad||'-')}</td>
+      <td style="${td}">${wwFinalRisk_(a.riesgo)}</td>
+      <td style="${td}">${wwFinalRank_(a.rango)}</td>
+      <td style="${td}">${escapeHtml(a.contratista||'-')}</td>
+      <td style="${td}">${escapeHtml(a.supervisor||'-')}</td>
+      <td style="${td}">${escapeHtml(String(a.cuadrilla||'-'))}</td>
+      <td style="${td}">${escapeHtml(a.areaTrabajo||'-')}</td>
+      <td style="${td}">${escapeHtml(a.apoyo||'-')}</td>
+      ${cols.map(c=>`<td style="${td}">${wwFinalDia_(a,c.key,c.fecha)}</td>`).join('')}
+      <td style="${td}">
+        <div style="width:132px;height:58px;margin:0 auto;border:1.5px dashed #CBD5E1;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff">
+          ${a.firmaConfirmacion?`<img src="${a.firmaConfirmacion}" alt="Confirmation" style="max-width:100%;max-height:100%;object-fit:contain">`:''}
+        </div>
+        <div style="font-size:.7rem;font-weight:700;margin-top:4px;line-height:1.35;color:${a.confirmada?'#15803D':'#64748B'}">
+          ${a.confirmada?('✓ '+escapeHtml(a.confirmadaPor)+'<br><span style="font-weight:500;color:#64748B">'+escapeHtml(resultadoEn[a.resultadoFinal]||'Done')+' · '+escapeHtml(fmtDateTime(a.fechaConfirmacion))+'</span>'):'Not confirmed yet'}
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const conZona=acts.filter(a=>a.layoutZone&&typeof a.layoutZone.xf==='number');
+  const zonas=conZona.map((a,i)=>{
+    const z=a.layoutZone, c=WW_ZONA_COLORES[i%WW_ZONA_COLORES.length];
+    return `<div style="position:absolute;left:${(z.xf*100).toFixed(2)}%;top:${(z.yf*100).toFixed(2)}%;width:${(z.wf*100).toFixed(2)}%;height:${(z.hf*100).toFixed(2)}%;border:2px solid ${c};background:${c}33;border-radius:3px">
+      <div style="position:absolute;top:-1px;left:-1px;background:${c};color:#fff;font-size:10px;font-weight:700;padding:1px 4px;border-radius:0 0 3px 0">${escapeHtml(a.no)}</div></div>`;
+  }).join('');
+
+  $('wwf-body').innerHTML=`<div id="wwf-doc" style="width:1180px;margin:0 auto;background:#FFFFFF;border-radius:14px;overflow:hidden;border-top:5px solid #DC2626;box-shadow:0 2px 10px rgba(15,31,61,.08);font-family:Inter,Arial,sans-serif">
+    <div class="wwf-corte" style="background:linear-gradient(135deg,#0F1F3D,#1E2F55);padding:22px 30px;display:flex;align-items:center;justify-content:space-between">
+      <div style="background:#FFFFFF;border-radius:8px;padding:7px 14px;display:flex;align-items:center;gap:7px">
+        <span style="display:inline-block;width:5px;height:20px;background:#DC2626;border-radius:2px"></span>
+        <b style="font-size:1.15rem;color:#0F1F3D;letter-spacing:.02em">KTMEX</b>
+      </div>
+      <div style="color:#FFFFFF;font-size:1.45rem;font-weight:700;letter-spacing:.03em">WEEKEND WORK PLAN</div>
+      <div style="text-align:center">
+        <div id="wwf-qr" style="background:#fff;padding:5px;border-radius:7px;width:62px;height:62px;margin:0 auto"></div>
+        <div style="color:#fff;font-size:.66rem;margin-top:3px">Accede aquí</div>
+      </div>
+    </div>
+
+    <div class="wwf-corte" style="display:flex;gap:26px;padding:24px 30px;align-items:flex-start">
+      <div style="flex:1.4;text-align:center">
+        <div style="${fila}"><b>Weekend Work Organizer:</b><br>${escapeHtml(d.organizador||'-')}</div>
+        ${guardias.length?`<div style="${fila};display:flex;justify-content:space-around;gap:14px;flex-wrap:wrap">${guardias.join('')}</div>`:''}
+        <div style="${fila}"><b>Weekend:</b><br>${cols.map(c=>escapeHtml(diaLargo(c.fecha,c.t))).join(' · ')||'-'}</div>
+        <div style="${fila};display:flex;justify-content:space-around;gap:14px;flex-wrap:wrap">
+          <span><b>Total activities:</b> ${acts.length}</span>
+          <span><b>Generated on:</b> ${escapeHtml(wwFechaLargaEn_(d.generado))}</span>
+        </div>
+      </div>
+      <div style="flex:1;border:1px solid #E2E8F0;border-radius:14px;padding:16px 14px">
+        <div style="text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.14em;color:#64748B;margin-bottom:10px">APPROVAL SIGNATURES</div>
+        <div style="display:flex;gap:8px">${['PRESIDENT','SENIOR_MANAGER','ENGINEER','ORIGINATOR'].map(slot).join('')}</div>
+      </div>
+    </div>
+
+    <div style="padding:0 30px 26px">
+      <p class="wwf-corte" style="text-align:center;font-size:.82rem;color:#64748B;margin:0 0 12px">Each row is confirmed with the signature and name of whoever carried out the activity once it's done.</p>
+      <table style="width:100%;border-collapse:separate;border-spacing:0;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+        <thead class="wwf-corte"><tr>
+          ${['No','Dept.','Job Leader','Activity','Risk','Rank','Contractor','Supervisor','Crew size','Work area','Support'].map(t=>`<th style="${th}">${t}</th>`).join('')}
+          ${cols.map(c=>`<th style="${th}">${c.t}<br>${escapeHtml(wwFechaLargaEn_(c.fecha))}</th>`).join('')}
+          <th style="${th}">Confirmation signature</th>
+        </tr></thead>
+        <tbody>${filas||`<tr><td colspan="${13+cols.length}" style="${td}">No activities.</td></tr>`}</tbody>
+      </table>
+    </div>
+
+    ${conZona.length?`<div class="wwf-corte" style="padding:0 30px 30px">
+      <div style="text-align:center;font-size:.9rem;font-weight:700;color:#0F1F3D">Plant layout — work zones</div>
+      <div style="text-align:center;font-size:.72rem;color:#64748B;margin-bottom:8px">Each box is the zone marked for that activity.</div>
+      <div style="position:relative;border:2px solid #0F1F3D;border-radius:6px;overflow:hidden">
+        <img id="wwf-mapa" src="./layout-planta.jpg" alt="Plant layout" style="width:100%;display:block">
+        ${zonas}
+      </div>
+    </div>`:''}
+  </div>`;
+
+  // QR de acceso al sistema.
+  try{
+    const q=$('wwf-qr'); q.innerHTML='';
+    new QRCode(q,{text:window.location.href.split('#')[0],width:52,height:52,correctLevel:QRCode.CorrectLevel.M});
+  }catch(e){}
+
+  // V9.1.1: si la tabla no cabe, el documento se ensancha. Con dos o tres
+  // días de trabajo la tabla es más ancha que el documento y la última
+  // columna —la de las firmas de confirmación— quedaba recortada.
+  requestAnimationFrame(()=>{
+    const docEl=$('wwf-doc'), tabla=docEl&&docEl.querySelector('table');
+    if(!tabla)return;
+    const disponible=docEl.clientWidth-60;
+    if(tabla.scrollWidth>disponible)docEl.style.width=(tabla.scrollWidth+60)+'px';
+  });
+}
+
+// ── Descarga en PDF ──────────────────────────────────────────
+// Las librerías se cargan solo cuando alguien pide el PDF, para no sumar
+// peso a la aplicación para quien nunca lo descarga.
+function wwCargarScript_(src){
+  return new Promise((res,rej)=>{
+    if([...document.scripts].some(x=>x.src===src))return res();
+    const s=document.createElement('script'); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('No se pudo cargar '+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function wwFinalPdf(){
+  const docEl=$('wwf-doc'); if(!docEl||!WW_FINAL){toast('Abre primero el documento','err');return;}
+  const btn=$('btn-wwf-pdf');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Generando PDF…';
+  try{
+    await wwCargarScript_('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await wwCargarScript_('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    // El plano se convierte en imagen incrustada antes de capturar. El
+    // navegador se niega a exportar una captura que contenga imágenes de
+    // otro origen ("canvas contaminado"); incrustada, nunca pasa.
+    const mapa=$('wwf-mapa');
+    if(mapa&&!/^data:/.test(mapa.src)){
+      try{
+        const blob=await (await fetch(mapa.src)).blob();
+        const dataUrl=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blob);});
+        await new Promise(r=>{mapa.onload=r;mapa.onerror=r;mapa.src=dataUrl;});
+      }catch(e){/* si no se puede incrustar, se intenta capturar tal cual */}
+    }
+    if(mapa&&!mapa.complete)await new Promise(r=>{mapa.onload=r;mapa.onerror=r;});
+
+    const escala=2;
+    const opciones={scale:escala,backgroundColor:'#FFFFFF',useCORS:true,windowWidth:Math.max(1300,docEl.offsetWidth+100)};
+    let canvas=await html2canvas(docEl,opciones);
+    // Si aun así la captura quedó contaminada, se rehace sin el plano: es
+    // preferible un PDF con firmas y actividades que ningún PDF.
+    let sinPlano=false;
+    try{ canvas.toDataURL('image/jpeg',0.5); }
+    catch(e){
+      canvas=await html2canvas(docEl,Object.assign({},opciones,{ignoreElements:el=>el.id==='wwf-mapa'}));
+      sinPlano=true;
+    }
+
+    // Cortes de página seguros: nunca a la mitad de un renglón de la tabla.
+    const base=docEl.getBoundingClientRect().top;
+    const cortes=[...docEl.querySelectorAll('.wwf-fila,.wwf-corte')]
+      .map(el=>Math.round((el.getBoundingClientRect().top-base)*escala)).filter(y=>y>0).sort((a,b)=>a-b);
+
+    const { jsPDF }=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), m=22;
+    const anchoUtil=pw-2*m, altoUtil=ph-2*m;
+    const altoPaginaPx=Math.floor(altoUtil*canvas.width/anchoUtil);
+
+    let inicio=0, pagina=0;
+    while(inicio<canvas.height){
+      let fin=Math.min(inicio+altoPaginaPx,canvas.height);
+      if(fin<canvas.height){
+        const seguro=cortes.filter(y=>y>inicio+altoPaginaPx*0.35&&y<=fin).pop();
+        if(seguro)fin=seguro;
+      }
+      const trozo=document.createElement('canvas');
+      trozo.width=canvas.width; trozo.height=fin-inicio;
+      trozo.getContext('2d').drawImage(canvas,0,inicio,canvas.width,fin-inicio,0,0,canvas.width,fin-inicio);
+      if(pagina>0)pdf.addPage();
+      pdf.addImage(trozo.toDataURL('image/jpeg',0.92),'JPEG',m,m,anchoUtil,(fin-inicio)*anchoUtil/canvas.width);
+      inicio=fin; pagina++;
+    }
+    pdf.save('Weekend_Work_Plan_'+((WW_FINAL.documento||{}).sabado||'')+'.pdf');
+    toast(sinPlano?'PDF descargado sin el plano: no se pudo incrustar la imagen del plano.':'PDF descargado');
+  }catch(e){toast('No se pudo generar el PDF: '+(e.message||e),'err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-file-pdf" style="margin-right:6px"></i>Descargar PDF';}
 }
 
 async function wwCambiarEtapa(accion,id){
