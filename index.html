@@ -2918,7 +2918,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.0.1';
+const FRONTEND_BUILD = '9.0.2';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -8221,6 +8221,69 @@ async function wwConfGuardar(){
 // ══════════════════════════════════════════════════════════════
 let WW_REV=null;
 
+// ══════════════════════════════════════════════════════════════
+// V9.0.2 — HORARIO CON EL DISEÑO DEL DOCUMENTO FINAL
+//
+// Replica la celda de día del Weekend Work: la fecha en negritas, una
+// barra que representa las 24 horas del día con el tramo de trabajo en
+// azul, y el rango de horas debajo. Así se ve de un vistazo a qué hora
+// del día se trabaja y cuánto dura.
+// ══════════════════════════════════════════════════════════════
+const WW_DIAS_DEF=[
+  {key:'Saturday',titulo:'Saturday',es:'sábado'},
+  {key:'Sunday',  titulo:'Sunday',  es:'domingo'},
+  {key:'Holiday', titulo:'Holiday', es:'festivo'}
+];
+
+function wwTieneDia_(a,def){
+  if((a.horario||[]).some(h=>h.dia===def.key))return true;
+  return String(a.dias||'').toLowerCase().indexOf(def.es)>=0;
+}
+
+// Días que aparecen en el documento, cada uno con su fecha.
+function wwDiasPresentes_(act,doc){
+  return WW_DIAS_DEF.filter(def=>act.some(a=>wwTieneDia_(a,def))).map(def=>{
+    let fecha='';
+    act.forEach(a=>{
+      const h=(a.horario||[]).find(x=>x.dia===def.key&&x.fecha);
+      if(h&&!fecha)fecha=h.fecha;
+    });
+    if(!fecha)fecha=def.key==='Saturday'?doc.sabado:(def.key==='Sunday'?doc.domingo:'');
+    return Object.assign({},def,{fecha:fecha});
+  });
+}
+
+// "2026-10-03" → "October 3, 2026", igual que el documento final.
+function wwFechaLargaEn_(iso){
+  if(!/^\d{4}-\d{2}-\d{2}/.test(String(iso||'')))return '';
+  const f=new Date(String(iso).slice(0,10)+'T12:00:00');
+  return f.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+
+// Fracción del día que representa una hora "HH:MM" (0 a 1).
+function wwFraccionHora_(t){
+  if(!t||String(t).indexOf(':')<0)return 0;
+  const p=String(t).split(':').map(Number);
+  return (Math.max(0,p[0]||0)+(p[1]||0)/60)/24;
+}
+
+function wwCeldaDia_(a,dc){
+  if(!wwTieneDia_(a,dc))return '<div style="text-align:center;color:#C7CDDA;font-size:.85rem">—</div>';
+  const h=(a.horario||[]).find(x=>x.dia===dc.key)||{};
+  const fecha=h.fecha||dc.fecha;
+  const ini=h.inicio||'', fin=h.fin||'';
+  const conHora=!!(ini&&fin);
+  const izq=Math.min(99,wwFraccionHora_(ini)*100);
+  const ancho=Math.max(1.8,(wwFraccionHora_(fin)-wwFraccionHora_(ini))*100);
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:96px">
+    <div style="font-size:.7rem;font-weight:700;color:#0F1F3D;white-space:nowrap">${escapeHtml(fecha?wwFechaLargaEn_(fecha):'(sin fecha)')}</div>
+    <div style="position:relative;width:100%;height:13px;border-radius:999px;background:#DBE0EA;overflow:hidden" title="${escapeHtml(conHora?(ini+'–'+fin):'Sin horario')}">
+      ${conHora?`<div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#2563EB"></div>`:''}
+    </div>
+    <div style="font-size:.66rem;color:#64748B;white-space:nowrap">${escapeHtml(conHora?(ini+'–'+fin):'Sin horario')}</div>
+  </div>`;
+}
+
 async function wwAbrirRevision(id){
   try{
     const r=await api({action:'getWeekendDocumento',token:SESSION.token,id});
@@ -8254,12 +8317,22 @@ function renderWwRevision(){
   // V8.9.4: la última columna es SIEMPRE visible y trae el botón para ver la
   // actividad completa. Antes esa columna solo existía para quien podía
   // editar, así que el resto de los administradores no podía abrir el detalle.
-  const cols=['No','Solicitante','Depto.','Job leader','Actividad','Área de trabajo','Riesgo','Contratista','Personas','Días','Origen'];
+  // V9.0.2: una columna por cada día del fin de semana, con el diseño del
+  // documento final (fecha, barra de 24 horas y rango de horas), en lugar
+  // del texto "Sábado, Domingo".
+  const diasCols=wwDiasPresentes_(act,d);
+  const colsAntes=['No','Solicitante','Depto.','Job leader','Actividad','Área de trabajo','Riesgo','Contratista','Personas'];
+  const colsDespues=['Origen'];
+  // El color va en CADA celda: la regla general "thead th" del sistema le
+  // gana al color puesto en la fila y dejaba el encabezado gris claro.
+  const thBase='padding:8px;font-weight:600;background:#0F1F3D;color:#FFFFFF';
   $('ww-rev-tabla').innerHTML=act.length?`
-    <table style="width:100%;border-collapse:collapse;font-size:.73rem;min-width:960px">
-      <thead><tr style="background:#0F2A4A;color:#fff">
-        ${cols.map(c=>`<th style="text-align:left;padding:7px 8px;font-weight:600">${c}</th>`).join('')}
-        <th style="padding:7px 8px"></th>
+    <table style="width:100%;border-collapse:collapse;font-size:.73rem;min-width:${960+diasCols.length*110}px">
+      <thead><tr>
+        ${colsAntes.map(c=>`<th style="text-align:left;${thBase}">${c}</th>`).join('')}
+        ${diasCols.map(dc=>`<th style="text-align:center;${thBase};line-height:1.3">${dc.titulo}<br>${escapeHtml(wwFechaLargaEn_(dc.fecha))}</th>`).join('')}
+        ${colsDespues.map(c=>`<th style="text-align:left;${thBase}">${c}</th>`).join('')}
+        <th style="${thBase}"></th>
       </tr></thead>
       <tbody>${act.map((a,i)=>{
         const rojo=a.fueraDeTiempo&&!a.cancelada;
@@ -8277,7 +8350,7 @@ function renderWwRevision(){
           <td style="padding:7px 8px">${escapeHtml(a.riesgo||'—')}</td>
           <td style="padding:7px 8px">${escapeHtml(a.contratista||'—')}</td>
           <td style="padding:7px 8px;text-align:center">${escapeHtml(String(a.cuadrilla||'—'))}</td>
-          <td style="padding:7px 8px">${escapeHtml(a.dias||'—')}</td>
+          ${diasCols.map(dc=>`<td style="padding:7px 8px">${wwCeldaDia_(a,dc)}</td>`).join('')}
           <td style="padding:7px 8px">
             ${a.agregadaEnRevision?`<span class="badge" style="background:#EDE9FE;color:#6D28D9;font-size:.6rem">En revisión</span><div style="font-size:.58rem;color:#94A3B8">${escapeHtml(a.agregadaPor||'')}</div>`
               :a.fueraDeTiempo?'<span class="badge" style="background:#FEE2E2;color:#B91C1C;font-size:.6rem">Fuera de tiempo</span>'
