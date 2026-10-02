@@ -1699,6 +1699,9 @@ const LPA_AREAS = {
        Aparece el lunes a las 06:30 siguiente al fin de semana. Cada
        persona confirma su propia actividad con nombre y firma.
        ══════════════════════════════════════════════════════════ -->
+  <!-- V9.1.2 — Plan aprobado del fin de semana, en solo lectura. -->
+  <div id="ww-plan-panel" style="display:none;margin-bottom:12px"></div>
+
   <div id="ww-confirm-panel" style="display:none;margin-bottom:12px"></div>
 
   <div id="weekend-cargando" class="card" style="display:none;padding:22px;text-align:center;color:#64748B;font-size:.82rem;margin-bottom:10px"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando formulario…</div>
@@ -2998,7 +3001,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.1.1';
+const FRONTEND_BUILD = '9.1.2';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4245,7 +4248,7 @@ function showView(v) {
   const target=$('view-'+v);if(target)target.style.display='';
   // V8.7.1: la herramienta se carga al entrar y se descarga al salir,
   // para no dejar un iframe de 800 KB vivo en segundo plano.
-  if(v==='weekend'){cargarWeekendWorkTool_();cargarConfirmacionWeekend_();}
+  if(v==='weekend'){cargarWeekendWorkTool_();cargarConfirmacionWeekend_();cargarPlanPublico_();}
   else if($('weekend-frame')&&$('weekend-frame').srcdoc)$('weekend-frame').srcdoc='';
   $('btn-logout').style.display=SESSION?'':'none';
   configureRoleUI();
@@ -4274,6 +4277,36 @@ function goCompra() {
   }
   initCompraForm(); showView('compra');
 }
+// ══════════════════════════════════════════════════════════════
+// V9.1.2 — ENLACE DIRECTO PARA LPA DE CALIDAD
+//
+// Los auditores abren la dirección del sistema con "?lpa" al final (o el
+// QR que la contiene). Ven un inicio de sesión propio de LPA de Calidad y,
+// al entrar, llegan directo a su panel: sin pantalla de inicio de
+// Facilities y sin elegir entre LPA de Facilities y de Calidad.
+// ══════════════════════════════════════════════════════════════
+let LPA_DIRECTO=false;
+
+function prepararAccesoLpa_(){
+  try{
+    const t=document.querySelector('#view-login h2'), p=document.querySelector('#view-login h2 + p');
+    if(t)t.textContent='LPA de Calidad';
+    if(p)p.textContent='Acceso de auditores · KTMEX';
+  }catch(e){}
+  PENDING_VIEW='lpa-quality';
+  if(!sessionStorage.getItem('ktmex_session'))setTimeout(()=>showView('login'),0);
+}
+
+// Después de entrar (o al restaurar la sesión), si llegó por el enlace de
+// LPA y su usuario puede ver LPA de Calidad, va directo a su panel.
+function irDirectoALpaSiAplica_(){
+  if(!LPA_DIRECTO||!SESSION||!SESSION.user)return false;
+  if(!roleCanView('lpa-quality'))return false;
+  showView('lpa-quality');
+  setTimeout(()=>goLpaQuality(),0);
+  return true;
+}
+
 function goLpaSelect() {
   if (!requireLogin('lpa-select')) return;
   if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a Auditoría LPA.','err'); goComprasRol(); return; }
@@ -4975,6 +5008,9 @@ async function performLogin() {
     PENDING_VIEW=null;
     toast('Bienvenido, '+SESSION.user.nombre,'ok');
     startNotificationPolling();
+
+    // V9.1.2: si entró por el enlace de LPA de Calidad, va directo a su panel.
+    if(irDirectoALpaSiAplica_())return;
 
     // Show destination immediately; load protected data afterwards.
     if(dest==='admin'){
@@ -7294,6 +7330,22 @@ let PLATFORM_SIGN_ACTIVE='',PLATFORM_SIGN_DRAWING=false,PLATFORM_SIGN_LAST={x:0,
 function openPlatformSignature(target,title){
   const c=$(target);
   if(c?.classList.contains('locked')){toast('Esta firma ya fue guardada y está bloqueada.','err');return;}
+  // V9.1.2: en celular, firma girada a pantalla completa.
+  if(esTelefono_()){
+    firmaGirada_(title||'Firma').then(url=>{
+      if(!url)return;
+      fitPlatformSignatureCanvas_(target);
+      const img=new Image();
+      img.onload=()=>{
+        const g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height);
+        const e=Math.min(c.width/img.width,c.height/img.height), w=img.width*e, h=img.height*e;
+        g.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);
+        PLATFORM_SIGNATURE_DIRTY[target]=true;
+      };
+      img.src=url;
+    });
+    return;
+  }
   PLATFORM_SIGN_ACTIVE=target;
   $('platform-sign-title').textContent=title||'Firma';
   $('platform-sign-modal').style.display='flex';
@@ -8182,6 +8234,8 @@ function wwPadInit(){
 
   c.onmousedown=start; c.onmousemove=move; c.onmouseup=end; c.onmouseleave=end;
   c.ontouchstart=start; c.ontouchmove=move; c.ontouchend=end;
+  // V9.1.2: en celular, firma girada a pantalla completa.
+  conectarFirmaTelefono_('ww-firma-canvas','Firma de aprobación',()=>{wwHayTrazo=true;});
 }
 
 function wwFirmaLimpiar(){
@@ -8218,6 +8272,43 @@ async function wwFirmaAceptar(){
 // ══════════════════════════════════════════════════════════════
 let WW_CONF=null, WW_CONF_CTX=null, wwConfPad=null, wwConfTrazo=false, wwConfPintando=false;
 
+// ══════════════════════════════════════════════════════════════
+// V9.1.2 — PLAN DEL FIN DE SEMANA PARA LAS ÁREAS
+//
+// El personal consulta en solo lectura el plan aprobado, con sus firmas,
+// y lo puede descargar en PDF. Aparece solo cuando el documento tiene las
+// cuatro firmas, y se retira al cierre de confirmaciones.
+// ══════════════════════════════════════════════════════════════
+async function cargarPlanPublico_(){
+  const box=$('ww-plan-panel'); if(!box)return;
+  try{
+    const r=await api({action:'getWeekendPlanPublico'});
+    const planes=(r&&r.success&&r.planes)||[];
+    if(!planes.length){box.style.display='none';return;}
+    box.style.display='';
+    box.innerHTML=planes.map(p=>`
+      <div class="card" style="padding:15px 16px;border-left:4px solid #0F2A4A;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <i class="fas fa-file-signature" style="font-size:1.4rem;color:#0F2A4A"></i>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:.92rem;font-weight:700;color:var(--navy)">Plan del fin de semana aprobado</div>
+          <div style="font-size:.74rem;color:#64748B">${escapeHtml(wwFechaLargaEn_(p.sabado))} – ${escapeHtml(wwFechaLargaEn_(p.domingo))} · ${p.actividades} actividad(es) · con las cuatro firmas</div>
+          <div style="font-size:.72rem;color:#B45309;margin-top:2px"><i class="fas fa-pen-to-square" style="margin-right:4px"></i>El cierre de actividades se habilita el ${escapeHtml(wwFmtCierre_(p.abreCierre))} y cierra el ${escapeHtml(wwFmtCierre_(p.cierre))}.</div>
+        </div>
+        <button class="btn-p" style="background:#0F2A4A" onclick="wwVerPlanPublico('${p.id}')"><i class="fas fa-eye" style="margin-right:6px"></i>Ver plan</button>
+      </div>`).join('');
+  }catch(e){box.style.display='none';}
+}
+
+async function wwVerPlanPublico(id){
+  $('wwf-body').innerHTML='<div style="padding:40px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Preparando el plan con sus firmas…</div>';
+  $('modal-ww-final').style.display='flex';
+  try{
+    const r=await api({action:'getWeekendPlanPublico',id});
+    if(!r.success){$('wwf-body').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    WW_FINAL=r; wwRenderFinal_(r);
+  }catch(e){$('wwf-body').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
 async function cargarConfirmacionWeekend_(){
   const box=$('ww-confirm-panel'); if(!box)return;
   try{
@@ -8239,7 +8330,7 @@ async function cargarConfirmacionWeekend_(){
           </div>
           <span class="badge ${res.pendientes?'b-wait':'b-done'}">${res.confirmadas} de ${res.total} confirmadas</span>
         </div>
-        <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y confírmala al terminar. Indica a qué hora trabajaste realmente, o por qué no se realizó, con tu nombre y tu firma.
+        <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y ciérrala en cuanto termines, aunque sea antes de lo planeado. Indica a qué hora trabajaste realmente, o por qué no se realizó, con tu nombre y tu firma.
           <br><b style="color:#B45309"><i class="fas fa-clock" style="margin-right:4px"></i>Las confirmaciones cierran el ${escapeHtml(wwFmtCierre_(res.cierre))}.</b></p>
         <div style="display:flex;flex-direction:column;gap:7px">
           ${d.actividades.map(a=>`
@@ -8255,7 +8346,7 @@ async function cargarConfirmacionWeekend_(){
                 ? (a.firmaURL?`<a href="${escapeHtml(a.firmaURL)}" target="_blank" rel="noopener" style="font-size:.7rem;color:#15803D;font-weight:650;text-decoration:none">Ver firma</a>`:'')
                 : (a.abierta
                     ? `<button class="btn-p" style="background:#16A34A;padding:8px 14px;font-size:.76rem" onclick="wwConfAbrir('${d.id}','${a.id}')">Confirmar</button>`
-                    : `<span style="font-size:.7rem;color:#64748B;text-align:right"><i class="fas fa-hourglass-half" style="margin-right:4px"></i>${a.estado==='AUN_NO'?'Se habilita al terminar:<br><b>'+escapeHtml(wwFmtCierre_(a.abreEn))+'</b>':'No disponible'}</span>`)}
+                    : `<span style="font-size:.7rem;color:#64748B;text-align:right"><i class="fas fa-hourglass-half" style="margin-right:4px"></i>${a.estado==='AUN_NO'?'Se habilita el<br><b>'+escapeHtml(wwFmtCierre_(a.abreEn))+'</b>':'No disponible'}</span>`)}
             </div>`).join('')}
         </div>
       </div>`;
@@ -8360,6 +8451,8 @@ function wwConfPadInit(){
   const end=()=>{wwConfPintando=false;};
   c.onmousedown=start;c.onmousemove=move;c.onmouseup=end;c.onmouseleave=end;
   c.ontouchstart=start;c.ontouchmove=move;c.ontouchend=end;
+  // V9.1.2: en celular, firma girada a pantalla completa.
+  conectarFirmaTelefono_('ww-conf-canvas','Firma de cierre de actividad',()=>{wwConfTrazo=true;});
 }
 
 function wwConfLimpiar(){
@@ -8759,6 +8852,8 @@ function wwAusPadInit_(){
   const fin=()=>{wwAusPintando=false;};
   c.onmousedown=ini;c.onmousemove=mov;c.onmouseup=fin;c.onmouseleave=fin;
   c.ontouchstart=ini;c.ontouchmove=mov;c.ontouchend=fin;
+  // V9.1.2: en celular, firma girada a pantalla completa.
+  conectarFirmaTelefono_('ww-aus-canvas','Firma por ausencia',()=>{wwAusTrazo=true;});
 }
 
 function wwAusLimpiar(){
@@ -9261,6 +9356,130 @@ function wwHorarioLeer_(){
     out.push({dia:dia,inicio:ini,fin:fin,fecha:fe?fe.value:''});
   }
   return {horario:out};
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.1.2 — FIRMA GIRADA EN EL CELULAR
+//
+// En un celular en vertical, el recuadro de firma queda angosto y la firma
+// sale apretada. Al tocar el recuadro, el celular abre una firma a pantalla
+// completa dibujada de lado: la persona gira el teléfono y firma a lo
+// ancho. Si el teléfono ya está en horizontal, se muestra derecha.
+//
+// Ninguna página web puede obligar a un iPhone a girar (Apple no lo
+// permite); por eso se gira el recuadro, no la pantalla. La firma se
+// guarda siempre bien orientada.
+// ══════════════════════════════════════════════════════════════
+function esTelefono_(){
+  const tactil=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  return tactil&&Math.min(screen.width,screen.height)<600;
+}
+
+function firmaGirada_(titulo){
+  return new Promise(resolve=>{
+    const prev=$('firma-girada'); if(prev)prev.remove();
+    const ov=document.createElement('div');
+    ov.id='firma-girada';
+    ov.style.cssText='position:fixed;inset:0;z-index:12500;background:#0F1F3D;touch-action:none';
+    ov.innerHTML=`<div id="fg-cont" style="position:absolute;background:#fff;display:flex;flex-direction:column;transform-origin:center center">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid #E2E8F0">
+        <b style="font-size:.88rem;color:#0F2A4A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(titulo||'Firma')}</b>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button type="button" class="btn-g" id="fg-limpiar" style="padding:6px 10px;font-size:.78rem">Limpiar</button>
+          <button type="button" class="btn-g" id="fg-cancelar" style="padding:6px 10px;font-size:.78rem">Cancelar</button>
+          <button type="button" class="btn-p" id="fg-ok" style="padding:6px 14px;font-size:.78rem">Listo</button>
+        </div>
+      </div>
+      <div style="flex:1;position:relative">
+        <canvas id="fg-canvas" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas>
+        <div style="position:absolute;left:8%;right:8%;bottom:24%;border-bottom:1.5px dashed #CBD5E1;pointer-events:none"></div>
+        <div style="position:absolute;top:8px;left:0;right:0;text-align:center;font-size:.72rem;color:#94A3B8;pointer-events:none">Firma a lo ancho, sobre la línea</div>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    const cont=ov.querySelector('#fg-cont'), cv=ov.querySelector('#fg-canvas');
+    let girado=false, trazos=[], actual=null;
+
+    // Distribución: el recuadro siempre más ancho que alto para quien firma.
+    const acomodar=()=>{
+      const W=window.innerWidth, H=window.innerHeight;
+      girado=H>W;
+      const ancho=girado?H:W, alto=girado?W:H;
+      cont.style.width=ancho+'px'; cont.style.height=alto+'px';
+      cont.style.left=((W-ancho)/2)+'px'; cont.style.top=((H-alto)/2)+'px';
+      cont.style.transform=girado?'rotate(90deg)':'none';
+      requestAnimationFrame(redibujar);
+    };
+    // Los trazos se guardan en proporción (0 a 1) para redibujarlos si
+    // cambia la orientación a media firma.
+    const redibujar=()=>{
+      const w=cv.offsetWidth, h=cv.offsetHeight, dpr=window.devicePixelRatio||1;
+      cv.width=w*dpr; cv.height=h*dpr;
+      const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+      g.lineWidth=3; g.lineCap='round'; g.lineJoin='round'; g.strokeStyle='#0F2A4A';
+      g.clearRect(0,0,w,h);
+      trazos.forEach(t=>{g.beginPath();t.forEach((p,i)=>{const x=p[0]*w,y=p[1]*h;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();});
+    };
+    // Coordenadas del dedo convertidas al sistema del recuadro, girado o no.
+    const punto=ev=>{
+      const t=ev.touches?ev.touches[0]:ev, b=cv.getBoundingClientRect();
+      const w=cv.offsetWidth, h=cv.offsetHeight;
+      const x=girado?(t.clientY-b.top):(t.clientX-b.left);
+      const y=girado?(b.right-t.clientX):(t.clientY-b.top);
+      return [Math.min(1,Math.max(0,x/w)),Math.min(1,Math.max(0,y/h))];
+    };
+    const ini=ev=>{ev.preventDefault();actual=[punto(ev)];trazos.push(actual);};
+    const mov=ev=>{if(!actual)return;ev.preventDefault();actual.push(punto(ev));redibujar();};
+    const fin=()=>{actual=null;};
+    cv.addEventListener('touchstart',ini,{passive:false}); cv.addEventListener('touchmove',mov,{passive:false});
+    cv.addEventListener('touchend',fin); cv.addEventListener('mousedown',ini);
+    cv.addEventListener('mousemove',mov); window.addEventListener('mouseup',fin);
+
+    const cerrar=val=>{window.removeEventListener('resize',acomodar);window.removeEventListener('mouseup',fin);ov.remove();resolve(val);};
+    ov.querySelector('#fg-limpiar').onclick=()=>{trazos=[];redibujar();};
+    ov.querySelector('#fg-cancelar').onclick=()=>cerrar(null);
+    ov.querySelector('#fg-ok').onclick=()=>{
+      if(!trazos.some(t=>t.length>1)){toast('Dibuja tu firma','err');return;}
+      cerrar(cv.toDataURL('image/png'));
+    };
+    window.addEventListener('resize',acomodar);
+    acomodar();
+  });
+}
+
+// Pinta una firma (imagen) dentro de un recuadro existente, centrada.
+function pintarFirmaEnCanvas_(c,url){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+      c.width=r.width*dpr; c.height=r.height*dpr;
+      const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,r.width,r.height);
+      const e=Math.min(r.width/img.width,r.height/img.height);
+      const w=img.width*e, h=img.height*e;
+      g.drawImage(img,(r.width-w)/2,(r.height-h)/2,w,h);
+      res();
+    };
+    img.src=url;
+  });
+}
+
+// En celular, tocar el recuadro abre la firma girada; al terminar, la firma
+// se pinta en el recuadro y se marca como hecha.
+function conectarFirmaTelefono_(canvasId,titulo,alTerminar){
+  if(!esTelefono_())return;
+  const c=$(canvasId); if(!c)return;
+  const abrir=ev=>{
+    ev.preventDefault();
+    firmaGirada_(titulo).then(url=>{if(!url)return;pintarFirmaEnCanvas_(c,url).then(alTerminar);});
+  };
+  c.ontouchstart=abrir; c.onmousedown=abrir; c.ontouchmove=null; c.onmousemove=null;
+  try{
+    const r=c.getBoundingClientRect(), g=c.getContext('2d');
+    g.save(); g.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
+    g.fillStyle='#94A3B8'; g.font='14px sans-serif'; g.textAlign='center';
+    g.fillText('Toca aquí para firmar',r.width/2,r.height/2); g.restore();
+  }catch(e){}
 }
 
 // ── Capturar o editar una actividad ──────────────────────────
@@ -11141,6 +11360,10 @@ function init() {
   });
 
   // Check saved session and validate with server
+  // V9.1.2: enlace directo para LPA de Calidad (?lpa). Abre su inicio de
+  // sesión y, al entrar, los lleva a su panel sin pasar por Facilities.
+  LPA_DIRECTO=new URLSearchParams(window.location.search).has('lpa');
+  if(LPA_DIRECTO)prepararAccesoLpa_();
   const saved=sessionStorage.getItem('ktmex_session');
   if(saved) {
     try {
@@ -11159,6 +11382,8 @@ function init() {
             if(m)m.textContent=(SESSION.user.rol||'usuario')+' · Facilities';
           },0);
           startNotificationPolling();
+          // V9.1.2: con sesión abierta y el enlace de LPA, directo a su panel.
+          if(irDirectoALpaSiAplica_())return;
           // V8.9.4: el presidente vuelve directo a su panel, en inglés; al
           // cargarse, refreshAdmin lo deja en la pestaña de Weekend Work.
           if(SESSION.user&&SESSION.user.soloWeekendWork){
@@ -11986,6 +12211,32 @@ window.addEventListener('offline',updateOfflineStatus);
 //     mostrando la interfaz vieja. Ahora, en cuanto toma el control, la
 //     página se recarga una sola vez sola.
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// V9.1.2 — AVISO DE VERSIÓN QUE FUNCIONA EN EL iPAD
+//
+// El aviso de la 9.0.1 dependía de que el navegador cambiara de versión
+// con la aplicación abierta. En el iPad, Safari aplica la versión nueva
+// al reabrir la aplicación —antes de que la página cargue— y ese evento
+// nunca ocurre. Ahora el sistema compara su propia versión con la
+// publicada en el servidor al abrir, al volver a primer plano (lo que pasa
+// al regresar a la aplicación en el iPad) y cada 30 minutos.
+// ══════════════════════════════════════════════════════════════
+let _versionRevisando=false;
+async function revisarVersionPublicada_(){
+  if(_versionRevisando||!navigator.onLine)return;
+  _versionRevisando=true;
+  try{
+    const r=await fetch('./index.html?vcheck='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const m=(await r.text()).match(/FRONTEND_BUILD\s*=\s*'([\d.]+)'/);
+    if(m&&m[1]!==FRONTEND_BUILD)mostrarAvisoVersionNueva_();
+  }catch(e){}
+  finally{_versionRevisando=false;}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')revisarVersionPublicada_();});
+setTimeout(revisarVersionPublicada_,6000);
+setInterval(revisarVersionPublicada_,30*60*1000);
+
 function mostrarAvisoVersionNueva_(){
   if($('aviso-version-nueva'))return;
   const a=document.createElement('div');
