@@ -18,7 +18,7 @@
 // V8.8.3: al subir la versión de caché, todos los dispositivos descargan
 // de nuevo la interfaz en su siguiente apertura. Es la forma de descartar
 // que un equipo esté viendo una copia vieja.
-const CACHE = 'ktmex-facilities-v26-9.1.1-20261005';
+const CACHE = 'ktmex-facilities-v27-9.1.2-20261006';
 // V8.7.4: weekend-work.html se sirve aparte de index.html. No entra en el
 // APP_SHELL a propósito: pesa 800 KB y solo lo necesita quien abre ese
 // formulario. La estrategia stale-while-revalidate de más abajo lo cachea
@@ -57,6 +57,13 @@ self.addEventListener('fetch', event => {
       url.hostname.indexOf('googleusercontent.com') >= 0) return;
 
   if (url.origin !== self.location.origin) return;
+
+  // V9.1.2: la consulta de versión siempre va al servidor y no se guarda;
+  // si se sirviera la copia en caché, la comparación diría siempre "igual".
+  if (url.searchParams.has('vcheck')) {
+    event.respondWith(fetch(req, { cache: 'no-store' }));
+    return;
+  }
 
   // Navegación: red primero, caché como respaldo sin conexión.
   if (req.mode === 'navigate') {
