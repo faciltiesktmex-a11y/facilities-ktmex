@@ -231,7 +231,9 @@ thead th{background:#F5F8FC;color:#586980}
 </head>
 <body>
 <!-- V8.2 estado de conexión / sincronización -->
-<div id="offline-status" onclick="openOfflineQueuePanel()" title="Ver pendientes de sincronización" style="cursor:pointer;"position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#064E3B;color:#fff;font-size:.74rem;font-weight:700;box-shadow:0 10px 28px rgba(15,23,42,.22)">
+<!-- V9.2.0: el estilo de este indicador tenía una comilla de más que lo cortaba antes de
+     "position:fixed": nunca se mostraba como pastilla fija y el aviso de pendientes no se veía. -->
+<div id="offline-status" onclick="openOfflineQueuePanel()" title="Ver pendientes de sincronización" style="cursor:pointer;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9998;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#064E3B;color:#fff;font-size:.74rem;font-weight:700;box-shadow:0 10px 28px rgba(15,23,42,.22)">
   <i class="fas fa-wifi"></i><span id="offline-status-text">En línea · Todo sincronizado</span>
 </div>
 
@@ -1149,7 +1151,7 @@ const LPA_AREAS = {
   </div>
   <div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
   <div id="chk-report-card" class="card" style="display:none;padding:18px;margin-top:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto" onchange="energiaToggleSelectores_()"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><span id="energia-selectores" style="display:none;gap:7px"><select id="energia-subestacion" class="inp" style="width:auto"><option>Subestación 1</option><option>Subestación 2</option></select><select id="energia-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select></span><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto" onchange="energiaToggleSelectores_()"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><span id="energia-selectores" style="display:none;gap:7px"><select id="energia-subestacion" class="inp" style="width:auto"><option>Subestación 1</option><option>Subestación 2</option></select><select id="energia-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select></span><span id="agua-selectores" style="display:none;gap:7px"><select id="agua-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select><select id="agua-periodo" class="inp" style="width:auto"><option value="dia">Por día</option><option value="semana">Por semana</option><option value="mes">Por mes</option></select></span><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
     <div id="chk-report-actions" style="display:none;gap:7px;margin-top:12px;flex-wrap:wrap"><button class="btn-g" style="width:auto" onclick="printChecklistMonthlyReport()"><i class="fas fa-file-pdf" style="margin-right:5px"></i>Imprimir / PDF</button><button class="btn-g" style="width:auto" onclick="exportChecklistMonthlyExcel()"><i class="fas fa-file-excel" style="margin-right:5px"></i>Descargar Excel</button></div>
     <div id="chk-report-content" style="margin-top:12px"></div>
   </div>
@@ -3001,7 +3003,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.1.3';
+const FRONTEND_BUILD = '9.2.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -11711,7 +11713,11 @@ async function submitChecklistV80(){
       const fotoName=fotos.length?fotos[0].nombre:'';
       respuestas.push({puntoId:p.id,valor,observacion:obs,fotos,fotoBase64,fotoName});
     }
-    const payload={action:'submitFacilitiesChecklist',token:SESSION.token,area:CHK_AREA,turno:$('chk-turno').value,inicio:CHK_START,observaciones:$('chk-general-obs').value,respuestas};
+    // V9.2.0: identificador propio desde la captura (evita duplicados si se
+    // reenvía), fecha de captura (no la de sincronización) y los puntos que
+    // el formulario mostró (el servidor solo exige esos).
+    const payload={action:'submitFacilitiesChecklist',token:SESSION.token,area:CHK_AREA,turno:$('chk-turno').value,inicio:CHK_START,observaciones:$('chk-general-obs').value,respuestas,
+      offlineId:offlineLocalId(),capturadoEn:new Date().toISOString(),puntosMostrados:pts.map(p=>p.id)};
     if(!navigator.onLine){
       const localId=await queueOfflineChecklist(payload);
       toast(`Inspección guardada sin conexión (${localId}). Se sincronizará al recuperar señal.`,'ok');
@@ -11801,7 +11807,7 @@ function checklistMonthLabel(v){
 function checklistTime(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?String(v).slice(11,16):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function configureChecklistReports(canAll,areas){
   const card=$('chk-report-card');if(!card)return;const allowed=canAll?['Subestaciones','Cuarto de Bombas','Cuarto de Máquinas','Compresores','Inspección General']:areas;
-  if(!allowed.length){card.style.display='none';return;}card.style.display='';$('chk-report-area').innerHTML=allowed.map(a=>`<option>${chkEsc(a)}</option>`).join('');try{energiaToggleSelectores_();}catch(e){}if(!$('chk-report-month').value)$('chk-report-month').value=new Date().toISOString().slice(0,7);
+  if(!allowed.length){card.style.display='none';return;}card.style.display='';$('chk-report-area').innerHTML=allowed.map(a=>`<option>${chkEsc(a)}</option>`).join('')+((allowed.includes('Cuarto de Bombas')||allowed.includes('Cuarto de Máquinas'))?`<option>${AGUA_AREA}</option>`:'');try{energiaToggleSelectores_();}catch(e){}if(!$('chk-report-month').value)$('chk-report-month').value=new Date().toISOString().slice(0,7);
 }
 async function openChecklistDetail(id){
   if(!SESSION||!navigator.onLine){toast('El detalle histórico requiere conexión','err');return;}
@@ -11815,9 +11821,11 @@ async function loadChecklistMonthlyReport(){
   const area=$('chk-report-area').value,month=$('chk-report-month').value;if(!area||!month){toast('Selecciona área y mes','err');return;}
   // V9.0.0: el área de Subestaciones tiene su propio reporte de energía.
   if(area==='Subestaciones'){return loadReporteEnergia_(month);}
+  // V9.2.0: reporte de agua, con consumo y reposición.
+  if(area===AGUA_AREA){return loadReporteAgua_(month);}
   $('chk-report-content').innerHTML='<p>Generando reporte…</p>';
   const r=await api({action:'getChecklistMonthlyReport',token:SESSION.token,area,month});if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
-  CHK_REPORT_DATA=r;ENERGIA_DATA=null;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
+  CHK_REPORT_DATA=r;ENERGIA_DATA=null;AGUA_DATA=null;renderChecklistMonthlyReport(r);$('chk-report-actions').style.display='flex';
 }
 // ══════════════════════════════════════════════════════════════
 // V9.0.0 — REPORTE DE ENERGÍA DE SUBESTACIONES
@@ -11831,8 +11839,9 @@ async function loadChecklistMonthlyReport(){
 let ENERGIA_DATA=null;
 
 function energiaToggleSelectores_(){
-  const s=$('energia-selectores');
-  if(s)s.style.display=($('chk-report-area').value==='Subestaciones')?'inline-flex':'none';
+  const s=$('energia-selectores'), a=$('agua-selectores'), v=$('chk-report-area').value;
+  if(s)s.style.display=(v==='Subestaciones')?'inline-flex':'none';
+  if(a)a.style.display=(v===AGUA_AREA)?'inline-flex':'none';
 }
 
 function energiaFmt_(n,dec){
@@ -11848,7 +11857,7 @@ async function loadReporteEnergia_(month){
     const r=await api({action:'getReporteSubestacion',token:SESSION.token,month,
       subestacion:$('energia-subestacion').value,turno:$('energia-turno').value});
     if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
-    ENERGIA_DATA=r;
+    ENERGIA_DATA=r; AGUA_DATA=null;
     CHK_REPORT_DATA=null;               // la impresión usa el reporte de energía
     renderReporteEnergia_(r);
     $('chk-report-actions').style.display='flex';
@@ -12039,6 +12048,137 @@ function exportarReporteEnergia_(){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
+// ══════════════════════════════════════════════════════════════
+// V9.2.0 — REPORTE DE AGUA: CONSUMO Y REPOSICIÓN
+//
+// Dos medidores en m³: el consumo de agua de la entrada principal
+// (Cuarto de Máquinas) y el agua de reposición (Cuarto de Bombas). Se ven
+// en barras lado a lado, por día, semana o mes, y separados por turno.
+// ══════════════════════════════════════════════════════════════
+const AGUA_AREA='Agua (consumo y reposición)';
+let AGUA_DATA=null;
+const AGUA_MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function aguaEtiqueta_(r,clave){
+  if(r.periodo==='mes')return AGUA_MESES[Number(clave.slice(5,7))-1]+' '+clave.slice(0,4);
+  const p=clave.split('-');
+  return (r.periodo==='semana'?'Sem. ':'')+p[2]+'/'+p[1];
+}
+
+async function loadReporteAgua_(month){
+  $('chk-report-content').innerHTML='<p>Generando reporte de agua…</p>';
+  try{
+    const r=await api({action:'getReporteAgua',token:SESSION.token,month,
+      turno:$('agua-turno').value,periodo:$('agua-periodo').value});
+    if(!r.success){$('chk-report-content').innerHTML='';toast(r.error||'No disponible','err');return;}
+    AGUA_DATA=r; ENERGIA_DATA=null; CHK_REPORT_DATA=null;
+    renderReporteAgua_(r);
+    $('chk-report-actions').style.display='flex';
+  }catch(e){$('chk-report-content').innerHTML='';toast('Error: '+e.message,'err');}
+}
+
+function renderReporteAgua_(r){
+  const nombrePeriodo={dia:'por día',semana:'por semana',mes:'por mes'}[r.periodo];
+  const alcance=r.periodo==='mes'?('año '+r.anio):(ENERGIA_MESES[Number(r.mes.slice(5,7))-1]+' '+r.anio);
+  const f2=v=>(v===null||v===undefined)?'—':energiaFmt_(v);
+  const th='padding:7px 9px;background:#0F2A4A;color:#FFFFFF;font-weight:600';
+  const filas=(r.filas||[]).map((x,i)=>`<tr style="background:${i%2?'#F8FAFC':'#FFF'}">
+      <td style="padding:6px 9px">${escapeHtml(aguaEtiqueta_(r,x.clave))}</td>
+      <td style="padding:6px 9px;text-align:right;font-weight:700;color:#1D4ED8">${x.conConsumo?f2(x.consumo):'—'}</td>
+      <td style="padding:6px 9px;text-align:right;font-weight:700;color:#0F766E">${x.conReposicion?f2(x.reposicion):'—'}</td>
+      <td style="padding:6px 9px;text-align:right;color:#475569">${x.porcentajeReposicion===null?'—':x.porcentajeReposicion+' %'}</td>
+    </tr>`).join('');
+
+  $('chk-report-content').innerHTML=`<div id="chk-print-area">
+    <div style="border-bottom:2px solid #0F2A4A;padding-bottom:8px;margin-bottom:12px">
+      <b style="font-size:1.02rem">KTMEX · Facilities — Consumo de agua y agua de reposición</b>
+      <div style="font-size:.76rem;color:#475569">${escapeHtml(r.turno)} · ${nombrePeriodo} · ${escapeHtml(alcance)} · m³</div>
+    </div>
+    ${(r.avisos||[]).map(a=>`<div style="padding:8px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:.72rem;color:#92400E;margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
+    ${(r.filas||[]).length?`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${[['Consumo de agua',f2(r.totalConsumo)+' m³','#1D4ED8'],['Agua de reposición',f2(r.totalReposicion)+' m³','#0F766E'],
+         ['Reposición / consumo',r.porcentajeReposicion===null?'—':r.porcentajeReposicion+' %','#475569'],
+         ['Promedio de consumo',f2(r.promedioConsumo)+' m³','#1D4ED8']].map(k=>`<div style="padding:9px 13px;border-radius:9px;background:#F8FAFC;border:1px solid #E2E8F0;min-width:140px"><div style="font-size:1.05rem;font-weight:800;color:${k[2]}">${k[1]}</div><div style="font-size:.66rem;color:#64748B">${k[0]}</div></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1 1 300px;overflow-x:auto">
+        <table style="border-collapse:collapse;font-size:.74rem;width:100%;border:1px solid #CBD5E1">
+          <thead><tr><th style="${th};text-align:left">Periodo</th><th style="${th};text-align:right">Consumo de agua (m³)</th><th style="${th};text-align:right">Agua de reposición (m³)</th><th style="${th};text-align:right">Reposición / consumo</th></tr></thead>
+          <tbody>${filas}</tbody>
+          <tfoot><tr style="font-weight:700"><td style="padding:7px 9px;background:#E2E8F0;color:#0F2A4A">TOTAL</td><td style="padding:7px 9px;background:#E2E8F0;text-align:right;color:#1D4ED8">${f2(r.totalConsumo)}</td><td style="padding:7px 9px;background:#E2E8F0;text-align:right;color:#0F766E">${f2(r.totalReposicion)}</td><td style="padding:7px 9px;background:#E2E8F0;text-align:right;color:#475569">${r.porcentajeReposicion===null?'—':r.porcentajeReposicion+' %'}</td></tr></tfoot>
+        </table>
+      </div>
+      <div style="flex:1 1 440px;border:1px solid #CBD5E1;border-radius:6px;padding:10px;background:#fff">
+        <div style="text-align:center;font-weight:700;font-size:.9rem;color:#0F172A;margin-bottom:6px">Consumo de agua y reposición ${nombrePeriodo}</div>
+        <canvas id="agua-chart" style="width:100%;height:320px"></canvas>
+      </div>
+    </div>`
+    :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay lecturas para este turno y periodo.</div>'}
+  </div>`;
+  if((r.filas||[]).length)setTimeout(()=>dibujarGraficaAgua_(r),0);
+}
+
+// Barras agrupadas: consumo (azul) y reposición (verde azulado) por periodo.
+function dibujarGraficaAgua_(r){
+  const c=$('agua-chart'); if(!c)return;
+  const datos=r.filas||[];
+  const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  const w=Math.max(360,rect.width), h=320;
+  c.width=w*dpr; c.height=h*dpr;
+  const g=c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+  const pL=46,pR=12,pT=28,pB=50;
+  const maxV=Math.max(1,...datos.map(x=>Math.max(x.consumo||0,x.reposicion||0)));
+  const paso=Math.pow(10,Math.floor(Math.log10(maxV)));
+  const tope=Math.ceil(maxV/paso)*paso;
+  const yFor=v=>pT+(tope-v)*(h-pT-pB)/tope;
+  g.font='10px sans-serif'; g.textAlign='right';
+  for(let k=0;k<=5;k++){
+    const v=tope*k/5, y=yFor(v);
+    g.strokeStyle='#E2E8F0'; g.lineWidth=1; g.beginPath(); g.moveTo(pL,y); g.lineTo(w-pR,y); g.stroke();
+    g.fillStyle='#475569'; g.fillText(v>=10?Math.round(v):v.toFixed(1),pL-6,y+3);
+  }
+  g.save(); g.translate(12,pT+(h-pT-pB)/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillStyle='#334155'; g.fillText('m³',0,0); g.restore();
+  const grupo=(w-pL-pR)/Math.max(1,datos.length), bw=Math.max(3,Math.min(26,grupo*0.36));
+  datos.forEach((x,i)=>{
+    const cx=pL+i*grupo+grupo/2;
+    [[x.consumo,'#2563EB',-1,x.conConsumo],[x.reposicion,'#0F766E',1,x.conReposicion]].forEach(b=>{
+      if(!b[3])return;
+      const bx=cx+(b[2]<0?-bw-1:1), by=yFor(Math.max(0,b[0]));
+      g.fillStyle=b[1]; g.fillRect(bx,by,bw,(h-pB)-by);
+    });
+    g.save(); g.translate(cx,h-pB+10); g.rotate(-Math.PI/4); g.textAlign='right'; g.fillStyle='#334155'; g.font='9px sans-serif';
+    g.fillText(aguaEtiqueta_(r,x.clave),0,0); g.restore();
+  });
+  // Leyenda
+  g.textAlign='left'; g.font='10px sans-serif';
+  g.fillStyle='#2563EB'; g.fillRect(pL,8,12,10); g.fillStyle='#334155'; g.fillText('Consumo de agua',pL+16,17);
+  g.fillStyle='#0F766E'; g.fillRect(pL+130,8,12,10); g.fillStyle='#334155'; g.fillText('Agua de reposición',pL+146,17);
+}
+
+function imprimirReporteAgua_(){
+  const area=$('chk-print-area'); if(!area)return;
+  const copia=area.cloneNode(true);
+  const c=$('agua-chart'), cc=copia.querySelector('#agua-chart');
+  if(c&&cc){const img=document.createElement('img');img.src=c.toDataURL('image/png');img.style.cssText='width:100%;max-width:560px';cc.parentNode.replaceChild(img,cc);}
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Reporte de agua ${escapeHtml(AGUA_DATA.mes)}</title><style>body{font-family:Arial,sans-serif;padding:18px;color:#172033}table{border-collapse:collapse}th,td{border:1px solid #94A3B8}@page{size:landscape;margin:12mm}</style></head><body>${copia.innerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+function exportarReporteAgua_(){
+  const r=AGUA_DATA; if(!r)return;
+  const e=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const filas=[['Turno',r.turno],['Periodo',r.periodo],['Mes',r.mes],[],['Periodo','Consumo de agua (m³)','Agua de reposición (m³)','Reposición / consumo (%)']]
+    .concat((r.filas||[]).map(x=>[aguaEtiqueta_(r,x.clave),x.conConsumo?x.consumo:'',x.conReposicion?x.reposicion:'',x.porcentajeReposicion??'']))
+    .concat([[],['TOTAL',r.totalConsumo,r.totalReposicion,r.porcentajeReposicion??'']]);
+  const html='<html><head><meta charset="utf-8"></head><body><table>'+filas.map(f=>'<tr>'+f.map(c=>'<td>'+e(c)+'</td>').join('')+'</tr>').join('')+'</table></body></html>';
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='Agua_'+(r.turno||'Todos').replace(/\s+/g,'')+'_'+r.periodo+'_'+r.mes+'.xls';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
 function renderChecklistMonthlyReport(r){
   const ins=(r.inspecciones||[]).slice().sort((a,b)=>{const ka=checklistDateKey(a.fecha),kb=checklistDateKey(b.fecha);if(ka!==kb)return ka.localeCompare(kb);return new Date(a.cierre||0)-new Date(b.cierre||0)}),pts=r.puntos||[],ok=ins.reduce((s,x)=>s+Number(x.ok||0),0),ng=ins.reduce((s,x)=>s+Number(x.ng||0),0),avg=ins.length?Math.round(ins.reduce((s,x)=>s+Number(x.cumplimiento||0),0)/ins.length*10)/10:0;
   const topNg=pts.filter(x=>x.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,10);
@@ -12061,10 +12201,12 @@ function drawChecklistMonthChart(ins){
 function printChecklistMonthlyReport(){
   // V9.0.0: el reporte de energía tiene su propia impresión.
   if(ENERGIA_DATA&&!CHK_REPORT_DATA){return imprimirReporteEnergia_();}
+  if(AGUA_DATA&&!CHK_REPORT_DATA){return imprimirReporteAgua_();}
   if(!CHK_REPORT_DATA)return;const content=$('chk-print-area').innerHTML,w=window.open('','_blank');w.document.write(`<html><head><title>Reporte ${chkEsc(CHK_REPORT_DATA.area)} ${chkEsc(CHK_REPORT_DATA.month)}</title><style>body{font-family:Arial;padding:22px;color:#172033}table{border-collapse:collapse;width:100%}th,td{border:1px solid #CBD5E1;padding:6px;text-align:left}.card{border:1px solid #CBD5E1}</style></head><body>${content}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 function exportChecklistMonthlyExcel(){
   // V9.0.0: el reporte de energía exporta su propio formato.
   if(ENERGIA_DATA&&!CHK_REPORT_DATA){return exportarReporteEnergia_();}
+  if(AGUA_DATA&&!CHK_REPORT_DATA){return exportarReporteAgua_();}
   const r=CHK_REPORT_DATA;if(!r)return;const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const rows=[['Área',r.area],['Mes',r.month],[],['ID','Fecha','Hora','Turno','Realizó','Estatus','OK','NG','N/A','Cumplimiento']].concat((r.inspecciones||[]).map(x=>[x.id,checklistDate(x.fecha),checklistTime(x.cierre),x.turno,x.tecnicoNombre,x.estatus,x.ok,x.ng,x.na,x.cumplimiento]));
   let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Resumen"><Table>'+rows.map(row=>'<Row>'+row.map(v=>'<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>').join('')+'</Row>').join('')+'</Table></Worksheet>';
@@ -12194,21 +12336,164 @@ async function offlineQueueAll(){const db=await offlineDb();return new Promise((
 async function offlineQueuePut(item){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').put(item);tx.oncomplete=()=>resolve(item);tx.onerror=()=>reject(tx.error);});}
 async function offlineQueueDelete(id){const db=await offlineDb();return new Promise((resolve,reject)=>{const tx=db.transaction('cola','readwrite');tx.objectStore('cola').delete(id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
 function offlineLocalId(){return 'OFF-'+new Date().toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
-async function queueOfflineChecklist(payload){const localId=offlineLocalId();const safe=JSON.parse(JSON.stringify(payload));delete safe.token;await offlineQueuePut({localId,createdAt:new Date().toISOString(),type:'facilities_checklist',payload:safe,status:'pending',lastError:'',attempts:0});return localId;}
+async function queueOfflineChecklist(payload){
+  // V9.2.0: se reutiliza el identificador del checklist y se guarda quién lo
+  // capturó. La cola es del iPad, no del usuario: sin esto, un checklist de
+  // Luis podía enviarse con la sesión de otra persona y quedar a su nombre.
+  const localId=payload.offlineId||offlineLocalId();
+  const safe=JSON.parse(JSON.stringify(payload));delete safe.token;safe.offlineId=localId;
+  await offlineQueuePut({localId,createdAt:payload.capturadoEn||new Date().toISOString(),type:'facilities_checklist',payload:safe,
+    status:'pending',lastError:'',attempts:0,usuario:SESSION&&SESSION.user?SESSION.user.username:'',nombre:SESSION&&SESSION.user?SESSION.user.nombre:''});
+  return localId;
+}
 function renderOfflineChecklistNotice(){const k=$('chk-kpis');if(k)k.innerHTML='<div class="card" style="padding:13px;border:1px solid #F59E0B;background:#FFFBEB"><b style="color:#92400E">Modo sin conexión</b><div style="font-size:.72rem;color:#92400E;margin-top:4px">Puedes completar y guardar checklists. Dashboard e historial se actualizarán cuando regrese Internet.</div></div>';}
-async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0;try{n=(await offlineQueueAll()).length}catch(_){}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(OFFLINE_SYNC_RUNNING){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate fa-spin';tx.textContent=`Sincronizando · ${n} pendiente${n===1?'':'s'}`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
+async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0,conError=0;try{const todos=await offlineQueueAll();n=todos.length;conError=todos.filter(x=>x.status==='error'||colaRequiereRevision_(x)).length;}catch(_){}
+  // V9.2.0: si algún registro necesita intervención, el indicador lo dice en rojo.
+  if(conError&&navigator.onLine&&!OFFLINE_SYNC_RUNNING){el.style.background='#B91C1C';el.querySelector('i').className='fas fa-triangle-exclamation';tx.textContent=`${conError} registro${conError===1?'':'s'} por revisar · toca aquí`;return;}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(OFFLINE_SYNC_RUNNING){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate fa-spin';tx.textContent=`Sincronizando · ${n} pendiente${n===1?'':'s'}`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
 async function validateOrRestoreOfflineSession(){
   if(SESSION&&SESSION.token)return true;const saved=sessionStorage.getItem('ktmex_session');if(!saved)return false;
   try{const parsed=JSON.parse(saved);if(!parsed||!parsed.token)return false;if(!navigator.onLine){SESSION=parsed;return true;}const r=await api({action:'validateSession',token:parsed.token});if(r&&r.valid){SESSION=parsed;configureRoleUI();return true;}return false;}catch(e){return !navigator.onLine&&!!SESSION;}
 }
-async function syncOfflineChecklists(){
-  if(OFFLINE_SYNC_RUNNING||!navigator.onLine)return;const items=await offlineQueueAll();if(!items.length){updateOfflineStatus();return;}
-  const valid=await validateOrRestoreOfflineSession();if(!valid){items[0].lastError='Sesión requerida para sincronizar. Inicia sesión; el registro permanece guardado.';await offlineQueuePut(items[0]);await updateOfflineStatus();toast('Hay inspecciones pendientes. Inicia sesión para sincronizarlas.','err');return;}
+// ══════════════════════════════════════════════════════════════
+// V9.2.0 — COLA SIN CONEXIÓN ROBUSTA
+//
+// Lo que estaba pasando en el iPad de Luis:
+//  1. El checklist que no lograba enviarse se reintentaba cada 30
+//     segundos, subiendo completo con todas sus fotos. Eso saturaba la
+//     conexión del iPad: todo lo demás —inspecciones, actividades— se
+//     volvía lento, sin importar con qué usuario se entrara.
+//  2. El envío no tenía límite de tiempo: si una subida se colgaba, la
+//     sincronización quedaba "en curso" para siempre.
+//  3. Un error permanente (por ejemplo, un punto que el servidor exige)
+//     se reintentaba sin fin, sin avisar.
+//  4. La cola es del iPad: un checklist se enviaba con la sesión de quien
+//     estuviera conectado, y quedaba a su nombre.
+// Ahora: cada envío tiene 3 minutos de límite; los reintentos se espacian
+// (1, 2, 5, 10, 20 y 30 minutos); un error permanente detiene el reintento
+// y se muestra para revisarlo; y cada registro se envía solo con la sesión
+// de quien lo capturó.
+// ══════════════════════════════════════════════════════════════
+const COLA_ESPERAS_MIN=[1,2,5,10,20,30];
+const COLA_LIMITE_MS=180000;
+
+// Registro anterior a esta versión: no sabe quién lo capturó.
+function colaRequiereRevision_(item){return !item.usuario&&!item.autorizado;}
+
+async function apiConLimite_(data,ms){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),ms);
+  try{
+    const r=await fetch(window.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data),cache:'no-store',signal:ctl.signal});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){
+    if(e&&e.name==='AbortError')throw new Error('El envío tardó más de '+Math.round(ms/60000)+' minutos y se canceló. Se reintentará.');
+    throw e;
+  }finally{clearTimeout(t);}
+}
+
+async function syncOfflineChecklists(forzarId){
+  if(OFFLINE_SYNC_RUNNING||!navigator.onLine)return;
+  const items=await offlineQueueAll();if(!items.length){updateOfflineStatus();return;}
+  const valid=await validateOrRestoreOfflineSession();
+  if(!valid){await updateOfflineStatus();return;}
+  const yo=String(SESSION.user.username||'').toLowerCase(), ahora=Date.now();
   OFFLINE_SYNC_RUNNING=true;await updateOfflineStatus();
-  try{for(const item of items){if(item.type!=='facilities_checklist')continue;try{const payload=Object.assign({},item.payload,{token:SESSION.token});const r=await api(payload);item.attempts=(item.attempts||0)+1;if(r&&r.success){await offlineQueueDelete(item.localId);}else{item.lastError=(r&&r.error)||'Error de sincronización';await offlineQueuePut(item);if(/sesión|token|expir/i.test(item.lastError)){toast('La sesión expiró. Inicia sesión nuevamente; la inspección sigue guardada.','err');break;}}}catch(e){item.lastError=e.message||String(e);item.attempts=(item.attempts||0)+1;await offlineQueuePut(item);break;}}}finally{OFFLINE_SYNC_RUNNING=false;await updateOfflineStatus();}
+  try{
+    for(const item of items){
+      if(item.type!=='facilities_checklist')continue;
+      const forzado=forzarId&&item.localId===forzarId;
+      if(!forzado){
+        if(item.status==='error')continue;                                   // espera revisión
+        if(item.nextTry&&ahora<item.nextTry)continue;                        // aún no le toca
+        if(colaRequiereRevision_(item))continue;                             // autor desconocido
+        if(item.usuario&&String(item.usuario).toLowerCase()!==yo)continue;    // es de otra persona
+      }
+      const payload=Object.assign({},item.payload,{token:SESSION.token,
+        offlineId:item.payload.offlineId||item.localId,capturadoEn:item.payload.capturadoEn||item.createdAt});
+      item.attempts=(item.attempts||0)+1;
+      try{
+        const r=await apiConLimite_(payload,COLA_LIMITE_MS);
+        if(r&&r.success){await offlineQueueDelete(item.localId);continue;}
+        item.lastError=(r&&r.error)||'Error de sincronización';
+        if(/sesión|token|expir/i.test(item.lastError)){await offlineQueuePut(item);break;}
+        item.status='error';                       // error del servidor: no se reintenta solo
+        await offlineQueuePut(item);
+      }catch(e){
+        item.lastError=e.message||String(e);
+        item.nextTry=Date.now()+COLA_ESPERAS_MIN[Math.min(item.attempts-1,COLA_ESPERAS_MIN.length-1)]*60000;
+        await offlineQueuePut(item);
+        break;                                     // problema de red: no insistir con los demás
+      }
+    }
+  }finally{OFFLINE_SYNC_RUNNING=false;await updateOfflineStatus();}
   if(navigator.onLine){try{if(typeof loadChkDashboard==='function')loadChkDashboard();if(typeof loadChkHistory==='function')loadChkHistory();}catch(_){}}
 }
-async function openOfflineQueuePanel(){const items=await offlineQueueAll();const msg=items.length?items.map(x=>`${x.localId}\n${new Date(x.createdAt).toLocaleString()}\n${x.lastError||'Pendiente de envío'}`).join('\n\n'):'No hay registros pendientes.';if(items.length&&navigator.onLine&&confirm(msg+'\n\n¿Sincronizar ahora?'))syncOfflineChecklists();else if(!items)toast('Todo está sincronizado','ok');else alert(msg);}
+
+// ── Ventana para revisar la cola ─────────────────────────────
+async function openOfflineQueuePanel(){
+  const items=await offlineQueueAll();
+  let m=$('modal-cola');
+  if(!m){
+    m=document.createElement('div'); m.id='modal-cola'; m.className='modal-bg'; m.style.display='none';
+    m.innerHTML=`<div class="card slide" style="width:100%;max-width:640px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-cloud-arrow-up" style="margin-right:8px"></i>Inspecciones por sincronizar</h3>
+        <button class="btn-g" onclick="closeModal('modal-cola')">Cerrar</button>
+      </div><div id="cola-lista"></div></div>`;
+    document.body.appendChild(m);
+  }
+  const yo=SESSION&&SESSION.user?SESSION.user.username:'';
+  const fmt=v=>v?new Date(v).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}):'';
+  $('cola-lista').innerHTML=items.length?items.map(x=>{
+    const p=x.payload||{}, legado=colaRequiereRevision_(x), ajeno=x.usuario&&yo&&x.usuario.toLowerCase()!==yo.toLowerCase();
+    const estado=x.status==='error'?'<b style="color:#B91C1C">Con error</b>':(legado?'<b style="color:#B45309">Requiere revisión</b>':(ajeno?'<b style="color:#64748B">De otro usuario</b>':'Pendiente'));
+    return `<div style="border:1px solid #E2E8F0;border-radius:10px;padding:11px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="font-size:.84rem;font-weight:700;color:#0F2A4A">${escapeHtml(p.area||'Inspección')} · ${escapeHtml(p.turno||'')}</div>
+        <div style="font-size:.74rem">${estado}</div>
+      </div>
+      <div style="font-size:.72rem;color:#64748B;margin-top:2px">Capturada ${escapeHtml(fmt(x.createdAt))} · ${escapeHtml(x.nombre||x.usuario||'autor desconocido')} · ${x.attempts||0} intento(s) · ${(p.respuestas||[]).length} lecturas</div>
+      ${x.lastError?`<div style="font-size:.72rem;color:#B91C1C;margin-top:5px;background:#FEF2F2;border-radius:6px;padding:6px 8px">${escapeHtml(x.lastError)}</div>`:''}
+      ${legado?`<div style="font-size:.72rem;color:#92400E;margin-top:5px">Se guardó antes de que el sistema registrara quién la capturó. Al enviarla quedará a nombre de <b>${escapeHtml(yo||'quien tenga la sesión')}</b>; entra con el usuario de quien la hizo antes de enviarla.</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        ${ajeno?'':`<button class="btn-p" style="padding:6px 11px;font-size:.74rem" onclick="colaEnviar_('${x.localId}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>${legado?'Enviar a nombre de '+escapeHtml(yo):'Enviar ahora'}</button>`}
+        <button class="btn-g" style="padding:6px 11px;font-size:.74rem" onclick="colaRespaldo_('${x.localId}')"><i class="fas fa-download" style="margin-right:5px"></i>Respaldo</button>
+        <button class="btn-g" style="padding:6px 11px;font-size:.74rem;color:#B91C1C" onclick="colaDescartar_('${x.localId}')"><i class="fas fa-trash" style="margin-right:5px"></i>Descartar</button>
+      </div>
+    </div>`;}).join(''):'<div style="padding:18px;text-align:center;color:#15803D;font-size:.84rem"><i class="fas fa-circle-check" style="margin-right:6px"></i>Todo está sincronizado.</div>';
+  m.style.display='flex';
+}
+
+async function colaItem_(id){return (await offlineQueueAll()).find(x=>x.localId===id);}
+
+async function colaEnviar_(id){
+  const x=await colaItem_(id); if(!x)return;
+  if(colaRequiereRevision_(x)){
+    if(!confirm('Esta inspección quedará a nombre de '+(SESSION&&SESSION.user?SESSION.user.nombre:'quien tiene la sesión')+'. ¿Enviarla?'))return;
+    x.autorizado=true; x.usuario=SESSION.user.username; x.nombre=SESSION.user.nombre;
+  }
+  x.status='pending'; x.nextTry=0; await offlineQueuePut(x);
+  toast('Enviando…'); await syncOfflineChecklists(id);
+  const sigue=await colaItem_(id);
+  if(sigue)toast('No se pudo enviar: '+(sigue.lastError||'revisa la conexión'),'err');
+  else toast('Inspección enviada','ok');
+  openOfflineQueuePanel();
+}
+
+// Descarga el registro completo, para no perder nada antes de descartarlo.
+async function colaRespaldo_(id){
+  const x=await colaItem_(id); if(!x)return;
+  const blob=new Blob([JSON.stringify(x,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='respaldo_'+id+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+async function colaDescartar_(id){
+  if(!confirm('¿Descartar esta inspección? Se borrará del iPad y no se enviará.\n\nTe recomiendo descargar antes el respaldo.'))return;
+  if(!confirm('Confirma de nuevo: esta acción no se puede deshacer.'))return;
+  await offlineQueueDelete(id); await updateOfflineStatus(); openOfflineQueuePanel();
+}
 window.addEventListener('online',()=>{updateOfflineStatus();setTimeout(syncOfflineChecklists,700);});
 window.addEventListener('offline',updateOfflineStatus);
 // ══════════════════════════════════════════════════════════════
