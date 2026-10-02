@@ -3001,7 +3001,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.1.2';
+const FRONTEND_BUILD = '9.1.3';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -8300,6 +8300,7 @@ async function cargarPlanPublico_(){
 }
 
 async function wwVerPlanPublico(id){
+  wwMostrarBotonPdf_();
   $('wwf-body').innerHTML='<div style="padding:40px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Preparando el plan con sus firmas…</div>';
   $('modal-ww-final').style.display='flex';
   try{
@@ -8987,7 +8988,20 @@ function wwReporteExcel(){
 // ══════════════════════════════════════════════════════════════
 let WW_FINAL=null;
 
+// V9.1.3: descargar el PDF del documento es solo para administradores del
+// sistema: ingeniería, manager y el técnico administrador (la misma regla
+// que la analítica). Las áreas ven el plan, pero no lo descargan.
+function puedeImprimirPlan_(){
+  if(!SESSION||!SESSION.user)return false;
+  const rol=SESSION.user.rol;
+  return rol==='manager'||rol==='ingeniero'||(rol==='tecnico'&&hasAdminPrivilege());
+}
+function wwMostrarBotonPdf_(){
+  const b=$('btn-wwf-pdf'); if(b)b.style.display=puedeImprimirPlan_()?'':'none';
+}
+
 async function wwVerDocumentoFinal(id){
+  wwMostrarBotonPdf_();
   $('wwf-body').innerHTML='<div style="padding:40px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Preparando el documento con sus firmas…</div>';
   $('modal-ww-final').style.display='flex';
   try{
@@ -9172,6 +9186,7 @@ function wwCargarScript_(src){
 }
 
 async function wwFinalPdf(){
+  if(!puedeImprimirPlan_()){toast('La descarga del documento es solo para administradores.','err');return;}
   const docEl=$('wwf-doc'); if(!docEl||!WW_FINAL){toast('Abre primero el documento','err');return;}
   const btn=$('btn-wwf-pdf');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Generando PDF…';
