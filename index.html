@@ -181,6 +181,11 @@ thead th{background:#F5F8FC;color:#586980}
   #toast{left:10px;right:10px;bottom:12px}
 }
 
+
+/* V9.4.0 — Totales del tablero con formato de botón */
+#kpi-row > .card{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;border:1.5px solid #E2E8F0}
+#kpi-row > .card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,42,74,.12);border-color:#93C5FD}
+#kpi-row > .card.kpi-activo{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.18)}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -1017,6 +1022,8 @@ const LPA_AREAS = {
   </div>
 
   <div id="lpaq-access-note" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:.8rem;color:#1E40AF"></div>
+  <!-- V9.4.0: medidores para la administración y la gerencia de Calidad -->
+  <div id="lpaq-medidores" style="display:none;margin-bottom:16px"></div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
     <div class="card" style="padding:16px">
@@ -1582,9 +1589,26 @@ const LPA_AREAS = {
       <input id="pm-desde" type="date" class="inp" style="width:auto">
       <select id="pm-semanas" class="inp" style="width:auto"><option value="2">2 semanas</option><option value="4" selected>4 semanas</option><option value="8">8 semanas</option></select>
       <button class="btn-p" onclick="pmCargarPrograma()">Ver programa</button>
-      <span style="font-size:.7rem;color:#94A3B8;margin-left:auto">La asignación de órdenes a técnicos llega en la fase 2.</span>
+      <span id="pm-cumplimiento" style="font-size:.78rem;color:#0F2A4A;margin-left:auto"></span>
     </div>
     <div id="pm-programa"></div>
+  </div>
+</div>
+
+<!-- V9.4.0 — Asignar una orden de preventivo -->
+<div id="modal-pm-asignar" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:560px;padding:20px">
+    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 8px"><i class="fas fa-user-gear" style="color:#2563EB;margin-right:8px"></i>Asignar orden de preventivo</h3>
+    <div id="pm-asig-info" style="font-size:.76rem;color:#334155;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;margin-bottom:12px"></div>
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Técnico *</label>
+    <select id="pm-asig-tec" class="inp" style="margin-bottom:10px"></select>
+    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Fecha de ejecución *</label>
+    <input id="pm-asig-fecha" type="date" class="inp" style="margin-bottom:6px">
+    <div style="font-size:.68rem;color:#64748B;margin-bottom:14px">La orden aparecerá en el Plan Diario del técnico ese día, como una actividad planeada.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-g" style="flex:1" onclick="closeModal('modal-pm-asignar')">Cancelar</button>
+      <button class="btn-p" id="btn-pm-asig" style="flex:1.4" onclick="pmConfirmarAsignacion()">Asignar</button>
+    </div>
   </div>
 </div>
 
@@ -1807,9 +1831,7 @@ const LPA_AREAS = {
         <p id="admin-stock-alert-text" style="font-size:.84rem;color:#B91C1C;margin:0;font-weight:600">
           <i class="fas fa-triangle-exclamation" style="margin-right:7px"></i>
         </p>
-        <button class="btn-red" style="padding:7px 12px" onclick="switchTab('inv')">
-          <i class="fas fa-boxes-stacked" style="margin-right:6px"></i>Ver inventario
-        </button>
+<!-- V9.4.0: el botón "Ver inventario" se quitó; la pestaña Inventario está abajo. -->
       </div>
     </div>
 
@@ -1837,6 +1859,19 @@ const LPA_AREAS = {
       </div>
     </div>
 
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;margin-bottom:16px">
+      <button class="tab-btn active" id="tab-sol" onclick="switchTab('sol')">Solicitudes</button>
+      <button class="tab-btn" id="tab-compra" onclick="switchTab('compra')">Compras</button>
+      <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
+      <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
+      <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')">Inventario <span id="inv-alert-dot" style="display:none;background:#EF4444;color:#fff;border-radius:8px;padding:1px 6px;font-size:.68rem;margin-left:4px"></span></button>
+      <button class="tab-btn" id="tab-daily-dash" onclick="switchTab('daily-dash')" style="display:none"><i class="fas fa-calendar-check" style="margin-right:5px"></i>Plan Diario</button>
+      <button class="tab-btn" id="tab-weekend" onclick="switchTab('weekend')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Weekend Works</button>
+      <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')" style="display:none"><i class="fas fa-chart-column" style="margin-right:5px"></i>Analítica</button>
+    </div>
+
+    <!-- V9.4.0: los totales van debajo de las pestañas, con formato de botón -->
     <!-- KPIs / Seguimiento de flujo -->
     <div style="display:grid;grid-template-columns:repeat(6,minmax(115px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
       <div class="card" style="padding:14px 16px">
@@ -1863,18 +1898,6 @@ const LPA_AREAS = {
         <p id="kpi-label-ejec" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En ejecución</p>
         <p id="kpi-ejec" class="mono" style="font-size:1.8rem;font-weight:700;color:#0891B2;margin:0">0</p>
       </div>
-    </div>
-
-    <!-- Tabs -->
-    <div style="display:flex;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;margin-bottom:16px">
-      <button class="tab-btn active" id="tab-sol" onclick="switchTab('sol')">Solicitudes</button>
-      <button class="tab-btn" id="tab-compra" onclick="switchTab('compra')">Compras</button>
-      <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
-      <button class="tab-btn" id="tab-acc" onclick="switchTab('acc')">Plan de Acciones</button>
-      <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')">Inventario <span id="inv-alert-dot" style="display:none;background:#EF4444;color:#fff;border-radius:8px;padding:1px 6px;font-size:.68rem;margin-left:4px"></span></button>
-      <button class="tab-btn" id="tab-daily-dash" onclick="switchTab('daily-dash')" style="display:none"><i class="fas fa-calendar-check" style="margin-right:5px"></i>Plan Diario</button>
-      <button class="tab-btn" id="tab-weekend" onclick="switchTab('weekend')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Weekend Works</button>
-      <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')" style="display:none"><i class="fas fa-chart-column" style="margin-right:5px"></i>Analítica</button>
     </div>
 
     <!-- TAB: Solicitudes -->
@@ -2846,6 +2869,7 @@ const LPA_AREAS = {
     <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-file-signature" style="color:#DC2626;margin-right:8px"></i>Documento final</h3>
       <div style="display:flex;gap:7px">
+        <button class="btn-g" id="btn-wwf-full" onclick="wwFinalPantallaCompleta()"><i class="fas fa-expand" style="margin-right:6px"></i>Pantalla completa</button>
         <button class="btn-p" id="btn-wwf-pdf" style="background:#DC2626" onclick="wwFinalPdf()"><i class="fas fa-file-pdf" style="margin-right:6px"></i>Descargar PDF</button>
         <button class="btn-g" onclick="closeModal('modal-ww-final')">Cerrar</button>
       </div>
@@ -3052,7 +3076,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.3.0';
+const FRONTEND_BUILD = '9.4.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4481,8 +4505,49 @@ async function pmVerEquipo(id){
           <span style="margin-left:5px;padding:1px 7px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700">${escapeHtml(String(m.stockActual))} ${escapeHtml(m.unidad||'')}</span></div>`;}).join('')}</div>`
         :'<div style="font-size:.74rem;color:#94A3B8">Ningún material del inventario está ligado a los planes de este equipo.</div>'}
       <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin:16px 0 6px">Historial</div>
-      <div style="font-size:.74rem;color:#94A3B8">El historial de órdenes ejecutadas se llenará con las órdenes de trabajo de la fase 2.</div>`;
+      ${(r.historial||[]).length?`<div style="display:flex;flex-direction:column;gap:5px">${r.historial.map(h=>`<div style="font-size:.72rem;border:1px solid #E2E8F0;border-radius:8px;padding:6px 9px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span><b>${escapeHtml(h.idOrden)}</b> · ${escapeHtml(h.plan)} · ${escapeHtml(h.tecnico||'')} · ${escapeHtml(h.folio||'')}</span>
+        <span style="color:${h.estatus==='Cerrada'?'#15803D':'#B45309'};font-weight:700">${h.estatus==='Cerrada'?'Cerrada '+pmFechaCorta_(h.fechaCierre):'Asignada para '+pmFechaCorta_(h.fechaEjecucion)}</span></div>`).join('')}</div>`
+        :'<div style="font-size:.74rem;color:#94A3B8">Todavía no hay órdenes ejecutadas para este equipo.</div>'}`;
   }catch(err){$('pm-eq-body').innerHTML=`<div style="color:#B91C1C">Error: ${escapeHtml(err.message||String(err))}</div>`;}
+}
+
+// ── V9.4.0: asignación de órdenes ───────────────────────────
+let PM_PROG=null, PM_PROG_ORD=[], PM_ASIG_CTX=null;
+function pmAccionOrden_(o,lunes){
+  if(o.estatus==='Cerrada')return `<div style="font-size:.66rem;color:#15803D;font-weight:700;margin-top:4px"><i class="fas fa-circle-check" style="margin-right:3px"></i>Cerrada ${pmFechaCorta_(o.fechaCierre)}</div>`;
+  if(o.estatus==='Asignada')return `<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px">${escapeHtml(o.tecnico||'')} · ${pmFechaCorta_(o.fechaEjecucion)}<br>${escapeHtml(o.folio||'')} · ${escapeHtml(o.idOrden||'')}</div>
+    <button class="btn-g" style="padding:3px 9px;font-size:.66rem;margin-top:4px" onclick="pmLiberar('${o.idOrden}')">Liberar</button>`;
+  const i=PM_PROG_ORD.push(Object.assign({lunes},o))-1;
+  return `<button class="btn-p" style="padding:4px 11px;font-size:.7rem;margin-top:5px" onclick="pmAbrirAsignar(${i})"><i class="fas fa-user-plus" style="margin-right:4px"></i>Asignar</button>`;
+}
+function pmAbrirAsignar(i){
+  const o=PM_PROG_ORD[i]; if(!o)return; PM_ASIG_CTX=o;
+  $('pm-asig-info').innerHTML=`<b>${escapeHtml(o.plan)}</b> · ${escapeHtml(o.localizacion)} · ${o.horas} h<br>
+    ${o.equipos.length} equipo(s): ${o.equipos.map(x=>escapeHtml(x.equipo.split(' ').slice(0,4).join(' '))).join(' · ')}
+    ${o.requiereParoDias?'<br><b style="color:#B91C1C">Requiere paro de equipo</b>':''}`;
+  const tecs=(PM_PROG.tecnicos||[]).map(t=>typeof t==='string'?{username:t,nombre:t}:t);
+  $('pm-asig-tec').innerHTML='<option value="">— Elige al técnico —</option>'+tecs.map(t=>`<option value="${escapeHtml(t.username||t.nombre)}">${escapeHtml(t.nombre||t.username)}</option>`).join('');
+  const hoy=localDateKeyV843_(); $('pm-asig-fecha').value=o.lunes<hoy?hoy:o.lunes;
+  $('modal-pm-asignar').style.display='flex';
+}
+async function pmConfirmarAsignacion(){
+  const o=PM_ASIG_CTX; if(!o)return;
+  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value;
+  if(!tec){toast('Elige al técnico','err');return;} if(!fecha){toast('Indica la fecha','err');return;}
+  const b=$('btn-pm-asig'); b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>Asignando…';
+  try{
+    const r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha});
+    if(!r.success){toast(r.error||'No se pudo asignar','err');return;}
+    toast(r.mensaje||'Orden asignada'); closeModal('modal-pm-asignar'); pmCargarPrograma();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{b.disabled=false;b.innerHTML='Asignar';}
+}
+async function pmLiberar(id){
+  if(!confirm('¿Liberar la orden '+id+'? Se quitará del Plan Diario del técnico y sus equipos volverán al programa.'))return;
+  try{const r=await api({action:'pmLiberarOrden',token:SESSION.token,idOrden:id});
+    if(!r.success){toast(r.error||'No se pudo liberar','err');return;} toast(r.mensaje||'Orden liberada'); pmCargarPrograma();}
+  catch(e){toast('Error: '+e.message,'err');}
 }
 
 async function pmCargarPrograma(){
@@ -4491,12 +4556,14 @@ async function pmCargarPrograma(){
   try{
     const r=await api({action:'getPMPrograma',token:SESSION.token,desde:$('pm-desde').value,semanas:$('pm-semanas').value});
     if(!r.success){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    PM_PROG=r; PM_PROG_ORD=[];
+    $('pm-cumplimiento').innerHTML=r.cumplimiento===null?'':`Cumplimiento del programa: <b style="color:${r.cumplimiento>=90?'#15803D':(r.cumplimiento>=80?'#B45309':'#B91C1C')}">${r.cumplimiento} %</b> <span style="color:#64748B">(${r.ordenesCerradas} de ${r.ordenesVencidasOActuales} órdenes)</span>`;
     box.innerHTML=r.semanas.map(w=>{
       const pct=Math.min(100,w.porcentaje), col=w.porcentaje>90?'#DC2626':(w.porcentaje>60?'#D97706':'#16A34A');
       return `<div class="card" style="padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <b style="font-size:.9rem;color:#0F2A4A">Semana del ${pmFechaCorta_(w.lunes)}</b>
-          <span style="font-size:.74rem;color:#475569">${w.ordenes.length} órdenes · <b>${w.horas} h</b> de ${w.capacidad} h de capacidad (${w.porcentaje} %)</span>
+          <span style="font-size:.74rem;color:#475569">${w.ordenes.length} órdenes · <b>${w.horas} h</b> de ${w.capacidad} h (${w.porcentaje} %)${w.cumplimiento!==null?` · <b>${w.cerradas}</b> cerradas`:''}</span>
         </div>
         <div style="height:8px;border-radius:999px;background:#E2E8F0;overflow:hidden;margin:7px 0 10px"><div style="height:100%;width:${pct}%;background:${col}"></div></div>
         ${w.ordenes.length?`<div style="display:flex;flex-direction:column;gap:6px">${w.ordenes.map(o=>`
@@ -4507,7 +4574,8 @@ async function pmCargarPrograma(){
               <div style="font-size:.66rem;color:#64748B">${o.actividades.slice(0,3).map(escapeHtml).join(' · ')}${o.actividades.length>3?' …':''}</div>
             </div>
             <div style="text-align:right;white-space:nowrap">${pmBadge_(o.prioridad)}<div style="font-size:.74rem;font-weight:700;color:#0F2A4A;margin-top:3px">${o.horas} h</div>
-              ${o.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">Vencida</div>`:''}${o.requiereParoDias?`<div style="font-size:.64rem;color:#B91C1C">Requiere paro</div>`:''}</div>
+              ${o.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">Vencida</div>`:''}${o.requiereParoDias?`<div style="font-size:.64rem;color:#B91C1C">Requiere paro</div>`:''}
+              ${pmAccionOrden_(o,w.lunes)}</div>
           </div>`).join('')}</div>`:'<div style="font-size:.74rem;color:#94A3B8">Sin órdenes esta semana.</div>'}
       </div>`;}).join('');
   }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
@@ -5676,6 +5744,39 @@ async function goLpaQuality(){
   showView('lpa-quality');
   await loadLpaQDashboard();
 }
+// ══════════════════════════════════════════════════════════════
+// V9.4.0 — MEDIDORES DE LPA CALIDAD
+// Para Dulce Rangel y la gerencia de Calidad (Erick García, Zia Bin y
+// Yoshiki Kojima). Rojo debajo de 80 %, ámbar de 80 a 89 %, verde desde 90 %.
+// ══════════════════════════════════════════════════════════════
+function lpaqMedidorSvg_(valor){
+  const cx=110,cy=100,r=78,w=20, v=Math.max(0,Math.min(100,Number(valor)||0));
+  const p=a=>{const t=a*Math.PI/180;return [cx+r*Math.cos(t),cy-r*Math.sin(t)];};
+  const arco=(v1,v2,col)=>{const a1=180-v1*1.8,a2=180-v2*1.8,[x1,y1]=p(a1),[x2,y2]=p(a2);
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${w}"/>`;};
+  const ang=(180-v*1.8)*Math.PI/180, nx=cx+(r-14)*Math.cos(ang), ny=cy-(r-14)*Math.sin(ang);
+  return `<svg viewBox="0 0 220 112" style="width:100%;max-width:230px;display:block;margin:0 auto">
+    ${arco(0,80,'#FF4D4D')}${arco(80,90,'#F6D27A')}${arco(90,100,'#0FB85A')}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#E5E7EB" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" fill="#E5E7EB"/></svg>`;
+}
+function lpaqRenderMedidores_(m){
+  const box=$('lpaq-medidores'); if(!box)return;
+  if(!m){box.style.display='none';box.innerHTML='';return;}
+  const en=LANG==='en';
+  const items=[[en?'Program Compliance':'Cumplimiento de Programa',m.cumplimientoPrograma],
+    [en?'Process Conformity':'Conformidad de Proceso',m.conformidadProceso],
+    [en?'Findings Closure':'Cierre de Hallazgos',m.cierreHallazgos]];
+  box.style.display='';
+  box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">${items.map(x=>`
+    <div style="background:#1F1F1F;border-radius:16px;padding:16px 12px 14px;text-align:center">
+      ${lpaqMedidorSvg_(x[1])}
+      <div style="color:#C9CDD3;font-size:.82rem;margin-top:4px">${escapeHtml(x[0])}</div>
+      <div style="color:#F3F4F6;font-size:2rem;font-weight:300;line-height:1.15">${Number(x[1])||0}%</div>
+    </div>`).join('')}</div>
+    <div style="font-size:.66rem;color:#64748B;margin-top:6px">${m.auditorias} ${en?'audits':'auditorías'} · ${m.hallazgos} ${en?'findings in the period':'hallazgos en el periodo'}</div>`;
+}
+
 async function loadLpaQDashboard(){
   // V8.6.0: por omisión se pide solo el mes en curso (más lo vencido de meses
   // anteriores). El backend ya no escribe en la hoja al consultar, por lo que
@@ -5698,6 +5799,7 @@ async function loadLpaQDashboard(){
       (r.programaTotal!==undefined?`<div style="font-size:.68rem;color:#1E40AF;margin-top:5px">Mostrando <b>${r.programaMostrado}</b> de <b>${r.programaTotal}</b> auditorías del programa · ${r.scope==='all'?'año completo':'mes '+(r.month||'')} + pendientes anteriores</div>`:'')+
       (r.avisoCanal?`<div style="font-size:.66rem;color:#475569;margin-top:3px"><i class="fas fa-bell" style="margin-right:4px"></i>${r.avisoCanal}</div>`:'');
     if($('lpaq-admin-pwd-panel'))$('lpaq-admin-pwd-panel').style.display=r.access.qadmin?'':'none';
+    lpaqRenderMedidores_(r.medidores);
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -8321,7 +8423,9 @@ function renderWeekendFlujo(){
         <span class="badge ${d.etapa==='APROBADO'?'b-done':'b-wait'}">${escapeHtml(d.etiquetaEtapa)}</span>
       </div>
       <div style="display:flex;align-items:flex-start;margin:13px 0">${pasos}</div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">${acciones.join('')}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${((SESSION&&SESSION.user&&SESSION.user.rol==='manager'&&(d.etapa==='APROBADO'||d.etapa==='CERRADO'))
+          ? acciones.filter(b=>b.indexOf('wwVerDocumentoFinal(')>=0)   /* V9.4.0: Inagaki y Kojima solo ven el documento */
+          : acciones).join('')}</div>
     </div>`;
   }).join('');
 }
@@ -9225,7 +9329,19 @@ function wwFinalDia_(a,key,fechaCol){
       ${conHora?`<div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#2563EB"></div>`:''}
     </div>
     <div style="font-size:.7rem;color:#64748B;white-space:nowrap">${escapeHtml(conHora?(h.inicio+'–'+h.fin):'—')}</div>
+    ${wwFinalReal_(a,key)}
   </div>`;
+}
+// V9.4.0: horario real capturado al cerrar, debajo del planeado.
+function wwFinalReal_(a,key){
+  const e=(a.ejecucion||[]).find(x=>x.dia===key);
+  if(!e)return '';
+  if(e.realizado===false)return `<div style="font-size:.66rem;font-weight:700;color:#B91C1C;margin-top:3px" title="${escapeHtml(e.motivo||'')}">No se realizó</div>`;
+  if(!e.inicio||!e.fin)return '';
+  const izq=Math.min(99,wwFraccionHora_(e.inicio)*100), ancho=Math.max(1.8,(wwFraccionHora_(e.fin)-wwFraccionHora_(e.inicio))*100);
+  return `<div style="position:relative;width:100%;height:11px;border-radius:999px;background:#DCFCE7;overflow:hidden;margin-top:4px">
+      <div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#16A34A"></div></div>
+    <div style="font-size:.66rem;font-weight:700;color:#15803D;white-space:nowrap">Real ${escapeHtml(e.inicio+'–'+e.fin)}</div>`;
 }
 function wwFinalDosNombres_(n){return String(n||'').trim().split(/\s+/).slice(0,2).join(' ');}
 
@@ -9361,6 +9477,25 @@ function wwRenderFinal_(r){
     const disponible=docEl.clientWidth-60;
     if(tabla.scrollWidth>disponible)docEl.style.width=(tabla.scrollWidth+60)+'px';
   });
+}
+
+// V9.4.0 — Pantalla completa del documento final. Usa la pantalla completa
+// del navegador cuando existe y, además, amplía la ventana a todo el espacio
+// (en el iPad la pantalla completa del navegador no siempre está disponible).
+let WWF_COMPLETA=false;
+function wwFinalPantallaCompleta(){
+  const m=$('modal-ww-final'), card=m&&m.querySelector('.card'); if(!card)return;
+  WWF_COMPLETA=!WWF_COMPLETA;
+  card.style.maxWidth=WWF_COMPLETA?'none':'1260px';
+  card.style.width=WWF_COMPLETA?'100vw':'100%';
+  card.style.minHeight=WWF_COMPLETA?'100dvh':'';
+  card.style.borderRadius=WWF_COMPLETA?'0':'';
+  m.style.padding=WWF_COMPLETA?'0':'';
+  const b=$('btn-wwf-full'); if(b)b.innerHTML=WWF_COMPLETA?'<i class="fas fa-compress" style="margin-right:6px"></i>Salir de pantalla completa':'<i class="fas fa-expand" style="margin-right:6px"></i>Pantalla completa';
+  try{
+    if(WWF_COMPLETA&&m.requestFullscreen&&!document.fullscreenElement)m.requestFullscreen().catch(()=>{});
+    else if(!WWF_COMPLETA&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  }catch(e){}
 }
 
 // ── Descarga en PDF ──────────────────────────────────────────
@@ -9821,6 +9956,11 @@ async function loadWeekendWorks(){
 
 function renderWeekendWorks(){
   const box=$('weekend-list'); if(!box) return;
+  // V9.4.0: la lista de solicitudes se oculta; cada documento ya tiene sus
+  // botones para revisar y ver sus actividades.
+  box.style.display='none';
+  const flt=$('weekend-filter-etapa'); if(flt&&flt.parentElement)flt.parentElement.style.display='none';
+  return;
   const f=$('weekend-filter-etapa')?.value||'';
   const completas=WEEKEND_DATA.filter(x=>Number(x.firmadas)>=4);
   const pendientes=WEEKEND_DATA.filter(x=>Number(x.firmadas)<4);
@@ -9893,6 +10033,8 @@ function switchTab(tab) {
     if(pn)pn.style.display=t===tab?'':'none';
   });
 
+  DASH_KPI_FILTRO=null; DASH_KPI_ACTIVO='';   // V9.4.0: el filtro de totales no pasa de una pestaña a otra
+  document.querySelectorAll('#kpi-row > .card.kpi-activo').forEach(c=>c.classList.remove('kpi-activo'));
   renderDashboardKPIs_(tab);
 
   if(tab==='compra'&&COMPRA_DATA.length===0)loadCompras();
@@ -10751,7 +10893,30 @@ function setDashboardKpiLabels_(labels){
     if(el)el.textContent=isManagerProfile_()?uiText(labels[i]||''):(labels[i]||'');
   });
 }
+// V9.4.0 — Cada total funciona como botón: filtra la tabla con los mismos
+// estatus que cuenta. Tocarlo otra vez quita el filtro.
+let DASH_KPI_FILTRO=null, DASH_KPI_ACTIVO='';
+const DASH_KPI_PRED={
+  sol:{ing:e=>e==='Pendiente de Ingeniería',mgr:e=>e==='Pendiente de Manager',
+    apro:e=>['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado','Pendiente de cierre por Ingeniería'].includes(e),
+    rech:e=>String(e||'').startsWith('Rechazado'),ejec:e=>['Asignado a técnico','En ejecución'].includes(e)},
+  compra:{ing:e=>e==='Pendiente de Ingeniería',mgr:e=>e==='Pendiente de Manager',apro:e=>e==='Autorizada para Compra',
+    rech:e=>['Rechazada por Ingeniería','Rechazada por Manager'].includes(e),ejec:e=>['En cotización','Ordenada'].includes(e)}
+};
+function dashKpiClick_(clave){
+  const tab=dashboardActiveTab_();
+  if(DASH_KPI_ACTIVO===clave||clave==='total'){DASH_KPI_FILTRO=null;DASH_KPI_ACTIVO='';}
+  else{DASH_KPI_FILTRO=(DASH_KPI_PRED[tab]||{})[clave]||null;DASH_KPI_ACTIVO=DASH_KPI_FILTRO?clave:'';}
+  ['total','ing','mgr','apro','rech','ejec'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c)c.classList.toggle('kpi-activo',k===DASH_KPI_ACTIVO);});
+  if(tab==='compra'){if(typeof renderCompras==='function')renderCompras();}
+  else if(typeof renderSolicitudes==='function')renderSolicitudes();
+}
+function dashKpiConectar_(){
+  ['total','ing','mgr','apro','rech','ejec'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c&&!c.dataset.kpi){c.dataset.kpi=k;c.onclick=()=>dashKpiClick_(k);c.title='Filtrar la tabla';}});
+}
+
 function renderDashboardKPIs_(tab){
+  dashKpiConectar_();
   const row=$('kpi-row');
   if(!row)return;
   tab=tab||dashboardActiveTab_();
@@ -10862,6 +11027,7 @@ function renderSolicitudes() {
   const list=source.filter(r=>{
     if(q && ![r.folio,r.nombre,r.departamento,r.tipoSolicitud].some(v=>(v||'').toLowerCase().includes(q))) return false;
     if(fd && r.departamento!==fd) return false;
+    if(DASH_KPI_FILTRO) return DASH_KPI_FILTRO(r.estatus);   // V9.4.0: filtro desde los totales
     if(verTodas) return true;
     if(soloCerradas) return esSolicitudCerrada_(r);
     if(fe) return r.estatus===fe;
@@ -10914,7 +11080,7 @@ function renderCompras() {
   const q=$('fc-search').value.toLowerCase(),fe=$('fc-est').value;
   const list=COMPRA_DATA.filter(r=>
     (!q||[r.folio,r.nombre,r.descripcion,r.materialNuevoNombre].some(v=>(v||'').toLowerCase().includes(q)))&&
-    (!fe||r.estatus===fe)
+    (!fe||r.estatus===fe)&&(!DASH_KPI_FILTRO||DASH_KPI_FILTRO(r.estatus))
   ).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
   const tbody=$('compra-tbody');
