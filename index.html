@@ -537,6 +537,7 @@ const LPA_AREAS = {
       <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
       </button>
+      <button onclick="goPreventivo()" id="nav-pm" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>Preventivo</button>
       <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-up-right-from-square" style="margin-right:5px"></i>Plataforma
       </button>
@@ -1550,6 +1551,54 @@ const LPA_AREAS = {
 
 
 <!-- ══════════════════════════════ VIEW: TRABAJO EN ALTURAS / PLATAFORMA V2 ══ -->
+<!-- ══════════════════════════════════════════════════════════
+     V9.3.0 — MANTENIMIENTO PREVENTIVO (fase 1): equipos y programa
+     ══════════════════════════════════════════════════════════ -->
+<div id="view-pm" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div class="card" style="padding:18px 20px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div>
+        <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-screwdriver-wrench" style="color:#2563EB;margin-right:8px"></i>Mantenimiento preventivo</h2>
+        <p style="font-size:.76rem;color:#64748B;margin:4px 0 0">401 equipos · 33 planes · las actividades diarias y semanales se cumplen con el checklist de Inspecciones</p>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-g" id="pm-tab-equipos" onclick="pmTab('equipos')"><i class="fas fa-gears" style="margin-right:5px"></i>Equipos</button>
+        <button class="btn-g" id="pm-tab-programa" onclick="pmTab('programa')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Programa</button>
+      </div>
+    </div>
+  </div>
+  <div id="pm-panel-equipos">
+    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="pm-buscar" class="inp" placeholder="Buscar equipo, ID de SVISION o plan…" style="flex:1 1 240px" oninput="pmRenderEquipos()">
+      <select id="pm-f-loc" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Todas las localizaciones</option></select>
+      <select id="pm-f-clas" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Todas las clasificaciones</option></select>
+      <select id="pm-f-prio" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Toda prioridad</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+    </div>
+    <div id="pm-equipos" class="card" style="padding:0;overflow-x:auto"></div>
+  </div>
+  <div id="pm-panel-programa" style="display:none">
+    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:.78rem;color:#475569">Desde la semana del</span>
+      <input id="pm-desde" type="date" class="inp" style="width:auto">
+      <select id="pm-semanas" class="inp" style="width:auto"><option value="2">2 semanas</option><option value="4" selected>4 semanas</option><option value="8">8 semanas</option></select>
+      <button class="btn-p" onclick="pmCargarPrograma()">Ver programa</button>
+      <span style="font-size:.7rem;color:#94A3B8;margin-left:auto">La asignación de órdenes a técnicos llega en la fase 2.</span>
+    </div>
+    <div id="pm-programa"></div>
+  </div>
+</div>
+
+<!-- V9.3.0 — Hoja de vida de un equipo -->
+<div id="modal-pm-equipo" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:980px;padding:0;display:flex;flex-direction:column">
+    <div style="padding:16px 20px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div id="pm-eq-cab"></div>
+      <button class="btn-g" onclick="closeModal('modal-pm-equipo')">Cerrar</button>
+    </div>
+    <div id="pm-eq-body" style="padding:16px 20px;overflow:auto"></div>
+  </div>
+</div>
+
 <div id="view-platform" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <div>
@@ -3003,7 +3052,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.2.0';
+const FRONTEND_BUILD = '9.3.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4178,6 +4227,8 @@ function configureRoleUI() {
   const role=SESSION?.user?.rol||'';
   const ids=['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin'];
   ids.forEach(id=>{if($(id))$(id).style.display='';});
+  // V9.3.0: el preventivo lo ven técnicos, Ingeniería y gerencia.
+  if($('nav-pm'))$('nav-pm').style.display=['tecnico','ingeniero','manager'].includes(role)?'':'none';
 
   if(role==='manager'){
     LANG='en';
@@ -4225,7 +4276,7 @@ function roleCanView(v) {
   if(v==='weekend')return true;
   if(role==='manager'){
     // V8.8.0: Inagaki y Kojima entran al panel para firmar su etapa.
-    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login'].includes(v);
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login','pm'].includes(v);
   }
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
   if(role==='compras')return ['home','solicitud','compras-rol','platform','login'].includes(v);
@@ -4244,7 +4295,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -4326,6 +4377,142 @@ function goPlanDiario(){
   if(SESSION.user.rol==='ingeniero'){goAdmin();setTimeout(function(){switchTab('daily-dash');},250);return;}
   toast('Plan Diario disponible para Técnicos e Ingeniería Facilities.','err');
 }
+// ══════════════════════════════════════════════════════════════
+// V9.3.0 — MANTENIMIENTO PREVENTIVO (fase 1)
+// ══════════════════════════════════════════════════════════════
+let PM_DATA=null;
+const PM_PRIO_COLOR={Alta:['#FEE2E2','#B91C1C'],Media:['#FEF3C7','#B45309'],Baja:['#E0F2FE','#0369A1']};
+function pmBadge_(t,map){const c=(map||PM_PRIO_COLOR)[t]||['#F1F5F9','#475569'];
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700;font-size:.66rem">${escapeHtml(t||'—')}</span>`;}
+function pmFechaCorta_(f){if(!f)return '—';const p=String(f).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+
+function goPreventivo(){
+  if(!requireLogin('pm'))return;
+  showView('pm'); pmTab('equipos');
+  if(!PM_DATA)pmCargarEquipos();
+}
+
+function pmTab(t){
+  ['equipos','programa'].forEach(x=>{
+    $('pm-panel-'+x).style.display=x===t?'':'none';
+    const b=$('pm-tab-'+x); if(b){b.style.background=x===t?'#0F2A4A':'';b.style.color=x===t?'#fff':'';}
+  });
+  if(t==='programa'){
+    if(PM_DATA&&!PM_DATA.puedeAdministrar){$('pm-programa').innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B">El programa lo administra Ingeniería.</div>';return;}
+    if(!$('pm-desde').value)$('pm-desde').value=localDateKeyV843_();
+    if(!$('pm-programa').innerHTML)pmCargarPrograma();
+  }
+}
+
+async function pmCargarEquipos(){
+  $('pm-equipos').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando equipos…</div>';
+  try{
+    const r=await api({action:'getPMEquipos',token:SESSION.token});
+    if(!r.success){$('pm-equipos').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    PM_DATA=r;
+    const uniq=k=>[...new Set(r.equipos.map(e=>e[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    $('pm-f-loc').innerHTML='<option value="">Todas las localizaciones</option>'+uniq('localizacion').map(x=>`<option>${escapeHtml(x)}</option>`).join('');
+    $('pm-f-clas').innerHTML='<option value="">Todas las clasificaciones</option>'+uniq('clasificacion').map(x=>`<option>${escapeHtml(x)}</option>`).join('');
+    $('pm-tab-programa').style.display=r.puedeAdministrar?'':'none';
+    pmRenderEquipos();
+  }catch(e){$('pm-equipos').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
+function pmRenderEquipos(){
+  if(!PM_DATA)return;
+  const q=($('pm-buscar').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const fl=$('pm-f-loc').value, fc=$('pm-f-clas').value, fp=$('pm-f-prio').value;
+  const lista=PM_DATA.equipos.filter(e=>{
+    if(fl&&e.localizacion!==fl)return false; if(fc&&e.clasificacion!==fc)return false; if(fp&&e.prioridad!==fp)return false;
+    if(!q)return true;
+    const t=(e.equipo+' '+e.idCMMS+' '+e.idEquipo+' '+e.planes.join(' ')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return t.indexOf(q)>=0;
+  });
+  const th='padding:9px 10px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.72rem;text-align:left;white-space:nowrap';
+  const td='padding:8px 10px;font-size:.76rem;border-bottom:1px solid #EEF1F6';
+  $('pm-equipos').innerHTML=`<div style="padding:9px 12px;font-size:.72rem;color:#64748B">${lista.length} de ${PM_DATA.equipos.length} equipos</div>
+    <table style="width:100%;border-collapse:collapse;min-width:820px">
+      <thead><tr>${['ID','Equipo','Clasificación','Localización','Prioridad','Actividades','Próxima orden',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
+      <tbody>${lista.slice(0,400).map(e=>`<tr style="cursor:pointer" onclick="pmVerEquipo('${e.idEquipo}')" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background=''">
+        <td style="${td};color:#64748B;white-space:nowrap">${escapeHtml(e.idEquipo)}<div style="font-size:.62rem">SVISION ${escapeHtml(e.idCMMS)}</div></td>
+        <td style="${td};font-weight:600;color:#0F2A4A">${escapeHtml(e.equipo)}</td>
+        <td style="${td}">${escapeHtml(e.clasificacion)}</td>
+        <td style="${td}">${escapeHtml(e.localizacion)}</td>
+        <td style="${td}">${pmBadge_(e.prioridad)}</td>
+        <td style="${td};text-align:center">${e.actividades}${e.porChecklist?`<div style="font-size:.62rem;color:#64748B">${e.porChecklist} por checklist</div>`:''}</td>
+        <td style="${td};white-space:nowrap">${pmFechaCorta_(e.proxima)}${e.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">${e.vencidas} vencida(s)</div>`:''}</td>
+        <td style="${td};color:#2563EB"><i class="fas fa-chevron-right"></i></td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function pmVerEquipo(id){
+  $('pm-eq-cab').innerHTML=''; $('pm-eq-body').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando hoja de vida…</div>';
+  $('modal-pm-equipo').style.display='flex';
+  try{
+    const r=await api({action:'getPMEquipoDetalle',token:SESSION.token,idEquipo:id});
+    if(!r.success){$('pm-eq-body').innerHTML=`<div style="color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    const e=r.equipo;
+    $('pm-eq-cab').innerHTML=`<div style="font-size:.7rem;color:#64748B">${escapeHtml(e.idEquipo)} · SVISION ${escapeHtml(e.idCMMS)}</div>
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--navy);margin:2px 0 6px">${escapeHtml(e.equipo)}</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${pmBadge_(e.prioridad)}
+        <span style="font-size:.74rem;color:#475569"><i class="fas fa-location-dot" style="margin-right:4px"></i>${escapeHtml(e.localizacion)}</span>
+        <span style="font-size:.74rem;color:#475569"><i class="fas fa-tag" style="margin-right:4px"></i>${escapeHtml(e.clasificacion)}</span>
+        <span style="font-size:.74rem;color:#475569"><i class="fas fa-clock" style="margin-right:4px"></i>${r.horasAnio} h de mantenimiento al año</span></div>`;
+    const th='padding:7px 9px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.7rem;text-align:left';
+    const td='padding:7px 9px;font-size:.74rem;border-bottom:1px solid #EEF1F6;vertical-align:top';
+    const estadoInv={OK:['#DCFCE7','#15803D'],'Óptimo':['#DCFCE7','#15803D'],'Poco inventario':['#FEF3C7','#B45309'],'Sin material':['#FEE2E2','#B91C1C']};
+    $('pm-eq-body').innerHTML=`
+      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin-bottom:6px">Planes y actividades</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:760px">
+        <thead><tr>${['Plan','Actividad','Frecuencia','Duración','Prioridad','Última','Próxima'].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${r.actividades.map(a=>`<tr>
+          <td style="${td};color:#64748B;white-space:nowrap">${escapeHtml(a.idPlan)}<div style="font-size:.64rem">${escapeHtml(a.sistema)}</div></td>
+          <td style="${td}"><b style="color:#0F2A4A">${escapeHtml(a.actividad)}</b><div style="font-size:.66rem;color:#64748B">${escapeHtml(a.plan)}${a.parte&&a.parte!=='General'?' · '+escapeHtml(a.parte):''} · ${escapeHtml(a.responsable)}</div>
+            ${a.requiereParoDias?`<span style="font-size:.62rem;color:#B91C1C;font-weight:700">Requiere paro</span>`:''}</td>
+          <td style="${td};white-space:nowrap">${escapeHtml(a.frecuencia)}</td>
+          <td style="${td};white-space:nowrap">${a.duracionMin} min</td>
+          <td style="${td}">${pmBadge_(a.prioridad)}</td>
+          <td style="${td};white-space:nowrap">${pmFechaCorta_(a.ultimaEjecucion)}</td>
+          <td style="${td};white-space:nowrap">${a.viaChecklist?'<span style="font-size:.66rem;color:#0369A1;font-weight:600"><i class="fas fa-list-check" style="margin-right:3px"></i>Checklist</span>':pmFechaCorta_(a.proximaFecha)}</td>
+        </tr>`).join('')}</tbody></table></div>
+      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin:16px 0 6px">Materiales que consume <span style="font-weight:400;font-size:.72rem;color:#64748B">(${r.materiales.length})</span></div>
+      ${r.materiales.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${r.materiales.map(m=>{const c=estadoInv[m.estadoStock]||['#F1F5F9','#475569'];
+        return `<div style="border:1px solid #E2E8F0;border-radius:8px;padding:6px 9px;font-size:.7rem;background:#fff"><b>${escapeHtml(m.codigo)}</b> ${escapeHtml(m.descripcion)}
+          <span style="margin-left:5px;padding:1px 7px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700">${escapeHtml(String(m.stockActual))} ${escapeHtml(m.unidad||'')}</span></div>`;}).join('')}</div>`
+        :'<div style="font-size:.74rem;color:#94A3B8">Ningún material del inventario está ligado a los planes de este equipo.</div>'}
+      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin:16px 0 6px">Historial</div>
+      <div style="font-size:.74rem;color:#94A3B8">El historial de órdenes ejecutadas se llenará con las órdenes de trabajo de la fase 2.</div>`;
+  }catch(err){$('pm-eq-body').innerHTML=`<div style="color:#B91C1C">Error: ${escapeHtml(err.message||String(err))}</div>`;}
+}
+
+async function pmCargarPrograma(){
+  const box=$('pm-programa');
+  box.innerHTML='<div class="card" style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Calculando programa…</div>';
+  try{
+    const r=await api({action:'getPMPrograma',token:SESSION.token,desde:$('pm-desde').value,semanas:$('pm-semanas').value});
+    if(!r.success){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    box.innerHTML=r.semanas.map(w=>{
+      const pct=Math.min(100,w.porcentaje), col=w.porcentaje>90?'#DC2626':(w.porcentaje>60?'#D97706':'#16A34A');
+      return `<div class="card" style="padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <b style="font-size:.9rem;color:#0F2A4A">Semana del ${pmFechaCorta_(w.lunes)}</b>
+          <span style="font-size:.74rem;color:#475569">${w.ordenes.length} órdenes · <b>${w.horas} h</b> de ${w.capacidad} h de capacidad (${w.porcentaje} %)</span>
+        </div>
+        <div style="height:8px;border-radius:999px;background:#E2E8F0;overflow:hidden;margin:7px 0 10px"><div style="height:100%;width:${pct}%;background:${col}"></div></div>
+        ${w.ordenes.length?`<div style="display:flex;flex-direction:column;gap:6px">${w.ordenes.map(o=>`
+          <div style="border:1px solid ${o.vencidas?'#FCA5A5':'#E2E8F0'};background:${o.vencidas?'#FEF2F2':'#fff'};border-radius:9px;padding:8px 11px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+            <div style="flex:1;min-width:230px">
+              <div style="font-size:.78rem;font-weight:700;color:#0F2A4A">${escapeHtml(o.plan)} <span style="font-weight:400;color:#64748B">· ${escapeHtml(o.localizacion)}</span></div>
+              <div style="font-size:.68rem;color:#475569">${o.equipos.length} equipo(s): ${o.equipos.slice(0,4).map(x=>escapeHtml(x.equipo.split(' ').slice(0,4).join(' '))).join(' · ')}${o.equipos.length>4?' …':''}</div>
+              <div style="font-size:.66rem;color:#64748B">${o.actividades.slice(0,3).map(escapeHtml).join(' · ')}${o.actividades.length>3?' …':''}</div>
+            </div>
+            <div style="text-align:right;white-space:nowrap">${pmBadge_(o.prioridad)}<div style="font-size:.74rem;font-weight:700;color:#0F2A4A;margin-top:3px">${o.horas} h</div>
+              ${o.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">Vencida</div>`:''}${o.requiereParoDias?`<div style="font-size:.64rem;color:#B91C1C">Requiere paro</div>`:''}</div>
+          </div>`).join('')}</div>`:'<div style="font-size:.74rem;color:#94A3B8">Sin órdenes esta semana.</div>'}
+      </div>`;}).join('');
+  }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
 function goPlataforma(){
   showView('platform');
   initPlatformModule();
