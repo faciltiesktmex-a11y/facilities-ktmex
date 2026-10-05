@@ -549,6 +549,8 @@ const LPA_AREAS = {
       <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
       </button>
+      <button onclick="goPS()" id="nav-ps" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-lightbulb" style="margin-right:5px"></i>Problem Solving</button>
+      <button onclick="goBoard()" id="nav-board" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-chart-gantt" style="margin-right:5px"></i>Facilities Board</button>
       <button onclick="goRFQ()" id="nav-rfq" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-file-invoice-dollar" style="margin-right:5px"></i>RFQ</button>
       <button onclick="goPreventivo()" id="nav-pm" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>Preventivo</button>
       <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
@@ -1599,6 +1601,51 @@ const LPA_AREAS = {
     </div>
     <div id="rfq-cargando" style="padding:40px;text-align:center;color:#64748B;display:none"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando el formulario…</div>
     <iframe id="rfq-frame" title="RFQ" style="flex:1;width:100%;border:0;background:#fff"></iframe>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     V9.6.0 — PROBLEM SOLVING y visor común de herramientas
+     ══════════════════════════════════════════════════════════ -->
+<div id="view-ps" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div class="card" style="padding:18px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-lightbulb" style="color:#D97706;margin-right:8px"></i>Problem Solving</h2>
+      <p style="font-size:.76rem;color:#64748B;margin:4px 0 0">El autor lo elabora y lo envía a revisión; Ingeniería lo aprueba o lo devuelve</p>
+    </div>
+    <button class="btn-p" onclick="psNuevo()"><i class="fas fa-plus" style="margin-right:6px"></i>Nuevo Problem Solving</button>
+  </div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" id="ps-filtros">
+    <button class="btn-g" data-f="mios" onclick="psFiltro('mios')">Míos</button>
+    <button class="btn-g" data-f="revisar" onclick="psFiltro('revisar')">Por revisar</button>
+    <button class="btn-g" data-f="todos" onclick="psFiltro('todos')">Todos</button>
+  </div>
+  <div id="ps-lista" class="card" style="padding:0;overflow-x:auto"></div>
+</div>
+
+<div id="modal-ht" class="modal-bg" style="display:none;padding:0">
+  <div style="width:100vw;height:100dvh;background:#F1F5F9;display:flex;flex-direction:column">
+    <div style="padding:10px 16px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="ht-barra" style="font-size:.84rem"></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+        <span id="ht-guardado" style="font-size:.7rem;color:#BFDBFE"></span>
+        <span id="ht-acciones" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+        <button class="btn-g" onclick="htCerrar()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button>
+      </div>
+    </div>
+    <div id="ht-cargando" style="padding:40px;text-align:center;color:#64748B;display:none"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando…</div>
+    <iframe id="ht-frame" title="Herramienta" style="flex:1;width:100%;border:0;background:#fff"></iframe>
+  </div>
+</div>
+
+<div id="modal-board-versiones" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:560px;padding:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-clock-rotate-left" style="margin-right:8px"></i>Versiones del tablero</h3>
+      <button class="btn-g" onclick="closeModal('modal-board-versiones')">Cerrar</button>
+    </div>
+    <div style="font-size:.72rem;color:#64748B;margin-bottom:10px">El sistema guarda una versión cada 15 minutos de edición, hasta 20. Restaurar guarda primero la versión actual, así que no se pierde nada.</div>
+    <div id="board-versiones"></div>
   </div>
 </div>
 
@@ -3138,7 +3185,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.5.0';
+const FRONTEND_BUILD = '9.6.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4316,7 +4363,11 @@ function configureRoleUI() {
   // V9.3.0: el preventivo lo ven técnicos, Ingeniería y gerencia.
   if($('nav-pm'))$('nav-pm').style.display=['tecnico','ingeniero','manager'].includes(role)?'':'none';
   // V9.5.0: RFQ para Ingeniería, Compras e Inagaki (no para el presidente).
-  if($('nav-rfq'))$('nav-rfq').style.display=(['ingeniero','compras','manager'].includes(role)&&!(SESSION&&SESSION.user&&SESSION.user.soloWeekendWork))?'':'none';
+  if($('nav-rfq'))$('nav-rfq').style.display=(['ingeniero','compras','manager','tecnico'].includes(role)&&!(SESSION&&SESSION.user&&SESSION.user.soloWeekendWork))?'':'none';
+  // V9.6.0: Problem Solving (técnicos e ingenieros) y Facilities Board (editores y consulta de Inagaki y Kojima).
+  if($('nav-ps'))$('nav-ps').style.display=['tecnico','ingeniero'].includes(role)?'':'none';
+  if($('nav-board')){const un=String(SESSION&&SESSION.user&&SESSION.user.username||'').toLowerCase();
+    $('nav-board').style.display=(['aramirez','ploya','ainagaki','ykojima'].includes(un)||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';}
 
   if(role==='manager'){
     LANG='en';
@@ -4386,7 +4437,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm','rfq'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm','rfq','ps'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -4649,6 +4700,174 @@ async function pmCargarPrograma(){
 }
 
 // ══════════════════════════════════════════════════════════════
+// V9.6.0 — VISOR COMÚN PARA HERRAMIENTAS EN ARCHIVO APARTE
+//
+// Problem Solving y Facilities Board se usan tal cual, como el Weekend Work
+// y el RFQ. El puente intercepta sus claves de guardado local y las manda
+// al sistema; en modo consulta los cambios no se guardan.
+// ══════════════════════════════════════════════════════════════
+let HT_CTX=null, HT_HTML={}, HT_TIMERS={}, HT_PEND={};
+
+async function htObtenerHtml_(archivo){
+  if(HT_HTML[archivo])return HT_HTML[archivo];
+  for(const u of ['./'+archivo,archivo,new URL(archivo,window.location.href).href]){
+    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){HT_HTML[archivo]=await r.text();return HT_HTML[archivo];}}catch(e){}
+  }
+  throw new Error('No se encontró '+archivo+' junto a index.html.');
+}
+async function htAbrir_(ctx){
+  HT_CTX=ctx; HT_PEND={};
+  $('modal-ht').style.display='flex'; $('ht-cargando').style.display=''; $('ht-frame').style.display='none';
+  $('ht-guardado').textContent=''; $('ht-barra').innerHTML=ctx.barra||''; $('ht-acciones').innerHTML=ctx.acciones||'';
+  try{
+    const html=await htObtenerHtml_(ctx.archivo), base=new URL('./',window.location.href).href;
+    const cfg={claves:Object.keys(ctx.claves),datos:ctx.datos,soloLectura:!ctx.editable,css:ctx.css||'',aviso:ctx.aviso||'',tickets:ctx.tickets||null,bloquearCampos:!!ctx.bloquearCampos};
+    const puente=`<script>window.__HT=${JSON.stringify(cfg).replace(/</g,'\\u003c')};<\/script><script>(${htPuente_.toString()})();<\/script>`;
+    $('ht-frame').srcdoc=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+base+'">'+puente);
+    $('ht-cargando').style.display='none'; $('ht-frame').style.display='';
+  }catch(e){$('ht-cargando').innerHTML=`<div style="color:#B91C1C">${escapeHtml(e.message||String(e))}</div>`;}
+}
+function htCerrar(){
+  if(HT_CTX&&HT_CTX.editable)Object.keys(HT_PEND).forEach(k=>htEnviar_(k));
+  $('modal-ht').style.display='none'; $('ht-frame').srcdoc='';
+  const c=HT_CTX; HT_CTX=null; if(c&&c.alCerrar)c.alCerrar();
+}
+// Se ejecuta DENTRO de la herramienta.
+function htPuente_(){
+  var C=window.__HT||{}, D=C.datos||{};
+  var gi=Storage.prototype.getItem, si=Storage.prototype.setItem;
+  Storage.prototype.getItem=function(k){
+    if(C.claves.indexOf(k)>=0)return D[k]==null?null:D[k];
+    if(/gsheet/i.test(k))return null;                       // sin sincronización con hojas externas
+    return gi.apply(this,arguments);
+  };
+  Storage.prototype.setItem=function(k,v){
+    if(C.claves.indexOf(k)>=0){D[k]=String(v);if(!C.soloLectura)parent.postMessage({tipo:'ht-guardar',clave:k,valor:String(v)},'*');return;}
+    return si.apply(this,arguments);
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    var st=document.createElement('style');st.textContent=C.css||'';document.head.appendChild(st);
+    if(C.aviso){var b=document.createElement('div');b.textContent=C.aviso;b.style.cssText='position:sticky;top:0;z-index:9999;background:#FEF3C7;color:#92400E;padding:8px 14px;font:600 13px Arial;text-align:center';document.body.insertBefore(b,document.body.firstChild);}
+    if(C.soloLectura&&C.bloquearCampos)setInterval(function(){
+      document.querySelectorAll('input,textarea,select').forEach(function(x){if(!x.disabled)x.disabled=true;});
+      document.querySelectorAll('[contenteditable="true"]').forEach(function(x){x.setAttribute('contenteditable','false');});
+    },700);
+    // Facilities Board: sección 6 con las solicitudes del sistema.
+    if(C.tickets){var intentos=0,t=setInterval(function(){
+      intentos++;
+      try{var p=currentProjects.find(function(x){return x.is_tickets;});
+        if(p){Object.keys(C.tickets).forEach(function(k){p[k]=C.tickets[k];});recomputeTicketsAggregate(p);renderSpecialRows();buildAllCharts(false);clearInterval(t);}}
+      catch(e){}
+      if(intentos>20)clearInterval(t);
+    },500);}
+  });
+}
+window.addEventListener('message',function(e){
+  const m=e.data||{}; if(m.tipo!=='ht-guardar'||!HT_CTX||!HT_CTX.editable)return;
+  HT_PEND[m.clave]=m.valor; $('ht-guardado').textContent='Cambios sin guardar…';
+  clearTimeout(HT_TIMERS[m.clave]); HT_TIMERS[m.clave]=setTimeout(()=>htEnviar_(m.clave),4000);
+});
+async function htEnviar_(clave){
+  if(!HT_CTX||HT_PEND[clave]===undefined)return;
+  const valor=HT_PEND[clave]; delete HT_PEND[clave]; $('ht-guardado').textContent='Guardando…';
+  try{
+    const r=await HT_CTX.guardar(HT_CTX.claves[clave],valor);
+    $('ht-guardado').textContent=r.success?'Guardado':'No guardado';
+    if(!r.success)toast(r.error||'No se pudo guardar','err');
+  }catch(err){$('ht-guardado').textContent='Sin conexión';HT_PEND[clave]=HT_PEND[clave]||valor;toast('Error de conexión: '+err.message,'err');}
+}
+
+// ── Problem Solving ─────────────────────────────────────────
+let PS_DATA=null, PS_FILTRO='mios';
+function goPS(){if(!requireLogin('ps'))return;showView('ps');psCargar();}
+async function psCargar(){
+  $('ps-lista').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
+  try{const r=await api({action:'getProblemSolvings',token:SESSION.token});
+    if(!r.success){$('ps-lista').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    PS_DATA=r; psFiltro(PS_FILTRO);}
+  catch(e){$('ps-lista').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+function psFiltro(f){
+  PS_FILTRO=f;
+  document.querySelectorAll('#ps-filtros button').forEach(b=>{const on=b.dataset.f===f;b.style.background=on?'#0F2A4A':'';b.style.color=on?'#fff':'';});
+  if(!PS_DATA)return;
+  const L=PS_DATA.casos.filter(x=>f==='mios'?x.esAutor:f==='revisar'?x.puedeAprobar:true);
+  const col={Borrador:'#64748B','En revisión':'#B45309',Aprobado:'#15803D',Devuelto:'#B91C1C'};
+  const th='padding:9px 10px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.72rem;text-align:left';
+  const td='padding:9px 10px;font-size:.76rem;border-bottom:1px solid #EEF1F6;vertical-align:top';
+  $('ps-lista').innerHTML=L.length?`<table style="width:100%;border-collapse:collapse;min-width:720px"><thead><tr>${['Folio','Problema','Autor','Estado','Actualizado',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
+    <tbody>${L.map(x=>`<tr style="cursor:pointer" onclick="psAbrir('${x.id}')" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background=''">
+      <td style="${td};white-space:nowrap"><b>${escapeHtml(x.folio)}</b></td>
+      <td style="${td}">${escapeHtml(x.titulo||'(sin nombre)')}${x.estado==='Devuelto'&&x.comentario?`<div style="font-size:.66rem;color:#B91C1C">${escapeHtml(x.aprobador)}: ${escapeHtml(x.comentario)}</div>`:''}</td>
+      <td style="${td}">${escapeHtml(x.autor)}</td>
+      <td style="${td}"><b style="color:${col[x.estado]||'#334155'}">${escapeHtml(x.estado)}</b>${x.puedeAprobar?'<div style="font-size:.64rem;color:#B45309;font-weight:700">Te toca revisar</div>':''}</td>
+      <td style="${td};white-space:nowrap">${escapeHtml(fmtDateTime(x.actualizado))}</td>
+      <td style="${td};color:#2563EB"><i class="fas fa-chevron-right"></i></td></tr>`).join('')}</tbody></table>`
+    :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay casos en esta lista.</div>';
+}
+async function psNuevo(){
+  const r=await api({action:'psCrear',token:SESSION.token});
+  if(!r.success){toast(r.error||'No se pudo crear','err');return;}
+  toast('Problem Solving '+r.folio+' creado'); await psCargar(); psAbrir(r.id);
+}
+async function psAbrir(id){
+  const r=await api({action:'getProblemSolving',token:SESSION.token,id});
+  if(!r.success){toast(r.error||'No disponible','err');return;}
+  const c=r.caso, acc=[];
+  if(c.puedeEditar)acc.push(`<button class="btn-p" onclick="psAccion('psEnviar','${id}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar a revisión</button>`);
+  if(c.puedeAprobar){acc.push(`<button class="btn-g" style="color:#B45309" onclick="psAccion('psDevolver','${id}')"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Devolver</button>`);
+    acc.push(`<button class="btn-p" style="background:#16A34A" onclick="psAccion('psAprobar','${id}')"><i class="fas fa-circle-check" style="margin-right:5px"></i>Aprobar</button>`);}
+  htAbrir_({archivo:'problem-solving.html',claves:{'ktmex_problem_solving_v1':'datos'},datos:{'ktmex_problem_solving_v1':r.datos},
+    editable:c.puedeEditar,bloquearCampos:true,aviso:c.puedeEditar?'':'Vista de consulta: los cambios no se guardan.',
+    barra:`<b>${escapeHtml(c.folio)}</b> · ${escapeHtml(c.titulo||'(sin nombre)')} · <b>${escapeHtml(c.estado)}</b> · ${escapeHtml(c.autor)}`,
+    acciones:acc.join(''),guardar:(campo,valor)=>api({action:'psGuardar',token:SESSION.token,id,datos:valor}),
+    alCerrar:()=>{if($('view-ps').style.display!=='none')psCargar();}});
+}
+async function psAccion(accion,id){
+  let comentario='';
+  if(accion==='psDevolver'){comentario=prompt('¿Qué debe corregir el autor?');if(!comentario||comentario.trim().length<5){if(comentario!==null)toast('Escribe qué debe corregir','err');return;}}
+  if(accion==='psEnviar'){Object.keys(HT_PEND).forEach(k=>htEnviar_(k));await new Promise(r=>setTimeout(r,1500));if(!confirm('¿Enviar a revisión? Ya no podrás editarlo hasta que Ingeniería lo apruebe o te lo devuelva.'))return;}
+  if(accion==='psAprobar'&&!confirm('¿Aprobar este Problem Solving?'))return;
+  const r=await api({action:accion,token:SESSION.token,id,comentario});
+  if(!r.success){toast(r.error||'No se pudo completar','err');return;}
+  toast({psEnviar:'Enviado a revisión',psAprobar:'Aprobado',psDevolver:'Devuelto al autor'}[accion]); htCerrar();
+}
+
+// ── Facilities Board ────────────────────────────────────────
+async function goBoard(){
+  const r=await api({action:'getFacilitiesBoard',token:SESSION.token});
+  if(!r.success){toast(r.error||'No disponible','err');return;}
+  const ocultar='[onclick*="connectToSharedFile"],[onclick*="reconnectClick"],[onclick*="file-input"],[onclick*="toggleGSheetPanel"],'+
+    '[onclick*="openTicketsSyncModal"],[onclick*="downloadGSheetTemplate"],#gsheet-panel{display:none!important}';
+  htAbrir_({archivo:'facilities-board.html',
+    claves:{'facilities_projects_board_data':'datos','facilities_projects_board_dates':'fechas'},
+    datos:{'facilities_projects_board_data':r.datos,'facilities_projects_board_dates':r.fechas},
+    editable:r.puedeEditar,tickets:r.solicitudes.conteo,
+    // En consulta: sin ventana de edición, sin Guardar ni Agregar proyecto, y con los campos bloqueados.
+    css:ocultar+(r.puedeEditar?'':' .modal-overlay,.gantt-click-hint,[onclick*="applyWeeks"],[onclick*="openProjectModal(null)"]{display:none!important}'),
+    bloquearCampos:!r.puedeEditar,
+    aviso:r.puedeEditar?'':'Vista de consulta.',
+    barra:`<b>Facilities Board</b> · solicitudes de ${r.solicitudes.anio}${r.guardado?' · guardado '+escapeHtml(fmtDateTime(r.guardado))+(r.por?' por '+escapeHtml(r.por):''):''}`,
+    acciones:r.puedeEditar?`<button class="btn-g" onclick="boardVersiones()"><i class="fas fa-clock-rotate-left" style="margin-right:5px"></i>Versiones</button>`:'',
+    guardar:(campo,valor)=>api({action:'guardarFacilitiesBoard',token:SESSION.token,clave:campo,valor})});
+  BOARD_VERSIONES=r.versiones||[];
+}
+let BOARD_VERSIONES=[];
+function boardVersiones(){
+  $('board-versiones').innerHTML=BOARD_VERSIONES.length?BOARD_VERSIONES.map(v=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid #E2E8F0;border-radius:9px;padding:8px 11px;margin-bottom:6px">
+      <span style="font-size:.76rem">${escapeHtml(fmtDateTime(v.fecha))}${v.por?' · '+escapeHtml(v.por):''}</span>
+      <button class="btn-g" style="padding:4px 10px;font-size:.72rem" onclick="boardRestaurar('${v.id}')">Restaurar</button></div>`).join('')
+    :'<div style="font-size:.78rem;color:#94A3B8">Todavía no hay versiones guardadas.</div>';
+  $('modal-board-versiones').style.display='flex';
+}
+async function boardRestaurar(id){
+  if(!confirm('¿Restaurar esta versión? La versión actual se guarda antes, por si necesitas volver a ella.'))return;
+  const r=await api({action:'restaurarFacilitiesBoard',token:SESSION.token,versionId:id});
+  if(!r.success){toast(r.error||'No se pudo restaurar','err');return;}
+  toast('Versión restaurada'); closeModal('modal-board-versiones'); HT_PEND={}; htCerrar(); goBoard();
+}
+
+// ══════════════════════════════════════════════════════════════
 // V9.5.0 — RFQ Y BENCH MARK
 //
 // El formulario oficial se publica aparte como rfq.html y se usa tal cual,
@@ -4729,7 +4948,13 @@ function rfqPuente_(){
   Storage.prototype.getItem=function(k){if(k===CLAVE)return EST?JSON.stringify(EST):null;return gi.apply(this,arguments);};
   Storage.prototype.setItem=function(k,v){if(k===CLAVE){try{EST=JSON.parse(v);}catch(e){}parent.postMessage({tipo:'rfq-estado',estado:EST},'*');return;}return si.apply(this,arguments);};
   Storage.prototype.removeItem=function(k){if(k===CLAVE)return;return ri.apply(this,arguments);};
-  var css='#resetBtn,#demoDataBtn{display:none!important}'+(CTX.puedeActuar?'':' [data-stage]{pointer-events:none!important;opacity:.92} #stageActionBtn,.sig-btn{display:none!important}');
+  // V9.6.0: el paso de Gerente asistente no existe en Facilities; en consulta
+  // se muestran todas las páginas (el asistente valida campos que quien
+  // consulta no puede llenar y lo dejaba atorado); el Bench Mark solo lo ven
+  // Compras e Inagaki.
+  var css='#resetBtn,#demoDataBtn,[data-stage="specialist2"],#step-specialist2{display:none!important}'+
+    (CTX.puedeActuar?'':' [data-stage]{pointer-events:none!important;opacity:.92} #stageActionBtn,.sig-btn{display:none!important} #wizParking{display:block!important}')+
+    (CTX.verBM?'':' [data-stage^="bm_"],#stepperBM,[id^="stepBM-"]{display:none!important}');
   document.addEventListener('DOMContentLoaded',function(){
     var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     if(!CTX.puedeActuar){var b=document.createElement('div');b.textContent='Vista de consulta: no es tu turno de firmar en este RFQ.';
