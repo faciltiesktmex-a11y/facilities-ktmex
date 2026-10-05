@@ -186,6 +186,13 @@ thead th{background:#F5F8FC;color:#586980}
 #kpi-row > .card{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;border:1.5px solid #E2E8F0}
 #kpi-row > .card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,42,74,.12);border-color:#93C5FD}
 #kpi-row > .card.kpi-activo{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.18)}
+
+/* V9.4.1 — Pestañas del tablero con formato de botón */
+#view-admin .tab-btn{white-space:nowrap;background:#FFFFFF;border:1.5px solid #E2E8F0;border-radius:10px;padding:8px 15px;margin:3px 2px;
+  font-weight:600;color:#334155;box-shadow:0 1px 3px rgba(15,42,74,.08);transition:background .15s,border-color .15s,transform .12s,box-shadow .15s}
+#view-admin .tab-btn:hover{background:#F1F5FF;border-color:#93C5FD;transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,42,74,.10)}
+#view-admin .tab-btn.active{background:#0F2A4A;border-color:#0F2A4A;color:#FFFFFF;box-shadow:0 4px 12px rgba(15,42,74,.25)}
+#view-admin .tab-btn.active i{color:#FFFFFF}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -542,6 +549,7 @@ const LPA_AREAS = {
       <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
       </button>
+      <button onclick="goRFQ()" id="nav-rfq" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-file-invoice-dollar" style="margin-right:5px"></i>RFQ</button>
       <button onclick="goPreventivo()" id="nav-pm" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>Preventivo</button>
       <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-up-right-from-square" style="margin-right:5px"></i>Plataforma
@@ -1558,6 +1566,60 @@ const LPA_AREAS = {
 
 
 <!-- ══════════════════════════════ VIEW: TRABAJO EN ALTURAS / PLATAFORMA V2 ══ -->
+<!-- ══════════════════════════════════════════════════════════
+     V9.5.0 — RFQ Y BENCH MARK
+     ══════════════════════════════════════════════════════════ -->
+<div id="view-rfq" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div class="card" style="padding:18px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-file-invoice-dollar" style="color:#2563EB;margin-right:8px"></i>RFQ y Bench Mark</h2>
+      <p style="font-size:.76rem;color:#64748B;margin:4px 0 0">Solicitudes de cotización para compras mayores de $20,000 · piloto Facilities</p>
+    </div>
+    <button class="btn-p" id="btn-rfq-nuevo" style="display:none" onclick="rfqNuevo()"><i class="fas fa-plus" style="margin-right:6px"></i>Nuevo RFQ</button>
+  </div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" id="rfq-filtros">
+    <button class="btn-g" data-f="mios" onclick="rfqFiltro('mios')">Por firmar</button>
+    <button class="btn-g" data-f="proceso" onclick="rfqFiltro('proceso')">En proceso</button>
+    <button class="btn-g" data-f="completos" onclick="rfqFiltro('completos')">Completados</button>
+    <button class="btn-g" data-f="cancelados" onclick="rfqFiltro('cancelados')">Cancelados</button>
+  </div>
+  <div id="rfq-lista" class="card" style="padding:0;overflow-x:auto"></div>
+</div>
+
+<div id="modal-rfq" class="modal-bg" style="display:none;padding:0">
+  <div style="width:100vw;height:100dvh;background:#F1F5F9;display:flex;flex-direction:column">
+    <div style="padding:10px 16px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="rfq-barra" style="font-size:.84rem"></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <span id="rfq-guardado" style="font-size:.7rem;color:#BFDBFE;align-self:center"></span>
+        <button class="btn-g" id="btn-rfq-devolver" style="display:none" onclick="rfqDevolver()"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Devolver</button>
+        <button class="btn-g" id="btn-rfq-cancelar" style="display:none;color:#B91C1C" onclick="rfqCancelar()"><i class="fas fa-ban" style="margin-right:5px"></i>Cancelar RFQ</button>
+        <button class="btn-g" onclick="rfqCerrarVisor()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button>
+      </div>
+    </div>
+    <div id="rfq-cargando" style="padding:40px;text-align:center;color:#64748B;display:none"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando el formulario…</div>
+    <iframe id="rfq-frame" title="RFQ" style="flex:1;width:100%;border:0;background:#fff"></iframe>
+  </div>
+</div>
+
+<!-- V9.5.0 — Evidencia al cerrar por Ingeniería -->
+<div id="modal-evidencia" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:920px;padding:0;display:flex;flex-direction:column">
+    <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-camera" style="color:#2563EB;margin-right:8px"></i>Verificar evidencia antes de cerrar</h3>
+      <button class="btn-g" onclick="closeModal('modal-evidencia')">Cancelar</button>
+    </div>
+    <div id="evid-body" style="padding:16px 18px;overflow:auto"></div>
+    <div style="padding:12px 18px;border-top:1px solid #E2E8F0">
+      <textarea id="evid-motivo" class="inp" rows="2" placeholder="Motivo para devolver al técnico (obligatorio si la devuelves)" style="margin-bottom:9px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-g" id="btn-evid-devolver" style="flex:1;color:#B45309;border-color:#FCD34D" onclick="evidDevolver()"><i class="fas fa-rotate-left" style="margin-right:6px"></i>Devolver al técnico</button>
+        <button class="btn-p" id="btn-evid-cerrar" style="flex:1.3;background:#16A34A" onclick="evidCerrar()"><i class="fas fa-circle-check" style="margin-right:6px"></i>Cerrar actividad</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════
      V9.3.0 — MANTENIMIENTO PREVENTIVO (fase 1): equipos y programa
      ══════════════════════════════════════════════════════════ -->
@@ -3076,7 +3138,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.4.0';
+const FRONTEND_BUILD = '9.5.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4253,6 +4315,8 @@ function configureRoleUI() {
   ids.forEach(id=>{if($(id))$(id).style.display='';});
   // V9.3.0: el preventivo lo ven técnicos, Ingeniería y gerencia.
   if($('nav-pm'))$('nav-pm').style.display=['tecnico','ingeniero','manager'].includes(role)?'':'none';
+  // V9.5.0: RFQ para Ingeniería, Compras e Inagaki (no para el presidente).
+  if($('nav-rfq'))$('nav-rfq').style.display=(['ingeniero','compras','manager'].includes(role)&&!(SESSION&&SESSION.user&&SESSION.user.soloWeekendWork))?'':'none';
 
   if(role==='manager'){
     LANG='en';
@@ -4273,6 +4337,8 @@ function configureRoleUI() {
   }else if(role==='compras'){
     if($('lang-switch'))$('lang-switch').style.display='flex';
     ['nav-lpa','nav-act','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-checklists'].forEach(id=>{if($(id))$(id).style.display='none';});
+    // V9.4.1: quien además audita LPA conserva su acceso.
+    if(SESSION&&SESSION.user&&SESSION.user.tieneLPA&&$('nav-lpa'))$('nav-lpa').style.display='';
     if($('nav-compra'))$('nav-compra').innerHTML='<i class="fas fa-cart-shopping" style="margin-right:5px"></i>'+uiText('Panel Compras');
   }else{
     if($('lang-switch'))$('lang-switch').style.display='flex';
@@ -4300,10 +4366,11 @@ function roleCanView(v) {
   if(v==='weekend')return true;
   if(role==='manager'){
     // V8.8.0: Inagaki y Kojima entran al panel para firmar su etapa.
-    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login','pm'].includes(v);
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login','pm','rfq'].includes(v);
   }
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
-  if(role==='compras')return ['home','solicitud','compras-rol','platform','login'].includes(v);
+  if(role==='compras')return ['home','solicitud','compras-rol','platform','login','rfq'].includes(v)||
+    (!!(SESSION&&SESSION.user&&SESSION.user.tieneLPA)&&['lpa-select','lpa-quality','lpa-quality-form'].includes(v));   // V9.4.1
   if(v==='electricas'&&!['tecnico','ingeniero'].includes(role))return false;
   if(role==='tecnico'){
     if(v==='admin')return hasAdminPrivilege();
@@ -4319,7 +4386,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm','rfq'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -4579,6 +4646,152 @@ async function pmCargarPrograma(){
           </div>`).join('')}</div>`:'<div style="font-size:.74rem;color:#94A3B8">Sin órdenes esta semana.</div>'}
       </div>`;}).join('');
   }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.5.0 — RFQ Y BENCH MARK
+//
+// El formulario oficial se publica aparte como rfq.html y se usa tal cual,
+// igual que el Weekend Work. El puente intercepta su guardado local
+// (localStorage) y lo manda al servidor, que valida quién firma cada etapa.
+// Así los formatos oficiales salen idénticos y el flujo es multiusuario.
+// ══════════════════════════════════════════════════════════════
+let RFQ_DATA=null, RFQ_FILTRO='mios', RFQ_ACTUAL=null, RFQ_HTML=null, RFQ_TIMER=null, RFQ_PENDIENTE=null, RFQ_ENVIANDO=false;
+
+function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); rfqCargar(); }
+async function rfqCargar(){
+  $('rfq-lista').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
+  try{
+    const r=await api({action:'getRFQs',token:SESSION.token});
+    if(!r.success){$('rfq-lista').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    RFQ_DATA=r; $('btn-rfq-nuevo').style.display=r.puedeCrear?'':'none'; rfqFiltro(RFQ_FILTRO);
+  }catch(e){$('rfq-lista').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+function rfqFiltro(f){
+  RFQ_FILTRO=f;
+  document.querySelectorAll('#rfq-filtros button').forEach(b=>{const on=b.dataset.f===f;b.style.background=on?'#0F2A4A':'';b.style.color=on?'#fff':'';});
+  if(!RFQ_DATA)return;
+  const L=RFQ_DATA.rfqs.filter(x=>f==='mios'?x.miTurno:f==='proceso'?x.estado==='En proceso':f==='completos'?x.estado==='Completado':x.estado==='Cancelado');
+  const th='padding:9px 10px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.72rem;text-align:left;white-space:nowrap';
+  const td='padding:9px 10px;font-size:.76rem;border-bottom:1px solid #EEF1F6;vertical-align:top';
+  $('rfq-lista').innerHTML=L.length?`<table style="width:100%;border-collapse:collapse;min-width:820px"><thead><tr>${['Folio','Requerimiento','Creó','Etapa','Responsable','Actualizado',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
+    <tbody>${L.map(x=>`<tr style="cursor:pointer" onclick="rfqAbrir('${x.id}')" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background=''">
+      <td style="${td};white-space:nowrap"><b>${escapeHtml(x.folio)}</b>${x.rfqNumero?`<div style="font-size:.64rem;color:#64748B">${escapeHtml(x.rfqNumero)}</div>`:''}</td>
+      <td style="${td}">${escapeHtml(x.titulo||'(sin título)')}${x.presupuesto?`<div style="font-size:.64rem;color:#64748B">${escapeHtml(x.presupuesto)} ${escapeHtml(x.moneda)}</div>`:''}${x.proveedorGanador?`<div style="font-size:.64rem;color:#15803D">Ganador: ${escapeHtml(x.proveedorGanador)}</div>`:''}</td>
+      <td style="${td}">${escapeHtml(x.creador)}</td>
+      <td style="${td}">${x.estado==='En proceso'?escapeHtml(x.etapaEs):`<b style="color:${x.estado==='Completado'?'#15803D':'#B91C1C'}">${escapeHtml(x.estado)}</b>`}</td>
+      <td style="${td}">${x.estado==='En proceso'?escapeHtml(x.responsables.join(' o ')):'—'}${x.miTurno?'<div style="font-size:.64rem;color:#B45309;font-weight:700">Te toca</div>':''}</td>
+      <td style="${td};white-space:nowrap">${escapeHtml(fmtDateTime(x.actualizado))}</td>
+      <td style="${td};color:#2563EB"><i class="fas fa-chevron-right"></i></td></tr>`).join('')}</tbody></table>`
+    :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay RFQ en esta lista.</div>';
+}
+async function rfqNuevo(){
+  if(!confirm('¿Crear un nuevo RFQ? Se abrirá el formulario para llenarlo.'))return;
+  const r=await api({action:'rfqCrear',token:SESSION.token});
+  if(!r.success){toast(r.error||'No se pudo crear','err');return;}
+  toast('RFQ '+r.folio+' creado'); await rfqCargar(); rfqAbrir(r.id);
+}
+async function rfqObtenerHtml_(){
+  if(RFQ_HTML)return RFQ_HTML;
+  const rutas=['./rfq.html','rfq.html',new URL('rfq.html',window.location.href).href];
+  for(const u of rutas){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){RFQ_HTML=await r.text();return RFQ_HTML;}}catch(e){}}
+  throw new Error('No se encontró rfq.html junto a index.html.');
+}
+async function rfqAbrir(id){
+  $('modal-rfq').style.display='flex'; $('rfq-cargando').style.display=''; $('rfq-frame').style.display='none'; $('rfq-guardado').textContent='';
+  try{
+    const [html,r]=await Promise.all([rfqObtenerHtml_(),api({action:'getRFQ',token:SESSION.token,id})]);
+    if(!r.success){toast(r.error||'No disponible','err');rfqCerrarVisor();return;}
+    RFQ_ACTUAL={id:id,rfq:r.rfq,ctx:r.ctx};
+    $('rfq-barra').innerHTML=`<b>${escapeHtml(r.rfq.folio)}</b> · ${escapeHtml(r.rfq.titulo||'(sin título)')} · `+
+      (r.rfq.estado==='En proceso'?`Etapa: <b>${escapeHtml(r.rfq.etapaEs)}</b> · ${r.ctx.puedeActuar?'<span style="color:#FDE68A;font-weight:700">te toca firmar</span>':'responsable: '+escapeHtml(r.rfq.responsables.join(' o '))}`:`<b>${escapeHtml(r.rfq.estado)}</b>`);
+    $('btn-rfq-devolver').style.display=(r.ctx.puedeActuar&&r.rfq.etapa!=='requester')?'':'none';
+    $('btn-rfq-cancelar').style.display=(r.rfq.esCreador&&r.rfq.estado==='En proceso')?'':'none';
+    const base=new URL('./',window.location.href).href;
+    const puente=`<script>window.__RFQ_ESTADO=${JSON.stringify(r.estado).replace(/</g,'\\u003c')};window.__RFQ_CTX=${JSON.stringify(r.ctx).replace(/</g,'\\u003c')};<\/script><script>(${rfqPuente_.toString()})();<\/script>`;
+    $('rfq-frame').srcdoc=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+base+'">'+puente);
+    $('rfq-cargando').style.display='none'; $('rfq-frame').style.display='';
+  }catch(e){$('rfq-cargando').innerHTML=`<div style="color:#B91C1C">${escapeHtml(e.message||String(e))}</div>`;}
+}
+function rfqCerrarVisor(){
+  if(RFQ_PENDIENTE&&RFQ_ACTUAL&&RFQ_ACTUAL.ctx.puedeActuar){rfqEnviar_(false);}
+  $('modal-rfq').style.display='none'; $('rfq-frame').srcdoc=''; RFQ_ACTUAL=null;
+  if($('view-rfq').style.display!=='none')rfqCargar();
+}
+
+// Se ejecuta DENTRO del formulario (se inyecta como texto). Intercepta el
+// guardado local del caso y lo pasa al sistema; bloquea la edición cuando no
+// es el turno de quien lo abre; llena su nombre en la firma; y ofrece el
+// catálogo de proveedores.
+function rfqPuente_(){
+  var CLAVE='ktmex_rfq_case_wizard_v1', CTX=window.__RFQ_CTX||{}, EST=window.__RFQ_ESTADO||null;
+  var gi=Storage.prototype.getItem, si=Storage.prototype.setItem, ri=Storage.prototype.removeItem;
+  Storage.prototype.getItem=function(k){if(k===CLAVE)return EST?JSON.stringify(EST):null;return gi.apply(this,arguments);};
+  Storage.prototype.setItem=function(k,v){if(k===CLAVE){try{EST=JSON.parse(v);}catch(e){}parent.postMessage({tipo:'rfq-estado',estado:EST},'*');return;}return si.apply(this,arguments);};
+  Storage.prototype.removeItem=function(k){if(k===CLAVE)return;return ri.apply(this,arguments);};
+  var css='#resetBtn,#demoDataBtn{display:none!important}'+(CTX.puedeActuar?'':' [data-stage]{pointer-events:none!important;opacity:.92} #stageActionBtn,.sig-btn{display:none!important}');
+  document.addEventListener('DOMContentLoaded',function(){
+    var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+    if(!CTX.puedeActuar){var b=document.createElement('div');b.textContent='Vista de consulta: no es tu turno de firmar en este RFQ.';
+      b.style.cssText='position:sticky;top:0;z-index:50;background:#FEF3C7;color:#92400E;padding:8px 14px;font:600 13px Arial;text-align:center';document.body.insertBefore(b,document.body.firstChild);}
+    var dl=document.createElement('datalist');dl.id='rfq-proveedores';document.body.appendChild(dl);
+    var pintar=function(l){dl.innerHTML=(l||[]).map(function(n){return '<option value="'+String(n).replace(/"/g,'&quot;')+'">';}).join('');};pintar(CTX.proveedores);
+    setInterval(function(){
+      // Nombre de quien firma, fijo para la etapa actual.
+      if(CTX.puedeActuar&&CTX.campoNombre){var f=document.getElementById(CTX.campoNombre);
+        if(f&&f.value!==CTX.nombre){f.value=CTX.nombre;f.readOnly=true;f.dispatchEvent(new Event('input',{bubbles:true}));f.dispatchEvent(new Event('change',{bubbles:true}));}}
+      // Catálogo de proveedores en el Bench Mark.
+      document.querySelectorAll('input[id^="bmSup"][id$="Name"]').forEach(function(x){if(x.getAttribute('list')!=='rfq-proveedores')x.setAttribute('list','rfq-proveedores');});
+      var t=document.getElementById('bmSupplierTable');
+      if(t&&CTX.puedeActuar&&!document.getElementById('rfq-btn-prov')){var a=document.createElement('button');a.type='button';a.id='rfq-btn-prov';
+        a.textContent='+ Agregar proveedor al catálogo';a.style.cssText='margin:8px 0;padding:6px 12px;border:1px solid #93C5FD;border-radius:8px;background:#EFF6FF;color:#1D4ED8;font:600 12px Arial;cursor:pointer';
+        a.onclick=function(){var n=prompt('Nombre del proveedor:');if(n&&n.trim().length>1)parent.postMessage({tipo:'rfq-proveedor',nombre:n.trim()},'*');};
+        t.parentNode.insertBefore(a,t.nextSibling);}
+    },800);
+    window.addEventListener('message',function(e){if(e.data&&e.data.tipo==='rfq-proveedores')pintar(e.data.lista);});
+  });
+}
+
+// Recibe los guardados del formulario. El avance de etapa se envía de
+// inmediato; los cambios de captura se agrupan y se envían a los 5 segundos.
+window.addEventListener('message',async function(e){
+  const m=e.data||{}; if(!RFQ_ACTUAL)return;
+  if(m.tipo==='rfq-proveedor'){
+    const r=await api({action:'rfqAgregarProveedor',token:SESSION.token,nombre:m.nombre});
+    if(r.success){toast(r.nuevo?'Proveedor agregado al catálogo':'Ese proveedor ya estaba en el catálogo');$('rfq-frame').contentWindow.postMessage({tipo:'rfq-proveedores',lista:r.proveedores},'*');}
+    else toast(r.error||'No se pudo agregar','err');
+    return;
+  }
+  if(m.tipo!=='rfq-estado'||!RFQ_ACTUAL.ctx.puedeActuar)return;
+  RFQ_PENDIENTE=m.estado;
+  const avanza=m.estado&&m.estado.stage&&m.estado.stage!==RFQ_ACTUAL.ctx.etapa;
+  clearTimeout(RFQ_TIMER);
+  if(avanza)rfqEnviar_(true);
+  else{$('rfq-guardado').textContent='Cambios sin guardar…';RFQ_TIMER=setTimeout(()=>rfqEnviar_(false),5000);}
+});
+async function rfqEnviar_(avanza){
+  if(!RFQ_ACTUAL||!RFQ_PENDIENTE)return;
+  if(RFQ_ENVIANDO){clearTimeout(RFQ_TIMER);RFQ_TIMER=setTimeout(()=>rfqEnviar_(avanza),1200);return;}
+  RFQ_ENVIANDO=true; const estado=RFQ_PENDIENTE; RFQ_PENDIENTE=null;
+  $('rfq-guardado').textContent=avanza?'Enviando a la siguiente etapa…':'Guardando…';
+  try{
+    const r=await api({action:'rfqGuardar',token:SESSION.token,id:RFQ_ACTUAL.id,estado});
+    if(!r.success){toast(r.error||'No se pudo guardar','err');$('rfq-guardado').textContent='No guardado';if(avanza)rfqAbrir(RFQ_ACTUAL.id);return;}
+    $('rfq-guardado').textContent='Guardado';
+    if(r.avanzo){toast('Enviado a: '+r.etapa);const id=RFQ_ACTUAL.id;setTimeout(()=>rfqAbrir(id),900);}
+  }catch(err){toast('Error de conexión: '+err.message,'err');RFQ_PENDIENTE=RFQ_PENDIENTE||estado;}
+  finally{RFQ_ENVIANDO=false;}
+}
+async function rfqDevolver(){
+  if(!RFQ_ACTUAL)return; const motivo=prompt('Motivo para devolverlo a la etapa anterior:'); if(!motivo||motivo.trim().length<5){if(motivo!==null)toast('Escribe el motivo','err');return;}
+  const r=await api({action:'rfqDevolver',token:SESSION.token,id:RFQ_ACTUAL.id,comentario:motivo.trim()});
+  if(!r.success){toast(r.error||'No se pudo devolver','err');return;} toast('RFQ devuelto'); RFQ_PENDIENTE=null; rfqCerrarVisor();
+}
+async function rfqCancelar(){
+  if(!RFQ_ACTUAL)return; const motivo=prompt('Motivo de la cancelación:'); if(motivo===null)return;
+  if(!confirm('¿Cancelar este RFQ? Ya no podrá continuar.'))return;
+  const r=await api({action:'rfqCancelar',token:SESSION.token,id:RFQ_ACTUAL.id,motivo});
+  if(!r.success){toast(r.error||'No se pudo cancelar','err');return;} toast('RFQ cancelado'); RFQ_PENDIENTE=null; rfqCerrarVisor();
 }
 
 function goPlataforma(){
@@ -5229,6 +5442,8 @@ async function performLogin() {
     SESSION={token:String(res.token),user:res.user};
     // V8.9.3: el presidente solo participa en Weekend Work, así que entra
     // directo a esa pantalla y en inglés.
+    // V9.4.1: Compras con acceso a LPA (Karina Sánchez).
+    if(res.tieneLPA)SESSION.user.tieneLPA=true;
     if(res.soloWeekendWork){
       SESSION.user.soloWeekendWork=true;
       setLanguage('en');
@@ -7071,10 +7286,57 @@ function renderDailyAdmin(){
   }).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">Sin actividades declaradas en el periodo.</div>';
 }
 // V8.6.4: Ingeniería elimina desde el panel de supervisión, también con motivo.
+// ══════════════════════════════════════════════════════════════
+// V9.5.0 — EVIDENCIA AL CERRAR
+// Sin la foto del antes y la del después no se puede cerrar: solo devolver.
+// ══════════════════════════════════════════════════════════════
+let EVID_CTX=null, EVID_SOL_OK=false;
+async function abrirEvidencia_(ctx){
+  EVID_CTX=ctx; $('evid-motivo').value='';
+  $('evid-body').innerHTML='<div style="padding:30px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando fotos…</div>';
+  $('btn-evid-cerrar').disabled=true; $('modal-evidencia').style.display='flex';
+  try{
+    const r=await api({action:'getEvidenciaCierre',token:SESSION.token,tipo:ctx.tipo,id:ctx.id});
+    if(!r.success){$('evid-body').innerHTML=`<div style="color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    const mini=u=>typeof driveMiniatura_==='function'?driveMiniatura_(u,1000):u;
+    const galeria=(t,fotos)=>`<div style="flex:1 1 280px"><div style="font-size:.8rem;font-weight:700;color:#0F2A4A;margin-bottom:6px">${t} <span style="font-weight:400;color:#64748B">(${fotos.length})</span></div>
+      ${fotos.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px">${fotos.map(f=>`<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" title="Abrir en tamaño completo">
+        <img src="${escapeHtml(mini(f.url))}" alt="${t}" style="width:100%;height:150px;object-fit:cover;border-radius:9px;border:1px solid #E2E8F0;background:#F8FAFC"></a>`).join('')}</div>`
+        :`<div style="padding:22px;text-align:center;border:2px dashed #FCA5A5;border-radius:10px;color:#B91C1C;font-size:.76rem;font-weight:600">Sin foto</div>`}</div>`;
+    $('evid-body').innerHTML=`<div style="font-size:.74rem;color:#475569;margin-bottom:10px">${escapeHtml(r.folio||'')}${r.tecnico?' · '+escapeHtml(r.tecnico):''}${r.fechaTermino?' · terminó '+escapeHtml(fmtDateTime(r.fechaTermino)):''}</div>
+      ${r.faltan.length?`<div style="padding:10px 12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:9px;color:#991B1B;font-size:.78rem;margin-bottom:12px"><i class="fas fa-triangle-exclamation" style="margin-right:6px"></i><b>No se puede cerrar:</b> falta la foto del ${r.faltan.join(' y la del ')}. Devuélvela al técnico para que la agregue.</div>`:''}
+      <div style="display:flex;gap:16px;flex-wrap:wrap">${galeria('Antes',r.antes)}${galeria('Después',r.despues)}</div>
+      ${r.comentario?`<div style="margin-top:12px;font-size:.76rem;color:#334155;background:#F8FAFC;border-radius:8px;padding:9px 11px"><b>Comentario del técnico:</b> ${escapeHtml(r.comentario)}</div>`:''}
+      ${(r.pdfs||[]).length?`<div style="margin-top:8px;font-size:.74rem">${r.pdfs.map(p=>`<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener"><i class="fas fa-file-pdf" style="color:#DC2626;margin-right:4px"></i>${escapeHtml(p.nombre||'PDF')}</a>`).join(' · ')}</div>`:''}`;
+    $('btn-evid-cerrar').disabled=r.faltan.length>0;
+  }catch(e){$('evid-body').innerHTML=`<div style="color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+async function evidCerrar(){
+  const c=EVID_CTX; if(!c)return; closeModal('modal-evidencia');
+  if(c.tipo==='daily'){await closeDailyEngineeringUIConfirmado_(c.id);return;}
+  EVID_SOL_OK=true; try{await saveSolicitudChanges();}finally{EVID_SOL_OK=false;}
+}
+async function evidDevolver(){
+  const c=EVID_CTX; if(!c)return;
+  const motivo=$('evid-motivo').value.trim(); if(motivo.length<5){toast('Escribe el motivo para devolverla','err');$('evid-motivo').focus();return;}
+  const b=$('btn-evid-devolver'); b.disabled=true;
+  try{
+    const r=c.tipo==='daily'
+      ? await api({action:'returnDailyActivityEngineering',token:SESSION.token,id:c.id,comentario:motivo})
+      : await api({action:'updateRequest',token:SESSION.token,id:c.id,estatus:'En ejecución',comentarioFacilities:'Devuelta por Ingeniería: '+motivo});
+    if(!r.success){toast(r.error||'No se pudo devolver','err');return;}
+    toast('Devuelta al técnico'); closeModal('modal-evidencia');
+    if(c.tipo==='daily')loadMisActividades(); else{closeModal('modal-sol');loadSolicitudes();}
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{b.disabled=false;}
+}
+
 function deleteDailyAdminDuplicateUI(id,folio){
   deleteDuplicateActivityUI('daily',id,folio||'','dashboardDaily');
 }
-async function closeDailyEngineeringUI(id){
+// V9.5.0: antes de cerrar, Ingeniería ve las fotos del antes y del después.
+function closeDailyEngineeringUI(id){abrirEvidencia_({tipo:'daily',id:id});}
+async function closeDailyEngineeringUIConfirmado_(id){
   const r=await api({action:'closeDailyActivityEngineering',token:SESSION.token,id});
   if(r.success){toast('Actividad cerrada por Ingeniería. Tiempos de apoyo contabilizados.');loadMisActividades();}else toast(r.error||'No se pudo cerrar','err');
 }
@@ -11337,6 +11599,8 @@ async function saveSolicitudChanges() {
   const tecnico=$('ms-tecnico').value, estatus=$('ms-estatus').value;
   const comentario=$('ms-comment').value.trim();
   if(!tecnico&&!estatus){toast('Selecciona técnico o estatus para guardar','err');return;}
+  // V9.5.0: aprobar un cierre abre primero la evidencia fotográfica.
+  if(CUR_SOL.estatus==='Pendiente de cierre por Ingeniería'&&estatus==='Cerrada'&&!EVID_SOL_OK){abrirEvidencia_({tipo:'solicitud',id:CUR_SOL.id});return;}
   if(estatus==='Suspendido'&&!comentario){toast('Para suspender una actividad indica el motivo o la información requerida en Comentario Facilities.','err');return;}
   const btn=$('btn-ms-save');
   btn.disabled=true; btn.textContent=LANG==='en'?'Saving…':'Guardando…';
