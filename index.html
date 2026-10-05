@@ -193,6 +193,21 @@ thead th{background:#F5F8FC;color:#586980}
 #view-admin .tab-btn:hover{background:#F1F5FF;border-color:#93C5FD;transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,42,74,.10)}
 #view-admin .tab-btn.active{background:#0F2A4A;border-color:#0F2A4A;color:#FFFFFF;box-shadow:0 4px 12px rgba(15,42,74,.25)}
 #view-admin .tab-btn.active i{color:#FFFFFF}
+
+/* V9.6.1 — Menú lateral de escritorio.
+   1) Respeta el rol: una regla del menú obligaba a mostrar TODOS los botones
+      (display:flex !important) y anulaba el ocultamiento que hace el sistema
+      según el usuario. Un técnico veía "Admin"; Kojima, "RFQ" y "Preventivo".
+   2) Desplazamiento: la lista crecía sin encogerse y el menú cortaba lo que
+      no cabía; en pantallas bajas los últimos botones quedaban inalcanzables. */
+@media (min-width:1001px){
+  nav button[id^="nav-"][style*="display: none"],
+  nav button[id^="nav-"][style*="display:none"]{display:none!important}
+  body nav>div>div:nth-child(2){flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+  body nav>div>div:nth-child(2)::-webkit-scrollbar{width:6px}
+  body nav>div>div:nth-child(2)::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
+}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -3185,7 +3200,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.6.0';
+const FRONTEND_BUILD = '9.6.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
