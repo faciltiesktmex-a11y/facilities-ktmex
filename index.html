@@ -208,6 +208,11 @@ thead th{background:#F5F8FC;color:#586980}
   body nav>div>div:nth-child(2)::-webkit-scrollbar{width:6px}
   body nav>div>div:nth-child(2)::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
 }
+
+/* V9.8.0 — Con el visor de RFQ o de herramientas abierto, la píldora de conexión
+   (fija abajo a la derecha) tapaba botones como "Agregar nota". */
+body:has(#modal-rfq[style*="display: flex"]) #offline-status,
+body:has(#modal-ht[style*="display: flex"]) #offline-status{display:none!important}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -1182,7 +1187,23 @@ const LPA_AREAS = {
     <div id="chk-fotos-aviso" style="display:none;padding:10px 12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;font-size:.72rem;color:#991B1B;margin-top:12px"></div>
     <button id="chk-submit" class="btn-p" onclick="submitChecklistV80()" style="width:100%;margin-top:14px"><i class="fas fa-floppy-disk" style="margin-right:6px"></i>Guardar inspección</button>
   </div>
-  <div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
+  <div id="chk-tiempos" style="font-size:.64rem;color:#94A3B8;margin:2px 4px 8px"></div>
+<!-- V9.8.0 — Calendario de inspecciones: cada día, por área, si se hizo, si falta o si hubo NG -->
+<div class="card" id="chk-cal-card" style="padding:14px 16px;margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <h3 style="font-size:.95rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-calendar-days" style="margin-right:7px"></i>Calendario de inspecciones</h3>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="btn-g" style="width:auto;padding:6px 11px" onclick="chkCalMes_(-1)" title="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+      <b id="chk-cal-mes" style="min-width:140px;text-align:center;font-size:.84rem;color:#0F2A4A"></b>
+      <button class="btn-g" style="width:auto;padding:6px 11px" onclick="chkCalMes_(1)" title="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
+      <button class="btn-g" style="width:auto;padding:6px 11px" onclick="chkCalHoy_()">Hoy</button>
+    </div>
+  </div>
+  <div id="chk-cal-grid"></div>
+  <div id="chk-cal-leyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:.64rem;color:#64748B;margin-top:8px"></div>
+  <div id="chk-cal-detalle" style="margin-top:10px"></div>
+</div>
+<div class="card" style="padding:18px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 id="chk-history-title" style="margin:0 0 10px;color:var(--navy);font-size:1rem">Historial de inspecciones</h3><span id="chk-history-access" style="font-size:.7rem;color:#64748B"></span></div><div id="chk-history"><p style="color:#94A3B8;font-size:.8rem">Sin datos cargados.</p></div></div>
   <div id="chk-report-card" class="card" style="display:none;padding:18px;margin-top:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;color:var(--navy);font-size:1rem">Reporte mensual del área</h3><p style="font-size:.72rem;color:#64748B;margin:4px 0 0">Tendencias, cumplimiento, NG y detalle de inspecciones.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><select id="chk-report-area" class="inp" style="width:auto" onchange="energiaToggleSelectores_()"></select><input id="chk-report-month" type="month" class="inp" style="width:auto"><span id="energia-selectores" style="display:none;gap:7px"><select id="energia-subestacion" class="inp" style="width:auto"><option>Subestación 1</option><option>Subestación 2</option></select><select id="energia-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select></span><span id="agua-selectores" style="display:none;gap:7px"><select id="agua-turno" class="inp" style="width:auto"><option value="Primer Turno">Primer Turno</option><option value="Segundo Turno">Segundo Turno</option><option value="">Todos los turnos</option></select><select id="agua-periodo" class="inp" style="width:auto"><option value="dia">Por día</option><option value="semana">Por semana</option><option value="mes">Por mes</option></select></span><button class="btn-p" style="width:auto" onclick="loadChecklistMonthlyReport()">Generar</button></div></div>
     <div id="chk-report-actions" style="display:none;gap:7px;margin-top:12px;flex-wrap:wrap"><button class="btn-g" style="width:auto" onclick="printChecklistMonthlyReport()"><i class="fas fa-file-pdf" style="margin-right:5px"></i>Imprimir / PDF</button><button class="btn-g" style="width:auto" onclick="exportChecklistMonthlyExcel()"><i class="fas fa-file-excel" style="margin-right:5px"></i>Descargar Excel</button></div>
@@ -1598,20 +1619,35 @@ const LPA_AREAS = {
     <button class="btn-g" data-f="mios" onclick="rfqFiltro('mios')">Por firmar</button>
     <button class="btn-g" data-f="proceso" onclick="rfqFiltro('proceso')">En proceso</button>
     <button class="btn-g" data-f="completos" onclick="rfqFiltro('completos')">Completados</button>
-    <button class="btn-g" data-f="cancelados" onclick="rfqFiltro('cancelados')">Cancelados</button>
+    <button class="btn-g" data-f="cancelados" onclick="rfqFiltro('cancelados')">Cancelados y rechazados</button>
   </div>
   <div id="rfq-lista" class="card" style="padding:0;overflow-x:auto"></div>
 </div>
 
 <div id="modal-rfq" class="modal-bg" style="display:none;padding:0">
-  <div style="width:100vw;height:100dvh;background:#F1F5F9;display:flex;flex-direction:column">
+  <div style="width:100vw;height:100dvh;background:#F1F5F9;display:flex;flex-direction:column;position:relative">
     <div style="padding:10px 16px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div id="rfq-barra" style="font-size:.84rem"></div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <span id="rfq-guardado" style="font-size:.7rem;color:#BFDBFE;align-self:center"></span>
-        <button class="btn-g" id="btn-rfq-devolver" style="display:none" onclick="rfqDevolver()"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Devolver</button>
+        <button class="btn-g" id="btn-rfq-notas" onclick="rfqNotasAbrir()"><i class="fas fa-note-sticky" style="margin-right:5px"></i>Notas <span id="rfq-notas-n" style="display:none;background:#DC2626;color:#fff;border-radius:999px;padding:1px 7px;font-size:.66rem;margin-left:3px"></span></button>
+        <button class="btn-g" id="btn-rfq-devolver" style="display:none;color:#B45309" onclick="rfqDevolver()"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Regresar para corregir</button>
+        <button class="btn-g" id="btn-rfq-rechazar" style="display:none;color:#B91C1C" onclick="rfqRechazar()"><i class="fas fa-thumbs-down" style="margin-right:5px"></i>Rechazar</button>
         <button class="btn-g" id="btn-rfq-cancelar" style="display:none;color:#B91C1C" onclick="rfqCancelar()"><i class="fas fa-ban" style="margin-right:5px"></i>Cancelar RFQ</button>
         <button class="btn-g" onclick="rfqCerrarVisor()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button>
+      </div>
+    </div>
+    <div id="rfq-banner" style="display:none;padding:9px 16px;font-size:.8rem;font-weight:600"></div>
+    <div id="rfq-notas-panel" style="display:none;position:absolute;top:54px;right:0;bottom:0;width:min(370px,100vw);background:#fff;border-left:1px solid #CBD5E1;box-shadow:-6px 0 18px rgba(15,42,74,.15);z-index:6;flex-direction:column">
+      <div style="padding:11px 14px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
+        <b style="color:#0F2A4A;font-size:.9rem"><i class="fas fa-note-sticky" style="margin-right:7px"></i>Notas del RFQ</b>
+        <button class="btn-g" style="width:auto;padding:4px 10px" onclick="rfqNotasCerrar()"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div style="padding:7px 14px;font-size:.68rem;color:#64748B;background:#F8FAFC;border-bottom:1px solid #E2E8F0">Son solo visuales: <b>no se escriben en el documento ni se imprimen</b>. Las del Bench Mark solo las ven Compras e Inagaki.</div>
+      <div id="rfq-notas-lista" style="flex:1;overflow:auto;padding:10px 14px"></div>
+      <div style="padding:10px 14px 58px;border-top:1px solid #E2E8F0">
+        <textarea id="rfq-nota-texto" class="inp" rows="3" maxlength="1000" placeholder="Escribe una nota para quienes revisen este RFQ…" style="resize:vertical;margin-bottom:7px"></textarea>
+        <button class="btn-p" id="btn-rfq-nota" onclick="rfqNotaEnviar()" style="width:100%">Agregar nota</button>
       </div>
     </div>
     <div id="rfq-cargando" style="padding:40px;text-align:center;color:#64748B;display:none"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando el formulario…</div>
@@ -1665,6 +1701,15 @@ const LPA_AREAS = {
 </div>
 
 <!-- V9.5.0 — Evidencia al cerrar por Ingeniería -->
+<div id="modal-rfq-motivo" class="modal-bg" style="display:none;z-index:95">
+  <div class="card slide" style="width:100%;max-width:480px;padding:20px">
+    <h3 id="rfq-motivo-titulo" style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 4px"></h3>
+    <p id="rfq-motivo-ayuda" style="font-size:.74rem;color:#64748B;margin:0 0 10px"></p>
+    <textarea id="rfq-motivo-texto" class="inp" rows="4" maxlength="600" style="resize:vertical;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px"><button class="btn-g" style="flex:1" onclick="rfqMotivoCerrar_(null)">Cancelar</button><button class="btn-p" id="rfq-motivo-ok" style="flex:1.4" onclick="rfqMotivoCerrar_(document.getElementById('rfq-motivo-texto').value)">Aceptar</button></div>
+  </div>
+</div>
+
 <div id="modal-evidencia" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:920px;padding:0;display:flex;flex-direction:column">
     <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
@@ -2266,6 +2311,7 @@ const LPA_AREAS = {
         <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
           <button id="ops-subtab-check" class="btn-p" onclick="showOpsAnalyticsSubtab('check')" style="width:auto">Checklists de cuartos</button>
           <button id="ops-subtab-tech" class="btn-g" onclick="showOpsAnalyticsSubtab('tech')" style="width:auto">Actividades de técnicos</button>
+          <button id="ops-subtab-eng" class="btn-g" onclick="showOpsAnalyticsSubtab('eng')" style="width:auto;display:none">Gráficas de ingeniería</button>
         </div>
 
         <!-- CHECKLIST ANALYTICS -->
@@ -2298,6 +2344,17 @@ const LPA_AREAS = {
             <h4 style="margin:0 0 10px;font-size:.82rem;color:#334155">Tendencia de lecturas capturadas</h4>
             <div style="height:280px"><canvas id="ops-chart-numeric"></canvas></div>
           </div>
+        </div>
+
+        <!-- V9.7.0 — GRÁFICAS DE INGENIERÍA -->
+        <div id="ops-panel-eng" style="display:none">
+          <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div><label style="display:block;font-size:.72rem;font-weight:600;color:#475569;margin-bottom:3px">Técnico</label>
+              <select id="eng-tecnico" class="inp" style="min-width:210px" onchange="loadEngAnalytics()"><option value="">Todos los técnicos</option></select></div>
+            <div style="font-size:.7rem;color:#64748B;flex:1;min-width:240px">Usa el periodo de arriba. Para Ingeniería y el técnico administrador: el detalle por persona es para encontrar causas y corregirlas, no para ordenar a nadie.</div>
+          </div>
+          <div id="eng-loading" class="card" style="display:none;padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Calculando gráficas…</div>
+          <div id="eng-content"></div>
         </div>
 
         <!-- TECHNICIAN ANALYTICS -->
@@ -3200,7 +3257,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.6.1';
+const FRONTEND_BUILD = '9.8.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3663,6 +3720,16 @@ const TEXT_I18N = {
   'Tiempo efectivo':'Effective Time',
   'Tiempo pausado':'Paused Time',
 };
+// V9.8.0 — Textos del RFQ para quienes usan la interfaz en inglés (Inagaki).
+Object.assign(TEXT_I18N,{
+  'Regresar para corregir':'Return for corrections','Rechazar':'Reject','Rechazar el RFQ':'Reject the RFQ','Regresar':'Return',
+  'Notas':'Notes','Notas del RFQ':'RFQ notes','Agregar nota':'Add note','Todavía no hay notas.':'There are no notes yet.',
+  'Aprobación':'Approval','Cancelados y rechazados':'Cancelled and rejected','Cancelar RFQ':'Cancel RFQ','Nuevo RFQ':'New RFQ',
+  'Por firmar':'To sign','Completados':'Completed','Creó':'Created by','Etapa':'Stage','Requerimiento':'Requirement',
+  'Se regresa a quien lo creó. Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.':'It goes back to its creator. The signatures of that phase are cleared and signed again. Write what must be corrected.',
+  'Se regresa al comprador (Staff / Asistente de compras). Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.':'It goes back to the buyer (Purchasing Staff / Assistant). The signatures of that phase are cleared and signed again. Write what must be corrected.',
+  'El RFQ se cierra como rechazado y se avisa a quien lo creó. Si solo hay correcciones, usa Regresar para corregir.':'The RFQ is closed as rejected and its creator is notified. If there are only corrections, use Return for corrections.'
+});
 
 const TEXT_I18N_EXTRA = {
   "Registra una nueva solicitud de instalación o mantenimiento para Facilities.": "Register a new Facilities installation or maintenance request.",
@@ -4905,10 +4972,10 @@ function rfqFiltro(f){
   RFQ_FILTRO=f;
   document.querySelectorAll('#rfq-filtros button').forEach(b=>{const on=b.dataset.f===f;b.style.background=on?'#0F2A4A':'';b.style.color=on?'#fff':'';});
   if(!RFQ_DATA)return;
-  const L=RFQ_DATA.rfqs.filter(x=>f==='mios'?x.miTurno:f==='proceso'?x.estado==='En proceso':f==='completos'?x.estado==='Completado':x.estado==='Cancelado');
+  const L=RFQ_DATA.rfqs.filter(x=>f==='mios'?x.miTurno:f==='proceso'?x.estado==='En proceso':f==='completos'?x.estado==='Completado':(x.estado==='Cancelado'||x.estado==='Rechazado'));
   const th='padding:9px 10px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.72rem;text-align:left;white-space:nowrap';
   const td='padding:9px 10px;font-size:.76rem;border-bottom:1px solid #EEF1F6;vertical-align:top';
-  $('rfq-lista').innerHTML=L.length?`<table style="width:100%;border-collapse:collapse;min-width:820px"><thead><tr>${['Folio','Requerimiento','Creó','Etapa','Responsable','Actualizado',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
+  $('rfq-lista').innerHTML=L.length?`<table style="width:100%;border-collapse:collapse;min-width:820px"><thead><tr>${['Folio','Requerimiento','Creó','Etapa','Responsable','Actualizado','Aprobación',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
     <tbody>${L.map(x=>`<tr style="cursor:pointer" onclick="rfqAbrir('${x.id}')" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background=''">
       <td style="${td};white-space:nowrap"><b>${escapeHtml(x.folio)}</b>${x.rfqNumero?`<div style="font-size:.64rem;color:#64748B">${escapeHtml(x.rfqNumero)}</div>`:''}</td>
       <td style="${td}">${escapeHtml(x.titulo||'(sin título)')}${x.presupuesto?`<div style="font-size:.64rem;color:#64748B">${escapeHtml(x.presupuesto)} ${escapeHtml(x.moneda)}</div>`:''}${x.proveedorGanador?`<div style="font-size:.64rem;color:#15803D">Ganador: ${escapeHtml(x.proveedorGanador)}</div>`:''}</td>
@@ -4916,6 +4983,7 @@ function rfqFiltro(f){
       <td style="${td}">${x.estado==='En proceso'?escapeHtml(x.etapaEs):`<b style="color:${x.estado==='Completado'?'#15803D':'#B91C1C'}">${escapeHtml(x.estado)}</b>`}</td>
       <td style="${td}">${x.estado==='En proceso'?escapeHtml(x.responsables.join(' o ')):'—'}${x.miTurno?'<div style="font-size:.64rem;color:#B45309;font-weight:700">Te toca</div>':''}</td>
       <td style="${td};white-space:nowrap">${escapeHtml(fmtDateTime(x.actualizado))}</td>
+      <td style="${td};white-space:nowrap">${x.fechaAprobacion?`<b style="color:#15803D">${escapeHtml(fmtDateTime(x.fechaAprobacion))}</b>`:'<span style="color:#94A3B8">—</span>'}</td>
       <td style="${td};color:#2563EB"><i class="fas fa-chevron-right"></i></td></tr>`).join('')}</tbody></table>`
     :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay RFQ en esta lista.</div>';
 }
@@ -4938,8 +5006,12 @@ async function rfqAbrir(id){
     if(!r.success){toast(r.error||'No disponible','err');rfqCerrarVisor();return;}
     RFQ_ACTUAL={id:id,rfq:r.rfq,ctx:r.ctx};
     $('rfq-barra').innerHTML=`<b>${escapeHtml(r.rfq.folio)}</b> · ${escapeHtml(r.rfq.titulo||'(sin título)')} · `+
-      (r.rfq.estado==='En proceso'?`Etapa: <b>${escapeHtml(r.rfq.etapaEs)}</b> · ${r.ctx.puedeActuar?'<span style="color:#FDE68A;font-weight:700">te toca firmar</span>':'responsable: '+escapeHtml(r.rfq.responsables.join(' o '))}`:`<b>${escapeHtml(r.rfq.estado)}</b>`);
-    $('btn-rfq-devolver').style.display=(r.ctx.puedeActuar&&r.rfq.etapa!=='requester')?'':'none';
+      (r.rfq.fechaAprobacion?`Aprobado el <b style="color:#86EFAC">${escapeHtml(fmtDateTime(r.rfq.fechaAprobacion))}</b> · `:'')+(r.rfq.estado==='En proceso'?`Etapa: <b>${escapeHtml(r.rfq.etapaEs)}</b> · ${r.ctx.puedeActuar?'<span style="color:#FDE68A;font-weight:700">te toca firmar</span>':'responsable: '+escapeHtml(r.rfq.responsables.join(' o '))}`:`<b>${escapeHtml(r.rfq.estado)}</b>`);
+    const puedeRegresar=r.ctx.puedeActuar&&r.rfq.etapa!=='requester';
+    $('btn-rfq-devolver').style.display=puedeRegresar?'':'none';
+    $('btn-rfq-rechazar').style.display=puedeRegresar?'':'none';
+    RFQ_ACTUAL.notas=r.notas||[]; rfqNotasPintar_(); rfqBannerPintar_(r.rfq);
+    $('rfq-notas-panel').style.display='none';
     $('btn-rfq-cancelar').style.display=(r.rfq.esCreador&&r.rfq.estado==='En proceso')?'':'none';
     const base=new URL('./',window.location.href).href;
     const puente=`<script>window.__RFQ_ESTADO=${JSON.stringify(r.estado).replace(/</g,'\\u003c')};window.__RFQ_CTX=${JSON.stringify(r.ctx).replace(/</g,'\\u003c')};<\/script><script>(${rfqPuente_.toString()})();<\/script>`;
@@ -4967,7 +5039,7 @@ function rfqPuente_(){
   // se muestran todas las páginas (el asistente valida campos que quien
   // consulta no puede llenar y lo dejaba atorado); el Bench Mark solo lo ven
   // Compras e Inagaki.
-  var css='#resetBtn,#demoDataBtn,[data-stage="specialist2"],#step-specialist2{display:none!important}'+
+  var css='#resetBtn,#demoDataBtn,[data-stage="specialist2"],#step-specialist2{display:none!important} #requester,#rfqNumber{background:#F1F5F9!important;color:#334155!important}'+
     (CTX.puedeActuar?'':' [data-stage]{pointer-events:none!important;opacity:.92} #stageActionBtn,.sig-btn{display:none!important} #wizParking{display:block!important}')+
     (CTX.verBM?'':' [data-stage^="bm_"],#stepperBM,[id^="stepBM-"]{display:none!important}');
   document.addEventListener('DOMContentLoaded',function(){
@@ -4977,6 +5049,12 @@ function rfqPuente_(){
     var dl=document.createElement('datalist');dl.id='rfq-proveedores';document.body.appendChild(dl);
     var pintar=function(l){dl.innerHTML=(l||[]).map(function(n){return '<option value="'+String(n).replace(/"/g,'&quot;')+'">';}).join('');};pintar(CTX.proveedores);
     setInterval(function(){
+      // V9.8.0: el solicitante (quien creó el RFQ) y el folio los fija el sistema; no se editan.
+      [['requester',CTX.requester],['rfqNumber',CTX.folio]].forEach(function(p){
+        var f=document.getElementById(p[0]); if(!f||!p[1])return;
+        if(f.value!==p[1]){f.value=p[1];f.dispatchEvent(new Event('input',{bubbles:true}));f.dispatchEvent(new Event('change',{bubbles:true}));}
+        f.readOnly=true; f.title='Lo asigna el sistema; no se edita';
+      });
       // Nombre de quien firma, fijo para la etapa actual.
       if(CTX.puedeActuar&&CTX.campoNombre){var f=document.getElementById(CTX.campoNombre);
         if(f&&f.value!==CTX.nombre){f.value=CTX.nombre;f.readOnly=true;f.dispatchEvent(new Event('input',{bubbles:true}));f.dispatchEvent(new Event('change',{bubbles:true}));}}
@@ -5023,9 +5101,71 @@ async function rfqEnviar_(avanza){
   finally{RFQ_ENVIANDO=false;}
 }
 async function rfqDevolver(){
-  if(!RFQ_ACTUAL)return; const motivo=prompt('Motivo para devolverlo a la etapa anterior:'); if(!motivo||motivo.trim().length<5){if(motivo!==null)toast('Escribe el motivo','err');return;}
+  if(!RFQ_ACTUAL)return;
+  const alComprador=['bm_specialist','bm_manager','bm_srmanager'].includes(RFQ_ACTUAL.rfq.etapa);
+  const motivo=await rfqPedirMotivo_('Regresar para corregir',alComprador?'Se regresa al comprador (Staff / Asistente de compras). Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.':'Se regresa a quien lo creó. Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.','Regresar');
+  if(motivo===null)return;
+  if(motivo.trim().length<5){toast('Escribe el motivo o las correcciones (mínimo 5 caracteres)','err');return;}
   const r=await api({action:'rfqDevolver',token:SESSION.token,id:RFQ_ACTUAL.id,comentario:motivo.trim()});
-  if(!r.success){toast(r.error||'No se pudo devolver','err');return;} toast('RFQ devuelto'); RFQ_PENDIENTE=null; rfqCerrarVisor();
+  if(!r.success){toast(r.error||'No se pudo regresar','err');return;}
+  toast('RFQ regresado para corrección'); RFQ_PENDIENTE=null; rfqCerrarVisor();
+}
+async function rfqRechazar(){
+  if(!RFQ_ACTUAL)return;
+  const motivo=await rfqPedirMotivo_('Rechazar el RFQ','El RFQ se cierra como rechazado y se avisa a quien lo creó. Si solo hay correcciones, usa Regresar para corregir.','Rechazar');
+  if(motivo===null)return;
+  if(motivo.trim().length<5){toast('Escribe el motivo del rechazo (mínimo 5 caracteres)','err');return;}
+  if(!confirm('¿Rechazar este RFQ? Ya no podrá continuar.'))return;
+  const r=await api({action:'rfqRechazar',token:SESSION.token,id:RFQ_ACTUAL.id,comentario:motivo.trim()});
+  if(!r.success){toast(r.error||'No se pudo rechazar','err');return;}
+  toast('RFQ rechazado'); RFQ_PENDIENTE=null; rfqCerrarVisor();
+}
+
+// Ventana para escribir el motivo (reemplaza al cuadro simple del navegador).
+let RFQ_MOTIVO_RES=null;
+function rfqPedirMotivo_(titulo,ayuda,boton){
+  return new Promise(res=>{
+    RFQ_MOTIVO_RES=res; $('rfq-motivo-titulo').textContent=uiText(titulo); $('rfq-motivo-ayuda').textContent=uiText(ayuda);
+    $('rfq-motivo-ok').textContent=uiText(boton); $('rfq-motivo-texto').value=''; $('modal-rfq-motivo').style.display='flex';
+    setTimeout(()=>$('rfq-motivo-texto').focus(),80);
+  });
+}
+function rfqMotivoCerrar_(valor){ $('modal-rfq-motivo').style.display='none'; const f=RFQ_MOTIVO_RES; RFQ_MOTIVO_RES=null; if(f)f(valor); }
+
+// Aviso para quien recibe el RFQ de vuelta, y para el creador si fue rechazado.
+function rfqBannerPintar_(rfq){
+  const b=$('rfq-banner'); if(!b)return; const d=rfq.devolucion;
+  if(!d||(rfq.estado==='En proceso'&&!['requester','bm_staff'].includes(rfq.etapa))){b.style.display='none';return;}
+  const rech=rfq.estado==='Rechazado'||d.rechazo;
+  b.style.display=''; b.style.background=rech?'#FEE2E2':'#FEF3C7'; b.style.color=rech?'#7F1D1D':'#78350F';
+  const en=LANG==='en';
+  b.innerHTML=`<i class="fas fa-${rech?'thumbs-down':'rotate-left'}" style="margin-right:7px"></i><b>${rech?(en?'Rejected':'Rechazado'):(en?'Returned for corrections':'Regresado para corregir')}</b> ${en?'by':'por'} ${escapeHtml(d.por)} ${en?'on':'el'} ${escapeHtml(fmtDateTime(d.fecha))}: ${escapeHtml(d.motivo)}`;
+}
+
+// ── Notas: solo visuales, no se escriben en el documento ──
+function rfqNotasPintar_(){
+  const n=(RFQ_ACTUAL&&RFQ_ACTUAL.notas)||[]; const badge=$('rfq-notas-n');
+  badge.textContent=n.length; badge.style.display=n.length?'':'none';
+  const tipoCol={Nota:['#EFF6FF','#1D4ED8'],Regreso:['#FEF3C7','#B45309'],Rechazo:['#FEE2E2','#B91C1C']};
+  $('rfq-notas-lista').innerHTML=n.length?n.map(x=>{const c=tipoCol[x.tipo]||tipoCol.Nota;
+    return `<div style="border:1px solid #E2E8F0;border-radius:9px;padding:8px 10px;margin-bottom:8px;background:#fff">
+      <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b style="font-size:.76rem;color:#0F2A4A">${escapeHtml(x.nombre)}</b>
+        <span style="font-size:.6rem;font-weight:700;padding:1px 7px;border-radius:999px;background:${c[0]};color:${c[1]}">${escapeHtml(x.tipo==='Nota'?x.etapaEs:x.tipo)}</span></div>
+      <div style="font-size:.64rem;color:#94A3B8;margin:1px 0 4px">${escapeHtml(fmtDateTime(x.fecha))}${x.restringida?' · solo Compras e Inagaki':''}</div>
+      <div style="font-size:.78rem;color:#334155;white-space:pre-wrap">${escapeHtml(x.texto)}</div></div>`;}).join('')
+    :'<div style="padding:20px 6px;text-align:center;color:#94A3B8;font-size:.76rem">Todavía no hay notas.</div>';
+}
+function rfqNotasAbrir(){ const p=$('rfq-notas-panel'); p.style.display=p.style.display==='none'?'flex':'none'; const l=$('rfq-notas-lista'); l.scrollTop=l.scrollHeight; }
+function rfqNotasCerrar(){ $('rfq-notas-panel').style.display='none'; }
+async function rfqNotaEnviar(){
+  if(!RFQ_ACTUAL)return; const t=$('rfq-nota-texto').value.trim(); if(!t){toast('Escribe la nota','err');return;}
+  const b=$('btn-rfq-nota'); b.disabled=true;
+  try{
+    const r=await api({action:'rfqNotaAgregar',token:SESSION.token,id:RFQ_ACTUAL.id,texto:t});
+    if(!r.success){toast(r.error||'No se pudo agregar la nota','err');return;}
+    RFQ_ACTUAL.notas=r.notas||[]; $('rfq-nota-texto').value=''; rfqNotasPintar_(); const l=$('rfq-notas-lista'); l.scrollTop=l.scrollHeight;
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{b.disabled=false;}
 }
 async function rfqCancelar(){
   if(!RFQ_ACTUAL)return; const motivo=prompt('Motivo de la cancelación:'); if(motivo===null)return;
@@ -6777,6 +6917,23 @@ function renderUnifiedDailyCard_(d){
     ${actions}
   </div>`;
 }
+// V9.8.0 — El técnico de apoyo puede retirarse de la actividad (abierta o aún sin iniciar).
+function botonSalirApoyo_(x,a,validado){
+  const ABIERTOS=['En curso','Pausada','En espera de material','Espera de material','Falta material','Reanudada'];
+  const abierta=a?ABIERTOS.includes(String(a.estatusActividad||'')):String((x.planDiario&&x.planDiario.estatus)||'')==='Declarada';
+  if(validado||!abierta)return '';
+  return `<button class="btn-g" style="margin-top:9px;width:auto;padding:7px 13px;font-size:.74rem;color:#B45309;border-color:#FCD34D" onclick="apoyoSalir_('${escapeHtml(a?a.id:'')}','${escapeHtml(x.planDiario?x.planDiario.id:'')}','${escapeHtml(x.folio||'')}')"><i class="fas fa-right-from-bracket" style="margin-right:6px"></i>Salir de la actividad</button>`;
+}
+async function apoyoSalir_(actividadId,dailyId,folio){
+  const yaInicio=!!actividadId;
+  if(!confirm(yaInicio?'¿Salir de '+folio+'? Tu tiempo de apoyo se detiene ahora y quedas libre para otra actividad.':'¿Salir de '+folio+'? Dejarás de aparecer como apoyo en esta actividad.'))return;
+  const motivo=prompt('Motivo por el que sales (opcional):'); if(motivo===null)return;
+  try{
+    const r=await api({action:'salirDeApoyo',token:SESSION.token,actividadId,dailyId,motivo:(motivo||'').trim()});
+    if(!r.success){toast(r.error||'No se pudo salir de la actividad','err');return;}
+    toast(r.mensaje||'Saliste de la actividad'); loadMisActividades();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
 function renderUnifiedSupportCard_(x){
   const a=x.actividad||null,sp=x.soporte||{};
   const status=a?actBucketUnified_(x.solicitud||{},a):{b:'PENDIENTE',t:'Apoyo previsto'};
@@ -6791,6 +6948,7 @@ function renderUnifiedSupportCard_(x){
       <span>${escapeHtml(sp.estado||(a?'Apoyo en curso':'Apoyo previsto · Por iniciar'))}${validated&&sp.validadoPor?' · validado por '+escapeHtml(sp.validadoPor):''}</span>
     </div>
     <p style="font-size:.66rem;color:#64748B;margin:7px 0 0">El técnico responsable controla inicio, pausas, término y cierre de esta actividad.</p>
+ ${botonSalirApoyo_(x,a,validated)}
   </div>`;
 }
 // ══════════════════════════════════════════════════════════════
@@ -10739,11 +10897,14 @@ async function loadOperationsAnalytics(){
     toast('Error al cargar analítica: '+e.message,'err');
   }finally{
     if($('ops-analytics-loading'))$('ops-analytics-loading').style.display='none';
+    if(OPS_SUBTAB==='eng')loadEngAnalytics();    // V9.7.0: "Actualizar" también refresca las gráficas de ingeniería
   }
 }
 
 function renderOperationsAnalytics(){
   const r=OPS_ANALYTICS_DATA;if(!r)return;
+  // V9.7.0: las gráficas de ingeniería no son para la gerencia.
+  if($('ops-subtab-eng'))$('ops-subtab-eng').style.display=(SESSION&&SESSION.user&&SESSION.user.rol==='manager')?'none':'';
   if($('ops-analytics-content'))$('ops-analytics-content').style.display='';
 
   // V8.6.5: deja claro qué rango se está viendo.
@@ -10841,7 +11002,7 @@ function renderOperationsAnalytics(){
       `Turno de <b>${j.horasTurno} h</b> menos <b>${j.descansoMinutosDia} min</b> de descansos`+
       (detalle?` (${escapeHtml(detalle)})`:'')+
       ` = <b>${j.horasPorDia} h</b> efectivas por día.<br>`+
-      `El periodo tiene <b>${j.diasLaborales}</b> días hábiles, es decir <b>${opsFmtMin_(j.minutosDisponibles)}</b> disponibles por técnico. `+
+      `El periodo tiene <b>${j.diasLaborales}</b> días hábiles, es decir <b>${opsFmtMin_(j.minutosDisponibles)}</b> disponibles en primer turno`+(j.metaSegundoTurnoMin?` (<b>${opsFmtMin_(j.metaSegundoTurnoMin*j.diasLaborales)}</b> en segundo turno)`:'')+`; el turno de cada técnico se infiere cada semana de sus checklists y sus actividades. `+
       `Sábado y domingo se reportan como tiempo extra.`;
   }
 
@@ -11063,12 +11224,177 @@ function opsKpisDesdeItems_(items){
   return k;
 }
 
+// ══════════════════════════════════════════════════════════════
+// V9.7.0 — GRÁFICAS DE INGENIERÍA
+//
+// Siete vistas de la actividad de los técnicos para encontrar causas:
+// pausas, estimado contra real, mapa de calor de cobertura, hora de
+// arranque, carga por área, espera hasta el cierre y material retirado.
+// El turno de cada técnico (que rola cada semana) se infiere de sus
+// checklists y actividades; la meta diaria depende de él.
+// ══════════════════════════════════════════════════════════════
+let ENG_DATA=null;
+const ENG_PAL=['#2563EB','#F59E0B','#10B981','#EF4444','#8B5CF6','#06B6D4','#84CC16','#F97316','#64748B'];
+const ENG_DIAS=['D','L','M','M','J','V','S'];
+
+async function loadEngAnalytics(){
+  if(!SESSION||SESSION.user.rol==='manager'||!canViewOperationsAnalytics())return;
+  if(!navigator.onLine){toast('La analítica requiere conexión.','err');return;}
+  const hoy=localDateKeyV843_(), periodo=$('ops-analytics-period')?.value||'mes';
+  const monthEl=$('ops-analytics-month'), month=(monthEl&&monthEl.value)||hoy.slice(0,7);
+  const fecha=($('ops-analytics-fecha')&&$('ops-analytics-fecha').value)||hoy;
+  const req={action:'getAnaliticaIngenieria',token:SESSION.token,month,periodo,tecnico:$('eng-tecnico')?.value||''};
+  if(periodo==='semana'||periodo==='dia')req.fecha=fecha;
+  if(periodo==='rango'){req.desde=$('ops-analytics-desde')?.value||'';req.hasta=$('ops-analytics-hasta')?.value||'';}
+  $('eng-loading').style.display=''; $('eng-content').style.display='none';
+  try{
+    const r=await api(req);
+    if(!r.success){toast(r.error||'No se pudieron calcular las gráficas.','err');return;}
+    ENG_DATA=r; engRender_(r);
+  }catch(e){toast('Error al cargar las gráficas: '+e.message,'err');}
+  finally{$('eng-loading').style.display='none';$('eng-content').style.display='';}
+}
+
+function engChart_(key,canvasId,cfg){
+  opsDestroyChart_(key);
+  const c=$(canvasId); if(!c||typeof Chart==='undefined')return;
+  OPS_ANALYTICS_CHARTS[key]=new Chart(c,cfg);
+}
+function engHm_(min){const m=Math.max(0,Math.round(Number(min)||0));return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function engSec_(titulo,sub,cuerpo){
+  return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.92rem;font-weight:700;color:#0F2A4A">${titulo}</div>
+    ${sub?`<div style="font-size:.7rem;color:#64748B;margin:2px 0 10px">${sub}</div>`:'<div style="height:8px"></div>'}${cuerpo}</div>`;
+}
+const engVacio_=t=>`<div style="padding:22px;text-align:center;color:#94A3B8;font-size:.78rem;border:1.5px dashed #E2E8F0;border-radius:10px">${t}</div>`;
+const engCaja_=(id,alto)=>`<div style="position:relative;height:${alto||280}px"><canvas id="${id}"></canvas></div>`;
+
+function engRender_(r){
+  const sel=$('eng-tecnico');
+  if(sel){const prev=sel.value;
+    sel.innerHTML='<option value="">Todos los técnicos</option>'+(r.listaTecnicos||[]).map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    if(prev&&(r.listaTecnicos||[]).includes(prev))sel.value=prev;}
+  const rs=r.resumen||{};
+  const poca=rs.actividades<10;
+  const html=[];
+
+  html.push(`<div class="card" style="padding:11px 14px;margin-bottom:12px;font-size:.74rem;color:#334155;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+    <span><b>${escapeHtml(r.periodo.desde)}</b> a <b>${escapeHtml(r.periodo.hasta)}</b></span>
+    <span><b>${rs.actividades}</b> actividades iniciadas · <b>${rs.finalizadas}</b> terminadas</span>
+    <span><b>${rs.tecnicos}</b> técnico(s) con registros · <b>${rs.diasLaborales}</b> días hábiles</span>
+    ${poca?`<span style="color:#B45309;font-weight:600"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>Con menos de 10 actividades las gráficas pueden no ser representativas; amplía el periodo.</span>`:''}</div>`);
+
+  // 1. Pareto de pausas
+  const pa=r.pareto||{items:[]};
+  html.push(engSec_('1. Motivos de pausa (Pareto)','Qué causa quitarle más tiempo al técnico. Si domina la espera de material, el problema es el abasto, no la persona.',
+    pa.items.length?`<div style="display:flex;gap:14px;flex-wrap:wrap"><div style="flex:2 1 420px">${engCaja_('eng-ch-pareto',290)}</div>
+      <div style="flex:1 1 230px;font-size:.72rem">${pa.items.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #EEF1F6"><span>${escapeHtml(x.motivo)}</span><span style="white-space:nowrap"><b>${opsFmtMin_(x.minutos)}</b> · ${x.pct}% · ${x.eventos} pausa(s)</span></div>`).join('')}</div></div>`
+      :engVacio_('No hay pausas registradas en el periodo.')));
+
+  // 2. Estimado contra real
+  const es=r.estimado||{porCategoria:[],puntos:[]};
+  html.push(engSec_('2. Tiempo estimado contra tiempo real','Qué tan buenos son los tiempos que se declaran. Razón mayor a 1: el trabajo tarda más de lo estimado. Sirve también para validar las duraciones del preventivo.',
+    es.porCategoria.length?`<div style="display:flex;gap:14px;flex-wrap:wrap"><div style="flex:1 1 340px">${engCaja_('eng-ch-est-cat',270)}</div><div style="flex:1 1 340px">${engCaja_('eng-ch-est-pts',270)}</div></div>
+      <div style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr>${['Categoría','Actividades','Estimado prom.','Real prom.','Razón'].map(h=>`<th style="text-align:left;padding:6px 8px;background:#0F2A4A;color:#fff;font-weight:600">${h}</th>`).join('')}</tr></thead>
+      <tbody>${es.porCategoria.map(x=>`<tr style="border-bottom:1px solid #EEF1F6"><td style="padding:6px 8px;font-weight:600">${escapeHtml(x.categoria)}</td><td style="padding:6px 8px">${x.n}</td><td style="padding:6px 8px">${opsFmtMin_(x.estPromedio)}</td><td style="padding:6px 8px">${opsFmtMin_(x.realPromedio)}</td>
+        <td style="padding:6px 8px;font-weight:700;color:${x.razon>1.25?'#B91C1C':(x.razon<0.75?'#B45309':'#15803D')}">${x.razon.toFixed(2)}</td></tr>`).join('')}</tbody></table></div>
+      ${es.n<10?'<div style="font-size:.68rem;color:#B45309;margin-top:6px">Solo '+es.n+' actividad(es) terminadas con estimado: tómalo como referencia.</div>':''}`
+      :engVacio_('Todavía no hay actividades terminadas con tiempo estimado en el periodo.')));
+
+  // 3. Mapa de calor
+  const ca=r.calor||{tecnicos:[],dias:[]};
+  const color=p=>p===null||p===undefined?['#E5E7EB','#9CA3AF']:(p>=90?['#BBF7D0','#14532D']:(p>=70?['#FDE68A','#78350F']:['#FECACA','#7F1D1D']));
+  const dcab=d=>{const dt=new Date(d+'T12:00:00');return `<th style="padding:3px 2px;font-size:.6rem;font-weight:600;color:#475569;min-width:30px;text-align:center" title="${d}">${ENG_DIAS[dt.getDay()]}<br>${d.slice(8)}</th>`;};
+  const turnoTxt=t=>t==='Segundo Turno'?'2.º':'1.º';
+  const tabla=ca.tecnicos.length?`<div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:2px;font-size:.66rem"><thead><tr><th style="text-align:left;padding:3px 8px;font-size:.66rem">Técnico</th>${ca.dias.map(dcab).join('')}<th style="padding:3px 8px">Cobertura</th><th style="text-align:left;padding:3px 8px">Turno por semana</th></tr></thead><tbody>
+    ${ca.tecnicos.map(t=>`<tr><td style="padding:3px 8px;font-weight:700;color:#0F2A4A;white-space:nowrap">${escapeHtml(t.tecnico)}</td>
+      ${t.celdas.map(c=>{const col=color(c.m===null?null:c.pct);
+        const tip=c.m===null?`${t.tecnico} · ${c.d}: sin registro (meta ${engHm_(c.meta)} h)`:`${t.tecnico} · ${c.d}: registrado ${engHm_(c.m)} h (efectivo ${engHm_(c.ef)} + pausas ${engHm_(c.pa)}) de meta ${engHm_(c.meta)} h = ${c.pct}%`;
+        return `<td title="${escapeHtml(tip)}" style="background:${col[0]};color:${col[1]};text-align:center;min-width:30px;height:26px;border-radius:4px;font-weight:600">${c.m===null?'—':(c.m/60).toFixed(1)}</td>`;}).join('')}
+      <td style="text-align:center;padding:3px 8px"><span style="display:inline-block;padding:2px 9px;border-radius:999px;font-weight:700;background:${color(t.cobertura)[0]};color:${color(t.cobertura)[1]}">${t.cobertura}%</span></td>
+      <td style="padding:3px 8px;white-space:nowrap;color:#475569">${t.semanas.slice(-8).map(w=>`${w.lunes.slice(8)}/${w.lunes.slice(5,7)}: <b>${turnoTxt(w.turno)}</b>`).join(' · ')||'sin datos (se toma 1.º)'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:.66rem;color:#475569;align-items:center">
+      <span><i style="display:inline-block;width:11px;height:11px;background:#BBF7D0;border-radius:3px;vertical-align:-1px"></i> 90 % o más de la meta</span>
+      <span><i style="display:inline-block;width:11px;height:11px;background:#FDE68A;border-radius:3px;vertical-align:-1px"></i> 70 a 89 %</span>
+      <span><i style="display:inline-block;width:11px;height:11px;background:#FECACA;border-radius:3px;vertical-align:-1px"></i> menos de 70 %</span>
+      <span><i style="display:inline-block;width:11px;height:11px;background:#E5E7EB;border-radius:3px;vertical-align:-1px"></i> sin registro</span>
+      <span>Cada celda: horas registradas (efectivo + pausas). Meta: ${engHm_(ca.metas.primer)} h en 1.er turno, ${engHm_(ca.metas.segundo)} h en 2.º. Solo lunes a viernes.</span></div>
+    ${ca.recortado?'<div style="font-size:.66rem;color:#64748B;margin-top:4px">Se muestran los últimos 35 días hábiles; la cobertura considera todo el periodo.</div>':''}
+    <div style="font-size:.66rem;color:#64748B;margin-top:4px">Es una señal de captura, no una calificación: un valor bajo puede significar tiempo sin aprovechar o actividades que no se están declarando.</div>`
+    :engVacio_('No hay registros de técnicos en el periodo.');
+  html.push(engSec_('3. Mapa de calor: tiempo registrado por técnico y día','Qué días y quiénes quedan lejos de su meta. El turno de cada técnico se infiere cada semana de sus checklists y actividades.',
+    tabla+((ca.sinRegistros||[]).length?`<div style="margin-top:8px;padding:8px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:.7rem;color:#92400E"><b>Sin ningún registro en el periodo:</b> ${ca.sinRegistros.map(escapeHtml).join(', ')}</div>`:'')));
+
+  // 4. Hora de arranque
+  const ar=(r.arranque&&r.arranque.turnos)||[], conAr=ar.filter(t=>t.n>0);
+  html.push(engSec_('4. Hora de arranque','A qué hora registra su primera actividad cada técnico en un día hábil, separado por turno. Un patrón constante es distinto de un día aislado.',
+    conAr.length?`${engCaja_('eng-ch-arranque',250)}<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.72rem;color:#334155;margin-top:6px">${conAr.map(t=>`<span><b>${escapeHtml(t.turno)}</b>: mediana ${engHm_(t.mediana)} · ${t.n} arranques</span>`).join('')}</div>`
+      :engVacio_('No hay horas de arranque en el periodo.')));
+
+  // 5. Área y categoría
+  const aa=r.areas||{areas:[],categorias:[]};
+  html.push(engSec_('5. Actividades por área y categoría','Dónde se concentra el trabajo y qué parte es preventivo, correctivo u otra categoría (actividades iniciadas en el periodo).',
+    aa.areas.length?engCaja_('eng-ch-areas',Math.max(220,aa.areas.length*34+70)):engVacio_('No hay actividades en el periodo.')));
+
+  // 6. Espera hasta el cierre de Ingeniería
+  const ec=r.esperaCierre||{grupos:[],pendientes:{lista:[]}}, pe=ec.pendientes||{};
+  html.push(engSec_('6. Espera hasta el cierre de Ingeniería','Cuánto pasa entre que el técnico termina y Ingeniería cierra. Una espera larga retrasa la reprogramación del preventivo. Son horas corridas, fines de semana incluidos.',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px">
+      ${opsKpiCard_('Cierres en el periodo',ec.n)}${opsKpiCard_('Espera promedio',ec.n?opsFmtMin_(ec.promedioH*60):'—')}${opsKpiCard_('Espera mediana',ec.n?opsFmtMin_(ec.medianaH*60):'—')}
+      ${opsKpiCard_('Pendientes ahora',pe.n||0)}${opsKpiCard_('Con más de 24 h',pe.mas24||0)}${opsKpiCard_('Con más de 72 h',pe.mas72||0)}</div>
+     ${ec.n?engCaja_('eng-ch-espera',220):engVacio_('Todavía no hay cierres de Ingeniería con fecha de término en el periodo.')}
+     ${(pe.lista||[]).length?`<div style="font-size:.76rem;font-weight:700;color:#0F2A4A;margin:12px 0 5px">Las más antiguas esperando cierre</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><tbody>
+       ${pe.lista.map(x=>`<tr style="border-bottom:1px solid #EEF1F6"><td style="padding:5px 8px;white-space:nowrap"><b>${escapeHtml(x.folio||'—')}</b></td><td style="padding:5px 8px">${escapeHtml(x.tecnico)}</td><td style="padding:5px 8px;color:#475569">${escapeHtml(x.descripcion)}</td>
+       <td style="padding:5px 8px;white-space:nowrap;font-weight:700;color:${x.horas>72?'#B91C1C':(x.horas>24?'#B45309':'#15803D')}">${x.horas>=48?Math.round(x.horas/24)+' días':x.horas+' h'}</td></tr>`).join('')}</tbody></table></div>`:''}`));
+
+  // 7. Material
+  const ma=r.material||{total:0,porArea:[],top:[]};
+  html.push(engSec_('7. Material retirado','Salidas de inventario del periodo, por el área del trabajo y por material. Se cuentan salidas, no pesos: el inventario aún no tiene costos y las unidades no se pueden sumar.',
+    ma.total?`<div style="display:flex;gap:14px;flex-wrap:wrap"><div style="flex:1 1 320px">${engCaja_('eng-ch-mat-area',Math.max(200,ma.porArea.length*30+60))}</div><div style="flex:1 1 320px">${engCaja_('eng-ch-mat-top',Math.max(200,ma.top.length*30+60))}</div></div>`
+      :engVacio_('Todavía no hay salidas de inventario registradas en el periodo. Aparecerán cuando los técnicos empiecen a registrar el material que retiran.')));
+
+  $('eng-content').innerHTML=html.join('');
+
+  // ── Gráficas ──
+  if(pa.items.length)engChart_('engPareto','eng-ch-pareto',{type:'bar',data:{labels:pa.items.map(x=>x.motivo),datasets:[
+      {type:'bar',label:'Minutos de pausa',data:pa.items.map(x=>x.minutos),backgroundColor:'#2563EB',yAxisID:'y',order:2},
+      {type:'line',label:'% acumulado',data:pa.items.map(x=>x.acumPct),borderColor:'#EF4444',backgroundColor:'#EF4444',tension:.2,yAxisID:'y2',order:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,title:{display:true,text:'minutos'}},y2:{position:'right',min:0,max:100,grid:{drawOnChartArea:false},title:{display:true,text:'% acumulado'}}}}});
+  if(es.porCategoria.length){
+    engChart_('engEstCat','eng-ch-est-cat',{type:'bar',data:{labels:es.porCategoria.map(x=>`${x.categoria} (${x.n})`),datasets:[
+      {label:'Estimado promedio (min)',data:es.porCategoria.map(x=>x.estPromedio),backgroundColor:'#94A3B8'},
+      {label:'Real promedio (min)',data:es.porCategoria.map(x=>x.realPromedio),backgroundColor:'#2563EB'}]},options:opsChartDefaults_()});
+    const cats=[...new Set(es.puntos.map(p=>p.c))], mx=Math.max(10,...es.puntos.map(p=>Math.max(p.x,p.y)));
+    engChart_('engEstPts','eng-ch-est-pts',{type:'scatter',data:{datasets:cats.map((c,i)=>({label:c,data:es.puntos.filter(p=>p.c===c).map(p=>({x:p.x,y:p.y,f:p.f,t:p.t})),backgroundColor:ENG_PAL[i%ENG_PAL.length],pointRadius:4}))
+        .concat([{type:'line',label:'Real = estimado',data:[{x:0,y:0},{x:mx,y:mx}],borderColor:'#64748B',borderDash:[6,4],pointRadius:0,borderWidth:1.5}])},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>c.raw&&c.raw.f?`${c.raw.f} · ${c.raw.t}: est. ${c.raw.x} min, real ${c.raw.y} min`:`${c.dataset.label}`}}},
+        scales:{x:{beginAtZero:true,title:{display:true,text:'Estimado (min)'}},y:{beginAtZero:true,title:{display:true,text:'Real (min)'}}}}});
+  }
+  if(conAr.length){
+    const lo=Math.min(...conAr.map(t=>t.bins[0].desde)), hi=Math.max(...conAr.map(t=>t.bins[t.bins.length-1].desde)), labs=[];
+    for(let b=lo;b<=hi;b+=15)labs.push(b);
+    engChart_('engArr','eng-ch-arranque',{type:'bar',data:{labels:labs.map(engHm_),datasets:conAr.map((t,i)=>({label:t.turno,data:labs.map(b=>{const x=t.bins.find(y=>y.desde===b);return x?x.n:0;}),backgroundColor:i?'#F59E0B':'#2563EB'}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{precision:0},title:{display:true,text:'arranques'}}}}});
+  }
+  if(aa.areas.length)engChart_('engAreas','eng-ch-areas',{type:'bar',data:{labels:aa.areas.map(x=>`${x.area} (${x.total})`),datasets:aa.categorias.map((c,i)=>({label:c,data:aa.areas.map(x=>x.cats[c]||0),backgroundColor:ENG_PAL[i%ENG_PAL.length]}))},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,beginAtZero:true,ticks:{precision:0}},y:{stacked:true}}}});
+  if(ec.n)engChart_('engEspera','eng-ch-espera',{type:'bar',data:{labels:ec.grupos.map(x=>x.etiqueta),datasets:[{label:'Actividades cerradas',data:ec.grupos.map(x=>x.n),backgroundColor:['#10B981','#84CC16','#F59E0B','#F97316','#EF4444']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  if(ma.total){
+    engChart_('engMatArea','eng-ch-mat-area',{type:'bar',data:{labels:ma.porArea.map(x=>x.area),datasets:[{label:'Salidas',data:ma.porArea.map(x=>x.salidas),backgroundColor:'#2563EB'}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Salidas por área'}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});
+    engChart_('engMatTop','eng-ch-mat-top',{type:'bar',data:{labels:ma.top.map(x=>(x.codigo+' '+x.descripcion).slice(0,34)),datasets:[{label:'Salidas',data:ma.top.map(x=>x.salidas),backgroundColor:'#10B981'}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Materiales más retirados'},tooltip:{callbacks:{label:c=>`${c.raw} salida(s) · ${ma.top[c.dataIndex].cantidad} unidades`}}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});
+  }
+}
+
+let OPS_SUBTAB='check';
 function showOpsAnalyticsSubtab(tab){
-  const check=tab==='check';
-  if($('ops-panel-check'))$('ops-panel-check').style.display=check?'':'none';
-  if($('ops-panel-tech'))$('ops-panel-tech').style.display=check?'none':'';
-  if($('ops-subtab-check'))$('ops-subtab-check').className=check?'btn-p':'btn-g';
-  if($('ops-subtab-tech'))$('ops-subtab-tech').className=check?'btn-g':'btn-p';
+  OPS_SUBTAB=tab;
+  const sh=(id,on)=>{if($(id))$(id).style.display=on?'':'none';};
+  sh('ops-panel-check',tab==='check'); sh('ops-panel-tech',tab==='tech'); sh('ops-panel-eng',tab==='eng');
+  [['check','ops-subtab-check'],['tech','ops-subtab-tech'],['eng','ops-subtab-eng']].forEach(x=>{if($(x[1]))$(x[1]).className=(tab===x[0])?'btn-p':'btn-g';});
+  if(tab==='eng'&&!ENG_DATA)loadEngAnalytics();
 }
 
 let ADMIN_INV_DATA=[];
@@ -12407,7 +12733,7 @@ function goChecklists(){
 async function loadChecklistV80(){
   try{
     if(navigator.onLine){
-      const res=await api({action:'getChecklistBootstrap',token:SESSION.token});
+      const _t0=performance.now(); const res=await api({action:'getChecklistBootstrap',token:SESSION.token}); const _tResp=performance.now()-_t0;
       if(!res.success)throw new Error(res.error||'No fue posible cargar los checklists');
 
       CHK_CATALOG=res.catalogo||[];
@@ -12416,6 +12742,7 @@ async function loadChecklistV80(){
       renderChkAreas();
       if(res.dashboard)aplicarChkDashboard_(res.dashboard);
       if(res.historial)aplicarChkHistory_(res.historial);
+      chkMostrarTiempos_(res.tiempos,_tResp,performance.now()-_t0);
       return;
     }
 
@@ -12634,13 +12961,100 @@ async function loadChkHistory(month){
   }catch(e){}
 }
 
-function aplicarChkHistory_(r){
+// ══════════════════════════════════════════════════════════════
+// V9.8.0 — CALENDARIO DE INSPECCIONES Y TIEMPOS DE CARGA
+//
+// El calendario muestra, por día y por área, si la inspección se hizo (verde),
+// se hizo con NG (rojo), falta (ámbar, solo días hábiles ya pasados) o está
+// pendiente (hoy). Se espera al menos una inspección por área de lunes a
+// viernes. El técnico ve sus áreas; Ingeniería, todas. Se puede navegar a
+// meses anteriores. La línea de tiempos de abajo mide dónde se va la carga.
+// ══════════════════════════════════════════════════════════════
+let CHK_CAL={mes:'',insp:[],areasResp:[],canAll:false,dia:''};
+const CHK_CAL_COL={ok:'#16A34A',ng:'#DC2626',falta:'#F59E0B',pend:'#CBD5E1'};
+function chkMostrarTiempos_(t,respMs,totalMs){
+  const el=$('chk-tiempos'); if(!el)return; if(!t){el.textContent='';return;}
+  const s=ms=>(Number(ms||0)/1000).toFixed(1)+' s';
+  el.textContent='Carga '+s(totalMs)+' · respuesta del servidor (con red) '+s(respMs)+' · dibujo '+s(Math.max(0,totalMs-respMs))+' · dentro del servidor '+s(t.totalMs)+
+    ' (sesión '+s(t.sesionMs)+', catálogo '+s(t.catalogoMs)+', inspecciones '+s(t.inspeccionesMs)+', hallazgos '+s(t.hallazgosMs)+') · '+t.filasLeidas+' de '+t.filasTotales+' inspecciones leídas';
+}
+function chkCalcularCalendario_(insp,areas,mes,hoy){
+  const p=mes.split('-').map(Number), y=p[0], m=p[1], pad=n=>String(n).padStart(2,'0');
+  const ultimo=new Date(y,m,0,12).getDate(), offset=(new Date(y,m-1,1,12).getDay()+6)%7;
+  const porDia={}; (insp||[]).forEach(x=>{const k=String(x.fecha||'').slice(0,10);(porDia[k]=porDia[k]||[]).push(x);});
+  const resumen={ok:0,ng:0,falta:0}, celdas=[];
+  for(let i=0;i<offset;i++)celdas.push(null);
+  for(let d=1;d<=ultimo;d++){
+    const fecha=y+'-'+pad(m)+'-'+pad(d), dow=new Date(y,m-1,d,12).getDay(), laboral=dow>=1&&dow<=5, delDia=porDia[fecha]||[];
+    const estados=areas.map(area=>{
+      const hechas=delDia.filter(x=>x.area===area); let estado;
+      if(hechas.length)estado=hechas.some(x=>Number(x.ng||0)>0)?'ng':'ok';
+      else if(laboral&&fecha<hoy)estado='falta'; else if(laboral&&fecha===hoy)estado='pend'; else estado='na';
+      if(resumen[estado]!==undefined)resumen[estado]++;
+      return {area:area,estado:estado,n:hechas.length};
+    });
+    celdas.push({dia:d,fecha:fecha,laboral:laboral,hoy:fecha===hoy,estados:estados,total:delDia.length});
+  }
+  while(celdas.length%7)celdas.push(null);
+  const semanas=[]; for(let i=0;i<celdas.length;i+=7)semanas.push(celdas.slice(i,i+7));
+  return {semanas:semanas,resumen:resumen};
+}
+function chkCalSet_(r){CHK_CAL.mes=r.month||CHK_CAL.mes;CHK_CAL.insp=r.inspecciones||[];CHK_CAL.areasResp=r.responsibleAreas||[];CHK_CAL.canAll=!!r.canSeeAll;CHK_CAL.dia='';}
+function chkCalAreas_(){
+  if(CHK_CAL.canAll)return [...new Set((CHK_CATALOG||[]).map(x=>x.area).filter(Boolean))];
+  return CHK_CAL.areasResp.length?CHK_CAL.areasResp:[...new Set(CHK_CAL.insp.map(x=>x.area).filter(Boolean))];
+}
+function chkCalRender_(){
+  const g=$('chk-cal-grid'); if(!g||!CHK_CAL.mes)return;
+  const areas=chkCalAreas_(), hoy=localDateKeyV843_(), cal=chkCalcularCalendario_(CHK_CAL.insp,areas,CHK_CAL.mes,hoy);
+  $('chk-cal-mes').textContent=checklistMonthLabel(CHK_CAL.mes);
+  const dn=['L','M','M','J','V','S','D'];
+  g.innerHTML='<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">'+dn.map(x=>`<div style="text-align:center;font-size:.62rem;font-weight:700;color:#64748B">${x}</div>`).join('')+
+    cal.semanas.map(sem=>sem.map(c=>{
+      if(!c)return '<div></div>';
+      const hay=k=>c.estados.some(e=>e.estado===k), bg=hay('ng')?'#FEF2F2':hay('falta')?'#FFFBEB':(hay('ok')&&!hay('pend')?'#F0FDF4':'#F8FAFC');
+      const sel=CHK_CAL.dia===c.fecha;
+      const pts=c.estados.filter(e=>e.estado!=='na').map(e=>`<i title="${escapeHtml(e.area+': '+({ok:'hecha',ng:'hecha con NG',falta:'falta',pend:'pendiente hoy'})[e.estado])}" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CHK_CAL_COL[e.estado]}"></i>`).join('');
+      return `<div onclick="chkCalDia_('${c.fecha}')" style="cursor:pointer;min-height:54px;border-radius:8px;padding:4px 5px;background:${bg};border:1.5px solid ${sel?'#2563EB':(c.hoy?'#93C5FD':'#E2E8F0')};opacity:${c.laboral||c.total?1:.6}">
+        <div style="font-size:.7rem;font-weight:700;color:#0F2A4A">${c.dia}</div><div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${pts}</div></div>`;}).join('')).join('')+'</div>';
+  $('chk-cal-leyenda').innerHTML=[['ok','Hecha'],['ng','Con NG'],['falta','Falta'],['pend','Pendiente hoy']].map(x=>`<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CHK_CAL_COL[x[0]]};margin-right:4px"></i>${x[1]}</span>`).join('')+
+    `<span style="margin-left:auto">${cal.resumen.ok+cal.resumen.ng} hechas · ${cal.resumen.ng} con NG · <b style="color:${cal.resumen.falta?'#B45309':'#15803D'}">${cal.resumen.falta} faltan</b> · se espera una por área de lunes a viernes</span>`;
+  chkCalDetalle_();
+}
+function chkCalDia_(f){CHK_CAL.dia=CHK_CAL.dia===f?'':f;chkCalRender_();}
+function chkCalDetalle_(){
+  const box=$('chk-cal-detalle'); if(!box)return; const f=CHK_CAL.dia; if(!f){box.innerHTML='';return;}
+  const del=CHK_CAL.insp.filter(x=>String(x.fecha||'').slice(0,10)===f), areas=chkCalAreas_(), dow=new Date(f+'T12:00:00').getDay();
+  const faltan=(dow>=1&&dow<=5&&f<localDateKeyV843_())?areas.filter(a=>!del.some(x=>x.area===a)):[];
+  box.innerHTML=`<div style="font-size:.78rem;font-weight:700;color:#0F2A4A;margin-bottom:5px">${escapeHtml(checklistDate(f))}</div>`+
+    (del.length?del.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid #E2E8F0;border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:.74rem">
+      <span><b>${escapeHtml(x.area)}</b> · ${escapeHtml(x.turno||'')} · ${escapeHtml(checklistTime(x.cierre))} · ${escapeHtml(x.tecnicoNombre||'')}</span>
+      <span style="white-space:nowrap"><b style="color:${Number(x.ng||0)?'#B91C1C':'#15803D'}">${Number(x.ng||0)?x.ng+' NG':'Sin NG'}</b> <button class="btn-g" style="width:auto;padding:4px 9px;margin-left:6px" onclick="openChecklistDetail('${escapeHtml(x.id)}')">Ver</button></span></div>`).join(''):'<div style="font-size:.74rem;color:#94A3B8">No hay inspecciones registradas ese día.</div>')+
+    (faltan.length?`<div style="font-size:.72rem;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:6px 10px;margin-top:6px"><b>Faltó inspeccionar:</b> ${faltan.map(escapeHtml).join(', ')}</div>`:'');
+}
+async function chkCalCargar_(mes){
+  if(!navigator.onLine){toast('El calendario necesita conexión','err');return;}
+  const g=$('chk-cal-grid'); if(g)g.style.opacity='.5';
+  try{
+    const r=await api({action:'getChecklistMes',token:SESSION.token,month:mes});
+    if(!r.success){toast(r.error||'No se pudo cargar el mes','err');return;}
+    aplicarChkHistory_({inspecciones:r.inspecciones,month:r.month,responsibleAreas:r.responsibleAreas,canSeeAll:r.canSeeAll},true);
+  }catch(e){toast('Error al cargar el mes: '+e.message,'err');}
+  finally{if(g)g.style.opacity='';}
+}
+function chkCalMes_(delta){const p=CHK_CAL.mes.split('-').map(Number),d=new Date(p[0],p[1]-1+delta,1);chkCalCargar_(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+function chkCalHoy_(){chkCalCargar_(localDateKeyV843_().slice(0,7));}
+
+function aplicarChkHistory_(r,soloMes){
   try{
     const a=(r.inspecciones||[]).slice(0,100),areas=r.responsibleAreas||[],canAll=!!r.canSeeAll;
     if($('chk-history-access'))$('chk-history-access').textContent=canAll?'Acceso a todas las inspecciones':areas.length?'Responsable: '+areas.join(', '):'Tus inspecciones';
-    configureChecklistReports(canAll,areas);
+    if(!soloMes)configureChecklistReports(canAll,areas);
+ chkCalSet_(r);
     $('chk-history').innerHTML=a.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.76rem"><thead><tr><th>Fecha</th><th>Hora</th><th>Área</th><th>Turno</th><th>Realizó</th><th>OK</th><th>NG</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${a.map(x=>`<tr><td>${chkEsc(checklistDate(x.fecha))}</td><td>${chkEsc(checklistTime(x.cierre))}</td><td>${chkEsc(x.area)}</td><td>${chkEsc(x.turno)}</td><td>${chkEsc(x.tecnicoNombre)}</td><td>${x.ok||0}</td><td>${x.ng||0}</td><td>${x.cumplimiento!==''?x.cumplimiento+'%':'—'}</td><td><button class="btn-g" style="padding:5px 8px;width:auto" onclick="openChecklistDetail('${chkEsc(x.id)}')">Ver</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#94A3B8;font-size:.8rem">Aún no hay inspecciones registradas.</p>';
   }catch(e){}
+
+ chkCalRender_();
 }
 
 function checklistDate(v){
