@@ -18,7 +18,7 @@
 // V8.8.3: al subir la versión de caché, todos los dispositivos descargan
 // de nuevo la interfaz en su siguiente apertura. Es la forma de descartar
 // que un equipo esté viendo una copia vieja.
-const CACHE = 'ktmex-facilities-v35-9.6.1-20261011';
+const CACHE = 'ktmex-facilities-v37-9.8.0-20261013';
 // V8.7.4: weekend-work.html se sirve aparte de index.html. No entra en el
 // APP_SHELL a propósito: pesa 800 KB y solo lo necesita quien abre ese
 // formulario. La estrategia stale-while-revalidate de más abajo lo cachea
