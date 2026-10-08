@@ -213,6 +213,9 @@ thead th{background:#F5F8FC;color:#586980}
    (fija abajo a la derecha) tapaba botones como "Agregar nota". */
 body:has(#modal-rfq[style*="display: flex"]) #offline-status,
 body:has(#modal-ht[style*="display: flex"]) #offline-status{display:none!important}
+
+/* V9.9.0 — El aviso quedaba debajo de la píldora «En línea · Todo sincronizado» (capa 9998) y no se leía. */
+#toast{z-index:10001;bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -569,8 +572,8 @@ const LPA_AREAS = {
       <button onclick="goActividades()" id="nav-act" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-person-digging" style="margin-right:5px"></i>Mis Actividades
       </button>
-      <button onclick="goPS()" id="nav-ps" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-lightbulb" style="margin-right:5px"></i>Problem Solving</button>
       <button onclick="goBoard()" id="nav-board" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-chart-gantt" style="margin-right:5px"></i>Facilities Board</button>
+      <button onclick="goWwAprob()" id="nav-wwaprob" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-clipboard-check" style="margin-right:5px"></i>Aprobaciones Weekend</button>
       <button onclick="goRFQ()" id="nav-rfq" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-file-invoice-dollar" style="margin-right:5px"></i>RFQ</button>
       <button onclick="goPreventivo()" id="nav-pm" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>Preventivo</button>
       <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
@@ -583,7 +586,7 @@ const LPA_AREAS = {
         <i class="fas fa-qrcode" style="margin-right:5px"></i>Recepción QR
       </button>
       <button onclick="goHerramientasElectricas()" id="nav-electricas" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
-        <i class="fas fa-bolt" style="margin-right:5px"></i>Herramientas Eléctricas
+        <i class="fas fa-bolt" style="margin-right:5px"></i>Herramientas
       </button>
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
@@ -1426,7 +1429,7 @@ const LPA_AREAS = {
           <i class="fas fa-bolt" style="font-size:18px;color:#D97706"></i>
         </div>
         <div>
-          <h2 style="font-size:1.35rem;font-weight:750;color:var(--navy);margin:0">Herramientas Eléctricas</h2>
+          <h2 style="font-size:1.35rem;font-weight:750;color:var(--navy);margin:0">Herramientas</h2>
           <p style="font-size:.78rem;color:#64748B;margin:2px 0 0">Acceso exclusivo: Técnicos e Ingenieros Facilities</p>
         </div>
       </div>
@@ -1463,6 +1466,14 @@ const LPA_AREAS = {
         <h3 style="font-size:.98rem;font-weight:700;color:var(--navy);margin:0 0 5px">Memoria de Cálculo Eléctrico</h3>
         <p style="font-size:.78rem;color:#64748B;line-height:1.5;margin:0 0 12px">Circuitos, protecciones, conductores, caída de tensión, tableros, BOM e impresión de memoria.</p>
         <span style="font-size:.76rem;color:#2563EB;font-weight:650">Abrir memoria →</span>
+      </div>
+<div class="card" onclick="goPS()" style="padding:20px;cursor:pointer;transition:.18s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div style="width:44px;height:44px;background:#EFF6FF;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <i class="fas fa-lightbulb" style="color:#2563EB;font-size:18px"></i>
+        </div>
+        <h3 style="font-size:.98rem;font-weight:700;color:var(--navy);margin:0 0 5px">Problem Solving</h3>
+        <p style="font-size:.78rem;color:#64748B;line-height:1.5;margin:0 0 12px">Análisis de problemas paso a paso: causas raíz, 5M, Ishikawa, cronograma y evidencias. Lo revisa y aprueba Ingeniería.</p>
+        <span style="font-size:.76rem;color:#2563EB;font-weight:650">Abrir →</span>
       </div>
     </div>
 
@@ -1658,7 +1669,23 @@ const LPA_AREAS = {
 <!-- ══════════════════════════════════════════════════════════
      V9.6.0 — PROBLEM SOLVING y visor común de herramientas
      ══════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════
+     V9.9.0 — APROBACIONES DE WEEKEND WORK
+     ══════════════════════════════════════════════════════════ -->
+<div id="view-ww-aprob" style="display:none;max-width:1100px;margin:0 auto;padding:26px 16px" class="fade">
+  <div class="card" style="padding:18px 20px;margin-bottom:14px">
+    <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-clipboard-check" style="color:#2563EB;margin-right:8px"></i>Aprobaciones de Weekend Work</h2>
+    <p id="wwa-sub" style="font-size:.76rem;color:#64748B;margin:4px 0 0">Las solicitudes de tu departamento esperan tu aprobación antes de entrar al plan del fin de semana.</p>
+  </div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" id="wwa-filtros">
+    <button class="btn-g" data-f="pendientes" onclick="wwAprobFiltro('pendientes')">Por aprobar</button>
+    <button class="btn-g" data-f="todas" onclick="wwAprobFiltro('todas')">Últimas 4 semanas</button>
+  </div>
+  <div id="wwa-lista"></div>
+</div>
+
 <div id="view-ps" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div style="margin-bottom:10px"><button class="btn-g" style="width:auto" onclick="goHerramientasElectricas()"><i class="fas fa-arrow-left" style="margin-right:6px"></i>Herramientas</button></div>
   <div class="card" style="padding:18px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
     <div>
       <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-lightbulb" style="color:#D97706;margin-right:8px"></i>Problem Solving</h2>
@@ -1707,6 +1734,50 @@ const LPA_AREAS = {
     <p id="rfq-motivo-ayuda" style="font-size:.74rem;color:#64748B;margin:0 0 10px"></p>
     <textarea id="rfq-motivo-texto" class="inp" rows="4" maxlength="600" style="resize:vertical;margin-bottom:12px"></textarea>
     <div style="display:flex;gap:8px"><button class="btn-g" style="flex:1" onclick="rfqMotivoCerrar_(null)">Cancelar</button><button class="btn-p" id="rfq-motivo-ok" style="flex:1.4" onclick="rfqMotivoCerrar_(document.getElementById('rfq-motivo-texto').value)">Aceptar</button></div>
+  </div>
+</div>
+
+<div id="modal-relogin" class="modal-bg" style="display:none;z-index:96">
+  <div class="card slide" style="width:100%;max-width:400px;padding:22px">
+    <h3 style="font-size:1.02rem;font-weight:700;color:var(--navy);margin:0 0 4px"><i class="fas fa-lock" style="margin-right:8px;color:#2563EB"></i>Tu sesión venció</h3>
+    <p style="font-size:.76rem;color:#64748B;margin:0 0 12px">Escribe tu contraseña para continuar. <b>No pierdes lo que ya capturaste</b>: al entrar se repite la acción.</p>
+    <div style="font-size:.78rem;font-weight:700;color:#0F2A4A;margin-bottom:6px" id="relogin-usuario"></div>
+    <input id="relogin-pwd" type="password" class="inp" placeholder="Contraseña" autocomplete="current-password" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')reloginEnviar_()">
+    <div id="relogin-err" style="display:none;font-size:.72rem;color:#B91C1C;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px"><button class="btn-g" style="flex:1" onclick="reloginCerrar_(null)">Salir</button><button class="btn-p" id="relogin-ok" style="flex:1.4" onclick="reloginEnviar_()">Continuar</button></div>
+  </div>
+</div>
+
+<div id="modal-ww-mis" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:640px;padding:20px;max-height:92vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-list-check" style="margin-right:8px;color:#2563EB"></i>Mis actividades</h3>
+      <button class="btn-g" style="width:auto" onclick="closeModal('modal-ww-mis')">Cerrar</button>
+    </div>
+    <p style="font-size:.74rem;color:#64748B;margin:0 0 10px">Elige tu departamento y escribe tu nombre como lo registraste. Verás tus solicitudes de las últimas 4 semanas, con su folio y en qué etapa van.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <select id="wwm-depto" class="inp" style="flex:1 1 200px"><option value="">Departamento…</option></select>
+      <input id="wwm-nombre" class="inp" style="flex:1 1 200px" placeholder="Tu nombre" onkeydown="if(event.key==='Enter')wwMisBuscar()">
+      <button class="btn-p" style="width:auto" onclick="wwMisBuscar()"><i class="fas fa-magnifying-glass" style="margin-right:6px"></i>Buscar</button>
+    </div>
+    <div id="wwm-lista" style="overflow:auto;flex:1"></div>
+  </div>
+</div>
+
+<div id="modal-seguimiento" class="modal-bg" style="display:none">
+  <div class="card slide" style="width:100%;max-width:470px;padding:20px">
+    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 2px"><i class="fas fa-comment-dots" style="margin-right:8px;color:#2563EB"></i>Seguimiento de la solicitud</h3>
+    <div id="seg-folio" style="font-size:.74rem;color:#64748B;margin-bottom:10px"></div>
+    <label style="font-size:.74rem;font-weight:700;color:#334155">¿En qué estatus queda?</label>
+    <select id="seg-estatus" class="inp" style="margin:4px 0 10px">
+      <option value="En ejecución">En ejecución</option>
+      <option value="En espera de refacciones">En espera de refacciones</option>
+      <option value="Suspendido">Suspendido</option>
+    </select>
+    <label style="font-size:.74rem;font-weight:700;color:#334155">Tu comentario</label>
+    <textarea id="seg-comentario" class="inp" rows="4" maxlength="500" placeholder="Qué hiciste, qué falta o por qué queda así…" style="resize:vertical;margin:4px 0 6px"></textarea>
+    <div style="font-size:.66rem;color:#64748B;margin-bottom:12px">Lo ve Ingeniería y también quien pidió el trabajo. Para terminar el trabajo usa el botón <b>Terminar</b>, con sus dos fotos. Para suspender, la actividad no debe estar en curso.</div>
+    <div style="display:flex;gap:8px"><button class="btn-g" style="flex:1" onclick="closeModal('modal-seguimiento')">Cancelar</button><button class="btn-p" id="seg-ok" style="flex:1.4" onclick="guardarSeguimiento()">Guardar</button></div>
   </div>
 </div>
 
@@ -1949,7 +2020,8 @@ const LPA_AREAS = {
   <div id="ww-confirm-panel" style="display:none;margin-bottom:12px"></div>
 
   <div id="weekend-cargando" class="card" style="display:none;padding:22px;text-align:center;color:#64748B;font-size:.82rem;margin-bottom:10px"><i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando formulario…</div>
-  <iframe id="weekend-frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-downloads allow-popups"
+  <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn-g" style="width:auto" onclick="wwMisAbrir()"><i class="fas fa-list-check" style="margin-right:7px"></i>Mis actividades</button></div>
+    <iframe id="weekend-frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-downloads allow-popups"
           style="width:100%;height:84vh;min-height:720px;border:1px solid #CBD5E1;border-radius:14px;background:#fff"></iframe>
 </div>
 
@@ -3257,7 +3329,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.8.0';
+const FRONTEND_BUILD = '9.9.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3729,6 +3801,11 @@ Object.assign(TEXT_I18N,{
   'Se regresa a quien lo creó. Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.':'It goes back to its creator. The signatures of that phase are cleared and signed again. Write what must be corrected.',
   'Se regresa al comprador (Staff / Asistente de compras). Las firmas de esa fase se borran y se vuelven a firmar. Escribe qué debe corregir.':'It goes back to the buyer (Purchasing Staff / Assistant). The signatures of that phase are cleared and signed again. Write what must be corrected.',
   'El RFQ se cierra como rechazado y se avisa a quien lo creó. Si solo hay correcciones, usa Regresar para corregir.':'The RFQ is closed as rejected and its creator is notified. If there are only corrections, use Return for corrections.'
+});
+Object.assign(TEXT_I18N,{
+  'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
+  'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
+  'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…'
 });
 
 const TEXT_I18N_EXTRA = {
@@ -4371,6 +4448,38 @@ const $  = id => document.getElementById(id);
 const prioSlug = p => ({Alta:'alta',Media:'media',Baja:'baja'}[p]||'baja');
 
 // ── API ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// V9.9.0 — SESIÓN VENCIDA SIN PERDER EL TRABAJO
+//
+// La sesión dura 12 h. Si vence con una ventana abierta (por ejemplo, al
+// terminar una actividad con fotos), antes aparecía «Cannot read properties
+// of null (reading 'token')» y el trabajo se perdía. Ahora se pide solo la
+// contraseña, se renueva la sesión y se repite la acción que falló.
+// ══════════════════════════════════════════════════════════════
+let RELOGIN_P=null;
+function pedirReloginMismaVentana_(){
+  if(RELOGIN_P)return RELOGIN_P;
+  if(!SESSION||!SESSION.user||!SESSION.user.username)return Promise.resolve(null);
+  RELOGIN_P=new Promise(res=>{
+    window.__reloginRes=res; $('relogin-usuario').textContent=(SESSION.user.nombre||'')+' · '+SESSION.user.username;
+    $('relogin-pwd').value=''; $('relogin-err').style.display='none'; $('modal-relogin').style.display='flex';
+    setTimeout(()=>$('relogin-pwd').focus(),80);
+  }).finally(()=>{RELOGIN_P=null;});
+  return RELOGIN_P;
+}
+function reloginCerrar_(token){ $('modal-relogin').style.display='none'; const f=window.__reloginRes; window.__reloginRes=null; if(f)f(token); }
+async function reloginEnviar_(){
+  const pwd=$('relogin-pwd').value; if(!pwd){$('relogin-err').textContent='Escribe tu contraseña.';$('relogin-err').style.display='';return;}
+  const b=$('relogin-ok'); b.disabled=true;
+  try{
+    const r=await api({action:'login',username:SESSION.user.username,password:pwd});
+    if(!r.success){$('relogin-err').textContent=r.error||'Contraseña incorrecta.';$('relogin-err').style.display='';return;}
+    if(r.mustChangePassword){reloginCerrar_(null);toast('Debes cambiar tu contraseña: inicia sesión de nuevo.','err');return;}
+    SESSION.token=String(r.token); saveSession(); reloginCerrar_(SESSION.token);
+  }catch(e){$('relogin-err').textContent='No se pudo validar: '+e.message;$('relogin-err').style.display='';}
+  finally{b.disabled=false;}
+}
+
 async function api(data) {
   if (!window.SCRIPT_URL || window.SCRIPT_URL.indexOf('REEMPLAZA_CON_')===0) {
     toast('⚠ Configura SCRIPT_URL con la URL /exec de la implementación activa.','err');
@@ -4395,6 +4504,12 @@ async function api(data) {
 
   // Si el servidor informa que el token ya no sirve, limpiar la sesión local.
   const err = String(res?.error || '');
+  if (/sesión inválida|sesion invalida|expirada/i.test(err) && data.action !== 'login' && data.token && !data.__reintento) {
+    // V9.9.0: en lugar de dejar al usuario con un error críptico (y perder sus fotos y su comentario),
+    // se pide solo la contraseña en la misma ventana y se repite la acción.
+    const nuevoToken = await pedirReloginMismaVentana_();
+    if (nuevoToken) return api(Object.assign({}, data, {token: nuevoToken, __reintento: true}));
+  }
   if (/sesión inválida|sesion invalida|expirada/i.test(err) && data.action !== 'login') {
     SESSION = null;
     sessionStorage.removeItem('ktmex_session');
@@ -4432,7 +4547,7 @@ function toast(msg, type='ok') {
   ico.className = type==='ok'?'fas fa-circle-check':type==='err'?'fas fa-circle-xmark':'fas fa-circle-info';
   ico.style.color = type==='ok'?'#4ADE80':type==='err'?'#F87171':'#60A5FA';
   t.style.display='flex'; clearTimeout(t._t);
-  t._t=setTimeout(()=>t.style.display='none',3500);
+  t._t=setTimeout(()=>t.style.display='none',type==='err'?6500:3500);   // V9.9.0: los errores se quedan más tiempo
 }
 
 // ── Views ────────────────────────────────────────────────────
@@ -4447,7 +4562,7 @@ function configureRoleUI() {
   // V9.5.0: RFQ para Ingeniería, Compras e Inagaki (no para el presidente).
   if($('nav-rfq'))$('nav-rfq').style.display=(['ingeniero','compras','manager','tecnico'].includes(role)&&!(SESSION&&SESSION.user&&SESSION.user.soloWeekendWork))?'':'none';
   // V9.6.0: Problem Solving (técnicos e ingenieros) y Facilities Board (editores y consulta de Inagaki y Kojima).
-  if($('nav-ps'))$('nav-ps').style.display=['tecnico','ingeniero'].includes(role)?'':'none';
+  if($('nav-wwaprob')){const uu=SESSION&&SESSION.user;$('nav-wwaprob').style.display=(role==='aprobador'||role==='ingeniero'||(uu&&uu.aprobadorWW))?'':'none';}   // V9.9.0
   if($('nav-board')){const un=String(SESSION&&SESSION.user&&SESSION.user.username||'').toLowerCase();
     $('nav-board').style.display=(['aramirez','ploya','ainagaki','ykojima'].includes(un)||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';}
 
@@ -4484,6 +4599,11 @@ function configureRoleUI() {
     
     if(role==='tecnico'&&$('nav-admin'))$('nav-admin').style.display=hasAdminPrivilege()?'':'none';
   }
+  // V9.9.0: quien solo aprueba Weekend Work no ve nada más.
+  if(role==='aprobador'){
+    ['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-pm','nav-rfq','nav-board'].forEach(id=>{if($(id))$(id).style.display='none';});
+    if($('nav-wwaprob'))$('nav-wwaprob').style.display='';
+  }
   configureManagerDashboardTabs();
   setTimeout(()=>{
     if(isManagerProfile_())enforceManagerEnglish_();else applyLanguage();
@@ -4504,6 +4624,7 @@ function roleCanView(v) {
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
   if(role==='compras')return ['home','solicitud','compras-rol','platform','login','rfq'].includes(v)||
     (!!(SESSION&&SESSION.user&&SESSION.user.tieneLPA)&&['lpa-select','lpa-quality','lpa-quality-form'].includes(v));   // V9.4.1
+  if(role==='aprobador')return ['home','ww-aprob','login'].includes(v);   // V9.9.0
   if(v==='electricas'&&!['tecnico','ingeniero'].includes(role))return false;
   if(role==='tecnico'){
     if(v==='admin')return hasAdminPrivilege();
@@ -4519,7 +4640,7 @@ function showView(v) {
     if(SESSION?.user?.rol==='manager')v='admin';
     else v=SESSION?.user?.rol==='compras'?'compras-rol':'home';
   }
-  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm','rfq','ps'].forEach(x=>{
+  ['home','solicitud','compra','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','actividades','platform','inventario','recepcion-qr','electricas','compras-rol','weekend','login','admin','pm','rfq','ps','ww-aprob'].forEach(x=>{
     const el=$('view-'+x);if(el)el.style.display='none';
   });
   const target=$('view-'+v);if(target)target.style.display='';
@@ -4959,6 +5080,123 @@ async function boardRestaurar(id){
 // ══════════════════════════════════════════════════════════════
 let RFQ_DATA=null, RFQ_FILTRO='mios', RFQ_ACTUAL=null, RFQ_HTML=null, RFQ_TIMER=null, RFQ_PENDIENTE=null, RFQ_ENVIANDO=false;
 
+// ══════════════════════════════════════════════════════════════
+// V9.9.0 — WEEKEND WORK: DEPARTAMENTOS, «MIS ACTIVIDADES» Y APROBACIONES
+// ══════════════════════════════════════════════════════════════
+// Solo se ofrecen los departamentos que ya tienen responsables (y Facilities).
+// No se edita el archivo del formulario: se ajustan sus listas al cargarlo.
+function weekendAjustarDeptos_(html,cfg){
+  if(!cfg||!cfg.success||!Array.isArray(cfg.deptos)||!cfg.deptos.length)return html;
+  let out=html.replace(/const DEPT_OPTIONS = \[[\s\S]*?\];/,()=>'const DEPT_OPTIONS = '+JSON.stringify(cfg.deptos.map(d=>[d.code,d.label]))+';');
+  if(cfg.etiquetas)out=out.replace(/const DEPT_LABELS = \{[\s\S]*?\};/,()=>'const DEPT_LABELS = '+JSON.stringify(cfg.etiquetas)+';');
+  if(cfg.zonas)out=out.replace(/const ZONE_MAP = \{[\s\S]*?\};/,()=>'const ZONE_MAP = '+JSON.stringify(cfg.zonas)+';');
+  return out;
+}
+const WW_ESTADO_COL={PENDIENTE:['#FEF3C7','#92400E'],APROBADA:['#DCFCE7','#166534'],EN_DOCUMENTO:['#DCFCE7','#166534'],SIN_DOCUMENTO:['#FFEDD5','#9A3412'],
+  RECHAZADA:['#FEE2E2','#991B1B'],VENCIDA:['#E2E8F0','#475569'],BLOQUEADA:['#E2E8F0','#475569'],EXENTA:['#DBEAFE','#1E40AF']};
+function wwActsHtml_(acts){
+  return (acts||[]).length?`<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse;font-size:.7rem"><tbody>${acts.map(a=>`<tr style="border-top:1px solid #EEF1F6">
+    <td style="padding:4px 6px;color:#64748B;white-space:nowrap">#${escapeHtml(String(a.n))}</td><td style="padding:4px 6px;font-weight:600">${escapeHtml(a.actividad)}</td>
+    <td style="padding:4px 6px;color:#475569">${escapeHtml(a.areaTrabajo||'')}${a.jobLeader?' · '+escapeHtml(a.jobLeader):''}</td>
+    <td style="padding:4px 6px;color:#475569;white-space:nowrap">${escapeHtml(a.dias||'')}${a.riesgo?' · riesgo '+escapeHtml(a.riesgo):''}</td></tr>`).join('')}</tbody></table></div>`:'';
+}
+function wwEstadoPill_(estado,texto){const c=WW_ESTADO_COL[estado]||WW_ESTADO_COL.PENDIENTE;
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:.68rem;font-weight:700;background:${c[0]};color:${c[1]}">${escapeHtml(texto)}</span>`;}
+
+async function wwMisAbrir(){
+  $('modal-ww-mis').style.display='flex'; $('wwm-lista').innerHTML='';
+  const sel=$('wwm-depto');
+  if(sel.options.length<=1){
+    try{const r=await api({action:'getWeekendDeptos'});
+      // Se listan TODOS, aunque estén ocultos en el formulario: así quien tiene una solicitud bloqueada puede verla.
+      if(r.success)sel.innerHTML='<option value="">Departamento…</option>'+Object.keys(r.etiquetas||{}).map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(r.etiquetas[k])}</option>`).join('');}catch(e){}
+  }
+}
+async function wwMisBuscar(){
+  const depto=$('wwm-depto').value, nombre=$('wwm-nombre').value.trim();
+  if(!depto){toast('Elige tu departamento','err');return;}
+  if(nombre.length<3){toast('Escribe tu nombre (al menos 3 letras)','err');return;}
+  $('wwm-lista').innerHTML='<div style="padding:18px;text-align:center;color:#64748B;font-size:.8rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Buscando…</div>';
+  try{
+    const r=await api({action:'getWeekendMisActividades',depto,nombre});
+    if(!r.success){$('wwm-lista').innerHTML=`<div style="color:#B91C1C;font-size:.8rem">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    $('wwm-lista').innerHTML=r.solicitudes.length?r.solicitudes.map(x=>`<div style="border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="color:#0F2A4A">${escapeHtml(x.requestNo)}</b>${wwEstadoPill_(x.estado,x.estadoTexto)}</div>
+      <div style="font-size:.68rem;color:#64748B;margin:2px 0">${escapeHtml(x.registrante)} · declarada ${escapeHtml(fmtDateTime(x.fechaEnvio))}</div>
+      ${x.motivoRechazo?`<div style="font-size:.74rem;color:#991B1B;background:#FEF2F2;border-radius:7px;padding:6px 9px;margin:5px 0"><b>Motivo del rechazo:</b> ${escapeHtml(x.motivoRechazo)}</div>`:''}
+      ${(x.aprobaciones||[]).length?`<div style="font-size:.68rem;color:#166534;margin:3px 0">Aprobó: ${x.aprobaciones.map(a=>escapeHtml(a.por)+(a.sustituto?' (en lugar del responsable)':'')).join(' → ')}</div>`:''}
+      ${wwActsHtml_(x.actividades)}</div>`).join(''):'<div style="padding:18px;text-align:center;color:#64748B;font-size:.8rem">No encontré solicitudes tuyas en las últimas 4 semanas. Revisa que el departamento y tu nombre sean los que usaste al registrar.</div>';
+  }catch(e){$('wwm-lista').innerHTML=`<div style="color:#B91C1C;font-size:.8rem">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+
+let WWA_DATA=null, WWA_FILTRO='pendientes';
+function goWwAprob(){ if(!requireLogin('ww-aprob'))return; showView('ww-aprob'); wwAprobCargar(); }
+async function wwAprobCargar(){
+  $('wwa-lista').innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
+  try{
+    const r=await api({action:'getWeekendAprobaciones',token:SESSION.token});
+    if(!r.success){$('wwa-lista').innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
+    WWA_DATA=r;
+    $('wwa-sub').textContent=r.esIngenieroFacilities&&!(r.misDepartamentos||[]).length?'Como ingeniero de Facilities puedes aprobar en lugar de un responsable ausente, con motivo.'
+      :'Tus departamentos: '+(r.misDepartamentos||[]).join(', ')+'. Las solicitudes esperan tu aprobación antes de entrar al plan del fin de semana.';
+    wwAprobFiltro(WWA_FILTRO);
+  }catch(e){$('wwa-lista').innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+function wwAprobFiltro(f){
+  WWA_FILTRO=f;
+  document.querySelectorAll('#wwa-filtros button').forEach(b=>{const on=b.dataset.f===f;b.style.background=on?'#0F2A4A':'';b.style.color=on?'#fff':'';});
+  if(!WWA_DATA)return;
+  const L=WWA_DATA.items.filter(x=>f==='todas'||x.puedeAprobar||x.puedeSustituir);
+  $('wwa-lista').innerHTML=L.length?L.map(x=>`<div class="card" style="padding:14px 16px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center">
+      <div><b style="color:#0F2A4A;font-size:.92rem">${escapeHtml(x.requestNo)}</b> <span style="font-size:.74rem;color:#475569">· ${escapeHtml(x.registrante)} · ${escapeHtml(x.departamento)}</span></div>${wwEstadoPill_(x.estado,x.estadoTexto)}</div>
+    <div style="font-size:.66rem;color:#94A3B8;margin:2px 0">Declarada ${escapeHtml(fmtDateTime(x.fechaEnvio))}</div>
+    ${wwActsHtml_(x.actividades)}
+    ${(x.eventos||[]).length?`<div style="font-size:.68rem;margin-top:7px;color:#475569">${x.eventos.map(e=>`<div>${e.accion==='RECHAZO'?'<b style="color:#991B1B">Rechazó</b>':'<b style="color:#166534">Aprobó</b>'} ${escapeHtml(e.por)} · ${escapeHtml(fmtDateTime(e.fecha))}${e.sustituto?' · en lugar de '+escapeHtml((e.enLugarDe||[]).join(' o ')):''}${e.nota?' · «'+escapeHtml(e.nota)+'»':''}</div>`).join('')}</div>`:''}
+    ${(x.puedeAprobar||x.puedeSustituir)?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn-p" style="width:auto;background:#16A34A" onclick="wwAprobAccion('${escapeHtml(x.clave)}','${x.puedeSustituir?'sustituir':'aprobar'}')"><i class="fas fa-circle-check" style="margin-right:6px"></i>${x.puedeSustituir?'Aprobar en lugar del responsable':'Aprobar'}</button>
+      <button class="btn-g" style="width:auto;color:#B91C1C" onclick="wwAprobAccion('${escapeHtml(x.clave)}','rechazar')"><i class="fas fa-thumbs-down" style="margin-right:6px"></i>Rechazar</button></div>`:''}
+  </div>`).join(''):`<div class="card" style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">${f==='todas'?'No hay solicitudes en las últimas 4 semanas.':'No tienes solicitudes por aprobar.'}</div>`;
+}
+async function wwAprobAccion(clave,tipo){
+  let motivo='';
+  if(tipo==='rechazar'){motivo=await rfqPedirMotivo_('Rechazar la solicitud','El rechazo es definitivo: quien la registró tendrá que volver a declararla. Escribe el motivo; él lo verá en «Mis actividades».','Rechazar');}
+  else if(tipo==='sustituir'){motivo=await rfqPedirMotivo_('Aprobar en lugar del responsable','Queda registrado que aprobaste tú, en lugar de quien le tocaba, y el motivo. Escribe por qué (por ejemplo, el responsable está ausente).','Aprobar');}
+  else if(!confirm('¿Aprobar esta solicitud? Quedará registrado con tu nombre y la hora.'))return;
+  if(tipo!=='aprobar'){if(motivo===null)return; if(motivo.trim().length<5){toast('Escribe el motivo (mínimo 5 caracteres)','err');return;}}
+  const r=await api({action:tipo==='rechazar'?'weekendRechazar':'weekendAprobar',token:SESSION.token,clave,motivo:(motivo||'').trim()});
+  if(!r.success){toast(r.error||'No se pudo completar','err');wwAprobCargar();return;}
+  toast(tipo==='rechazar'?'Solicitud rechazada':(r.estado==='EN_DOCUMENTO'?'Aprobada: ya está en el documento':r.estado==='SIN_DOCUMENTO'?'Aprobada, pero el documento ya está en firmas: se avisó a Facilities':'Aprobada: pasa a la siguiente aprobación'),'ok');
+  wwAprobCargar();
+}
+
+// ── Seguimiento del técnico en una solicitud de trabajo ──
+function botonSeguimiento_(s){
+  return `<div style="margin-top:8px"><button class="btn-g" style="width:auto;padding:7px 13px;font-size:.74rem" onclick="openSeguimientoModal('${escapeHtml(s.id)}','${escapeHtml(s.folio||'')}','${escapeHtml(s.estatus||'')}')"><i class="fas fa-comment-dots" style="margin-right:6px"></i>Seguimiento</button></div>`;
+}
+let SEG_ID='';
+function openSeguimientoModal(id,folio,estatus){
+  SEG_ID=id; $('seg-folio').textContent=folio+(estatus?' · estatus actual: '+estatus:'');
+  $('seg-estatus').value=['En ejecución','En espera de refacciones','Suspendido'].includes(estatus)?estatus:'En ejecución';
+  $('seg-comentario').value=''; $('modal-seguimiento').style.display='flex';
+}
+async function guardarSeguimiento(){
+  const comentario=$('seg-comentario').value.trim(); if(comentario.length<5){toast('Escribe tu comentario (mínimo 5 caracteres)','err');return;}
+  const b=$('seg-ok'); b.disabled=true;
+  try{
+    const r=await api({action:'tecnicoSeguimientoSolicitud',token:SESSION.token,solicitudId:SEG_ID,estatus:$('seg-estatus').value,comentario});
+    if(!r.success){toast(r.error||'No se pudo guardar','err');return;}
+    toast('Seguimiento guardado: '+r.estatus,'ok'); closeModal('modal-seguimiento'); loadMisActividades();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{b.disabled=false;}
+}
+
+// RFQ: al enviar a la siguiente etapa, la ventana se cubre de inmediato para que quien envió no vea el formato siguiente.
+function rfqCubrir_(){
+  const f=$('rfq-frame'); if(f)f.style.visibility='hidden';
+  const c=$('rfq-cargando'); if(c){c.style.display='';c.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Enviando a la siguiente etapa…';}
+}
+
 function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); rfqCargar(); }
 async function rfqCargar(){
   $('rfq-lista').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
@@ -5000,7 +5238,7 @@ async function rfqObtenerHtml_(){
   throw new Error('No se encontró rfq.html junto a index.html.');
 }
 async function rfqAbrir(id){
-  $('modal-rfq').style.display='flex'; $('rfq-cargando').style.display=''; $('rfq-frame').style.display='none'; $('rfq-guardado').textContent='';
+  $('modal-rfq').style.display='flex'; $('rfq-cargando').style.display=''; $('rfq-frame').style.visibility=''; $('rfq-cargando').innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Cargando el formulario…'; $('rfq-frame').style.display='none'; $('rfq-guardado').textContent='';
   try{
     const [html,r]=await Promise.all([rfqObtenerHtml_(),api({action:'getRFQ',token:SESSION.token,id})]);
     if(!r.success){toast(r.error||'No disponible','err');rfqCerrarVisor();return;}
@@ -5084,7 +5322,7 @@ window.addEventListener('message',async function(e){
   RFQ_PENDIENTE=m.estado;
   const avanza=m.estado&&m.estado.stage&&m.estado.stage!==RFQ_ACTUAL.ctx.etapa;
   clearTimeout(RFQ_TIMER);
-  if(avanza)rfqEnviar_(true);
+  if(avanza){rfqCubrir_();rfqEnviar_(true);}
   else{$('rfq-guardado').textContent='Cambios sin guardar…';RFQ_TIMER=setTimeout(()=>rfqEnviar_(false),5000);}
 });
 async function rfqEnviar_(avanza){
@@ -5096,7 +5334,7 @@ async function rfqEnviar_(avanza){
     const r=await api({action:'rfqGuardar',token:SESSION.token,id:RFQ_ACTUAL.id,estado});
     if(!r.success){toast(r.error||'No se pudo guardar','err');$('rfq-guardado').textContent='No guardado';if(avanza)rfqAbrir(RFQ_ACTUAL.id);return;}
     $('rfq-guardado').textContent='Guardado';
-    if(r.avanzo){toast('Enviado a: '+r.etapa);const id=RFQ_ACTUAL.id;setTimeout(()=>rfqAbrir(id),900);}
+    if(r.avanzo){toast('Enviado a: '+(r.siguiente||r.etapaEs||'la siguiente etapa'),'ok');RFQ_PENDIENTE=null;rfqCerrarVisor();}   // V9.9.0: ya no se reabre en la etapa siguiente
   }catch(err){toast('Error de conexión: '+err.message,'err');RFQ_PENDIENTE=RFQ_PENDIENTE||estado;}
   finally{RFQ_ENVIANDO=false;}
 }
@@ -5250,7 +5488,7 @@ async function notifyTechnicianAssignments() {
 function goHerramientasElectricas() {
   if (!requireLogin('electricas')) return;
   if (!['tecnico','ingeniero'].includes(SESSION.user.rol)) {
-    toast('Herramientas Eléctricas está disponible solo para Técnicos e Ingenieros.','err');
+    toast('Herramientas está disponible solo para Técnicos e Ingenieros.','err');
     showView('home'); return;
   }
   showView('electricas');
@@ -5547,7 +5785,8 @@ async function cargarWeekendWorkTool_(){
   const cargando=$('weekend-cargando');
   if(cargando)cargando.style.display='';
   try{
-    const html=await obtenerWeekendHtml_();
+    let html=await obtenerWeekendHtml_();
+    try{ html=weekendAjustarDeptos_(html,await api({action:'getWeekendDeptos'})); }catch(e){}   // V9.9.0: solo departamentos con responsables
     // V9.0.1: el formulario se carga dentro de un marco "srcdoc". Safari, el
     // navegador del iPad, resuelve las rutas relativas de ese tipo de marco
     // de forma distinta a Chrome, y "./layout-planta.jpg" podía no
@@ -5824,6 +6063,7 @@ async function performLogin() {
     // directo a esa pantalla y en inglés.
     // V9.4.1: Compras con acceso a LPA (Karina Sánchez).
     if(res.tieneLPA)SESSION.user.tieneLPA=true;
+    if(res.aprobadorWW)SESSION.user.aprobadorWW=true;   // V9.9.0
     if(res.soloWeekendWork){
       SESSION.user.soloWeekendWork=true;
       setLanguage('en');
@@ -5877,6 +6117,9 @@ async function performLogin() {
         $('admin-rol-label').textContent=res.user.nombre+' · Técnico Facilities · Admin';
         setTimeout(()=>refreshAdmin(),0);
         setTimeout(()=>notifyTechnicianAssignments(),100);
+      }else if(SESSION.user.rol==='aprobador'){
+        showView('ww-aprob');
+        setTimeout(()=>wwAprobCargar(),0);
       }else if(SESSION.user.rol==='compras'){
         showView('compras-rol');
         setTimeout(()=>loadComprasRol(),0);
@@ -7001,6 +7244,7 @@ function renderUnifiedWorkCard_(s,a,st,isSpont){
   if(st.b==='CONFIRMACION')action='<div style="padding:8px;background:#FDF2F8;border-radius:8px;font-size:.72rem">Pendiente de confirmación del solicitante.</div>';
   if(st.b==='CERRADA')action='<div style="padding:8px;background:#F0FDF4;border-radius:8px;font-size:.72rem;color:#166534">Actividad cerrada.</div>';
   if(st.b==='SUSPENDIDA')action='<div style="padding:8px;background:#FFFBEB;border-radius:8px;font-size:.72rem">Actividad suspendida.</div>';
+  if(!isSpont&&s&&s.id&&['PENDIENTE','EN_CURSO','PAUSADA','MATERIAL','SUSPENDIDA'].includes(st.b))action+=botonSeguimiento_(s);   // V9.9.0
   if(st.b==='RECHAZADA')action='<div style="padding:8px;background:#FEF2F2;border-radius:8px;font-size:.72rem">Actividad rechazada.</div>';
   if(st.b==='INCONFORMIDAD')action='<div style="padding:8px;background:#FEF2F2;border-radius:8px;font-size:.72rem">Devuelta por inconformidad.</div>';
   // V8.7.3/8.7.5: datos del solicitante + historial. Si la solicitud trae el
