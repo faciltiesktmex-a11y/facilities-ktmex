@@ -216,6 +216,21 @@ body:has(#modal-ht[style*="display: flex"]) #offline-status{display:none!importa
 
 /* V9.9.0 — El aviso quedaba debajo de la píldora «En línea · Todo sincronizado» (capa 9998) y no se leía. */
 #toast{z-index:10001;bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+
+/* V9.11.0 — Ayuda paso a paso */
+#ayuda-fab{position:fixed;left:14px;bottom:16px;z-index:70;display:flex;align-items:center;gap:7px;padding:10px 16px;border:none;border-radius:999px;
+  background:#2563EB;color:#fff;font-weight:700;font-size:.8rem;box-shadow:0 6px 18px rgba(37,99,235,.35);cursor:pointer}
+#ayuda-fab:hover{background:#1D4ED8}
+@media (min-width:1001px){#ayuda-fab{left:253px}}
+.ayuda-paso{border:1.5px solid #E2E8F0;border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.ayuda-paso.actual{border-color:#2563EB;background:#EFF6FF;box-shadow:0 2px 10px rgba(37,99,235,.12)}
+.ayuda-paso.hecho{background:#F0FDF4;border-color:#BBF7D0}
+.ayuda-paso.futuro{background:#F8FAFC;color:#94A3B8}
+.ayuda-caja{width:26px;height:26px;border-radius:8px;border:2px solid #94A3B8;background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;color:#fff;font-size:.8rem}
+.ayuda-paso.actual .ayuda-caja{border-color:#2563EB}
+.ayuda-paso.hecho .ayuda-caja{background:#16A34A;border-color:#16A34A}
+.ayuda-barra{height:7px;border-radius:999px;background:#E2E8F0;overflow:hidden}
+.ayuda-barra>i{display:block;height:100%;background:#16A34A;border-radius:999px;transition:width .25s}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -1781,6 +1796,17 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<button id="ayuda-fab" onclick="ayudaAbrir()" aria-label="Ayuda"><i class="fas fa-circle-question"></i><span>Ayuda</span></button>
+<div id="ayuda-panel" class="modal-bg" style="display:none;z-index:97" onclick="if(event.target===this)ayudaCerrar()">
+  <div class="card slide" style="width:100%;max-width:580px;padding:0;max-height:92vh;display:flex;flex-direction:column">
+    <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h3 id="ayuda-titulo" style="font-size:1.02rem;font-weight:700;color:var(--navy);margin:0"></h3>
+      <button class="btn-g" style="width:auto;padding:6px 12px" onclick="ayudaCerrar()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div id="ayuda-cuerpo" style="padding:14px 18px;overflow:auto"></div>
+  </div>
+</div>
+
 <div id="modal-evidencia" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:920px;padding:0;display:flex;flex-direction:column">
     <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
@@ -3071,6 +3097,8 @@ const LPA_AREAS = {
         <input id="ww-act-cuadrilla" class="inp" type="number" min="1" style="margin-bottom:10px">
       </div>
     </div>
+        <label style="font-size:.74rem;font-weight:600;color:#334155;display:block;margin:2px 0 4px">Nombres del personal <span style="font-weight:400;color:#64748B">(uno por línea; opcional)</span></label>
+        <textarea id="ww-act-integrantes" class="inp" rows="3" style="margin-bottom:10px;resize:vertical" placeholder="Juan Pérez&#10;Ana López"></textarea>
 
     <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Horario</label>
     <p style="font-size:.66rem;color:#64748B;margin:0 0 6px">Marca los días en que se trabaja y su hora de inicio y fin.</p>
@@ -3329,7 +3357,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.9.0';
+const FRONTEND_BUILD = '9.11.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3805,7 +3833,7 @@ Object.assign(TEXT_I18N,{
 Object.assign(TEXT_I18N,{
   'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
   'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
-  'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…'
+  'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…','Ayuda':'Help'
 });
 
 const TEXT_I18N_EXTRA = {
@@ -5094,9 +5122,18 @@ function weekendAjustarDeptos_(html,cfg){
 }
 const WW_ESTADO_COL={PENDIENTE:['#FEF3C7','#92400E'],APROBADA:['#DCFCE7','#166534'],EN_DOCUMENTO:['#DCFCE7','#166534'],SIN_DOCUMENTO:['#FFEDD5','#9A3412'],
   RECHAZADA:['#FEE2E2','#991B1B'],VENCIDA:['#E2E8F0','#475569'],BLOQUEADA:['#E2E8F0','#475569'],EXENTA:['#DBEAFE','#1E40AF']};
+// V9.10.0 — Nombres de quienes harán cada actividad.
+function wwNombresHtml_(arr){
+  const n=(Array.isArray(arr)?arr:[]).filter(Boolean);
+  return n.length?`<div style="font-size:.66rem;color:#64748B;font-weight:400;margin-top:2px">Personal (${n.length}): ${n.map(x=>escapeHtml(String(x))).join(', ')}</div>`:'';
+}
+function wwNombresDetalle_(arr){
+  const n=(Array.isArray(arr)?arr:[]).filter(Boolean);
+  return n.length?`<details style="font-size:.64rem;text-align:left;margin-top:3px"><summary style="cursor:pointer;color:#2563EB">Nombres</summary><div style="color:#475569">${n.map(x=>escapeHtml(String(x))).join('<br>')}</div></details>`:'';
+}
 function wwActsHtml_(acts){
   return (acts||[]).length?`<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse;font-size:.7rem"><tbody>${acts.map(a=>`<tr style="border-top:1px solid #EEF1F6">
-    <td style="padding:4px 6px;color:#64748B;white-space:nowrap">#${escapeHtml(String(a.n))}</td><td style="padding:4px 6px;font-weight:600">${escapeHtml(a.actividad)}</td>
+    <td style="padding:4px 6px;color:#64748B;white-space:nowrap">#${escapeHtml(String(a.n))}</td><td style="padding:4px 6px;font-weight:600">${escapeHtml(a.actividad)}${wwNombresHtml_(a.integrantes)}</td>
     <td style="padding:4px 6px;color:#475569">${escapeHtml(a.areaTrabajo||'')}${a.jobLeader?' · '+escapeHtml(a.jobLeader):''}</td>
     <td style="padding:4px 6px;color:#475569;white-space:nowrap">${escapeHtml(a.dias||'')}${a.riesgo?' · riesgo '+escapeHtml(a.riesgo):''}</td></tr>`).join('')}</tbody></table></div>`:'';
 }
@@ -5195,6 +5232,174 @@ async function guardarSeguimiento(){
 function rfqCubrir_(){
   const f=$('rfq-frame'); if(f)f.style.visibility='hidden';
   const c=$('rfq-cargando'); if(c){c.style.display='';c.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Enviando a la siguiente etapa…';}
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.11.0 — AYUDA PASO A PASO (nivel 1)
+//
+// Un botón «Ayuda» abre las guías de los registros de la plataforma. Cada guía
+// es una lista de pasos con casilla: al marcar uno aparecen las instrucciones
+// del siguiente. El avance es solo de cada usuario: se guarda en su propio
+// navegador, con su usuario, y nadie más lo ve. Solo texto, en español e inglés.
+// ══════════════════════════════════════════════════════════════
+const AYUDA_GUIAS=[
+ {id:'plan',roles:['tecnico','ingeniero'],icono:'fa-clipboard-list',ir:{fn:'goActividades'},
+  titulo:{es:'Declarar tu plan del día',en:'Declare your daily plan'},
+  resumen:{es:'Registra lo que vas a hacer en tu turno. Mínimo tres actividades.',en:'Log what you will do in your shift. At least three activities.'},
+  pasos:[
+   {t:{es:'Abre «Mis Actividades»',en:'Open “My Activities”'},i:{es:'Entra por el menú o por la tarjeta del inicio. Arriba verás el formulario del Plan Diario.',en:'Use the menu or the home card. The Daily Plan form is at the top.'}},
+   {t:{es:'Escribe lo que vas a hacer',en:'Write what you are going to do'},i:{es:'En la descripción pon el trabajo con claridad y completa la categoría y el área.',en:'Describe the job clearly and fill in the category and the area.'}},
+   {t:{es:'Agrega a quien te apoyará (opcional)',en:'Add who will support you (optional)'},i:{es:'Si alguien te va a ayudar, elígelo en «Técnicos de apoyo previstos» y toca «Agregar».',en:'If someone will help you, pick them under the planned support technicians and tap “Agregar”.'}},
+   {t:{es:'Toca «Agregar actividad al Plan Diario»',en:'Tap “Agregar actividad al Plan Diario”'},i:{es:'La actividad queda en tu lista del día como por iniciar.',en:'The activity is added to your list for the day as not started.'}},
+   {t:{es:'Repite hasta tener tres',en:'Repeat until you have three'},i:{es:'El plan del día necesita mínimo tres actividades. El contador de arriba te dice cuántas llevas.',en:'The daily plan needs at least three activities. The counter at the top shows how many you have.'}},
+   {t:{es:'Si surge algo imprevisto, usa «Actividad Espontánea»',en:'If something unplanned comes up, use “Actividad Espontánea”'},i:{es:'Queda registrada aparte y no cuenta dentro de las tres del plan.',en:'It is logged separately and does not count toward the three in the plan.'}}]},
+ {id:'iniciar',roles:['tecnico','ingeniero'],icono:'fa-camera',ir:{fn:'goActividades'},
+  titulo:{es:'Iniciar y terminar una actividad con fotos',en:'Start and finish an activity with photos'},
+  resumen:{es:'La foto del antes al iniciar y las del después al terminar.',en:'The “before” photo when you start and the “after” photos when you finish.'},
+  pasos:[
+   {t:{es:'Busca la tarjeta de tu actividad',en:'Find your activity card'},i:{es:'En «Mis Actividades», la que vas a hacer aparece como por iniciar.',en:'In “My Activities”, the one you will do shows as not started.'}},
+   {t:{es:'Toca «Iniciar» y toma la foto del ANTES',en:'Tap “Iniciar” and take the BEFORE photo'},i:{es:'Usa «Tomar fotografía». Sin la foto del antes no podrás terminar la actividad.',en:'Use “Tomar fotografía”. You cannot finish the activity without the before photo.'}},
+   {t:{es:'Confirma el inicio',en:'Confirm the start'},i:{es:'Si te van a apoyar, elígelos aquí. Luego toca «Confirmar»: el tiempo empieza a contar.',en:'If you will have support, choose them here. Then tap “Confirmar”: the time starts counting.'}},
+   {t:{es:'Si tienes que parar, toca «Pausar»',en:'If you have to stop, tap “Pausar”'},i:{es:'Elige el motivo (por ejemplo, falta de material). Así queda claro por qué tardó más.',en:'Pick the reason (for example, missing material). It shows why it took longer.'}},
+   {t:{es:'Al terminar, toca «Terminar» y adjunta las fotos del DESPUÉS',en:'When done, tap “Terminar” and attach the AFTER photos'},i:{es:'De una a tres fotos. Puedes agregar un PDF y un comentario de cierre.',en:'One to three photos. You may add a PDF and a closing comment.'}},
+   {t:{es:'Toca «Confirmar»',en:'Tap “Confirmar”'},i:{es:'La actividad pasa a revisión de Ingeniería. Si te la devuelven, lee su comentario, corrige y vuelve a terminarla.',en:'The activity goes to Engineering for review. If it is returned, read the comment, fix it and finish it again.'}}]},
+ {id:'apoyo',roles:['tecnico','ingeniero'],icono:'fa-user-group',ir:{fn:'goActividades'},
+  titulo:{es:'Apoyar o dejar de apoyar en una actividad',en:'Support, or stop supporting, an activity'},
+  resumen:{es:'Cómo agregar apoyos y cómo salir si tienes que retirarte.',en:'How to add support and how to leave if you have to go.'},
+  pasos:[
+   {t:{es:'Si necesitas ayuda, agrega un apoyo',en:'If you need help, add support'},i:{es:'Como responsable, toca «Apoyos» en tu actividad y elige al técnico.',en:'As the person in charge, tap “Apoyos” on your activity and choose the technician.'}},
+   {t:{es:'Si te agregaron como apoyo, mira tu lista',en:'If you were added as support, check your list'},i:{es:'La actividad aparece con la etiqueta de apoyo. No la inicias ni la terminas: la controla el responsable.',en:'The activity shows with the support label. You do not start or finish it: the person in charge does.'}},
+   {t:{es:'Si tienes que retirarte, toca «Salir de la actividad»',en:'If you have to leave, tap “Salir de la actividad”'},i:{es:'Puedes escribir el motivo. Funciona mientras la actividad siga abierta.',en:'You may write the reason. It works while the activity is still open.'}},
+   {t:{es:'Listo',en:'Done'},i:{es:'Tu tiempo de apoyo queda registrado hasta ese momento, el responsable recibe un aviso y quedas libre para otra actividad.',en:'Your support time is recorded up to that moment, the person in charge is notified and you are free for another activity.'}}]},
+ {id:'checklist',roles:['tecnico','ingeniero'],icono:'fa-list-check',ir:{fn:'goChecklists'},
+  titulo:{es:'Hacer una inspección (con o sin señal)',en:'Do an inspection (with or without signal)'},
+  resumen:{es:'Checklist de tu área, una vez por turno. Funciona aunque no haya señal.',en:'Your area checklist, once per shift. It works even without signal.'},
+  pasos:[
+   {t:{es:'Abre «Inspecciones» y elige tu área',en:'Open “Inspections” and choose your area'},i:{es:'Por ejemplo, cuarto de bombas, compresores o subestaciones.',en:'For example, pump room, compressors or substations.'}},
+   {t:{es:'Elige tu turno',en:'Choose your shift'},i:{es:'Primer o segundo turno, arriba a la derecha de la lista de puntos.',en:'First or second shift, at the top right of the list of points.'}},
+   {t:{es:'Responde cada punto',en:'Answer every point'},i:{es:'Elige la opción o escribe la lectura tal como aparece, sin comas ni unidades (27427.7). Un dígito de más descompone el consumo de dos días.',en:'Pick the option or type the reading exactly as shown, without commas or units (27427.7). One extra digit ruins two days of consumption.'}},
+   {t:{es:'Si un punto sale fuera de rango (NG), explícalo',en:'If a point is out of range (NG), explain it'},i:{es:'Escribe una observación y, si puedes, agrega una foto. Ingeniería recibe el hallazgo.',en:'Write a note and, if you can, add a photo. Engineering receives the finding.'}},
+   {t:{es:'Toca «Guardar inspección»',en:'Tap “Guardar inspección”'},i:{es:'Se guarda con la fecha y la hora en que la hiciste.',en:'It is saved with the date and time you did it.'}},
+   {t:{es:'Sin señal, no pasa nada',en:'No signal? No problem'},i:{es:'Se guarda en el iPad y se envía sola al volver la señal. Si abajo a la derecha aparece en rojo «por revisar · toca aquí», tócalo: se abre «Inspecciones por sincronizar» y ahí usa «Enviar ahora». No borres los datos del navegador con pendientes.',en:'It is saved on the iPad and sent by itself when the signal returns. If a red “por revisar · toca aquí” appears at the bottom right, tap it: “Inspecciones por sincronizar” opens and there you use “Enviar ahora”. Do not clear browser data while items are pending.'}}]},
+ {id:'material',roles:['tecnico','ingeniero'],icono:'fa-boxes-stacked',ir:{fn:'goInventario'},
+  titulo:{es:'Registrar la salida de material',en:'Log a material withdrawal'},
+  resumen:{es:'Cada vez que retiras algo de las gavetas.',en:'Every time you take something from the drawers.'},
+  pasos:[
+   {t:{es:'Abre «Inventario»',en:'Open “Inventory”'},i:{es:'Entra por el menú o por la tarjeta del inicio.',en:'Use the menu or the home card.'}},
+   {t:{es:'Busca el material',en:'Find the material'},i:{es:'En «Registrar salida», escribe el código FAC, el nombre o la ubicación.',en:'Under “Registrar salida”, type the FAC code, the name or the location.'}},
+   {t:{es:'Elige el trabajo al que va',en:'Choose the job it is for'},i:{es:'La solicitud FAC o la actividad AD- que lo necesita.',en:'The FAC request or the AD- activity that needs it.'}},
+   {t:{es:'Escribe la cantidad',en:'Enter the quantity'},i:{es:'Solo lo que te llevas.',en:'Only what you are taking.'}},
+   {t:{es:'Toca «Registrar Salida»',en:'Tap “Registrar Salida”'},i:{es:'Si falta material y no está registrado, nadie sabe que el problema fue el abasto.',en:'If material is missing and it is not logged, nobody knows the problem was supply.'}}]},
+ {id:'seguimiento',roles:['tecnico','ingeniero'],icono:'fa-comment-dots',ir:{fn:'goActividades'},
+  titulo:{es:'Dejar el seguimiento de una solicitud de trabajo',en:'Leave a follow-up on a work request'},
+  resumen:{es:'Tu comentario y el estatus en que queda el trabajo.',en:'Your comment and the status the job is left in.'},
+  pasos:[
+   {t:{es:'Busca la solicitud que tienes asignada',en:'Find the request assigned to you'},i:{es:'En «Mis Actividades», la tarjeta lleva el folio FAC-.',en:'In “My Activities”, the card shows the FAC- folio.'}},
+   {t:{es:'Toca «Seguimiento»',en:'Tap “Seguimiento”'},i:{es:'Se abre una ventana para dejar tu comentario y el estatus.',en:'A window opens to leave your comment and the status.'}},
+   {t:{es:'Elige en qué estatus queda',en:'Choose the status it is left in'},i:{es:'En ejecución, En espera de refacciones o Suspendido. Para suspender, la actividad no debe estar en curso: pausa o termina primero.',en:'In execution, Waiting for spare parts or Suspended. To suspend, the activity must not be running: pause or finish it first.'}},
+   {t:{es:'Escribe tu comentario',en:'Write your comment'},i:{es:'Es obligatorio: qué hiciste o qué falta. Lo verán Ingeniería y quien pidió el trabajo.',en:'It is required: what you did or what is missing. Engineering and the requester will see it.'}},
+   {t:{es:'Toca «Guardar»',en:'Tap “Guardar”'},i:{es:'Para terminar el trabajo no uses esto: usa «Terminar» con las dos fotos.',en:'To finish the job do not use this: use “Terminar” with the two photos.'}}]},
+ {id:'solicitud',roles:['todos'],icono:'fa-file-pen',ir:{view:'solicitud'},
+  titulo:{es:'Pedir un trabajo (Solicitud de trabajo)',en:'Request a job (Work request)'},
+  resumen:{es:'Para pedirle a Facilities una reparación, instalación o mantenimiento.',en:'To ask Facilities for a repair, installation or maintenance job.'},
+  pasos:[
+   {t:{es:'Abre «Solicitud de Trabajo»',en:'Open “Work Request”'},i:{es:'Está en la pantalla de inicio. Asegúrate de estar en «Nueva solicitud».',en:'It is on the home screen. Make sure you are on “Nueva solicitud”.'}},
+   {t:{es:'Llena tus datos',en:'Fill in your details'},i:{es:'Nombre del solicitante, correo (ahí llega tu folio), nombre del gerente de área y departamento.',en:'Requester name, email (your folio is sent there), area manager name and department.'}},
+   {t:{es:'Elige el tipo y describe el trabajo',en:'Choose the type and describe the job'},i:{es:'Entre más detalle (dónde, qué falla, desde cuándo), más rápido se atiende.',en:'The more detail (where, what fails, since when), the faster it is handled.'}},
+   {t:{es:'Adjunta la evidencia',en:'Attach the evidence'},i:{es:'Es obligatoria: toma una fotografía o selecciona imágenes o un PDF.',en:'It is required: take a photo or select images or a PDF.'}},
+   {t:{es:'Indica si es una instalación nueva',en:'Say whether it is a new installation'},i:{es:'Si es «Sí», anota el número de presupuesto asignado y el monto.',en:'If “Sí”, enter the assigned budget number and the amount.'}},
+   {t:{es:'Toca «Enviar Solicitud» y guarda tu folio',en:'Tap “Enviar Solicitud” and keep your folio'},i:{es:'Para ver cómo va, usa «Consultar estatus» con ese folio.',en:'To see how it is going, use “Consultar estatus” with that folio.'}}]},
+ {id:'weekend',roles:['todos'],icono:'fa-calendar-days',ir:{view:'weekend'},
+  titulo:{es:'Declarar una actividad de Weekend Work (con nombres)',en:'Declare a Weekend Work activity (with names)'},
+  resumen:{es:'Para trabajar en sábado, domingo o festivo. Pasa por la aprobación de tu departamento.',en:'To work on a Saturday, Sunday or holiday. It goes through your department’s approval.'},
+  pasos:[
+   {t:{es:'Abre «Weekend Work Request»',en:'Open “Weekend Work Request”'},i:{es:'Está en la pantalla de inicio. El formulario está en inglés.',en:'It is on the home screen.'}},
+   {t:{es:'Escribe tu nombre y elige tu departamento',en:'Enter your name and choose your department'},i:{es:'Toca «Next». Con eso se te asignan tus aprobadores.',en:'Tap “Next”. This is how your approvers are assigned.'}},
+   {t:{es:'Indica cuántas actividades vas a registrar',en:'Say how many activities you will register'},i:{es:'Toca «Start» y llena una pantalla por actividad.',en:'Tap “Start” and fill one screen per activity.'}},
+   {t:{es:'Describe cada actividad',en:'Describe each activity'},i:{es:'Departamento, líder del trabajo (KTMEX), nombre de la actividad, tipo y nivel de riesgo, rango, área de trabajo y contratista o cuadrilla.',en:'Department, KTMEX job leader, activity name, risk type and level, rank, work area and contractor or crew.'}},
+   {t:{es:'Escribe el número de personas y sus nombres',en:'Enter the number of people and their names'},i:{es:'Al poner «Crew Size» aparece un campo por persona. Todos los nombres son obligatorios.',en:'When you enter “Crew Size” one field per person appears. Every name is required.'}},
+   {t:{es:'Anota supervisor, días y horario',en:'Enter supervisor, days and schedule'},i:{es:'Elige sábado, domingo o festivo con su horario, y marca en el plano dónde trabajarás.',en:'Pick Saturday, Sunday or holiday with its schedule, and mark on the plant layout where you will work.'}},
+   {t:{es:'Revisa y envía, y guarda tu folio REQ',en:'Review and submit, and keep your REQ folio'},i:{es:'Sin el folio no podrás dar seguimiento.',en:'Without the folio you cannot follow up.'}},
+   {t:{es:'Da seguimiento en «Mis actividades»',en:'Follow up in “Mis actividades”'},i:{es:'Elige tu departamento y escribe tu nombre: verás en qué etapa va tu solicitud y, si la rechazan, el motivo.',en:'Choose your department and type your name: you will see the stage your request is in and, if it is rejected, the reason.'}}]},
+ {id:'aprobaciones',roles:['aprobador','ingeniero'],icono:'fa-clipboard-check',ir:{fn:'goWwAprob'},
+  titulo:{es:'Aprobar solicitudes de Weekend Work',en:'Approve Weekend Work requests'},
+  resumen:{es:'Las solicitudes de tu departamento esperan tu decisión antes de entrar al plan.',en:'Your department’s requests wait for your decision before entering the plan.'},
+  pasos:[
+   {t:{es:'Abre «Aprobaciones Weekend»',en:'Open “Weekend approvals”'},i:{es:'Está en el menú. «Por aprobar» muestra las solicitudes de tu departamento que esperan tu decisión.',en:'It is in the menu. “To approve” shows your department’s requests waiting for your decision.'}},
+   {t:{es:'Revisa cada actividad',en:'Review each activity'},i:{es:'Qué se hará, quién lidera, el área, el riesgo, los días y los nombres del personal.',en:'What will be done, who leads, the area, the risk, the days and the names of the people.'}},
+   {t:{es:'Si procede, toca «Aprobar»',en:'If it is fine, tap “Aprobar”'},i:{es:'Queda registrado con tu nombre y la hora. Si hay una segunda aprobación, le llega a esa persona.',en:'It is recorded with your name and the time. If there is a second approval, it goes to that person.'}},
+   {t:{es:'Si no procede, toca «Rechazar»',en:'If it is not fine, tap “Rechazar”'},i:{es:'Escribe el motivo. El rechazo es definitivo: quien registró volverá a declararla y verá tu motivo.',en:'Write the reason. A rejection is final: the requester will declare it again and will see your reason.'}},
+   {t:{es:'Solo ingenieros de Facilities: si el responsable está ausente',en:'Facilities engineers only: if the approver is absent'},i:{es:'Usa «Aprobar en lugar del responsable» y escribe el motivo.',en:'Use “Aprobar en lugar del responsable” and write the reason.'}}]}
+];
+const AYUDA_TXT={
+  lista:{es:'Ayuda: ¿cómo se hace?',en:'Help: how is it done?'},
+  intro:{es:'Elige una guía. Marca cada paso al terminarlo: verás las instrucciones del siguiente.',en:'Pick a guide. Tick each step when you finish it: you will see the instructions for the next one.'},
+  todas:{es:'← Todas las guías',en:'← All guides'},ir:{es:'Ir a la pantalla',en:'Go to the screen'},reiniciar:{es:'Reiniciar guía',en:'Restart guide'},
+  marcar:{es:'Marcar como hecho',en:'Mark as done'},de:{es:'de',en:'of'},nueva:{es:'Empezar',en:'Start'},seguir:{es:'Continuar',en:'Continue'},
+  completa:{es:'Completada',en:'Completed'},listo:{es:'¡Listo! Completaste esta guía.',en:'Done! You completed this guide.'},
+  ver:{es:'Ver',en:'Show'},privado:{es:'Tu avance es solo tuyo: se guarda en este dispositivo y nadie más lo ve.',en:'Your progress is only yours: it is saved on this device and nobody else sees it.'},
+  vacio:{es:'Por ahora no hay guías para tu perfil.',en:'There are no guides for your profile yet.'}};
+let AYUDA_VISTA={guia:null,expandidos:{}};
+function ayudaT_(o){return (o&&(o[LANG]||o.es))||'';}
+function ayudaRol_(){return (SESSION&&SESSION.user&&SESSION.user.rol)||'anon';}
+function ayudaClave_(){return 'ktmex_ayuda_v1_'+((SESSION&&SESSION.user&&SESSION.user.username)||'anon');}
+function ayudaCargar_(){try{return JSON.parse(localStorage.getItem(ayudaClave_())||'{}')||{};}catch(e){return {};}}
+function ayudaGuardar_(est){try{localStorage.setItem(ayudaClave_(),JSON.stringify(est));}catch(e){}}
+function ayudaVisibles_(rol){return AYUDA_GUIAS.filter(g=>g.roles.includes('todos')||g.roles.includes(rol));}
+function ayudaHechos_(est,g){return Math.min(g.pasos.length,((est[g.id]&&est[g.id].hechos)||0));}
+// El avance es secuencial: «hechos» es cuántos pasos van, de corrido desde el primero.
+function ayudaMarcar_(id){const g=AYUDA_GUIAS.find(x=>x.id===id),est=ayudaCargar_(),n=ayudaHechos_(est,g);if(n>=g.pasos.length)return;est[id]={hechos:n+1,ts:Date.now()};ayudaGuardar_(est);}
+function ayudaDesmarcar_(id,i){const est=ayudaCargar_();est[id]={hechos:Math.max(0,i),ts:Date.now()};ayudaGuardar_(est);}
+function ayudaReiniciar_(id){const est=ayudaCargar_();delete est[id];ayudaGuardar_(est);AYUDA_VISTA.expandidos={};ayudaRender_();}
+function ayudaAbrir(){AYUDA_VISTA.guia=null;AYUDA_VISTA.expandidos={};$('ayuda-panel').style.display='flex';ayudaRender_();}
+function ayudaCerrar(){$('ayuda-panel').style.display='none';}
+function ayudaAbrirGuia_(id){AYUDA_VISTA.guia=id;AYUDA_VISTA.expandidos={};ayudaRender_();}
+function ayudaVolver_(){AYUDA_VISTA.guia=null;ayudaRender_();}
+function ayudaPaso_(id,i,accion){
+  if(accion==='marcar')ayudaMarcar_(id); else if(accion==='deshacer')ayudaDesmarcar_(id,i);
+  else if(accion==='ver')AYUDA_VISTA.expandidos[i]=!AYUDA_VISTA.expandidos[i];
+  ayudaRender_();
+}
+function ayudaIr_(id){
+  const g=AYUDA_GUIAS.find(x=>x.id===id); if(!g||!g.ir)return; ayudaCerrar();
+  if(g.ir.view)showView(g.ir.view); else if(typeof window[g.ir.fn]==='function')window[g.ir.fn]();
+}
+function ayudaRender_(){
+  const est=ayudaCargar_(), cont=$('ayuda-cuerpo'), t=k=>ayudaT_(AYUDA_TXT[k]);
+  if(!AYUDA_VISTA.guia){
+    $('ayuda-titulo').textContent=t('lista');
+    const gs=ayudaVisibles_(ayudaRol_());
+    cont.innerHTML=`<p style="font-size:.78rem;color:#475569;margin:0 0 12px">${escapeHtml(t('intro'))}</p>`+(gs.length?gs.map(g=>{
+      const h=ayudaHechos_(est,g),n=g.pasos.length,fin=h>=n,pct=Math.round(h*100/n);
+      return `<div class="ayuda-paso ${fin?'hecho':''}" style="cursor:pointer" onclick="ayudaAbrirGuia_('${g.id}')">
+        <div style="display:flex;gap:11px;align-items:center"><i class="fas ${g.icono}" style="font-size:1.15rem;color:${fin?'#16A34A':'#2563EB'};width:26px;text-align:center"></i>
+          <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.86rem;color:#0F2A4A">${escapeHtml(ayudaT_(g.titulo))}</div><div style="font-size:.7rem;color:#64748B;margin:1px 0 6px">${escapeHtml(ayudaT_(g.resumen))}</div>
+          <div class="ayuda-barra"><i style="width:${pct}%"></i></div></div>
+          <div style="font-size:.68rem;font-weight:700;color:${fin?'#16A34A':'#2563EB'};white-space:nowrap;text-align:right">${fin?'✓ '+escapeHtml(t('completa')):(h?escapeHtml(t('seguir')):escapeHtml(t('nueva')))}<div style="font-weight:500;color:#94A3B8">${h} ${escapeHtml(t('de'))} ${n}</div></div></div></div>`;}).join('')
+      :`<div style="padding:20px;text-align:center;color:#94A3B8;font-size:.8rem">${escapeHtml(t('vacio'))}</div>`)
+      +`<p style="font-size:.66rem;color:#94A3B8;margin:10px 0 0"><i class="fas fa-lock" style="margin-right:5px"></i>${escapeHtml(t('privado'))}</p>`;
+    return;
+  }
+  const g=AYUDA_GUIAS.find(x=>x.id===AYUDA_VISTA.guia); if(!g){ayudaVolver_();return;}
+  const h=ayudaHechos_(est,g),n=g.pasos.length,fin=h>=n,pct=Math.round(h*100/n);
+  $('ayuda-titulo').textContent=ayudaT_(g.titulo);
+  cont.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn-g" style="width:auto;padding:6px 12px;font-size:.74rem" onclick="ayudaVolver_()">${escapeHtml(t('todas'))}</button>
+      <div style="display:flex;gap:6px">${g.ir?`<button class="btn-g" style="width:auto;padding:6px 12px;font-size:.74rem;color:#2563EB" onclick="ayudaIr_('${g.id}')"><i class="fas fa-arrow-up-right-from-square" style="margin-right:6px"></i>${escapeHtml(t('ir'))}</button>`:''}
+      <button class="btn-g" style="width:auto;padding:6px 12px;font-size:.74rem" onclick="ayudaReiniciar_('${g.id}')">${escapeHtml(t('reiniciar'))}</button></div></div>
+    <p style="font-size:.76rem;color:#475569;margin:0 0 8px">${escapeHtml(ayudaT_(g.resumen))}</p>
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><div class="ayuda-barra" style="flex:1"><i style="width:${pct}%"></i></div><b style="font-size:.72rem;color:#334155;white-space:nowrap">${h} ${escapeHtml(t('de'))} ${n}</b></div>`
+    +g.pasos.map((p,i)=>{
+      const estado=i<h?'hecho':(i===h?'actual':'futuro'), abierto=estado==='actual'||AYUDA_VISTA.expandidos[i];
+      const caja=estado==='hecho'?`<div class="ayuda-caja" title="${escapeHtml(t('reiniciar'))}" onclick="ayudaPaso_('${g.id}',${i},'deshacer')"><i class="fas fa-check"></i></div>`
+        :(estado==='actual'?`<div class="ayuda-caja" onclick="ayudaPaso_('${g.id}',${i},'marcar')"></div>`:`<div class="ayuda-caja" style="border-color:#CBD5E1;background:#F1F5F9"></div>`);
+      return `<div class="ayuda-paso ${estado}"><div style="display:flex;gap:10px;align-items:flex-start">${caja}
+        <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.82rem;${estado==='hecho'?'color:#166534':(estado==='futuro'?'':'color:#0F2A4A')}"><span style="opacity:.6">${i+1}.</span> ${escapeHtml(ayudaT_(p.t))}</div>
+          ${abierto?`<div style="font-size:.78rem;color:#334155;margin-top:5px;line-height:1.45">${escapeHtml(ayudaT_(p.i))}</div>`:''}
+          ${estado==='actual'?`<button class="btn-p" style="width:auto;margin-top:9px;padding:8px 16px;font-size:.78rem;background:#16A34A" onclick="ayudaPaso_('${g.id}',${i},'marcar')"><i class="fas fa-check" style="margin-right:6px"></i>${escapeHtml(t('marcar'))}</button>`:''}
+          ${estado==='hecho'?`<a style="font-size:.66rem;color:#2563EB;cursor:pointer" onclick="ayudaPaso_('${g.id}',${i},'ver')">${abierto?'−':escapeHtml(t('ver'))}</a>`:''}
+        </div></div></div>`;}).join('')
+    +(fin?`<div style="margin-top:10px;padding:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;color:#166534;font-weight:700;font-size:.84rem;text-align:center"><i class="fas fa-circle-check" style="margin-right:7px"></i>${escapeHtml(t('listo'))}</div>`:'');
 }
 
 function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); rfqCargar(); }
@@ -9822,7 +10027,7 @@ function renderWwRevision(){
           <td style="padding:7px 8px">${escapeHtml(a.areaTrabajo||'—')}</td>
           <td style="padding:7px 8px">${escapeHtml(a.riesgo||'—')}</td>
           <td style="padding:7px 8px">${escapeHtml(a.contratista||'—')}</td>
-          <td style="padding:7px 8px;text-align:center">${escapeHtml(String(a.cuadrilla||'—'))}</td>
+          <td style="padding:7px 8px;text-align:center">${escapeHtml(String(a.cuadrilla||'—'))}${wwNombresDetalle_(a.integrantes)}</td>
           ${diasCols.map(dc=>`<td style="padding:7px 8px">${wwCeldaDia_(a,dc)}</td>`).join('')}
           <td style="padding:7px 8px">
             ${a.agregadaEnRevision?`<span class="badge" style="background:#EDE9FE;color:#6D28D9;font-size:.6rem">En revisión</span><div style="font-size:.58rem;color:#94A3B8">${escapeHtml(a.agregadaPor||'')}</div>`
@@ -9976,7 +10181,7 @@ function wwMostrarTip_(a,color,caja,ev){
     (horario.length?fila('Schedule',horario.join('<br>')):fila('Days',escapeHtml(a.dias||'')))+
     fila('Risk',escapeHtml(a.riesgo||''))+
     fila('Contractor',escapeHtml(a.contratista||''))+
-    fila('Crew',escapeHtml(String(a.cuadrilla||'')))+
+    fila('Crew',escapeHtml(String(a.cuadrilla||'')))+ ((a.integrantes||[]).length?fila('Personal',escapeHtml((a.integrantes||[]).join(', '))):'')+
     (a.requestNo?`<div style="color:#94A3B8;font-size:.66rem;margin-top:5px">${escapeHtml(a.requestNo)}</div>`:'');
 
   // Posición: junto a la zona, sin salirse de la pantalla.
@@ -10309,6 +10514,13 @@ function wwRenderFinal_(r){
     </tr>`).join('');
 
   const conZona=acts.filter(a=>a.layoutZone&&typeof a.layoutZone.xf==='number');
+ // V9.10.0: lista de las personas que harán cada actividad (el plan público no la lleva).
+ const conNombres=acts.filter(a=>Array.isArray(a.integrantes)&&a.integrantes.length);
+ const anexoNombres=conNombres.length?`<div class="wwf-corte" style="padding:6px 30px 26px">
+   <div style="text-align:center;font-size:.9rem;font-weight:700;color:#0F1F3D;margin:8px 0 2px">Annex — Crew members by activity</div>
+   <div style="text-align:center;font-size:.72rem;color:#64748B;margin-bottom:8px">People assigned to each activity, for control of the managers.</div>
+   <table style="width:100%;border-collapse:collapse;font-size:.74rem"><thead><tr><th style="${th}">No.</th><th style="${th}">Request</th><th style="${th}">Activity</th><th style="${th}">Crew</th><th style="${th}">Names</th></tr></thead>
+   <tbody>${conNombres.map(a=>`<tr><td style="${td}">${escapeHtml(String(a.no||''))}</td><td style="${td}">${escapeHtml(String(a.requestNo||''))}</td><td style="${td}">${escapeHtml(String(a.actividad||''))}</td><td style="${td};text-align:center">${a.integrantes.length}</td><td style="${td}">${a.integrantes.map(x=>escapeHtml(String(x))).join(', ')}</td></tr>`).join('')}</tbody></table></div>`:'';
   const zonas=conZona.map((a,i)=>{
     const z=a.layoutZone, c=WW_ZONA_COLORES[i%WW_ZONA_COLORES.length];
     return `<div style="position:absolute;left:${(z.xf*100).toFixed(2)}%;top:${(z.yf*100).toFixed(2)}%;width:${(z.wf*100).toFixed(2)}%;height:${(z.hf*100).toFixed(2)}%;border:2px solid ${c};background:${c}33;border-radius:3px">
@@ -10356,7 +10568,7 @@ function wwRenderFinal_(r){
       </table>
     </div>
 
-    ${conZona.length?`<div class="wwf-corte" style="padding:0 30px 30px">
+    ${anexoNombres} ${conZona.length?`<div class="wwf-corte" style="padding:0 30px 30px">
       <div style="text-align:center;font-size:.9rem;font-weight:700;color:#0F1F3D">Plant layout — work zones</div>
       <div style="text-align:center;font-size:.72rem;color:#64748B;margin-bottom:8px">Each box is the zone marked for that activity.</div>
       <div style="position:relative;border:2px solid #0F1F3D;border-radius:6px;overflow:hidden">
@@ -10733,7 +10945,7 @@ function wwRevNuevaActividad(){
   WW_ACT_CTX={modo:'nueva',id:WW_REV.documento.id};
   $('ww-act-titulo').textContent='Agregar actividad';
   $('ww-act-sub').textContent='Quedará marcada como capturada en la revisión, con tu nombre, porque no viene de una solicitud del formulario.';
-  ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla']
+  ['actividad','solicitante','departamento','jobleader','supervisor','area','contratista','cuadrilla','integrantes']
     .forEach(k=>{const el=$('ww-act-'+k); if(el)el.value='';});
   wwHorarioCargar_(null);
   $('ww-act-riesgo').value='';
@@ -10756,7 +10968,7 @@ function wwActEditar(actId){
   $('ww-act-area').value=a.areaTrabajo||'';
   $('ww-act-riesgo').value=a.riesgo||'';
   $('ww-act-contratista').value=a.contratista||'';
-  $('ww-act-cuadrilla').value=a.cuadrilla||'';
+  $('ww-act-cuadrilla').value=a.cuadrilla||''; $('ww-act-integrantes').value=(Array.isArray(a.integrantes)?a.integrantes:[]).join('\n');
   wwHorarioCargar_(a);
   WW_ZONA=(a.layoutZone&&typeof a.layoutZone.xf==='number')?Object.assign({},a.layoutZone):null;
   wwZonaInit_(); wwZonaPintar_();
@@ -10775,6 +10987,7 @@ async function wwActGuardar(){
     riesgo:$('ww-act-riesgo').value,
     contratista:$('ww-act-contratista').value.trim(),
     cuadrilla:$('ww-act-cuadrilla').value.trim(),
+ integrantes:$('ww-act-integrantes').value,   // V9.10.0
     // V8.9.8: la zona marcada en el plano (o null si se quitó).
     layoutZone:WW_ZONA?{xf:WW_ZONA.xf,yf:WW_ZONA.yf,wf:WW_ZONA.wf,hf:WW_ZONA.hf,
       label:$('ww-act-area').value.trim()}:null

@@ -888,7 +888,7 @@
         // CATÁLOGOS REUTILIZABLES PARA LOS PASOS DE ACTIVIDAD
         // ---------------------------------------------------------------
         const DEPT_OPTIONS = [
-            ['BL', 'Blanking (BL)'], ['PE', 'Stamping / Welding (PE)'], ['PRESS-M', 'Press Maintenance (PRESS-M)'],
+            ['BL', 'Blanking (BL)'], ['PE', 'Stamping / Press (PE)'], ['PRESS-M', 'Press Maintenance (PRESS-M)'],
             ['W', 'Welding (W)'], ['W-M', 'Welding Maintenance (W-M)'], ['IL', 'Internal Logistic (IL)'],
             ['DIE-M', 'Die Maintenance (DIE-M)'], ['M', 'General Maintenance (M)'], ['FAC', 'Facilities (FAC)'],
             ['IT', 'IT (IT)'], ['SAFETY', 'Safety (SAFETY)'], ['ENV', 'Environmental (ENV)'],
@@ -914,7 +914,7 @@
             'Welding Mezzanine', 'Stamping Mezzanine', 'Northway Access', 'Waste Disposal Warehouse', 'Chemical Warehouse', 'Waste Water Treatment Plant',
             'Executive Parking Lot', 'Managers Parking Lot', 'General Parking Lot', 'Union Parking Lot', 'Maneuver Road',
             'Quality Lab', 'Quality Destructive Test Room', 'Quality Elevator', 'Quarantine Area', 'Checking Fixture Area',
-            'Compressor Room', 'Substation Room I', 'Substation Room II', 'Pump Room', 'Machine Room', 'LPS', 'TDM', 'Die Maintenance'
+            'Compressor Room', 'Substation Room I', 'Substation Room II', 'Pump Room', 'Machine Room'
         ];
 
         // ---------------------------------------------------------------
@@ -1477,7 +1477,43 @@
         // ---------------------------------------------------------------
         // VALIDACIÓN DE UN PASO (ACTIVIDAD)
         // ---------------------------------------------------------------
-        function validateStep(step, i, isLast) {
+        // ── V9.10.0 — Nombres de quienes harán la actividad (control de los managers) ──
+  // Al escribir el número de personas aparece, debajo, un campo de nombre por persona.
+  const CREW_MAX = 50;
+  function crewNamesRead(root) {
+    return Array.from(root.querySelectorAll('[data-crew-name]')).map(el => toTitleCase(el.value.trim()));
+  }
+  function crewNamesHtml(t) {
+    return (t && Array.isArray(t.crewNames) && t.crewNames.length)
+      ? '<div class="text-xs text-gray-500 mt-1">' + t.crewNames.map(n => escapeHtml(String(n))).join(', ') + '</div>' : '';
+  }
+  function crewNamesHolder(sizeEl) { return sizeEl.closest('.grid') || sizeEl.parentElement; }
+  function crewNamesRender(sizeEl, initial) {
+    const n = Math.min(CREW_MAX, Math.max(0, parseInt(sizeEl.value, 10) || 0));
+    const holder = crewNamesHolder(sizeEl);
+    let wrap = (holder.nextElementSibling && holder.nextElementSibling.hasAttribute('data-crew-names-wrap')) ? holder.nextElementSibling : null;
+    if (!wrap) { wrap = document.createElement('div'); wrap.setAttribute('data-crew-names-wrap', ''); wrap.className = 'mt-3'; holder.insertAdjacentElement('afterend', wrap); }
+    const prev = initial || Array.from(wrap.querySelectorAll('[data-crew-name]')).map(el => el.value);
+    if (!n) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<label class="block text-sm font-semibold mb-1">Crew member names <span class="required-mark">*</span> <span class="font-normal text-gray-500">(' + n + ')</span></label>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' + Array.from({ length: n }, (_, k) =>
+        '<input type="text" data-crew-name class="title-case w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="' + (k + 1) + '. First and last name">').join('') + '</div>' +
+      ((parseInt(sizeEl.value, 10) || 0) > CREW_MAX ? '<div class="text-xs text-red-600 mt-1">Maximum ' + CREW_MAX + ' people per activity: split it into two activities.</div>' : '');
+    // Los valores se ponen por código (no dentro del HTML): una comilla en un nombre no rompe el campo.
+    wrap.querySelectorAll('[data-crew-name]').forEach((el, k) => { el.value = String(prev[k] || ''); });
+  }
+  document.addEventListener('input', e => { const el = e.target; if (el && el.matches && el.matches('[data-field="crewSize"]')) crewNamesRender(el); });
+  (function () {
+    const boot = () => new MutationObserver(() => {
+      document.querySelectorAll('[data-field="crewSize"]').forEach(el => {
+        const h = crewNamesHolder(el), tiene = h.nextElementSibling && h.nextElementSibling.hasAttribute('data-crew-names-wrap');
+        if (!tiene && (parseInt(el.value, 10) || 0) > 0) { let init = null; try { init = JSON.parse(decodeURIComponent(el.getAttribute('data-crew-init') || 'null')); } catch (_) {} crewNamesRender(el, init); }
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+    if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
+  })();
+
+  function validateStep(step, i, isLast) {
             const missing = [];
             const label = `Activity ${i}`;
             const get = (field) => step.querySelector(`[data-field="${field}"]`);
@@ -1518,7 +1554,18 @@
                 }
             });
 
-            const contractorChoiceEl = get('contractorChoice');
+            // V9.10.0: tantos nombres como personas, todos escritos.
+    { const sizeEl = get('crewSize'), nPers = Math.floor(Number(sizeEl.value) || 0);
+      if (nPers > CREW_MAX) { missing.push(`${label}: Crew size (maximum ${CREW_MAX} people; split the activity)`); markInvalidEl(sizeEl); }
+      else if (nPers >= 1) {
+        const campos = Array.from(step.querySelectorAll('[data-crew-name]'));
+        if (campos.length !== nPers || campos.some(el => !el.value.trim())) {
+          missing.push(`${label}: Crew member names (${nPers} required)`);
+          campos.forEach(el => { if (!el.value.trim()) markInvalidEl(el); });
+        }
+      } }
+
+    const contractorChoiceEl = get('contractorChoice');
             const contractorChoiceVal = contractorChoiceEl.value.trim();
             if (!contractorChoiceVal) {
                 missing.push(`${label}: Contractor / Crew`);
@@ -1633,7 +1680,7 @@
                     deptCode: val('deptCode'), deptLabel: DEPT_LABELS[val('deptCode')] || val('deptCode'),
                     jobLeader: valTC('jobLeader'), activity: valSC('activity'),
                     riskTypes, riskLevel: val('riskLevel'), rank: val('rank'),
-                    contractor: resolveContractorValue(val, valSC), crewSize: val('crewSize'), supervisor: valTC('supervisor'),
+                    contractor: resolveContractorValue(val, valSC), crewSize: val('crewSize'), crewNames: crewNamesRead(step), supervisor: valTC('supervisor'),
                     workArea: val('workArea'), chiefTcGl: valTC('chiefTcGl'),
                     confirmationMethods,
                     daySat: checked('daySat'), daySun: checked('daySun'), dayHoliday: checked('dayHoliday'),
@@ -1780,7 +1827,7 @@
                     <td>${rankBadge(t.rank)}</td>
                     <td>${escapeHtml(t.contractor)}</td>
                     <td>${escapeHtml(t.supervisor)}</td>
-                    <td>${escapeHtml(String(t.crewSize))}</td>
+                    <td>${escapeHtml(String(t.crewSize))}${crewNamesHtml(t)}</td>
                     <td>${escapeHtml(t.workArea)}</td>
                     <td>${escapeHtml(t.chiefTcGl)}</td>
                     ${hasSat ? `<td>${dayBarCellHtml(satDateVal, t.daySat, t.satStart, t.satEnd)}</td>` : ''}
@@ -2788,7 +2835,7 @@
                     <td>${rankBadge(t.rank)}</td>
                     <td>${escapeHtml(t.contractor)}</td>
                     <td>${escapeHtml(t.supervisor)}</td>
-                    <td>${escapeHtml(String(t.crewSize))}</td>
+                    <td>${escapeHtml(String(t.crewSize))}${crewNamesHtml(t)}</td>
                     <td>${escapeHtml(t.workArea)}</td>
                     <td>${escapeHtml(t.chiefTcGl)}</td>
                     <td>${t.confirmationMethods.map(escapeHtml).join(', ')}</td>
@@ -3055,7 +3102,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-1">Crew size</label>
-                    <input type="number" min="1" data-field="crewSize" class="w-full border rounded-lg p-2" value="${escapeHtml(String(t.crewSize))}">
+                    <input type="number" min="1" data-field="crewSize" class="w-full border rounded-lg p-2" value="${escapeHtml(String(t.crewSize))}" data-crew-init="${encodeURIComponent(JSON.stringify(t.crewNames||[]))}">
                 </div>
             </div>
             <div class="mt-3">
@@ -3114,7 +3161,7 @@
                 jobLeader: valTC('jobLeader'), activity: valSC('activity'),
                 riskTypes: Array.from(body.querySelectorAll('.riskType:checked')).map(el => el.value),
                 riskLevel: val('riskLevel'), rank: val('rank'),
-                contractor: resolveContractorValue(val, valSC), crewSize: val('crewSize'), supervisor: valTC('supervisor'),
+                contractor: resolveContractorValue(val, valSC), crewSize: val('crewSize'), crewNames: crewNamesRead(body), supervisor: valTC('supervisor'),
                 workArea: val('workArea'), chiefTcGl: valTC('chiefTcGl'),
                 confirmationMethods: Array.from(body.querySelectorAll('.confirmMethod:checked')).map(el => el.value)
             };
