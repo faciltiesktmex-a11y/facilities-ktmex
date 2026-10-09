@@ -727,7 +727,7 @@
         }
 
         const DEPT_LABELS = {
-            BL: 'BL1 Production (BL)', PE: 'Stamping / Press (PE)', 'PRESS-M': 'Press Maintenance (PRESS-M)',
+            BL: 'Blanking (BL)', PE: 'Stamping / Press (PE)', 'PRESS-M': 'Press Maintenance (PRESS-M)',
             W: 'Welding (W)', 'W-M': 'Welding Maintenance (W-M)', IL: 'Internal Logistic (IL)',
             'DIE-M': 'Die Maintenance (DIE-M)', M: 'General Maintenance (M)', FAC: 'Facilities (FAC)',
             IT: 'IT (IT)', SAFETY: 'Safety (SAFETY)', ENV: 'Environmental (ENV)', ACC: 'Accounting (ACC)',
@@ -888,7 +888,7 @@
         // CATÁLOGOS REUTILIZABLES PARA LOS PASOS DE ACTIVIDAD
         // ---------------------------------------------------------------
         const DEPT_OPTIONS = [
-            ['BL', 'BL1 Production (BL)'], ['PE', 'Stamping / Press (PE)'], ['PRESS-M', 'Press Maintenance (PRESS-M)'],
+            ['BL', 'Blanking (BL)'], ['PE', 'Stamping / Press (PE)'], ['PRESS-M', 'Press Maintenance (PRESS-M)'],
             ['W', 'Welding (W)'], ['W-M', 'Welding Maintenance (W-M)'], ['IL', 'Internal Logistic (IL)'],
             ['DIE-M', 'Die Maintenance (DIE-M)'], ['M', 'General Maintenance (M)'], ['FAC', 'Facilities (FAC)'],
             ['IT', 'IT (IT)'], ['SAFETY', 'Safety (SAFETY)'], ['ENV', 'Environmental (ENV)'],
@@ -946,28 +946,31 @@
         let priorSubmissionZonesCache = []; // zonas ya guardadas por otros solicitantes (solo referencia, rojo)
 
         function getStepZone(step) {
-      const zs = stepZones(step);
-      if (zoneModalArea) return zs.find(z => z.area === zoneModalArea) || null;
-      return zs[0] || null;
-    }
+            const el = step.querySelector('[data-field="layoutZone"]');
+            if (!el || !el.value) return null;
+            try { return JSON.parse(el.value); } catch (e) { return null; }
+        }
 
         function setStepZone(step, zoneObj) {
-      const area = zoneModalArea; let zs = stepZones(step);
-      if (area) zs = zs.filter(z => z.area !== area);
-      if (zoneObj) { if (area) zoneObj.area = area; zs.push(zoneObj); }
-      const order = stepAreas(step); zs.sort((a, b) => order.indexOf(a.area) - order.indexOf(b.area));
-      setStepZones(step, zs);
-    }
+            const el = step.querySelector('[data-field="layoutZone"]');
+            if (el) el.value = zoneObj ? JSON.stringify(zoneObj) : '';
+        }
 
         function updateZoneStatusUI(step, i) {
-      renderAreaChips(step);
-      const status = step.querySelector('[data-zone-status]'); if (!status) return;
-      const areas = stepAreas(step), zs = stepZones(step);
-      if (!areas.length) { status.style.display = 'none'; status.innerHTML = ''; return; }
-      const done = areas.filter(a => zs.some(z => z.area === a)).length;
-      status.style.display = 'block';
-      status.innerHTML = '<span style="color:rgb(' + zoneColorForStep(i).r + ',' + zoneColorForStep(i).g + ',' + zoneColorForStep(i).b + '); font-weight:700;">●</span> ' + done + ' of ' + areas.length + ' location' + (areas.length === 1 ? '' : 's') + ' marked on the layout';
-    }
+            const status = step.querySelector('[data-zone-status]');
+            const markBtn = step.querySelector('[data-action="mark-zone"]');
+            const zone = getStepZone(step);
+            if (!status) return;
+            if (zone) {
+                status.style.display = 'block';
+                status.innerHTML = `<span style="color:rgb(${zoneColorForStep(i).r},${zoneColorForStep(i).g},${zoneColorForStep(i).b}); font-weight:700;">●</span> Location marked on the layout`;
+                if (markBtn) { markBtn.classList.remove('field-error'); markBtn.innerHTML = '📍 Edit location on the layout'; }
+            } else {
+                status.style.display = 'none';
+                status.innerHTML = '';
+                if (markBtn) markBtn.innerHTML = '📍 Mark location on the layout <span class="required-mark">*</span>';
+            }
+        }
 
         function zoneCanvasCoords(e) {
             const rect = zoneModalCanvas.getBoundingClientRect();
@@ -1003,7 +1006,8 @@
             document.querySelectorAll('#activityStepsContainer .wizard-step').forEach(otherStep => {
                 const otherIndex = parseInt(otherStep.dataset.step, 10);
                 if (otherIndex === zoneModalStepIndex) return;
-                stepZones(otherStep).forEach(z => {
+                const z = getStepZone(otherStep);
+                if (!z) return;
                 zoneModalCtx.fillStyle = 'rgba(100,116,139,0.28)';
                 zoneModalCtx.strokeStyle = 'rgba(100,116,139,0.7)';
                 zoneModalCtx.lineWidth = 3;
@@ -1011,14 +1015,10 @@
                 zoneModalCtx.strokeRect(z.x, z.y, z.w, z.h);
                 zoneModalCtx.font = 'bold 22px Inter, Arial';
                 zoneModalCtx.fillStyle = '#475569';
-                zoneModalCtx.fillText(`#${otherIndex}`, z.x + 6, z.y + 24); });
+                zoneModalCtx.fillText(`#${otherIndex}`, z.x + 6, z.y + 24);
             });
 
-            // V9.12.0: otras áreas de ESTA actividad que ya tienen su recuadro (azul claro)
-    { const cur = document.getElementById(`step_${zoneModalStepIndex}`); if (cur) stepZones(cur).filter(z => z.area !== zoneModalArea).forEach(z => {
-        zoneModalCtx.fillStyle = 'rgba(37,99,235,0.22)'; zoneModalCtx.strokeStyle = 'rgba(37,99,235,0.85)'; zoneModalCtx.lineWidth = 3; zoneModalCtx.fillRect(z.x, z.y, z.w, z.h); zoneModalCtx.strokeRect(z.x, z.y, z.w, z.h);
-        zoneModalCtx.font = 'bold 20px Inter, Arial'; zoneModalCtx.fillStyle = '#1D4ED8'; zoneModalCtx.fillText(String(z.area || ''), z.x + 6, z.y + 22); }); }
-    // Zona de la actividad actual
+            // Zona de la actividad actual
             if (zonePendingRect) {
                 const color = zoneColorForStep(zoneModalStepIndex);
                 const rx = Math.min(zonePendingRect.x, zonePendingRect.x + zonePendingRect.w);
@@ -1104,7 +1104,7 @@
         }
 
         function closeLayoutZoneModal() {
-            document.getElementById('layoutZoneModal').classList.add('hidden'); zoneModalArea = null;
+            document.getElementById('layoutZoneModal').classList.add('hidden');
             zoneModalStepIndex = null;
             zonePendingRect = null;
             requestAnimationFrame(function () {
@@ -1166,7 +1166,7 @@
             // actividad y en recuadros chicos el texto se salía o se cortaba
             // a media palabra.
             // ───────────────────────────────────────────────────────
-            const areaSel = zoneModalArea || (step.querySelector('[data-field="workArea"]') || {}).value || '';
+            const areaSel = (step.querySelector('[data-field="workArea"]') || {}).value || '';
             const activityRaw = step.querySelector('[data-field="activity"]').value.trim() || `Activity ${zoneModalStepIndex}`;
             const activityName = ajustarEtiquetaZona(areaSel, activityRaw, Math.abs(zonePendingRect.w));
 
@@ -1185,14 +1185,14 @@
             if (e.target.matches('[data-field="workArea"]')) {
                 const step = e.target.closest('.wizard-step');
                 const btn = step.querySelector('[data-action="mark-zone"]');
-                if (btn) btn.style.display = 'none'; // V9.12.0: el marcado ahora es por área, en cada etiqueta
+                if (btn) btn.style.display = e.target.value ? 'block' : 'none';
             }
         });
         document.getElementById('activityStepsContainer').addEventListener('click', function (e) {
             const btn = e.target.closest('[data-action="mark-zone"]');
             if (!btn) return;
             e.preventDefault();
-            const step = btn.closest('.wizard-step'); zoneModalArea = btn.dataset.area ? decodeURIComponent(btn.dataset.area) : null;
+            const step = btn.closest('.wizard-step');
             openLayoutZoneModal(parseInt(step.dataset.step, 10));
         });
 
@@ -1338,15 +1338,13 @@
                         </div>
 
                         <div class="mt-3">
-                            <label class="block text-sm font-semibold mb-1">Work Areas / Systems <span class="required-mark">*</span> <span class="font-normal text-gray-500">(you can add up to 5)</span></label>
+                            <label class="block text-sm font-semibold mb-1">Work Area / System <span class="required-mark">*</span></label>
                             <select data-field="workArea" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
                                 <option value="">-- Select --</option>${areaOpts}
                             </select>
                             <button type="button" data-action="mark-zone" class="wizard-btn wizard-btn-ghost text-sm mt-2" style="display:none;">📍 Mark location on the layout <span class="required-mark">*</span></button>
                             <p data-zone-status class="text-xs text-gray-400 mt-1" style="display:none;"></p>
                             <input type="hidden" data-field="layoutZone" value="">
- <input type="hidden" data-field="workAreasJSON" value="[]"><input type="hidden" data-field="layoutZones" value="[]">
- <div data-area-chips class="flex flex-wrap gap-2 mt-2"></div><p data-area-note class="text-xs text-gray-400 mt-1">You can add up to 5 areas to the same activity. Mark one location on the layout for each.</p>
                         </div>
                     </div>
 
@@ -1515,59 +1513,6 @@
     if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
   })();
 
-  // ── V9.12.0 — Varias áreas de trabajo por actividad (un recuadro por área en el plano) ──
-  const AREAS_MAX = 5;
-  let zoneModalArea = null;
-  function stepAreas(step) { try { const a = JSON.parse((step.querySelector('[data-field="workAreasJSON"]') || {}).value || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
-  function setStepAreas(step, arr) { const el = step.querySelector('[data-field="workAreasJSON"]'); if (el) el.value = JSON.stringify(arr); }
-  function stepZones(step) { try { const a = JSON.parse((step.querySelector('[data-field="layoutZones"]') || {}).value || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
-  function setStepZones(step, arr) {
-    const el = step.querySelector('[data-field="layoutZones"]'); if (el) el.value = JSON.stringify(arr);
-    const first = step.querySelector('[data-field="layoutZone"]'); if (first) first.value = arr.length ? JSON.stringify(arr[0]) : '';
-  }
-  function zonesOf(t) { return (t && Array.isArray(t.layoutZones) && t.layoutZones.length) ? t.layoutZones : ((t && t.layoutZone) ? [t.layoutZone] : []); }
-  // Una actividad con varias zonas se dibuja como varias (misma actividad, un recuadro por área).
-  function expandZones(list) { const out = []; (list || []).forEach(t => { const zs = zonesOf(t); if (zs.length <= 1) out.push(t); else zs.forEach(z => out.push(Object.assign({}, t, { layoutZone: z }))); }); return out; }
-  function expandRows(rows) { const out = []; (rows || []).forEach(r => { const zs = zonesOf(r.activity); if (zs.length <= 1) out.push(r); else zs.forEach(z => out.push(Object.assign({}, r, { activity: Object.assign({}, r.activity, { layoutZone: z }) }))); }); return out; }
-  function renderAreaChips(step) {
-    const holder = step.querySelector('[data-area-chips]'); if (!holder) return;
-    const areas = stepAreas(step), zones = stepZones(step);
-    holder.innerHTML = areas.map(a => {
-      const enc = encodeURIComponent(a), marked = zones.some(z => z.area === a);
-      return '<div class="inline-flex items-center gap-1 rounded-xl border px-2 py-1" style="background:#F8FAFC;border-color:#CBD5E1">' +
-        '<span class="text-sm font-semibold">' + escapeHtml(a) + '</span>' +
-        '<button type="button" data-action="mark-zone" data-area="' + enc + '" class="wizard-btn wizard-btn-ghost text-xs" style="padding:3px 8px">' + (marked ? '📍 ✓ Edit' : '📍 Mark location') + (marked ? '' : ' <span class="required-mark">*</span>') + '</button>' +
-        '<button type="button" data-action="remove-area" data-area="' + enc + '" class="text-sm" style="color:#B91C1C;padding:0 4px" aria-label="Remove area">✕</button></div>';
-    }).join('');
-    const note = step.querySelector('[data-area-note]');
-    if (note) note.textContent = areas.length >= AREAS_MAX ? 'Maximum ' + AREAS_MAX + ' areas per activity.' : 'You can add up to ' + AREAS_MAX + ' areas to the same activity. Mark one location on the layout for each.';
-  }
-  document.addEventListener('change', e => {
-    const el = e.target; if (!el || !el.matches || !el.matches('[data-field="workArea"]')) return;
-    const step = el.closest('.wizard-step'); if (!step) return;
-    const v = el.value; el.value = ''; if (!v) return;
-    const arr = stepAreas(step); if (arr.includes(v) || arr.length >= AREAS_MAX) { renderAreaChips(step); return; }
-    arr.push(v); setStepAreas(step, arr); renderAreaChips(step); updateZoneStatusUI(step, parseInt(step.dataset.step, 10));
-  });
-  document.addEventListener('click', e => {
-    const b = e.target.closest && e.target.closest('[data-action="remove-area"]'); if (!b) return;
-    e.preventDefault(); const step = b.closest('.wizard-step'), a = decodeURIComponent(b.dataset.area);
-    setStepAreas(step, stepAreas(step).filter(x => x !== a)); setStepZones(step, stepZones(step).filter(z => z.area !== a));
-    updateZoneStatusUI(step, parseInt(step.dataset.step, 10));
-  });
-  // ── V9.12.0 — Mensaje al terminar: código y estado de aprobación ──
-  function afterSendNeedsApproval() {
-    try { const d = document.getElementById('registrantDept').value, f = (typeof WW_FLUJO !== 'undefined' && WW_FLUJO) ? WW_FLUJO[d] : null; return !!(f && f.pasos > 0); } catch (e) { return false; }
-  }
-  function afterSendStatusHtml() {
-    if (afterSendNeedsApproval()) {
-      return '<p class="text-sm font-semibold mt-2" style="color:#92400E">⏳ Status: Pending approval</p>' +
-        '<p class="text-sm text-gray-500 mt-1">The approver(s) of your department must approve this request before it enters the weekend plan. When it is approved, its status changes to “Approved”. ' +
-        'Follow it any time with the “Mis actividades / My activities” button at the top of this window: choose your department and type your name.</p>';
-    }
-    return '<p class="text-sm text-gray-500 mt-1">Your request has been sent for review by the Weekend Work Organizer.</p>';
-  }
-
   function validateStep(step, i, isLast) {
             const missing = [];
             const label = `Activity ${i}`;
@@ -1597,7 +1542,8 @@
             const reqFields = [
                 ['deptCode', 'Department'], ['jobLeader', 'Job Leader'], ['activity', 'Activity description'],
                 ['riskLevel', 'Risk level'], ['rank', 'Rank'],
-                ['crewSize', 'Crew size'], ['supervisor', 'Supervisor'], ['chiefTcGl', 'Main support name']
+                ['crewSize', 'Crew size'], ['supervisor', 'Supervisor'], ['workArea', 'Work area'],
+                ['chiefTcGl', 'Main support name']
             ];
             reqFields.forEach(([field, name]) => {
                 const el = get(field);
@@ -1635,16 +1581,15 @@
             if (step.querySelectorAll('.riskType:checked').length === 0) missing.push(`${label}: select at least one risk type`);
             if (step.querySelectorAll('.confirmMethod:checked').length === 0) missing.push(`${label}: select at least one confirmation method`);
 
-            { const areas = stepAreas(step), zs = stepZones(step);
-      if (!areas.length) { missing.push(`${label}: Work area / system (add at least one)`); markInvalidEl(get('workArea')); }
-      else areas.forEach(a => {
-        if (!zs.some(z => z.area === a)) {
-          missing.push(`${label}: mark the location on the layout for "${a}"`);
-          step.querySelectorAll('[data-action="mark-zone"][data-area]').forEach(b => { if (decodeURIComponent(b.dataset.area) === a) b.classList.add('field-error'); });
-        }
-      }); }
+            const workAreaVal = get('workArea').value.trim();
+            const zoneEl = get('layoutZone');
+            if (workAreaVal && (!zoneEl || !zoneEl.value)) {
+                missing.push(`${label}: mark the location on the layout`);
+                const markBtn = step.querySelector('[data-action="mark-zone"]');
+                if (markBtn) markBtn.classList.add('field-error');
+            }
 
-    if (isLast) {
+            if (isLast) {
                 const nameEl = get('requesterName');
                 if (!nameEl.value.trim()) { missing.push('Requester information: Requester name'); markInvalidEl(nameEl); }
             }
@@ -1736,13 +1681,13 @@
                     jobLeader: valTC('jobLeader'), activity: valSC('activity'),
                     riskTypes, riskLevel: val('riskLevel'), rank: val('rank'),
                     contractor: resolveContractorValue(val, valSC), crewSize: val('crewSize'), crewNames: crewNamesRead(step), supervisor: valTC('supervisor'),
-                    workArea: stepAreas(step).join('; '), workAreas: stepAreas(step), chiefTcGl: valTC('chiefTcGl'),
+                    workArea: val('workArea'), chiefTcGl: valTC('chiefTcGl'),
                     confirmationMethods,
                     daySat: checked('daySat'), daySun: checked('daySun'), dayHoliday: checked('dayHoliday'),
                     satDate: val('satDate'), satStart: val('satStart'), satEnd: val('satEnd'),
                     sunDate: val('sunDate'), sunStart: val('sunStart'), sunEnd: val('sunEnd'),
                     holidayDate: val('holidayDate'), holidayStart: val('holidayStart'), holidayEnd: val('holidayEnd'),
-                    layoutZone: stepZones(step)[0] || null, layoutZones: stepZones(step),
+                    layoutZone: (() => { try { const raw = val('layoutZone'); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } })(),
                     outOfTime: false
                 });
             }
@@ -1924,7 +1869,7 @@
 
         function docLayoutSectionHtml(tasksList, idSuffix) {
             idSuffix = idSuffix || 'final';
-            const boxesHtml = expandZones(tasksList).filter(t => t.layoutZone).map(t => {
+            const boxesHtml = tasksList.filter(t => t.layoutZone).map(t => {
                 const z = t.layoutZone;
                 const c = zoneColorForStep(t.id);
                 // Speech bubble opens on whichever side keeps it on-screen:
@@ -2650,7 +2595,7 @@
                          <p style="color:#991B1B;font-size:.75rem;margin:6px 0 0;font-family:monospace">${escapeHtml(saveErrorMessage)}</p>
                        </div>`) +
                 `<p class="text-sm text-gray-700 mt-2">Request number: <strong>${escapeHtml(requestNo)}</strong></p>
-                ${afterSendStatusHtml()}
+                <p class="text-sm text-gray-500 mt-1">Your request has been sent for review by the Weekend Work Organizer.</p>
                 <div class="mt-3" id="afterSendActions"></div>`;
 
             // ───────────────────────────────────────────────────────────
@@ -2668,7 +2613,7 @@
             // ───────────────────────────────────────────────────────────
             const actionsEl = document.getElementById('afterSendActions');
             actionsEl.innerHTML = `
-                <p class="status-ok text-sm font-semibold mb-2">✅ Your request was received.${afterSendNeedsApproval() ? '' : ' Facilities Engineering will consolidate it and collect the approval signatures.'}</p>
+                <p class="status-ok text-sm font-semibold mb-2">✅ Your request was received. Facilities Engineering will consolidate it and collect the approval signatures.</p>
                 <button type="button" id="registerAnotherBtn" class="wizard-btn wizard-btn-primary w-full sm:w-auto sm:px-8">➕ Register another activity</button>`;
             document.getElementById('registerAnotherBtn').addEventListener('click', resetWizardForNextRegistrant);
 
@@ -3050,7 +2995,7 @@
                 const imgX = (pageWidth - imgW) / 2;
                 doc.addImage(LAYOUT_IMAGE_BASE64, 'JPEG', imgX, layoutY, imgW, imgH);
 
-                expandRows(rows).forEach(r => {
+                rows.forEach(r => {
                     const t = r.activity;
                     if (!t.layoutZone) return;
                     const z = t.layoutZone;
