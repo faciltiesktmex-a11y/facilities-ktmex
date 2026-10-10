@@ -3221,7 +3221,7 @@ const LPA_AREAS = {
 
 <!-- V9.1.1 — MODAL: documento final del Weekend Work -->
 <div id="modal-ww-final" class="modal-bg" style="display:none">
-  <div class="card slide" style="width:100%;max-width:1260px;padding:0;display:flex;flex-direction:column">
+  <div class="card slide" style="width:100%;max-width:min(1560px,98vw);padding:0;display:flex;flex-direction:column">
     <div style="padding:14px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-file-signature" style="color:#DC2626;margin-right:8px"></i>Documento final</h3>
       <div style="display:flex;gap:7px">
@@ -3432,7 +3432,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.14.0';
+const FRONTEND_BUILD = '9.14.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -10984,6 +10984,11 @@ function wwFinalReal_(a,key){
       <div style="position:absolute;top:0;bottom:0;left:${izq.toFixed(2)}%;width:${ancho.toFixed(2)}%;border-radius:999px;background:#16A34A"></div></div>
     <div style="font-size:.66rem;font-weight:700;color:#15803D;white-space:nowrap">Real ${escapeHtml(e.inicio+'–'+e.fin)}</div>`;
 }
+// V9.14.1: si el espacio «Originator» lo firmó otra persona por ausencia, ella es quien aparece como organizador.
+function wwFinalOrganizador_(d,f){
+  const o=(f&&f.ORIGINATOR)||{};
+  return (o.porAusencia&&String(o.firmo||'').trim())?String(o.firmo).trim():(d&&d.organizador)||'-';
+}
 function wwFinalDosNombres_(n){return String(n||'').trim().split(/\s+/).slice(0,2).join(' ');}
 
 function wwRenderFinalBase_(r){
@@ -11048,11 +11053,14 @@ function wwRenderFinalBase_(r){
   const conZona=wwExpandirZonas_(acts).filter(a=>a.layoutZone&&typeof a.layoutZone.xf==='number');
  // V9.10.0: lista de las personas que harán cada actividad (el plan público no la lleva).
  const conNombres=acts.filter(a=>Array.isArray(a.integrantes)&&a.integrantes.length);
- const anexoNombres=conNombres.length?`<div class="wwf-corte" style="padding:6px 30px 26px">
-   <div style="text-align:center;font-size:.9rem;font-weight:700;color:#0F1F3D;margin:8px 0 2px">Annex — Crew members by activity</div>
-   <div style="text-align:center;font-size:.72rem;color:#64748B;margin-bottom:8px">People assigned to each activity, for control of the managers.</div>
-   <table style="width:100%;border-collapse:collapse;font-size:.74rem"><thead><tr><th style="${th}">No.</th><th style="${th}">Request</th><th style="${th}">Activity</th><th style="${th}">Crew</th><th style="${th}">Names</th></tr></thead>
-   <tbody>${conNombres.map(a=>`<tr><td style="${td}">${escapeHtml(String(a.no||''))}</td><td style="${td}">${escapeHtml(String(a.requestNo||''))}</td><td style="${td}">${escapeHtml(String(a.actividad||''))}</td><td style="${td};text-align:center">${a.integrantes.length}</td><td style="${td}">${a.integrantes.map(x=>escapeHtml(String(x))).join(', ')}</td></tr>`).join('')}</tbody></table></div>`:'';
+ // V9.14.1: los nombres van en UNA fila al final de la tabla, en el mismo orden que las actividades (antes, un anexo aparte).
+ const filaNombres=conNombres.length?(()=>{
+   const items=acts.filter(a=>!a.cancelada).map(a=>`<td style="padding:5px 12px 5px 0;vertical-align:top;width:50%;font-size:.76rem;color:#1E293B;text-align:left"><b style="color:#0F1F3D">${escapeHtml(String(a.no||''))}</b> · ${escapeHtml(String(a.actividad||'-'))} <span style="color:#64748B">(${(a.integrantes||[]).length||escapeHtml(String(a.cuadrilla||'-'))})</span><div style="color:#334155">${(a.integrantes||[]).length?a.integrantes.map(x=>escapeHtml(String(x))).join(', '):'<span style="color:#94A3B8">Names not declared</span>'}</div></td>`);
+   const pares=[]; for(let i=0;i<items.length;i+=2)pares.push(`<tr class="wwf-fila">${items[i]}${items[i+1]||'<td></td>'}</tr>`);
+   return `<tr class="wwf-fila"><td colspan="${12+cols.length}" style="padding:14px 18px 12px;border-top:2px solid #0F1F3D;background:#F8FAFC;text-align:left">
+     <div style="font-size:.84rem;font-weight:700;color:#0F1F3D;margin-bottom:6px">Crew members <span style="font-weight:500;color:#64748B;font-size:.72rem">· in the same order as the activities above</span></div>
+     <table style="width:100%;border-collapse:collapse"><tbody>${pares.join('')}</tbody></table></td></tr>`;
+ })():'';
   const zonas=conZona.map((a,i)=>{
     const z=a.layoutZone, c=WW_ZONA_COLORES[i%WW_ZONA_COLORES.length];
     return `<div style="position:absolute;left:${(z.xf*100).toFixed(2)}%;top:${(z.yf*100).toFixed(2)}%;width:${(z.wf*100).toFixed(2)}%;height:${(z.hf*100).toFixed(2)}%;border:2px solid ${c};background:${c}33;border-radius:3px">
@@ -11074,7 +11082,7 @@ function wwRenderFinalBase_(r){
 
     <div class="wwf-corte" style="display:flex;gap:26px;padding:24px 30px;align-items:flex-start">
       <div style="flex:1.4;text-align:center">
-        <div style="${fila}"><b>Weekend Work Organizer:</b><br>${escapeHtml(d.organizador||'-')}</div>
+        <div style="${fila}"><b>Weekend Work Organizer:</b><br>${escapeHtml(wwFinalOrganizador_(d,f))}</div>
         ${guardias.length?`<div style="${fila};display:flex;justify-content:space-around;gap:14px;flex-wrap:wrap">${guardias.join('')}</div>`:''}
         <div style="${fila}"><b>Weekend:</b><br>${cols.map(c=>escapeHtml(diaLargo(c.fecha,c.t))).join(' · ')||'-'}</div>
         <div style="${fila};display:flex;justify-content:space-around;gap:14px;flex-wrap:wrap">
@@ -11096,11 +11104,11 @@ function wwRenderFinalBase_(r){
           ${cols.map(c=>`<th style="${th}">${c.t}<br>${escapeHtml(wwFechaLargaEn_(c.fecha))}</th>`).join('')}
           <th style="${th}">Confirmation signature</th>
         </tr></thead>
-        <tbody>${filas||`<tr><td colspan="${13+cols.length}" style="${td}">No activities.</td></tr>`}</tbody>
+        <tbody>${filas||`<tr><td colspan="${13+cols.length}" style="${td}">No activities.</td></tr>`}${filaNombres}</tbody>
       </table>
     </div>
 
-    ${anexoNombres} ${conZona.length?`<div class="wwf-corte" style="padding:0 30px 30px">
+    ${conZona.length?`<div class="wwf-corte" style="padding:0 30px 30px">
       <div style="text-align:center;font-size:.9rem;font-weight:700;color:#0F1F3D">Plant layout — work zones</div>
       <div style="text-align:center;font-size:.72rem;color:#64748B;margin-bottom:8px">Each box is the zone marked for that activity.</div>
       <div style="position:relative;border:2px solid #0F1F3D;border-radius:6px;overflow:hidden">
@@ -11164,10 +11172,28 @@ async function wwFinalPdf(){const b=$('wwf-body'),z=b?b.style.zoom:'';if(b)b.sty
 function wwFinalAjustar_(){
   const b=$('wwf-body'); if(!b)return;
   b.style.zoom=''; const natural=b.scrollWidth, disp=b.parentElement?b.parentElement.clientWidth:0;
-  if(natural>0&&disp>0&&natural>disp+2)b.style.zoom=String(Math.max(0.3,(disp-2)/natural));
+  if(natural>0&&disp>0&&natural>disp+2)b.style.zoom=String(Math.max(0.15,(disp-2)/natural));
 }
-function wwRenderFinal_(r){wwRenderFinalBase_(r);wwFinalAjustar_();}
+function wwRenderFinal_(r){
+  wwRenderFinalBase_(r); wwFinalAjustar_();
+  // V9.14.1: el documento se ensancha en el siguiente cuadro cuando la tabla no cabe; se vuelve a medir después (y otra vez al asentarse imágenes y fuentes).
+  requestAnimationFrame(()=>requestAnimationFrame(wwFinalAjustar_)); setTimeout(wwFinalAjustar_,350); setTimeout(wwFinalAjustar_,1200);
+}
 window.addEventListener('resize',()=>{const m=$('modal-ww-final');if(m&&m.style.display!=='none')wwFinalAjustar_();});
+// V9.14.1: hoja del PDF del documento final. 11 × 17 pulgadas = 792 × 1224 puntos. Vertical por ahora (se está probando);
+// para horizontal (17 de ancho × 11 de alto) basta cambiar orientacion a 'landscape'.
+const WW_PDF_PAGINA={formato:[792,1224],orientacion:'portrait',margen:22};
+// Reparte la captura en páginas sin cortar nunca a la mitad de un renglón. Devuelve [[inicio,fin],…] en píxeles de la captura.
+function wwPdfPaginas_(anchoPx,altoPx,cortes,pw,ph,m){
+  const anchoUtil=pw-2*m, altoUtil=ph-2*m, altoPaginaPx=Math.floor(altoUtil*anchoPx/anchoUtil), out=[]; let inicio=0;
+  while(inicio<altoPx){
+    let fin=Math.min(inicio+altoPaginaPx,altoPx);
+    if(fin<altoPx){const seguro=cortes.filter(y=>y>inicio+altoPaginaPx*0.35&&y<=fin).pop(); if(seguro)fin=seguro;}
+    if(fin<=inicio)fin=Math.min(inicio+altoPaginaPx,altoPx);
+    out.push([inicio,fin]); inicio=fin;
+  }
+  return out;
+}
 async function wwFinalPdfBase_(){
   if(!puedeImprimirPlan_()){toast('La descarga del documento es solo para administradores.','err');return;}
   const docEl=$('wwf-doc'); if(!docEl||!WW_FINAL){toast('Abre primero el documento','err');return;}
@@ -11208,26 +11234,17 @@ async function wwFinalPdfBase_(){
       .map(el=>Math.round((el.getBoundingClientRect().top-base)*escala)).filter(y=>y>0).sort((a,b)=>a-b);
 
     const { jsPDF }=window.jspdf;
-    const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
-    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), m=22;
-    const anchoUtil=pw-2*m, altoUtil=ph-2*m;
-    const altoPaginaPx=Math.floor(altoUtil*canvas.width/anchoUtil);
-
-    let inicio=0, pagina=0;
-    while(inicio<canvas.height){
-      let fin=Math.min(inicio+altoPaginaPx,canvas.height);
-      if(fin<canvas.height){
-        const seguro=cortes.filter(y=>y>inicio+altoPaginaPx*0.35&&y<=fin).pop();
-        if(seguro)fin=seguro;
-      }
-      const trozo=document.createElement('canvas');
-      trozo.width=canvas.width; trozo.height=fin-inicio;
-      trozo.getContext('2d').drawImage(canvas,0,inicio,canvas.width,fin-inicio,0,0,canvas.width,fin-inicio);
-      if(pagina>0)pdf.addPage();
-      pdf.addImage(trozo.toDataURL('image/jpeg',0.92),'JPEG',m,m,anchoUtil,(fin-inicio)*anchoUtil/canvas.width);
-      inicio=fin; pagina++;
-    }
-    pdf.save('Weekend_Work_Plan_'+((WW_FINAL.documento||{}).sabado||'')+'.pdf');
+    const pdf=new jsPDF({orientation:WW_PDF_PAGINA.orientacion,unit:'pt',format:WW_PDF_PAGINA.formato});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), m=WW_PDF_PAGINA.margen;
+ const anchoUtil=pw-2*m;
+ wwPdfPaginas_(canvas.width,canvas.height,cortes,pw,ph,m).forEach(([inicio,fin],pagina)=>{
+ const trozo=document.createElement('canvas');
+ trozo.width=canvas.width; trozo.height=fin-inicio;
+ trozo.getContext('2d').drawImage(canvas,0,inicio,canvas.width,fin-inicio,0,0,canvas.width,fin-inicio);
+ if(pagina>0)pdf.addPage();
+ pdf.addImage(trozo.toDataURL('image/jpeg',0.92),'JPEG',m,m,anchoUtil,(fin-inicio)*anchoUtil/canvas.width);
+ });
+ pdf.save('Weekend_Work_Plan_'+((WW_FINAL.documento||{}).sabado||'')+'.pdf');
     toast(sinPlano?'PDF descargado sin el plano: no se pudo incrustar la imagen del plano.':'PDF descargado');
   }catch(e){toast('No se pudo generar el PDF: '+(e.message||e),'err');}
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-file-pdf" style="margin-right:6px"></i>Descargar PDF';}
@@ -11619,7 +11636,7 @@ function renderWeekendWorks(){
   // V9.4.0: la lista de solicitudes se oculta; cada documento ya tiene sus
   // botones para revisar y ver sus actividades.
   box.style.display='none';
-  const flt=$('weekend-filter-etapa'); if(flt&&flt.parentElement)flt.parentElement.style.display='none';
+  const flt=$('weekend-filter-etapa'); if(flt)flt.style.display='none';   // V9.14.1: antes se ocultaba el contenedor completo (con sus botones)
   return;
   const f=$('weekend-filter-etapa')?.value||'';
   const completas=WEEKEND_DATA.filter(x=>Number(x.firmadas)>=4);
