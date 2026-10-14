@@ -2198,7 +2198,7 @@ const LPA_AREAS = {
     </div>
 
     <!-- Tabs -->
-    <div style="display:flex;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;margin-bottom:16px">
+    <div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#F1F5F9;border-radius:11px;width:fit-content;max-width:100%;margin-bottom:16px">
       <button class="tab-btn active" id="tab-sol" onclick="switchTab('sol')">Solicitudes</button>
       <button class="tab-btn" id="tab-compra" onclick="switchTab('compra')">Compras</button>
       <button class="tab-btn" id="tab-lpa" onclick="switchTab('lpa')">Resultados LPA</button>
@@ -2208,6 +2208,8 @@ const LPA_AREAS = {
       <button class="tab-btn" id="tab-weekend" onclick="switchTab('weekend')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Weekend Works</button>
       <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')" style="display:none"><i class="fas fa-chart-column" style="margin-right:5px"></i>Analítica</button>
     <button class="tab-btn" id="tab-entrenamientos" onclick="switchTab('entrenamientos')" style="display:none"><i class="fas fa-graduation-cap" style="margin-right:5px"></i>Entrenamientos</button>
+    <button class="tab-btn" id="tab-presupuesto" onclick="switchTab('presupuesto')" style="display:none"><i class="fas fa-file-invoice-dollar" style="margin-right:5px"></i>Budget</button>
+    <button class="tab-btn" id="tab-utilities" onclick="switchTab('utilities')" style="display:none"><i class="fas fa-bolt" style="margin-right:5px"></i>Utilities</button>
     </div>
 
     <!-- V9.4.0: los totales van debajo de las pestañas, con formato de botón -->
@@ -2436,6 +2438,15 @@ const LPA_AREAS = {
     <!-- TAB: Analítica Operativa — Manager lectura; Ingeniería/técnico administrador -->
     <div id="panel-entrenamientos" style="display:none"><div id="entr-contenido" style="padding:2px 0 24px"></div></div>
 
+<div id="panel-presupuesto" style="display:none">
+  <div class="card" style="padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+    <div><b style="color:var(--navy);font-size:.95rem"><i class="fas fa-file-invoice-dollar" style="color:#2563EB;margin-right:8px"></i>Facilities Budget</b><span id="bud-estado" style="font-size:.72rem;color:#64748B;margin-left:10px"></span></div>
+    <div id="bud-acciones" style="display:none;gap:8px;flex-wrap:wrap;align-items:center"><input type="file" id="bud-file" accept=".xlsx,.xls" style="display:none" onchange="budArchivoElegido(event)"><button class="btn-g" style="width:auto" onclick="$('bud-file').click()"><i class="fas fa-file-excel" style="margin-right:6px"></i>Update from Excel</button></div>
+  </div>
+  <div id="bud-import" style="display:none"></div>
+  <div id="bud-contenido"></div>
+</div>
+<div id="panel-utilities" style="display:none"><div id="ut-contenido"></div></div>
 <div id="panel-analytics" style="display:none">
       <div id="manager-analytics-readonly-note" style="display:none;margin-bottom:10px;padding:9px 11px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;color:#1E40AF;font-size:.72rem"><i class="fas fa-eye" style="margin-right:6px"></i>Manager view: read-only analytics.</div>
       <div class="card" style="padding:14px 16px;margin-bottom:14px;border:1.5px solid #BFDBFE;background:#F8FBFF">
@@ -3432,7 +3443,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.14.1';
+const FRONTEND_BUILD = '9.15.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -5930,6 +5941,153 @@ function apSiguiente(auto){
   if(sig)AP.sel=sig; else if(auto)toast('Ya están definidas todas las áreas','ok');
   AP.rect=null; areasPlanoRender_();
 }
+
+// ══════════════════════════════════════════════════════════════
+// V9.15.0 — PRESUPUESTO: lectura del libro «Summary General investment and expenses FC» (registro mensual)
+//
+// Hoja principal «FY2026 Budge (USD)»: una fila por partida (Budget Number 26KTE-… / 26KTI-…), con el PLAN por mes
+// (primeras 12 columnas de mes) y el REAL por mes (siguientes 12), «Total used», «Total remaining» y los números de
+// requisición. Las hojas con la columna «Purchase requisition» traen la lista de requisiciones.
+// El resultado tiene exactamente la forma que consume el tablero: {meta, items, reqs}.
+// ══════════════════════════════════════════════════════════════
+function budNorm_(s){return String(s==null?'':s).replace(/\s+/g,' ').trim().toLowerCase();}
+function budNum_(v){if(typeof v==='number'&&isFinite(v))return v;const t=String(v==null?'':v).replace(/[, ]/g,'');return /^-?\d+(\.\d+)?$/.test(t)?Number(t):0;}
+function budFecha_(v){
+  if(typeof v==='number'&&v>20000&&v<80000){const d=new Date(Date.UTC(1899,11,30)+Math.round(v)*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
+  const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[1]+'-'+m[2]+'-'+m[3]:null;
+}
+function budParsearLibro_(wb,XLSX,opciones){
+  opciones=opciones||{};
+  const filas=function(ws){return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});};
+  const nombre=wb.SheetNames.find(function(n){return /^FY\d{4}/i.test(n)&&/budge/i.test(n);})||wb.SheetNames.find(function(n){return /budge/i.test(n);});
+  if(!nombre)throw new Error('No encontré la hoja «FY2026 Budge (USD)». ¿Es el libro correcto?');
+  const R=filas(wb.Sheets[nombre]);
+  // encabezado: la fila que tiene «Budget Number»
+  // (hay dos filas con «Budget Number»: la de los encabezados en japonés y la del inglés, que es la que trae los meses)
+  const esMes=function(x){return /(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(budNorm_(x));};
+  let h=-1,cCode=-1; for(let i=0;i<Math.min(R.length,40)&&h<0;i++){const j=R[i].findIndex(function(x){return budNorm_(x)==='budget number';}); if(j>=0&&R[i].filter(esMes).length>=24){h=i;cCode=j;}}
+  if(h<0)throw new Error('No encontré el encabezado con «Budget Number» y los meses de plan y real en la hoja principal.');
+  const H=R[h].map(budNorm_), col=function(re,desde){for(let j=desde||0;j<H.length;j++)if(re.test(H[j]))return j;return -1;};
+  const cDesc=col(/^contents$/), cTipo=col(/^investment/), cGasto=col(/^expenses type/), cProv=col(/^payment destination/), cEst=col(/^new or continued/), cTot=col(/^total.*fy2026 only/);
+  const meses=[]; for(let j=0;j<H.length;j++)if(esMes(H[j]))meses.push(j);
+  if(meses.length<24)throw new Error('No encontré las columnas de plan y de real por mes (se esperaban 24).');
+  const cUsed=col(/^total\s*used/), cRem=col(/^total\s*remaining/), cReq=col(/^requisition numb/);
+  // tipo de cambio: el número debajo de «MXN/USD»
+  let fx=19.6; for(let i=0;i<h;i++)for(let j=0;j<R[i].length;j++)if(budNorm_(R[i][j])==='mxn/usd'){const v=R[i+1]&&R[i+1][j];if(typeof v==='number'&&v>1)fx=v;}
+  const items=[];
+  for(let i=h+1;i<R.length;i++){
+    const r=R[i], code=String(r[cCode]||'').trim(); if(!/^\d{2}KT[EI]-/i.test(code))continue;
+    const plan=meses.slice(0,12).map(function(j){return budNum_(r[j]);}), real=meses.slice(12,24).map(function(j){return budNum_(r[j]);});
+    const refs=String(cReq>=0?r[cReq]:'').split(/[\n\r;,]+/).map(function(x){return x.trim();}).filter(function(x){return /^REQ-/i.test(x);});
+    const tipo=String(r[cTipo]||'').trim(), gasto=String(r[cGasto]||'').replace(/[\u3000-\u9fff\uff00-\uffef].*$/,'').trim();
+    items.push({code:code.toUpperCase(),desc:String(r[cDesc]||'').trim(),type:/^exp/i.test(tipo)?'E':'I',expType:gasto,vendor:String(r[cProv]||'').trim(),status:String(r[cEst]||'').trim(),
+      plan:plan,real:real,planTotal:cTot>=0&&budNum_(r[cTot])?budNum_(r[cTot]):plan.reduce(function(a,b){return a+b;},0),
+      usedXls:cUsed>=0?budNum_(r[cUsed]):real.reduce(function(a,b){return a+b;},0),remainingXls:cRem>=0?budNum_(r[cRem]):0,reqRefs:refs,note:null});
+  }
+  if(!items.length)throw new Error('La hoja principal no trae partidas con Budget Number.');
+  // requisiciones: cualquier otra hoja con la columna «Purchase requisition»
+  const reqs={}, hojasReq=[];
+  wb.SheetNames.forEach(function(n){
+    if(n===nombre)return; const F=filas(wb.Sheets[n]); let hi=-1;
+    for(let i=0;i<F.length&&hi<0;i++)if(F[i].some(function(x){return budNorm_(x)==='purchase requisition';}))hi=i;
+    if(hi<0)return; hojasReq.push(n);
+    const HH=F[hi].map(budNorm_), c=function(re){return HH.findIndex(function(x){return re.test(x);});};
+    const cId=c(/^purchase requisition$/),cN=c(/^name$/),cP=c(/^preparer$/),cB=c(/^budget number$/),cPr=c(/^project id$/),cO=c(/^over ?drawn$/),cS=c(/^status$/),cCr=c(/^created date$/),cSu=c(/^submitted date$/),cPu=c(/^requisition purpose$/),cT=c(/^total$/);
+    for(let i=hi+1;i<F.length;i++){
+      const r=F[i], id=String(r[cId]||'').trim(); if(!/^REQ-/i.test(id))continue;
+      const tot=cT>=0?budNum_(r[cT]):0;
+      reqs[id.toUpperCase()]={id:id.toUpperCase(),name:String(r[cN]||'').replace(/\s+/g,' ').trim(),preparer:String(r[cP]||'').replace(/\s+/g,' ').trim(),budget:String(r[cB]||'').trim()||null,project:String(r[cPr]||'').trim()||null,
+        over:/^y/i.test(String(r[cO]||'').trim()),status:String(r[cS]||'').trim(),created:budFecha_(r[cCr]),submitted:budFecha_(r[cSu]),purpose:String(r[cPu]||'').trim(),amountMXN:tot>0?tot:null};
+    }
+  });
+  const hoy=opciones.hoy||new Date().toISOString().slice(0,10);
+  const corte=opciones.cutoffMonth||Math.max(1,items.reduce(function(m,it){return Math.max(m,it.real.reduce(function(a,v,k){return v>0&&k<12?k+1:a;},0));},0));
+  return {meta:{fy:2000+Number(items[0].code.slice(0,2)),fx:fx,asOf:hoy,cutoffMonth:Math.min(12,corte),source:opciones.source||('Registro de presupuesto Facilities · hoja «'+nombre+'»'),validatedBy:null,validatedDate:null},
+    items:items,reqs:Object.keys(reqs).map(function(k){return reqs[k];}),
+    resumen:{partidas:items.length,requisiciones:Object.keys(reqs).length,hojasRequisiciones:hojasReq,planTotal:items.reduce(function(a,i){return a+i.planTotal;},0),realTotal:items.reduce(function(a,i){return a+i.usedXls;},0)}};
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.15.0 — PESTAÑAS «BUDGET» Y «UTILITIES» DEL DASHBOARD (solo en inglés)
+// Cada una carga su página (presupuesto.html / utilities.html) dentro de un iframe y le entrega los datos
+// que recibe del servidor; los datos NUNCA viajan en el archivo público.
+// ══════════════════════════════════════════════════════════════
+function puedeVerPresupuesto_(){return !!SESSION&&!!SESSION.user&&(SESSION.user.rol==='manager'||SESSION.user.rol==='ingeniero'||hasAdminPrivilege());}
+function puedeVerUtilities_(){return puedeVerPresupuesto_();}
+const DASH_HTML_CACHE={};
+async function obtenerHtmlDash_(archivo,marca){
+  if(DASH_HTML_CACHE[archivo])return DASH_HTML_CACHE[archivo];
+  for(const ruta of ['./'+archivo,archivo]){
+    try{const r=await fetch(ruta,{cache:'no-cache'}); if(!r.ok)continue; const t=await r.text(); if(t.indexOf(marca)<0)continue; DASH_HTML_CACHE[archivo]=t; return t;}catch(e){}
+  }
+  throw new Error('Could not find '+archivo+' next to the app. Upload it together with index.html.');
+}
+function dashInyectar_(html,idScript,datos){
+  const json=JSON.stringify(datos).replace(/</g,'\\u003c');
+  return html.replace(new RegExp('(<script id="'+idScript+'" type="application/json">)[\\s\\S]*?(<\\/script>)'),function(m,a,b){return a+json+b;});
+}
+function dashCaja_(txt,rojo){return `<div class="card" style="padding:22px;text-align:center;color:${rojo?'#B91C1C':'#64748B'};font-size:.84rem">${txt}</div>`;}
+// ── Presupuesto ──
+async function loadPresupuesto(){
+  const cont=$('bud-contenido'); if(!cont)return;
+  if(!puedeVerPresupuesto_()){cont.innerHTML=dashCaja_('The budget is available to managers, engineers and the administrator technician.',true);return;}
+  cont.innerHTML=dashCaja_('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Loading…');
+  try{
+    const r=await api({action:'getPresupuesto',token:SESSION.token});
+    if(!r.success){cont.innerHTML=dashCaja_(escapeHtml(r.error||'Not available'),true);return;}
+    $('bud-acciones').style.display=r.puedeEditar?'flex':'none';
+    $('bud-estado').textContent=r.importado&&r.importado.fecha?'Last update: '+new Date(r.importado.fecha).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})+(r.importado.por?' · '+r.importado.por:''):'';
+    if(!r.data){cont.innerHTML=dashCaja_('No budget has been loaded yet. '+(r.puedeEditar?'Use “Update from Excel” to load the registry workbook.':'An engineer must load it first.'));return;}
+    const html=await obtenerHtmlDash_('presupuesto.html','Facilities Budget');
+    cont.innerHTML='<iframe id="bud-frame" title="Facilities Budget" style="width:100%;height:86vh;border:0;border-radius:12px;background:#fff"></iframe>';
+    $('bud-frame').srcdoc=dashInyectar_(html,'fac-data',r.data);
+  }catch(e){cont.innerHTML=dashCaja_(escapeHtml(e.message||String(e)),true);}
+}
+let BUD_EXCEL=null;
+async function budArchivoElegido(ev){
+  const f=ev.target.files&&ev.target.files[0], box=$('bud-import'); BUD_EXCEL=null; if(!f)return;
+  box.style.display='block'; box.innerHTML=dashCaja_('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Reading the workbook…');
+  try{
+    if(typeof XLSX==='undefined')await wwCargarScript_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    const mes=new Date().getMonth()+1, d=budParsearLibro_(XLSX.read(await f.arrayBuffer(),{type:'array'}),XLSX,{cutoffMonth:mes}); BUD_EXCEL=d; const rs=d.resumen, usd=n=>'US$'+Math.round(n).toLocaleString('en-US');
+    const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    box.innerHTML=`<div class="card" style="padding:14px 16px;margin-bottom:10px;border-left:5px solid #16A34A"><b style="color:#14532D">Workbook read</b>
+      <div style="font-size:.78rem;color:#334155;margin-top:4px">${rs.partidas} budget lines · ${rs.requisiciones} requisitions (${escapeHtml(rs.hojasRequisiciones.join(', ')||'no requisition sheets')}) · annual plan ${usd(rs.planTotal)} · actual ${usd(rs.realTotal)} · FX ${d.meta.fx}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px"><label style="font-size:.76rem;font-weight:700;color:#334155">Cutoff month</label>
+        <select id="bud-corte" class="inp" style="width:auto;padding:6px 9px;font-size:.78rem">${M.map((x,i)=>`<option value="${i+1}" ${i+1===d.meta.cutoffMonth?'selected':''}>${x}</option>`).join('')}</select>
+        <button class="btn-p" style="width:auto" onclick="budImportar()"><i class="fas fa-file-import" style="margin-right:6px"></i>Import (replaces the current budget data)</button>
+        <button class="btn-g" style="width:auto" onclick="$('bud-import').style.display='none';BUD_EXCEL=null">Cancel</button></div>
+      <div style="font-size:.68rem;color:#94A3B8;margin-top:8px">Check these totals against the workbook before importing. Months after the cutoff show committed or scheduled payments.</div></div>`;
+  }catch(e){box.innerHTML=dashCaja_(escapeHtml(e.message||String(e)),true);}
+  ev.target.value='';
+}
+async function budImportar(){
+  if(!BUD_EXCEL)return; const d=BUD_EXCEL, box=$('bud-import'); d.meta.cutoffMonth=Number($('bud-corte').value)||d.meta.cutoffMonth;
+  box.innerHTML=dashCaja_('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Importing…');
+  const r=await api({action:'presupuestoImportar',token:SESSION.token,datos:{meta:d.meta,items:d.items,reqs:d.reqs}});
+  if(!r.success){box.innerHTML=dashCaja_(escapeHtml(r.error||'Could not import'),true);return;}
+  BUD_EXCEL=null; box.style.display='none'; toast('Budget updated: '+r.resumen.partidas+' lines, '+r.resumen.requisiciones+' requisitions','ok'); loadPresupuesto();
+}
+// ── Utilities ──
+async function loadUtilities(){
+  const cont=$('ut-contenido'); if(!cont)return;
+  if(!puedeVerUtilities_()){cont.innerHTML=dashCaja_('Utilities is available to managers, engineers and the administrator technician.',true);return;}
+  cont.innerHTML=dashCaja_('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Loading…');
+  try{
+    const r=await api({action:'getUtilities',token:SESSION.token});
+    if(!r.success){cont.innerHTML=dashCaja_(escapeHtml(r.error||'Not available'),true);return;}
+    if(r.vacio){cont.innerHTML=dashCaja_('No utilities history has been loaded yet. Run importarUtilitiesHistorico() once in the script editor.');return;}
+    const html=await obtenerHtmlDash_('utilities.html','Utilities KTMEX');
+    cont.innerHTML='<iframe id="ut-frame" title="Utilities" style="width:100%;height:86vh;border:0;border-radius:12px;background:#fff"></iframe>';
+    $('ut-frame').srcdoc=dashInyectar_(html,'ut-data',{ktmex:r.ktmex,water:r.water,meta:r.meta,canEdit:!!r.canEdit});
+  }catch(e){cont.innerHTML=dashCaja_(escapeHtml(e.message||String(e)),true);}
+}
+window.addEventListener('message',async ev=>{
+  const fr=$('ut-frame'); if(!fr||ev.source!==fr.contentWindow)return; const d=ev.data; if(!d||d.type!=='ut-save')return;
+  let r; try{r=await api({action:'utilitiesGuardarMes',token:SESSION.token,payload:d.payload});}catch(e){r={success:false,error:e.message||String(e)};}
+  try{fr.contentWindow.postMessage({type:'ut-save-result',ok:!!r.success,error:r.error||''},'*');}catch(e){}
+  if(r.success){toast('Utilities month saved','ok');setTimeout(loadUtilities,400);}
+});
 
 function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); rfqCargar(); }
 async function rfqCargar(){
@@ -9926,7 +10084,7 @@ function configureManagerDashboardTabs(){
   }
   const canOps=canViewOperationsAnalytics();
   if($('tab-analytics'))$('tab-analytics').style.display=canOps?'':'none';
-  if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none'; if($('tab-entrenamientos'))$('tab-entrenamientos').style.display=puedeVerEntrenamientos_()?'':'none';   // V9.14.0
+  if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none'; if($('tab-entrenamientos'))$('tab-entrenamientos').style.display=puedeVerEntrenamientos_()?'':'none'; if($('tab-presupuesto'))$('tab-presupuesto').style.display=puedeVerPresupuesto_()?'':'none'; if($('tab-utilities'))$('tab-utilities').style.display=puedeVerUtilities_()?'':'none';   // V9.15.0   // V9.14.0
   if($('manager-analytics-readonly-note'))$('manager-analytics-readonly-note').style.display=role==='manager'?'':'none';
   if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
@@ -11696,6 +11854,10 @@ function switchTab(tab) {
     toast('El inventario no está disponible para Manager en este panel.','err');
     tab='sol';
   }
+  if((tab==='presupuesto'||tab==='utilities')&&!puedeVerPresupuesto_()){
+    toast('Budget and Utilities are available to managers, engineers and the administrator technician.','err');
+    tab='sol';
+  }
   if(tab==='entrenamientos'&&!puedeVerEntrenamientos_()){
     toast('Los entrenamientos están disponibles para Ingeniería y el técnico administrador.','err');
     tab='sol';
@@ -11708,7 +11870,7 @@ function switchTab(tab) {
     toast('El Plan Diario del Dashboard está disponible para Manager, Ingeniería y el técnico administrador.','err');
     tab='sol';
   }
-  ['sol','compra','lpa','acc','inv','daily-dash','weekend','analytics','entrenamientos'].forEach(t=>{
+  ['sol','compra','lpa','acc','inv','daily-dash','weekend','analytics','entrenamientos','presupuesto','utilities'].forEach(t=>{
     const tb=$('tab-'+t),pn=$('panel-'+t);
     if(tb)tb.classList.toggle('active',t===tab);
     if(pn)pn.style.display=t===tab?'':'none';
@@ -11726,6 +11888,8 @@ function switchTab(tab) {
   if(tab==='weekend'){loadWeekendWorks();loadWeekendFlujo();const ba=$('btn-areas-plano');if(ba)ba.style.display=puedeCalibrarPlano_()?'':'none';}
   if(tab==='analytics')loadOperationsAnalytics();
   if(tab==='entrenamientos')loadEntrenamientos();
+  if(tab==='presupuesto')loadPresupuesto();
+  if(tab==='utilities')loadUtilities();
   if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('view-admin')),0);
 }
 
