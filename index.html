@@ -3443,7 +3443,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.15.0';
+const FRONTEND_BUILD = '9.15.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3920,7 +3920,7 @@ Object.assign(TEXT_I18N,{
   'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
   'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
   'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…','Ayuda':'Help',
-  'Weekend Work (mi área)':'Weekend Work (my area)','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
+  'Weekend Work (mi área)':'Weekend Work (my area)','Entrenamientos':'Training','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
 });
 
 const TEXT_I18N_EXTRA = {
@@ -5675,18 +5675,32 @@ function entrParsearLibro_(wb,XLSX){
 const ENTR_COL={vigente:['#C6EFCE','#166534'],por_vencer:['#FFEB9C','#7A5B00'],vencido:['#FFC7CE','#9C0006']};
 const ENTR_TXT={vigente:'Vigente',por_vencer:'Por vencer (≤90 días)',vencido:'Vencido'};
 let ENTR={cargado:false,personas:[],cursos:[],registros:[],corte:'',importado:{},puedeEditar:false,vista:'matriz',f:{persona:'',puesto:'',curso:'',estatus:'',texto:''},admin:{tab:'registro'},excel:null};
-function puedeVerEntrenamientos_(){return !!SESSION&&!!SESSION.user&&(SESSION.user.rol==='ingeniero'||hasAdminPrivilege());}
+function puedeVerEntrenamientos_(){return !!SESSION&&!!SESSION.user&&(SESSION.user.rol==='ingeniero'||hasAdminPrivilege()||(SESSION.user.rol==='manager'&&SESSION.user.username==='ainagaki'));}   // V9.15.1: Inagaki, solo consulta
 function entrHoy_(){const d=new Date();return d.getFullYear()+'-'+entrP2_(d.getMonth()+1)+'-'+entrP2_(d.getDate());}
 function entrDias_(a,b){const f=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10));return Math.round((f(a)-f(b))/86400000);}
 function entrEstado_(vence,hoy){const d=entrDias_(vence,hoy);return d<0?'vencido':(d<=90?'por_vencer':'vigente');}
-function entrFmt_(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(2,4):'';}
-function entrFmtLargo_(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});}catch(e){return iso;}}
+function entrFmt_(iso){if(!iso)return '';if(LANG==='en'){const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return iso.slice(8,10)+'-'+M[+iso.slice(5,7)-1]+'-'+iso.slice(2,4);}return iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(2,4);}   // en inglés: 08-May-27, sin ambigüedad día/mes
+function entrFmtLargo_(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString(LANG==='en'?'en-US':'es-MX',{day:'numeric',month:'long',year:'numeric'});}catch(e){return iso;}}
 function entrEnc_(t){return encodeURIComponent(t);}
-function entrDiasTxt_(d){return d<0?('hace '+(-d)+' día'+(d===-1?'':'s')):(d===0?'vence hoy':('en '+d+' día'+(d===1?'':'s')));}
+function entrDiasTxt_(d){
+  if(LANG==='en')return d<0?((-d)+' day'+(d===-1?'':'s')+' ago'):(d===0?'due today':('in '+d+' day'+(d===1?'':'s')));
+  return d<0?('hace '+(-d)+' día'+(d===-1?'':'s')):(d===0?'vence hoy':('en '+d+' día'+(d===1?'':'s')));
+}
+function entrTxt_(k){return LANG==='en'?({vigente:'Valid',por_vencer:'Expiring (≤90 days)',vencido:'Expired'})[k]:ENTR_TXT[k];}
+// V9.15.1 — Para quien usa el sistema en inglés (Inagaki): se traducen las etiquetas fijas de la pantalla de solo consulta.
+// Los nombres de los cursos se muestran tal como vienen del archivo de origen.
+const ENTR_EN={'Solo consulta. Las actualizaciones las hace el técnico administrador.':'View only. Updates are made by the administrator technician.','Todavía no hay entrenamientos cargados.':'No training records have been loaded yet.',
+ 'Ningún dato tiene ese estatus con los filtros actuales.':'No data has that status with the current filters.','Ningún dato coincide con los filtros.':'No data matches the filters.','No hay cursos vencidos con los filtros actuales.':'No expired courses with the current filters.','No hay cursos por vencer en los próximos 90 días.':'No courses expiring in the next 90 days.',
+ 'Cada celda es la fecha de vencimiento.':'Each cell is the expiration date.','. Se calcula con los datos de la matriz.':'. Calculated from the matrix data.','Personas con el curso: ':'People with the course: ','Buscar persona o curso':'Search person or course','Por vencer (≤90 días)':'Expiring (≤90 days)',
+ 'Todas las personas':'All people','Todos los puestos':'All positions','Todos los cursos':'All courses','Todos los estatus':'All statuses','Quitar filtros':'Clear filters','Cursos con datos':'Courses with data','Entrenamientos':'Training','Por persona':'By person','Por curso':'By course','Por vencer':'Expiring',
+ 'Sin registro':'No record','Vencidos':'Expired','Vigentes':'Valid','Personas':'People','Matriz':'Matrix','JEFE TECNICO':'LEAD TECHNICIAN','INGENIERO':'ENGINEER','TECNICO':'TECHNICIAN',
+ '>Persona<':'>Person<','>Puesto<':'>Position<','>Curso tomado<':'>Course taken<','>Curso<':'>Course<','>Venció el<':'>Expired on<','>Vence el<':'>Expires on<','>Días vencido<':'>Days overdue<','>Días restantes<':'>Days left<',
+ '</b> vencidos':'</b> expired','</b> por vencer':'</b> expiring','</b> vigentes':'</b> valid','>vencido<':'>expired<','>por vencer<':'>expiring<','>vigente<':'>valid<'};
+function entrEn_(html){if(LANG!=='en')return html;let h=html;Object.keys(ENTR_EN).sort((a,b)=>b.length-a.length).forEach(k=>{h=h.split(k).join(ENTR_EN[k]);});return h;}
 
 async function loadEntrenamientos(){
   const cont=$('entr-contenido'); if(!cont)return;
-  if(!puedeVerEntrenamientos_()){cont.innerHTML='<div class="card" style="padding:20px;color:#B91C1C">Los entrenamientos están disponibles para Ingeniería y el técnico administrador.</div>';return;}
+  if(!puedeVerEntrenamientos_()){cont.innerHTML='<div class="card" style="padding:20px;color:#B91C1C">Training records are available to Engineering, the administrator technician and Mr. Inagaki.</div>';return;}
   if(!ENTR.cargado)cont.innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
   try{
     const r=await api({action:'getEntrenamientos',token:SESSION.token});
@@ -5719,11 +5733,11 @@ function entrRender_(){
   const kpi=(k,t,n,col)=>`<div class="card" onclick="entrFiltro_('estatus',ENTR.f.estatus==='${k}'?'':'${k}')" style="padding:12px 14px;cursor:pointer;border-left:5px solid ${col};${F.estatus===k?'box-shadow:0 0 0 2px '+col:''}"><div style="font-size:1.5rem;font-weight:800;color:#0F2A4A;line-height:1">${n}</div><div style="font-size:.7rem;color:#64748B;margin-top:3px">${t}</div></div>`;
   const kpi2=(t,n)=>`<div class="card" style="padding:12px 14px;border-left:5px solid #CBD5E1"><div style="font-size:1.5rem;font-weight:800;color:#0F2A4A;line-height:1">${n}</div><div style="font-size:.7rem;color:#64748B;margin-top:3px">${t}</div></div>`;
   const vistas=[['matriz','Matriz'],['personas','Por persona'],['vencidos','Vencidos'],['por_vencer','Por vencer'],['cursos','Por curso']];
-  const imp=ENTR.importado&&ENTR.importado.fecha?` · importado por ${escapeHtml(ENTR.importado.por||'')} el ${escapeHtml(entrFmt_(String(ENTR.importado.fecha).slice(0,10)))}`:'';
-  cont.innerHTML=`
+  const imp=ENTR.importado&&ENTR.importado.fecha?(LANG==='en'?` · imported by ${escapeHtml(ENTR.importado.por||'')} on ${escapeHtml(entrFmt_(String(ENTR.importado.fecha).slice(0,10)))}`:` · importado por ${escapeHtml(ENTR.importado.por||'')} el ${escapeHtml(entrFmt_(String(ENTR.importado.fecha).slice(0,10)))}`):'';
+  cont.innerHTML=entrEn_(`
    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">
      <div><h2 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-graduation-cap" style="color:#2563EB;margin-right:8px"></i>Entrenamientos</h2>
-       <div style="font-size:.72rem;color:#64748B;margin-top:3px">Estatus calculado al ${escapeHtml(entrFmtLargo_(c.hoy))}${ENTR.corte?' · datos del archivo con corte al '+escapeHtml(entrFmtLargo_(ENTR.corte)):''}${imp}</div></div>
+       <div style="font-size:.72rem;color:#64748B;margin-top:3px">${LANG==='en'?'Status calculated on ':'Estatus calculado al '}${escapeHtml(entrFmtLargo_(c.hoy))}${ENTR.corte?(LANG==='en'?' · file data as of ':' · datos del archivo con corte al ')+escapeHtml(entrFmtLargo_(ENTR.corte)):''}${imp}</div></div>
      ${ENTR.puedeEditar?`<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn-p" style="width:auto" onclick="entrAdminAbrir('registro')"><i class="fas fa-plus" style="margin-right:6px"></i>Registrar capacitación</button><button class="btn-g" style="width:auto" onclick="entrAdminAbrir('personas')"><i class="fas fa-users-gear" style="margin-right:6px"></i>Personas y cursos</button><button class="btn-g" style="width:auto" onclick="entrAdminAbrir('excel')"><i class="fas fa-file-excel" style="margin-right:6px"></i>Actualizar desde Excel</button></div>`:'<div style="font-size:.7rem;color:#94A3B8"><i class="fas fa-eye" style="margin-right:5px"></i>Solo consulta. Las actualizaciones las hace el técnico administrador.</div>'}
    </div>
    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
@@ -5737,7 +5751,7 @@ function entrRender_(){
      ${(F.persona||F.puesto||F.curso||F.estatus||F.texto)?'<button class="btn-g" style="width:auto;padding:6px 11px;font-size:.72rem" onclick="ENTR.f={persona:\'\',puesto:\'\',curso:\'\',estatus:\'\',texto:\'\'};entrRender_()">Quitar filtros</button>':''}
    </div>
    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${vistas.map(v=>`<button class="btn-g" style="width:auto;${ENTR.vista===v[0]?'background:#0F2A4A;color:#fff':''}" onclick="entrVista_('${v[0]}')">${v[1]}</button>`).join('')}</div>
-   <div id="entr-vista">${entrVistaHtml_(c)}</div>`;
+   <div id="entr-vista">${entrVistaHtml_(c)}</div>`);
 }
 function entrVistaHtml_(c){
   const v=ENTR.vista, F=ENTR.f;
@@ -5754,8 +5768,8 @@ function entrVistaHtml_(c){
       <tbody>${rows.map(p=>`<tr><td style="position:sticky;left:0;background:#fff;z-index:2;padding:7px 10px;border-bottom:1px solid #E2E8F0;white-space:nowrap;box-shadow:6px 0 6px -6px rgba(15,23,42,.25)"><b style="color:#0F2A4A">${escapeHtml(p.nombre)}</b><div style="font-size:.62rem;color:#94A3B8">${escapeHtml(p.puesto)}</div></td>${cols.map(k=>{const r=reg[p.id+'|'+k];
         if(!r||(F.estatus&&r.estado!==F.estatus))return '<td style="background:#F1F5F9;border-bottom:1px solid #fff;border-left:1px solid #fff;text-align:center;color:#CBD5E1">·</td>';
         const col=ENTR_COL[r.estado];
-        return `<td ${ENTR.puedeEditar?`onclick="entrCeldaClick('${escapeHtml(p.id)}','${entrEnc_(k)}')" style="cursor:pointer;`:'style="'}background:${col[0]};color:${col[1]};border-bottom:1px solid #fff;border-left:1px solid #fff;text-align:center;font-weight:600;padding:5px 2px" title="${escapeHtml(k)} · ${escapeHtml(p.nombre)}&#10;Vence el ${escapeHtml(entrFmtLargo_(r.vence))} (${entrDiasTxt_(r.dias)})${r.fechaCurso?'&#10;Curso tomado el '+escapeHtml(entrFmtLargo_(r.fechaCurso)):''}">${escapeHtml(entrFmt_(r.vence))}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
-      <div style="padding:8px 12px;font-size:.66rem;color:#64748B;border-top:1px solid #E2E8F0;display:flex;gap:14px;flex-wrap:wrap">${Object.keys(ENTR_COL).map(k=>`<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${ENTR_COL[k][0]};border:1px solid ${ENTR_COL[k][1]};margin-right:5px;vertical-align:-1px"></i>${ENTR_TXT[k]}</span>`).join('')}<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#F1F5F9;border:1px solid #CBD5E1;margin-right:5px;vertical-align:-1px"></i>Sin registro</span><span>Cada celda es la fecha de vencimiento.${ENTR.puedeEditar?' Toca una celda para editarla.':''}</span></div></div>`;
+        return `<td ${ENTR.puedeEditar?`onclick="entrCeldaClick('${escapeHtml(p.id)}','${entrEnc_(k)}')" style="cursor:pointer;`:'style="'}background:${col[0]};color:${col[1]};border-bottom:1px solid #fff;border-left:1px solid #fff;text-align:center;font-weight:600;padding:5px 2px" title="${escapeHtml(k)} · ${escapeHtml(p.nombre)}&#10;${LANG==='en'?'Expires on ':'Vence el '}${escapeHtml(entrFmtLargo_(r.vence))} (${entrDiasTxt_(r.dias)})${r.fechaCurso?'&#10;'+(LANG==='en'?'Course taken on ':'Curso tomado el ')+escapeHtml(entrFmtLargo_(r.fechaCurso)):''}">${escapeHtml(entrFmt_(r.vence))}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
+      <div style="padding:8px 12px;font-size:.66rem;color:#64748B;border-top:1px solid #E2E8F0;display:flex;gap:14px;flex-wrap:wrap">${Object.keys(ENTR_COL).map(k=>`<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${ENTR_COL[k][0]};border:1px solid ${ENTR_COL[k][1]};margin-right:5px;vertical-align:-1px"></i>${entrTxt_(k)}</span>`).join('')}<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#F1F5F9;border:1px solid #CBD5E1;margin-right:5px;vertical-align:-1px"></i>Sin registro</span><span>Cada celda es la fecha de vencimiento.${ENTR.puedeEditar?' Toca una celda para editarla.':''}</span></div></div>`;
   }
   if(v==='personas'){
     return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">${c.personas.map(p=>{
@@ -11859,7 +11873,7 @@ function switchTab(tab) {
     tab='sol';
   }
   if(tab==='entrenamientos'&&!puedeVerEntrenamientos_()){
-    toast('Los entrenamientos están disponibles para Ingeniería y el técnico administrador.','err');
+    toast('Training records are available to Engineering, the administrator technician and Mr. Inagaki.','err');
     tab='sol';
   }
   if(tab==='analytics'&&!canViewOperationsAnalytics()){
