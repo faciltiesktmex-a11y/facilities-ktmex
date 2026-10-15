@@ -3444,7 +3444,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.16.0';
+const FRONTEND_BUILD = '9.17.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3921,7 +3921,19 @@ Object.assign(TEXT_I18N,{
   'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
   'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
   'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…','Ayuda':'Help',
-  'Weekend Work (mi área)':'Weekend Work (my area)','Mostrar más':'Show more','Nueva solicitud':'New request','Mis solicitudes':'My requests','Solicitud de Plataforma':'Platform Request','Abrir Solicitud de Plataforma →':'Open Platform Request →','Entrenamientos':'Training','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
+  'Weekend Work (mi área)':'Weekend Work (my area)','Mostrar más':'Show more','Cambiar mi foto':'Change my photo',
+'Todavía no hay documentos de fin de semana.':'There are no weekend documents yet.','Firmas como':'You sign as','. No tienes documentos pendientes.':'. You have no pending documents.',
+ 'Consulta de documentos. Tu usuario':'Viewing documents. Your user','no forma parte de la cadena de firmas.':'is not part of the signature chain.',
+ 'Asignar guardias y continuar':'Assign duty and continue','Firmar por ausencia':'Sign on behalf (absence)','Guardias':'Duty roster','Asignar guardias':'Assign duty',
+ 'Reporte de confirmaciones':'Confirmations report','Cerrar ciclo':'Close cycle','Revisar documento':'Review document','Ver documento':'View document','Ver actividades':'View activities',
+ 'Guardias sin asignar':'Duty not assigned','En revisión':'Under review','Recibiendo solicitudes':'Receiving requests','En revisión con las áreas':'Under review with the areas',
+ 'Aprobado y cerrado':'Approved and closed','Aprobado · esperando confirmaciones':'Approved · awaiting confirmations','Ciclo cerrado':'Cycle closed',
+ 'Solicitudes de trabajo en fin de semana':'Weekend work requests',
+ 'Registradas por el personal de planta. Ingeniería de Facilities recaba las firmas: Ingeniería → Senior Manager → Presidente.':'Registered by plant staff. Facilities Engineering collects the signatures: Engineering → Senior Manager → President.',
+ 'Abrir formulario':'Open form','Cadena de aprobación':'Approval chain','Entrenamientos':'Training',
+ 'Instalación eléctrica':'Electrical installation','Instalación neumática':'Pneumatic installation','Instalación hidráulica':'Hydraulic installation','Infraestructura / Edificio':'Infrastructure / Building','Baños / Sanitarios':'Restrooms / Sanitary','Aire acondicionado':'Air conditioning','Iluminación':'Lighting','Instalación de activo nuevo en piso':'New asset installation on the floor','Instalación de activo nuevo en muros o pilares':'New asset installation on walls or pillars','Otras':'Other',
+ 'En ejecución':'In execution','Suspendido':'Suspended','Trabajo completado':'Work completed','En espera de refacciones':'Waiting for spare parts','Cancelado':'Cancelled','En proceso':'In Progress',
+ 'Pieza':'Piece','Metros lineales':'Linear meters','Caja':'Box','Servicio':'Service','Litros':'Liters','Nueva solicitud':'New request','Mis solicitudes':'My requests','Solicitud de Plataforma':'Platform Request','Abrir Solicitud de Plataforma →':'Open Platform Request →','Entrenamientos':'Training','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
 });
 
 const TEXT_I18N_EXTRA = {
@@ -4329,11 +4341,36 @@ const STATUS_I18N = {
   'Pendiente de cierre por Ingeniería':'Pending Engineering Closure'
 };
 
+// V9.17.0 — Textos con números o nombres dentro (no se pueden traducir por coincidencia exacta).
+const I18N_PATRONES=[
+ [/^Tienes (\d+) documento\(s\) esperando tu firma$/,'You have $1 document(s) awaiting your signature'],
+ [/^Firmar (.+)$/,'Sign $1'],
+ [/^Fin de semana del (\S+) al (\S+)$/,'Weekend of $1 to $2'],
+ [/^(\d+) fuera de tiempo$/,'$1 out of time'],
+ [/^(\d+) agregada\(s\) en reunión$/,'$1 added at the meeting'],
+ [/^(\d+)\/(\d+) confirmadas$/,'$1/$2 confirmed'],
+ [/^La confirmación abre el (.+)$/,'Confirmation opens on $1'],
+ [/^(\d+) actividad\(es\) activas(?: · Organiza: (.+))?$/,(m,a,o)=>a+' active activity(ies)'+(o?' · Organizer: '+o:'')],
+ [/^(\d+) cancelada\(s\)$/,'$1 cancelled'],
+ [/^Corte de recepción: (.+)$/,'Reception cutoff: $1'],
+ [/^Guardia: (.+)$/,(m,x)=>'On duty: '+x.replace(/sáb\. /g,'Sat. ').replace(/dom\. /g,'Sun. ').replace(/fest\. /g,'Hol. ')],
+ [/^interfaz (.+)$/,'interface $1'],
+ [/^Esperando firma de (.+)$/,'Awaiting signature of $1'],
+ [/^(\d+) material\(es\)$/,'$1 material(s)'],
+ [/^están en su stock mínimo o por debajo(?: · Ej\.: (.+))?\.$/,(m,e)=>'are at or below their minimum stock'+(e?' · e.g.: '+e:'')+'.'],
+ [/^Por ausencia · (.+)$/,'On behalf (absence) · $1'],
+ [/^(\d+) pendientes?$/,'$1 pending'],
+ [/^(\d+) actividad\(es\) activas ·$/,'$1 active activity(ies) ·'],
+ [/^· Organiza: (.+)$/,'· Organizer: $1'],
+ [/^(\d+) solicitud(?:es)? cerrada(?:s)? oculta(?:s)?\.$/,'$1 closed request(s) hidden.'],
+ [/^Total: (\d+)$/,'Total: $1'],
+];
+function uiPatron_(t){ for(const [re,rp] of I18N_PATRONES){ if(re.test(t)) return t.replace(re,rp); } return ''; }
 function uiText(es) {
   if(LANG==='es') return es;
   const raw=String(es??'');
   const trimmed=raw.trim();
-  return TEXT_I18N[raw] || TEXT_I18N[trimmed] || STATUS_I18N[raw] || STATUS_I18N[trimmed] || raw;
+  return TEXT_I18N[raw] || TEXT_I18N[trimmed] || STATUS_I18N[raw] || STATUS_I18N[trimmed] || uiPatron_(trimmed) || raw;
 }
 function statusLabel(s){ return LANG==='en' ? (STATUS_I18N[s]||s) : s; }
 
@@ -4480,7 +4517,7 @@ function i18nAuditar(){
     const t=(n.__esOriginal!==undefined?n.__esOriginal:n.nodeValue).trim();
     if(t.length<3)continue;
     if(!/[a-záéíóúñ]/i.test(t))continue;
-    if(TEXT_I18N[t]||STATUS_I18N[t]||LPA_I18N[t])continue;
+    if(TEXT_I18N[t]||STATUS_I18N[t]||LPA_I18N[t]||uiPatron_(t))continue;
     faltan.add(t);
   }
   const lista=[...faltan].sort();
@@ -5682,7 +5719,8 @@ function entrParsearLibro_(wb,XLSX){
 const ENTR_COL={vigente:['#C6EFCE','#166534'],por_vencer:['#FFEB9C','#7A5B00'],vencido:['#FFC7CE','#9C0006']};
 const ENTR_TXT={vigente:'Vigente',por_vencer:'Por vencer (≤90 días)',vencido:'Vencido'};
 let ENTR={cargado:false,personas:[],cursos:[],registros:[],corte:'',importado:{},puedeEditar:false,vista:'matriz',f:{persona:'',puesto:'',curso:'',estatus:'',texto:''},admin:{tab:'registro'},excel:null};
-function puedeVerEntrenamientos_(){return !!SESSION&&!!SESSION.user&&(SESSION.user.rol==='ingeniero'||hasAdminPrivilege()||(SESSION.user.rol==='manager'&&SESSION.user.username==='ainagaki'));}   // V9.15.1: Inagaki, solo consulta
+function esInagaki_(){const u=SESSION&&SESSION.user;if(!u)return false;const un=String(u.username||'').toLowerCase(),n=String(u.nombre||'').toLowerCase().replace(/\s+/g,' ').trim();return un==='ainagaki'||un==='atsushi.inagaki'||n==='atsushi inagaki';}   // V9.17.0
+function puedeVerEntrenamientos_(){return !!SESSION&&!!SESSION.user&&(SESSION.user.rol==='ingeniero'||hasAdminPrivilege()||(SESSION.user.rol==='manager'&&esInagaki_()));}   // V9.15.1: Inagaki, solo consulta
 function entrHoy_(){const d=new Date();return d.getFullYear()+'-'+entrP2_(d.getMonth()+1)+'-'+entrP2_(d.getDate());}
 function entrDias_(a,b){const f=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10));return Math.round((f(a)-f(b))/86400000);}
 function entrEstado_(vence,hoy){const d=entrDias_(vence,hoy);return d<0?'vencido':(d<=90?'por_vencer':'vigente');}
@@ -5700,9 +5738,19 @@ const ENTR_EN={'Solo consulta. Las actualizaciones las hace el técnico administ
  'Ningún dato tiene ese estatus con los filtros actuales.':'No data has that status with the current filters.','Ningún dato coincide con los filtros.':'No data matches the filters.','No hay cursos vencidos con los filtros actuales.':'No expired courses with the current filters.','No hay cursos por vencer en los próximos 90 días.':'No courses expiring in the next 90 days.',
  'Cada celda es la fecha de vencimiento.':'Each cell is the expiration date.','. Se calcula con los datos de la matriz.':'. Calculated from the matrix data.','Personas con el curso: ':'People with the course: ','Buscar persona o curso':'Search person or course','Por vencer (≤90 días)':'Expiring (≤90 days)',
  'Todas las personas':'All people','Todos los puestos':'All positions','Todos los cursos':'All courses','Todos los estatus':'All statuses','Quitar filtros':'Clear filters','Cursos con datos':'Courses with data','Entrenamientos':'Training','Por persona':'By person','Por curso':'By course','Por vencer':'Expiring',
- 'Sin registro':'No record','Vencidos':'Expired','Vigentes':'Valid','Personas':'People','Matriz':'Matrix','JEFE TECNICO':'LEAD TECHNICIAN','INGENIERO':'ENGINEER','TECNICO':'TECHNICIAN',
+ 'Sin registro':'No record','Vencidos':'Expired','Vigentes':'Valid','Personas':'People','Matriz':'Matrix',
  '>Persona<':'>Person<','>Puesto<':'>Position<','>Curso tomado<':'>Course taken<','>Curso<':'>Course<','>Venció el<':'>Expired on<','>Vence el<':'>Expires on<','>Días vencido<':'>Days overdue<','>Días restantes<':'>Days left<',
  '</b> vencidos':'</b> expired','</b> por vencer':'</b> expiring','</b> vigentes':'</b> valid','>vencido<':'>expired<','>por vencer<':'>expiring<','>vigente<':'>valid<'};
+
+// V9.17.0 — Nombres de cursos y puestos en inglés. Se traducen sobre lo que se ve (texto, comentarios y etiquetas de las listas), nunca sobre los
+// valores de los filtros, para que filtrar siga funcionando igual.
+const ENTR_CURSOS_EN={'Gestion de Residuos Peligrosos y de Manejo Especial':'Hazardous and Special-Handling Waste Management','Sustentabilidad':'Sustainability','Huella de Carbono':'Carbon Footprint','Sustancias químicas':'Chemical Substances','Sistemas de Gestion Ambiental':'Environmental Management Systems','Control de Derrames':'Spill Control','Indicadores de Desempeño Ambiental':'Environmental Performance Indicators','Gestión de Riesgo & ISO 31001:2018':'Risk Management & ISO 31001:2018','Requisitos Legales y otros/Legislación HSE':'Legal and Other Requirements / HSE Legislation','Conformación de auditores internos':'Internal Auditor Training','Gestión de Acciones Correctivas (ISO14001:2015)':'Corrective Action Management (ISO14001:2015)','MONTACARGAS BASICO':'BASIC FORKLIFT','MONTACARGAS':'FORKLIFT','TRABAJO EN ALTURAS':'WORK AT HEIGHTS','PLATAFORMA':'AERIAL WORK PLATFORM','CORTE Y SOLDADURA (PRÁCTICA)':'CUTTING AND WELDING (PRACTICAL)','NORMAS DE CORTE Y SOLDADURA':'CUTTING AND WELDING STANDARDS','ESPACIOS CONFINADOS':'CONFINED SPACES','HERRAMIENTAS VIBRATORIAS':'VIBRATING TOOLS','BRIGADA CONTRA INCENDIOS':'FIRE BRIGADE','BRIGADA BUSQUEDA':'SEARCH BRIGADE','BRIGADA PRIMEROS AUXILIOS':'FIRST AID BRIGADE','MANTENIMIENTO A SUBESTACIONES ELECTRICAS':'ELECTRICAL SUBSTATION MAINTENANCE','CONTENEDORES SUJETOS A PRESIÓN':'PRESSURE VESSELS','MANTENIMIENTO A BOMBAS HIDRÁULICAS':'HYDRAULIC PUMP MAINTENANCE','SEGURIDAD ELÉCTRICA':'ELECTRICAL SAFETY','CIRCUITOS ELECTRICOS':'ELECTRICAL CIRCUITS','Neumatica avanzada':'Advanced Pneumatics','Control estadistico del proceso':'Statistical Process Control','JEFE TECNICO':'LEAD TECHNICIAN','INGENIERO':'ENGINEER','TECNICO':'TECHNICIAN'};
+function entrNombresEn_(root){
+  if(LANG!=='en'||!root)return; const M=ENTR_CURSOS_EN, claves=Object.keys(M).sort((a,b)=>b.length-a.length);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while(n=w.nextNode()){const k=n.nodeValue.trim(); if(M[k])n.nodeValue=n.nodeValue.replace(k,M[k]);}
+  root.querySelectorAll('[title]').forEach(el=>{let x=el.getAttribute('title'),ch=false; claves.forEach(c=>{if(x.indexOf(c)>=0){x=x.split(c).join(M[c]);ch=true;}}); if(ch)el.setAttribute('title',x);});
+  root.querySelectorAll('option').forEach(o=>{const k=o.textContent.trim(); if(M[k])o.textContent=M[k];});
+}
 function entrEn_(html){if(LANG!=='en')return html;let h=html;Object.keys(ENTR_EN).sort((a,b)=>b.length-a.length).forEach(k=>{h=h.split(k).join(ENTR_EN[k]);});return h;}
 
 async function loadEntrenamientos(){
@@ -5759,6 +5807,7 @@ function entrRender_(){
    </div>
    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${vistas.map(v=>`<button class="btn-g" style="width:auto;${ENTR.vista===v[0]?'background:#0F2A4A;color:#fff':''}" onclick="entrVista_('${v[0]}')">${v[1]}</button>`).join('')}</div>
    <div id="entr-vista">${entrVistaHtml_(c)}</div>`);
+  entrNombresEn_(cont);
 }
 function entrVistaHtml_(c){
   const v=ENTR.vista, F=ENTR.f;
@@ -5772,7 +5821,7 @@ function entrVistaHtml_(c){
     const th='background:#0F1F3D;color:#fff;font-weight:600;font-size:.66rem;padding:6px 4px;position:sticky;top:0;z-index:3';
     return `<div class="card" style="padding:0;overflow:hidden"><div style="overflow:auto;max-height:68vh"><table id="entr-matriz" style="border-collapse:separate;border-spacing:0;font-size:.7rem;min-width:100%">
       <thead><tr><th style="${th};left:0;z-index:5;text-align:left;padding:8px 10px;min-width:190px">Persona</th>${cols.map(k=>`<th title="${escapeHtml(k)}" style="${th};height:170px;vertical-align:bottom;min-width:56px"><div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;margin:0 auto;max-height:160px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(k)}</div></th>`).join('')}</tr></thead>
-      <tbody>${rows.map(p=>`<tr><td style="position:sticky;left:0;background:#fff;z-index:2;padding:7px 10px;border-bottom:1px solid #E2E8F0;white-space:nowrap;box-shadow:6px 0 6px -6px rgba(15,23,42,.25)"><b style="color:#0F2A4A">${escapeHtml(p.nombre)}</b><div style="font-size:.62rem;color:#94A3B8">${escapeHtml(p.puesto)}</div></td>${cols.map(k=>{const r=reg[p.id+'|'+k];
+      <tbody>${rows.map(p=>`<tr><td style="position:sticky;left:0;background:#fff;z-index:2;padding:7px 10px;border-bottom:1px solid #E2E8F0;white-space:nowrap;box-shadow:6px 0 6px -6px rgba(15,23,42,.25)"><b style="color:#0F2A4A">${avatarHtml_(p.nombre,'',22)}${escapeHtml(p.nombre)}</b><div style="font-size:.62rem;color:#94A3B8">${escapeHtml(p.puesto)}</div></td>${cols.map(k=>{const r=reg[p.id+'|'+k];
         if(!r||(F.estatus&&r.estado!==F.estatus))return '<td style="background:#F1F5F9;border-bottom:1px solid #fff;border-left:1px solid #fff;text-align:center;color:#CBD5E1">·</td>';
         const col=ENTR_COL[r.estado];
         return `<td ${ENTR.puedeEditar?`onclick="entrCeldaClick('${escapeHtml(p.id)}','${entrEnc_(k)}')" style="cursor:pointer;`:'style="'}background:${col[0]};color:${col[1]};border-bottom:1px solid #fff;border-left:1px solid #fff;text-align:center;font-weight:600;padding:5px 2px" title="${escapeHtml(k)} · ${escapeHtml(p.nombre)}&#10;${LANG==='en'?'Expires on ':'Vence el '}${escapeHtml(entrFmtLargo_(r.vence))} (${entrDiasTxt_(r.dias)})${r.fechaCurso?'&#10;'+(LANG==='en'?'Course taken on ':'Curso tomado el ')+escapeHtml(entrFmtLargo_(r.fechaCurso)):''}">${escapeHtml(entrFmt_(r.vence))}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
@@ -5781,7 +5830,7 @@ function entrVistaHtml_(c){
   if(v==='personas'){
     return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">${c.personas.map(p=>{
       const rs=c.regs.filter(r=>r.personaId===p.id), n={vencido:0,por_vencer:0,vigente:0}; rs.forEach(r=>n[r.estado]++); const t=rs.length||1;
-      return `<div class="card" onclick="ENTR.f.persona='${escapeHtml(p.id)}';ENTR.vista='matriz';entrRender_()" style="padding:12px 14px;cursor:pointer"><b style="color:#0F2A4A;font-size:.84rem">${escapeHtml(p.nombre)}</b><div style="font-size:.66rem;color:#94A3B8;margin-bottom:8px">${escapeHtml(p.puesto)} · ID ${escapeHtml(p.id)}</div>
+      return `<div class="card" onclick="ENTR.f.persona='${escapeHtml(p.id)}';ENTR.vista='matriz';entrRender_()" style="padding:12px 14px;cursor:pointer"><b style="color:#0F2A4A;font-size:.84rem">${avatarHtml_(p.nombre,'',26)}${escapeHtml(p.nombre)}</b><div style="font-size:.66rem;color:#94A3B8;margin-bottom:8px">${escapeHtml(p.puesto)} · ID ${escapeHtml(p.id)}</div>
         <div style="display:flex;height:9px;border-radius:99px;overflow:hidden;background:#E2E8F0"><i style="width:${n.vencido*100/t}%;background:#DC2626"></i><i style="width:${n.por_vencer*100/t}%;background:#F59E0B"></i><i style="width:${n.vigente*100/t}%;background:#16A34A"></i></div>
         <div style="display:flex;gap:12px;font-size:.7rem;margin-top:7px"><span style="color:#B91C1C"><b>${n.vencido}</b> vencidos</span><span style="color:#92400E"><b>${n.por_vencer}</b> por vencer</span><span style="color:#166534"><b>${n.vigente}</b> vigentes</span></div></div>`;}).join('')}</div>`;
   }
@@ -6118,6 +6167,44 @@ async function cargarFullCalendar_(){
   await wwCargarScript_('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js');
 }
 async function asegurarJsQR_(){if(typeof jsQR==='undefined')await wwCargarScript_('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js');}
+// ══ V9.17.0 — Fotos de perfil ══
+let FOTOS={}, FOTOS_NOM={}, FOTOS_TOKEN='';
+function fotoClaveNombre_(n){return String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');}
+function fotoDe_(nombre,username){const u=String(username||'').toLowerCase();if(u&&FOTOS[u])return FOTOS[u];const k=fotoClaveNombre_(nombre);return (k&&FOTOS_NOM[k])||'';}
+function avatarHtml_(nombre,username,px){
+  px=px||28; const f=fotoDe_(nombre,username), est='width:'+px+'px;height:'+px+'px;border-radius:50%;flex:none;vertical-align:middle;margin-right:6px';
+  if(f)return '<img class="avt" alt="" src="'+f+'" style="'+est+';object-fit:cover">';
+  const t=String(nombre||'').trim().split(/\s+/).filter(Boolean), ini=((t[0]||'?')[0]+((t[1]||'')[0]||'')).toUpperCase();
+  return '<span class="avt" style="'+est+';background:#CBD5E1;color:#475569;display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(px*.4)+'px;font-weight:700">'+escapeHtml(ini)+'</span>';
+}
+function pintarAvatarSesion_(){const a=$('v81-avatar');if(!a||!SESSION||!SESSION.user)return;a.innerHTML=avatarHtml_(SESSION.user.nombre,SESSION.user.username,36).replace('margin-right:6px','margin-right:0');a.title=(LANG==='en'?'Change my photo':'Cambiar mi foto');}
+async function cargarFotos_(){
+  if(!SESSION||FOTOS_TOKEN===SESSION.token)return; FOTOS_TOKEN=SESSION.token;
+  try{
+    const r=await api({action:'getFotosPersonal',token:SESSION.token}); if(!r||!r.success)return;
+    FOTOS={};FOTOS_NOM={}; (r.fotos||[]).forEach(x=>{FOTOS[String(x.username||'').toLowerCase()]=x.foto;const k=fotoClaveNombre_(x.nombre);if(k)FOTOS_NOM[k]=x.foto;});
+    pintarAvatarSesion_(); try{if(typeof entrRender_==='function'&&$('entr-contenido')&&ENTR&&ENTR.personas&&ENTR.personas.length&&dashboardActiveTab_()==='entrenamientos')entrRender_();}catch(e){}
+  }catch(e){FOTOS_TOKEN='';}
+}
+function cambiarFotoPerfil_(){
+  if(!SESSION)return; const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=async()=>{
+    const file=inp.files&&inp.files[0]; if(!file)return;
+    try{
+      const bmp=await createImageBitmap(file); const lado=Math.min(bmp.width,bmp.height); let data='';
+      for(const [px,q] of [[200,.82],[160,.75],[120,.7]]){
+        const c=document.createElement('canvas'); c.width=px; c.height=px; const g=c.getContext('2d'); g.drawImage(bmp,(bmp.width-lado)/2,(bmp.height-lado)/2,lado,lado,0,0,px,px);
+        data=c.toDataURL('image/jpeg',q); if(data.length<=45000)break;
+      }
+      if(data.length>48000){toast(LANG==='en'?'The image is too large.':'La imagen es demasiado pesada.','err');return;}
+      const r=await api({action:'setFotoPerfil',token:SESSION.token,foto:data});
+      if(!r||!r.success){toast((r&&r.error)||'No se pudo guardar la foto.','err');return;}
+      const u=String(SESSION.user.username||'').toLowerCase(); FOTOS[u]=data; const k=fotoClaveNombre_(SESSION.user.nombre); if(k)FOTOS_NOM[k]=data;
+      pintarAvatarSesion_(); toast(LANG==='en'?'Photo updated.':'Foto actualizada.','ok');
+    }catch(e){toast((LANG==='en'?'Could not read the image: ':'No se pudo leer la imagen: ')+(e.message||e),'err');}
+  };
+  inp.click();
+}
 function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); const _t=$('rfq-tabs-compra'); if(_t)_t.style.display=(SESSION&&SESSION.user&&['tecnico','ingeniero'].includes(SESSION.user.rol))?'grid':'none'; rfqCargar(); }   // V9.16.0: técnicos e ingenieros ven las pestañas de Compras también aquí
 async function rfqCargar(){
   $('rfq-lista').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
@@ -7013,7 +7100,7 @@ async function performLogin() {
     $('btn-logout').style.display='';
     $('nav-admin').innerHTML='<i class="fas fa-gauge" style="margin-right:5px"></i>Dashboard';
     configureRoleUI();
-    if($('v81-role-name'))$('v81-role-name').textContent=SESSION.user.nombre||SESSION.user.username||'Usuario';
+    if($('v81-role-name'))$('v81-role-name').textContent=SESSION.user.nombre||SESSION.user.username||'Usuario'; try{pintarAvatarSesion_();cargarFotos_();}catch(e){}
     if($('v81-role-meta'))$('v81-role-meta').textContent=(SESSION.user.rol||'usuario')+' · Facilities';
     if(SESSION.user.rol==='manager') applyLanguage();
 
@@ -13799,7 +13886,7 @@ function init() {
           configureRoleUI();
           setTimeout(function(){
             const n=$('v81-role-name'),m=$('v81-role-meta');
-            if(n)n.textContent=SESSION.user.nombre||SESSION.user.username||'Usuario';
+            if(n)n.textContent=SESSION.user.nombre||SESSION.user.username||'Usuario'; try{pintarAvatarSesion_();cargarFotos_();}catch(e){}
             if(m)m.textContent=(SESSION.user.rol||'usuario')+' · Facilities';
           },0);
           startNotificationPolling();
@@ -14727,7 +14814,7 @@ function exportChecklistMonthlyExcel(){
   nav button[id^="nav-"].v81-active{background:#2563EB!important;color:#FFF!important;box-shadow:0 6px 18px rgba(37,99,235,.25)!important}
   nav button[id^="nav-"].v81-active i{color:#FFF!important}
   .v81-section{font-size:.60rem;letter-spacing:.13em;text-transform:uppercase;color:#637793;font-weight:800;padding:13px 10px 5px;white-space:nowrap}
-  #v81-role-card{width:100%;padding:9px 10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);border-radius:10px;box-sizing:border-box;margin-top:auto}
+  #v81-role-card{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);border-radius:10px;box-sizing:border-box;margin-top:auto}
   #v81-role-name{font-size:.70rem;color:#EDF3FC;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #v81-role-meta{font-size:.59rem;color:#778BA8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #v81-bottom-tools{display:flex;align-items:center;gap:6px;width:100%;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap}
@@ -14790,7 +14877,7 @@ function exportChecklistMonthlyExcel(){
     frag.appendChild(sec('Ingeniería')); move(frag,'nav-electricas');
     frag.appendChild(sec('Gestión')); move(frag,'nav-admin');
     menu.insertBefore(frag,menu.firstChild);
-    var role=document.createElement('div');role.id='v81-role-card';role.innerHTML='<div id="v81-role-name">Sesión no iniciada</div><div id="v81-role-meta">Facilities KTMEX</div>';
+    var role=document.createElement('div');role.id='v81-role-card';role.innerHTML='<div id=\"v81-avatar\" title=\"Cambiar mi foto\" onclick=\"cambiarFotoPerfil_()\" style=\"cursor:pointer;flex:none\"></div><div style=\"min-width:0;flex:1\"><div id=\"v81-role-name\">Sesión no iniciada</div><div id=\"v81-role-meta\">Facilities KTMEX</div></div>';
     menu.appendChild(role);
     var tools=document.createElement('div');tools.id='v81-bottom-tools';
     var collapse=document.createElement('button');collapse.id='v81-collapse';collapse.type='button';collapse.title='Contraer / Expandir menú';collapse.innerHTML='<i class="fas fa-chevron-left"></i>';
