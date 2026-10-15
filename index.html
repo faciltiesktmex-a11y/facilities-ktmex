@@ -6,15 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- KTMEX Facilities V8.2.7: corrige búsqueda de material en salida de inventario; conserva V8.2.6 -->
 <title>Sistema Facilities – KTMEX</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js"></script>
+
+
+
 <style>
 *{font-family:'DM Sans',system-ui,sans-serif}
 .mono{font-family:'Space Mono',monospace}
@@ -631,7 +631,7 @@ const LPA_AREAS = {
       <button onclick="goRFQ()" id="nav-rfq" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s;display:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-file-invoice-dollar" style="margin-right:5px"></i>RFQ</button>
       <button onclick="goPreventivo()" id="nav-pm" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>Preventivo</button>
       <button onclick="goPlataforma()" id="nav-platform" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
-        <i class="fas fa-up-right-from-square" style="margin-right:5px"></i>Plataforma
+        <i class="fas fa-up-right-from-square" style="margin-right:5px"></i>Solicitud de Plataforma
       </button>
       <button onclick="goInventario()" id="nav-inv" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-boxes-stacked" style="margin-right:5px"></i>Inventario
@@ -737,9 +737,9 @@ const LPA_AREAS = {
       <div style="width:48px;height:48px;background:#F0FDFA;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <i class="fas fa-up-right-from-square" style="color:#0F766E;font-size:20px"></i>
       </div>
-      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Trabajo en Alturas</h3>
+      <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 6px">Solicitud de Plataforma</h3>
       <p style="color:#64748B;font-size:.82rem;margin:0 0 16px">Plataforma Genie Z45: calendario, prioridades, lista de espera, aprobación y checklist digital.</p>
-      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir Trabajo en Alturas →</span>
+      <span style="color:#0F766E;font-size:.8rem;font-weight:600">Abrir Solicitud de Plataforma →</span>
     </div>
     <!-- Admin Card -->
     <div class="card" style="padding:28px;cursor:pointer;transition:.2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="goAdmin()">
@@ -869,9 +869,9 @@ const LPA_AREAS = {
     <p style="color:#64748B;font-size:.82rem;margin:0">Facilities Department · KTMEX</p>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
     <button id="compra-tab-new" class="btn-p" onclick="showCompraTab('new')"><i class="fas fa-cart-plus" style="margin-right:6px"></i>Nueva solicitud</button>
-    <button id="compra-tab-status" class="btn-g" onclick="showCompraTab('status')"><i class="fas fa-list-check" style="margin-right:6px"></i>Mis solicitudes</button><button class="btn-g" style="width:auto;margin-left:8px" onclick="ayIniciar('compra')"><i class="fas fa-circle-question" style="margin-right:6px;color:#2563EB"></i>Ayuda</button>
+    <button id="compra-tab-status" class="btn-g" onclick="showCompraTab('status')"><i class="fas fa-list-check" style="margin-right:6px"></i>Mis solicitudes</button><button id="compra-tab-rfq" class="btn-g" onclick="goRFQ()"><i class="fas fa-file-invoice-dollar" style="margin-right:6px"></i>RFQ</button><button class="btn-g" style="width:auto;margin-left:8px" onclick="ayIniciar('compra')"><i class="fas fa-circle-question" style="margin-right:6px;color:#2563EB"></i>Ayuda</button>
   </div>
   <div id="compra-status-panel" style="display:none">
     <div class="card" style="padding:18px;margin-bottom:14px">
@@ -1673,6 +1673,7 @@ const LPA_AREAS = {
      V9.5.0 — RFQ Y BENCH MARK
      ══════════════════════════════════════════════════════════ -->
 <div id="view-rfq" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
+  <div id="rfq-tabs-compra" style="display:none;max-width:760px;margin:0 auto 14px;grid-template-columns:1fr 1fr 1fr;gap:10px"><button class="btn-g" onclick="goCompra();showCompraTab('new')"><i class="fas fa-cart-plus" style="margin-right:6px"></i>Nueva solicitud</button><button class="btn-g" onclick="goCompra();showCompraTab('status')"><i class="fas fa-list-check" style="margin-right:6px"></i>Mis solicitudes</button><button class="btn-p"><i class="fas fa-file-invoice-dollar" style="margin-right:6px"></i>RFQ</button></div>
   <div class="card" style="padding:18px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
     <div>
       <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-file-invoice-dollar" style="color:#2563EB;margin-right:8px"></i>RFQ y Bench Mark</h2>
@@ -1962,7 +1963,7 @@ const LPA_AREAS = {
 <div id="view-platform" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <div>
-      <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-person-falling-burst" style="color:#0F766E;margin-right:8px"></i>Trabajo en Alturas · Plataforma Genie Z45</h2>
+      <h2 style="font-size:1.35rem;font-weight:800;color:var(--navy);margin:0 0 4px"><i class="fas fa-person-falling-burst" style="color:#0F766E;margin-right:8px"></i>Solicitud de Plataforma · Genie Z45</h2>
       <p style="font-size:.78rem;color:#64748B;margin:0">Plataforma V2 · Prioridades · Lista de espera · Carga de plataforma 1 h · Andrés Ramírez → Pedro Loya</p>
     </div>
       <button class="btn-g" style="width:auto;margin-left:8px" onclick="ayIniciar('alturas')"><i class="fas fa-circle-question" style="margin-right:6px;color:#2563EB"></i>Ayuda</button>
@@ -3443,7 +3444,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.15.1';
+const FRONTEND_BUILD = '9.16.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3487,7 +3488,7 @@ const TEXT_I18N = {
   '4 · Mejora — proyectos / estética': '4 · Improvement — projects / appearance',
   '3 imágenes + 1 PDF': '3 images + 1 PDF',
   'Abiertas (sin cerradas)': 'Open (closed hidden)',
-  'Abrir Trabajo en Alturas →': 'Open Work at Heights →',
+  'Abrir Solicitud de Plataforma →': 'Open Platform Request →',
   'Abrir formulario →': 'Open form →',
   'Abrir inspecciones →': 'Open inspections →',
   'Abrir inventario →': 'Open inventory →',
@@ -3920,7 +3921,7 @@ Object.assign(TEXT_I18N,{
   'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
   'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
   'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…','Ayuda':'Help',
-  'Weekend Work (mi área)':'Weekend Work (my area)','Entrenamientos':'Training','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
+  'Weekend Work (mi área)':'Weekend Work (my area)','Mostrar más':'Show more','Nueva solicitud':'New request','Mis solicitudes':'My requests','Solicitud de Plataforma':'Platform Request','Abrir Solicitud de Plataforma →':'Open Platform Request →','Entrenamientos':'Training','Actividades de mi área':'Activities in my area','Plan firmado':'Signed plan','Ver plan firmado':'View signed plan','Disponible el sábado a las 08:00':'Available on Saturday at 08:00'
 });
 
 const TEXT_I18N_EXTRA = {
@@ -4198,9 +4199,9 @@ const MANAGER_EN_I18N = {
   'Programa de auditorías':'Audit Schedule',
   'Auditorías LPA':'LPA Audits',
 
-  'Trabajo en Alturas':'Working at Heights',
-  'Abrir Trabajo en Alturas →':'Open Working at Heights →',
-  'Trabajo en Alturas · Plataforma Genie Z45':'Working at Heights · Genie Z45 Platform',
+  'Solicitud de Plataforma':'Platform Request',
+  'Abrir Solicitud de Plataforma →':'Open Platform Request →',
+  'Solicitud de Plataforma · Genie Z45':'Platform Request · Genie Z45',
   'Plataforma V2 · Prioridades · Lista de espera · Carga de plataforma 1 h · Andrés Ramírez → Pedro Loya':'Platform V2 · Priorities · Waitlist · 1 h Platform Charging · Andrés Ramírez → Pedro Loya',
   'Consultando estado de la plataforma…':'Checking platform status…',
   'Disponibilidad / Availability':'Availability',
@@ -4446,17 +4447,21 @@ function applyLanguage(root=document) {
 let _I18N_OBSERVER = null;
 let _I18N_PENDING  = null;
 
+let _I18N_ROOTS=new Set();
 function startI18nObserver_(){
   if(_I18N_OBSERVER || typeof MutationObserver==='undefined') return;
   _I18N_OBSERVER = new MutationObserver(muts=>{
     if(LANG!=='en' || _I18N_APPLYING) return;
     let hayNuevo=false;
-    for(const m of muts){ if(m.addedNodes && m.addedNodes.length){hayNuevo=true;break;} }
+    for(const m of muts){ if(m.addedNodes && m.addedNodes.length){ hayNuevo=true; _I18N_ROOTS.add(m.target&&m.target.nodeType===1?m.target:document.body); } }
     if(!hayNuevo) return;
     if(_I18N_PENDING) cancelAnimationFrame(_I18N_PENDING);
     _I18N_PENDING = requestAnimationFrame(()=>{
       _I18N_PENDING=null;
-      try{ applyLanguage(); }catch(e){}
+      // V9.16.0: solo se traduce lo que cambió (antes se recorría TODO el documento en cada cambio: duplicaba el tiempo de carga de los managers).
+      const raices=[..._I18N_ROOTS]; _I18N_ROOTS=new Set();
+      const finales=raices.filter(r=>r.isConnected&&!raices.some(o=>o!==r&&o.contains(r)));
+      try{ finales.forEach(r=>applyLanguage(r)); }catch(e){}
     });
   });
   _I18N_OBSERVER.observe(document.body,{childList:true,subtree:true});
@@ -5201,6 +5206,8 @@ let RFQ_DATA=null, RFQ_FILTRO='mios', RFQ_ACTUAL=null, RFQ_HTML=null, RFQ_TIMER=
 // ══════════════════════════════════════════════════════════════
 // Solo se ofrecen los departamentos que ya tienen responsables (y Facilities).
 // No se edita el archivo del formulario: se ajustan sus listas al cargarlo.
+// V9.16.0: el formulario consulta, al elegir un área, si otra solicitud de la semana ya la marcó.
+window.wwAreaOcupada=async function(area,quien){try{return await api({action:'getWeekendAreaOcupada',area:area,quien:quien||''});}catch(e){return {success:false};}};
 function weekendAjustarDeptos_(html,cfg){
   if(!cfg||!cfg.success||!Array.isArray(cfg.deptos)||!cfg.deptos.length)return html;
   let out=html.replace(/const DEPT_OPTIONS = \[[\s\S]*?\];/,()=>'const WW_FLUJO = '+JSON.stringify(cfg.aprobacion&&Object.keys(cfg.aprobacion).length?cfg.aprobacion:null)+';\n  const WW_AREAS_PLANO = '+JSON.stringify(cfg.areasPlano||{})+';\n  const DEPT_OPTIONS = '+JSON.stringify(cfg.deptos.map(d=>[d.code,d.label]))+';');   // V9.12.0
@@ -5481,7 +5488,7 @@ const AY_VENTANAS={
    mis:[
     {el:ayId_('compra-status-filter'),t:{es:'Filtra tus solicitudes',en:'Filter your requests'},i:{es:'Elige un estatus para ver solo las solicitudes en esa etapa.',en:'Choose a status to see only the requests at that stage.'},listo:null},
     {el:ayId_('compra-tab-new'),t:{es:'Para pedir algo nuevo, vuelve a «Nueva solicitud»',en:'To request something new, go back to “Nueva solicitud”'},i:{es:'Ahí llenas el formulario de compra.',en:'There you fill in the purchase form.'},listo:()=>ayVis_(document.getElementById('c-desc'))}]}},
- alturas:{titulo:{es:'Trabajo en Alturas',en:'Work at Heights'},view:'platform',
+ alturas:{titulo:{es:'Solicitud de Plataforma',en:'Platform Request'},view:'platform',
   pantalla:()=>ayVis_(document.getElementById('plat-name'))?'solicitar':(ayVis_(document.getElementById('plat-status-folio'))?'consultar':'calendario'),
   pantallas:{
    calendario:[
@@ -6103,7 +6110,15 @@ window.addEventListener('message',async ev=>{
   if(r.success){toast('Utilities month saved','ok');setTimeout(loadUtilities,400);}
 });
 
-function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); rfqCargar(); }
+// V9.16.0 — Librerías pesadas bajo demanda (antes bloqueaban la carga de TODA la aplicación para todos los usuarios).
+async function cargarFullCalendar_(){
+  if(typeof FullCalendar!=='undefined')return;
+  if(!document.getElementById('fc-css')){const l=document.createElement('link');l.id='fc-css';l.rel='stylesheet';l.href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css';document.head.appendChild(l);}
+  await wwCargarScript_('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js');
+  await wwCargarScript_('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js');
+}
+async function asegurarJsQR_(){if(typeof jsQR==='undefined')await wwCargarScript_('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js');}
+function goRFQ(){ if(!requireLogin('rfq'))return; showView('rfq'); const _t=$('rfq-tabs-compra'); if(_t)_t.style.display=(SESSION&&SESSION.user&&['tecnico','ingeniero'].includes(SESSION.user.rol))?'grid':'none'; rfqCargar(); }   // V9.16.0: técnicos e ingenieros ven las pestañas de Compras también aquí
 async function rfqCargar(){
   $('rfq-lista').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
   try{
@@ -9067,7 +9082,8 @@ async function loadPlatformCalendar(){
       };
     });
 
-    if(typeof FullCalendar==='undefined'){
+    if(typeof FullCalendar==='undefined'){try{await cargarFullCalendar_();}catch(e){}}
+ if(typeof FullCalendar==='undefined'){
       $('platform-calendar').innerHTML='<p style="color:#64748B">Calendario no disponible sin conexión a la librería. Las solicitudes continúan funcionando.</p>';
       return;
     }
@@ -9933,7 +9949,8 @@ async function buscarCodigoQR() {
   }
 }
 
-async function startQRScanner() {
+function startQRScanner() { asegurarJsQR_().then(()=>startQRScannerBase_()).catch(()=>toast("No se pudo cargar el lector de QR (¿sin conexión?).","err")); }
+async function startQRScannerBase_() {
   if (!SESSION || SESSION.user.rol !== 'tecnico') { toast('Solo los técnicos pueden utilizar la recepción por QR.','err'); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     toast('Este navegador no permite acceso a la cámara. Usa "Leer QR desde foto" o escribe el código.','err'); return;
@@ -10011,7 +10028,8 @@ function stopQRScanner() {
   if($('qr-camera-wrap')) $('qr-camera-wrap').style.display='none';
 }
 
-async function scanQRFromImage(input) {
+function scanQRFromImage(input) { asegurarJsQR_().then(()=>scanQRFromImageBase_(input)).catch(()=>toast("No se pudo cargar el lector de QR (¿sin conexión?).","err")); }
+async function scanQRFromImageBase_(input) {
   const file=input.files?.[0]; input.value=''; if(!file)return;
   try{
     const bmp=await createImageBitmap(file);
@@ -11920,8 +11938,8 @@ async function refreshAdmin() {
     const esPresidente=!!(SESSION.user&&SESSION.user.soloWeekendWork);
     if($('manager-approval-box'))$('manager-approval-box').style.display=esPresidente?'none':'';
     await loadAdminBootstrap();
-    if(!esPresidente)renderManagerApprovalQueue();
-    renderSolicitudes();
+    if(!window.__BOOT_OK){if(!esPresidente)renderManagerApprovalQueue();
+    renderSolicitudes();}   // V9.16.0: el arranque ya las pintó; antes se pintaban dos veces
     switchTab(esPresidente?'weekend':'sol');
     return;
   }
@@ -11935,6 +11953,7 @@ async function refreshAdmin() {
 // en una sola llamada, y las listas viajan sin el campo "historial", que era
 // lo más pesado del payload.
 async function loadAdminBootstrap(){
+  window.__BOOT_OK=false;
   try{
     const res=await api({action:'getAdminBootstrap',token:SESSION.token});
     if(!res.success){
@@ -11946,6 +11965,7 @@ async function loadAdminBootstrap(){
     }
 
     SOL_DATA=res.requests||[];
+  window.__BOOT_OK=true;
     refreshWorkStatusFilterLabels();
     renderSolicitudes();
     renderManagerApprovalQueue();
@@ -11956,7 +11976,7 @@ async function loadAdminBootstrap(){
     renderCompras();
 
     if(res.inventarioResponse)aplicarInventarioAdmin_(res.inventarioResponse);
-    else{try{await loadAdminInventario();}catch(e){}}
+    else if(SESSION?.user?.rol!=='manager'){try{await loadAdminInventario();}catch(e){}}   // V9.16.0: el manager no ve Inventario
 
     if(res.lpa){LPA_DATA=res.lpa;try{renderLPA();}catch(e){}}
     if(res.acciones){ACC_DATA=res.acciones;try{renderAcciones();}catch(e){}}
@@ -12597,6 +12617,7 @@ function showOpsAnalyticsSubtab(tab){
   if(tab==='eng'&&!ENG_DATA)loadEngAnalytics();
 }
 
+let SOL_LIM=300, COMPRA_LIM=300;   // V9.16.0: se pintan 300 filas y el resto con «Mostrar más»
 let ADMIN_INV_DATA=[];
 async function loadAdminInventario() {
   try{
@@ -13076,7 +13097,7 @@ function renderSolicitudes() {
     tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>'+uiText('Sin resultados')+'</td></tr>';
     return;
   }
-  tbody.innerHTML=list.map(r=>`
+  const _tot=list.length; tbody.innerHTML=list.slice(0,SOL_LIM).map(r=>`
     <tr class="tbl-row" onclick="openSolicitudModal('${r.id}')">
       <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#2563EB">${r.folio||'—'}</span></td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
@@ -13086,7 +13107,7 @@ function renderSolicitudes() {
       <td>${estatusBadge(r.estatus)}</td>
       <td style="font-size:.76rem;color:#64748B">${r.tecnico||'<span style="color:#CBD5E1">'+uiText('Sin asignar')+'</span>'}</td>
       <td style="text-align:center"><button onclick="event.stopPropagation();openSolicitudModal('${r.id}')" style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
-    </tr>`).join('');
+    </tr>`).join('')+(_tot>SOL_LIM?'<tr><td colspan="8" style="text-align:center;padding:14px"><button class="btn-g" style="width:auto" onclick="SOL_LIM+=300;renderSolicitudes()">'+uiText('Mostrar más')+' ('+SOL_LIM+' / '+_tot+')</button></td></tr>':'');
 }
 
 const compraBadge = s => {
@@ -13116,7 +13137,7 @@ function renderCompras() {
     tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-cart-shopping" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>'+uiText('Sin resultados')+'</td></tr>';
     return;
   }
-  tbody.innerHTML=list.map(r=>`
+  const _tot=list.length; tbody.innerHTML=list.slice(0,COMPRA_LIM).map(r=>`
     <tr class="tbl-row" onclick="openCompraModal('${r.id}')">
       <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#D97706">${r.folio||'—'}</span></td>
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fecha)}</td>
@@ -13126,7 +13147,7 @@ function renderCompras() {
       <td style="color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
       <td>${compraBadge(r.estatus)}${String(r.cotizacionesEstado||'')==='Enviadas a Ingeniería'?'<div style="font-size:.62rem;color:#15803D;margin-top:3px"><i class="fas fa-paper-plane"></i> Cotizaciones enviadas</div>':(r.cotizacionesPDF&&r.cotizacionesPDF!=='[]'?'<div style="font-size:.62rem;color:#B45309;margin-top:3px"><i class="fas fa-file-pdf"></i> Pendientes de enviar</div>':'')}</td>
       <td style="text-align:center"><button onclick="event.stopPropagation();verHistorialRegistro('compra','${r.id}','${r.folio}')" title="Ver historial" style="width:28px;height:28px;background:#EFF6FF;border:none;border-radius:7px;cursor:pointer;color:#2563EB;margin-right:4px"><i class="fas fa-clock-rotate-left" style="font-size:.72rem"></i></button><button onclick="event.stopPropagation();openCompraModal('${r.id}')" style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706"><i class="fas fa-pen-to-square" style="font-size:.72rem"></i></button></td>
-    </tr>`).join('');
+    </tr>`).join('')+(_tot>COMPRA_LIM?'<tr><td colspan="8" style="text-align:center;padding:14px"><button class="btn-g" style="width:auto" onclick="COMPRA_LIM+=300;renderCompras()">'+uiText('Mostrar más')+' ('+COMPRA_LIM+' / '+_tot+')</button></td></tr>':'');
 }
 
 function renderLPA() {

@@ -1348,7 +1348,7 @@
                             <p data-zone-status class="text-xs text-gray-400 mt-1" style="display:none;"></p>
                             <input type="hidden" data-field="layoutZone" value="">
  <input type="hidden" data-field="workAreasJSON" value="[]"><input type="hidden" data-field="layoutZones" value="[]">
- <div data-area-chips class="flex flex-wrap gap-2 mt-2"></div><p data-area-note class="text-xs text-gray-400 mt-1">You can add up to 5 areas to the same activity. Mark one location on the layout for each.</p>
+ <div data-area-chips class="flex flex-wrap gap-2 mt-2"></div><p data-area-note class="text-xs text-gray-400 mt-1">You can add up to 5 areas to the same activity. Mark one location on the layout for each.</p><div data-area-busy class="mt-2"></div>
                         </div>
                     </div>
 
@@ -1550,6 +1550,25 @@
     const act = nombreActividadPaso(step);
     return stepZones(step).map(z => Object.assign({}, z, { label: ajustarEtiquetaZona(z.area || '', act, z.w) }));
   }
+  // V9.16.0 — Aviso: otra solicitud de esta semana ya marcó esta área. Solo informa; no bloquea nada.
+  function areaOcupadaPuente() { try { return (window.parent && typeof window.parent.wwAreaOcupada === 'function') ? window.parent.wwAreaOcupada : null; } catch (e) { return null; } }
+  async function avisarAreaOcupada(step, area) {
+    const fn = areaOcupadaPuente(); if (!fn) return;
+    try {
+      const quien = ((document.getElementById('registrantName') || {}).value || '').trim();
+      const r = await fn(area, quien);
+      step._ocupadas = step._ocupadas || {}; step._ocupadas[area] = (r && r.success && Array.isArray(r.ocupantes)) ? r.ocupantes : [];
+      renderAreaOcupada(step);
+    } catch (e) { /* un aviso nunca debe estorbar */ }
+  }
+  function renderAreaOcupada(step) {
+    const box = step.querySelector('[data-area-busy]'); if (!box) return;
+    const areas = stepAreas(step), oc = step._ocupadas || {};
+    const bloques = areas.filter(a => (oc[a] || []).length).map(a =>
+      '<div style="margin-top:6px"><b>' + escapeHtml(a) + '</b> is already marked by:<ul style="margin:3px 0 0 18px;list-style:disc">' +
+      oc[a].map(x => '<li>' + escapeHtml([x.departamento, x.solicitante].filter(Boolean).join(' · ')) + (x.actividad ? ' — ' + escapeHtml(x.actividad) : '') + (x.horario ? ' (' + escapeHtml(x.horario) + ')' : '') + '</li>').join('') + '</ul></div>').join('');
+    box.innerHTML = bloques ? '<div role="alert" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:10px 12px;font-size:.8rem;color:#92400E"><b>⚠ Someone else will also work in this area this weekend.</b>' + bloques + '<div style="margin-top:6px">Please coordinate with them before continuing.</div></div>' : '';
+  }
   function renderAreaChips(step) {
     const holder = step.querySelector('[data-area-chips]'); if (!holder) return;
     const areas = stepAreas(step), zones = stepZones(step);
@@ -1569,13 +1588,13 @@
     const step = el.closest('.wizard-step'); if (!step) return;
     const v = el.value; el.value = ''; if (!v) return;
     const arr = stepAreas(step); if (arr.includes(v) || arr.length >= AREAS_MAX) { renderAreaChips(step); return; }
-    arr.push(v); setStepAreas(step, arr); autoZonaArea(step, v); renderAreaChips(step); updateZoneStatusUI(step, parseInt(step.dataset.step, 10));
+    arr.push(v); setStepAreas(step, arr); autoZonaArea(step, v); renderAreaChips(step); avisarAreaOcupada(step, v); updateZoneStatusUI(step, parseInt(step.dataset.step, 10));
   });
   document.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-action="remove-area"]'); if (!b) return;
     e.preventDefault(); const step = b.closest('.wizard-step'), a = decodeURIComponent(b.dataset.area);
     setStepAreas(step, stepAreas(step).filter(x => x !== a)); setStepZones(step, stepZones(step).filter(z => z.area !== a));
-    updateZoneStatusUI(step, parseInt(step.dataset.step, 10));
+    updateZoneStatusUI(step, parseInt(step.dataset.step, 10)); renderAreaOcupada(step);
   });
   // ── V9.12.0 — Mensaje al terminar: código y estado de aprobación ──
   function afterSendNeedsApproval() {
