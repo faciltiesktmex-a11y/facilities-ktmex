@@ -1913,8 +1913,17 @@ const LPA_AREAS = {
       <div style="display:flex;gap:7px">
         <button class="btn-g" id="pm-tab-equipos" onclick="pmTab('equipos')"><i class="fas fa-gears" style="margin-right:5px"></i>Equipos</button>
         <button class="btn-g" id="pm-tab-programa" onclick="pmTab('programa')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Programa</button>
+        <button class="btn-g" id="pm-tab-tablero" onclick="pmTab('tablero')"><i class="fas fa-chart-column" style="margin-right:5px"></i>Tablero</button>
       </div>
     </div>
+  </div>
+  <div id="pm-panel-tablero" style="display:none">
+    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:.78rem;color:#475569">Desde</span><input id="pm-t-desde" type="date" class="inp" style="width:auto">
+      <span style="font-size:.78rem;color:#475569">Hasta</span><input id="pm-t-hasta" type="date" class="inp" style="width:auto">
+      <button class="btn-p" onclick="pmCargarTablero()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+    </div>
+    <div id="pm-tablero"></div>
   </div>
   <div id="pm-panel-equipos">
     <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -1943,10 +1952,11 @@ const LPA_AREAS = {
     <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 8px"><i class="fas fa-user-gear" style="color:#2563EB;margin-right:8px"></i>Asignar orden de preventivo</h3>
     <div id="pm-asig-info" style="font-size:.76rem;color:#334155;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;margin-bottom:12px"></div>
     <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Técnico *</label>
-    <select id="pm-asig-tec" class="inp" style="margin-bottom:10px"></select>
+    <select id="pm-asig-tec" class="inp" style="margin-bottom:10px" onchange="pmPrevisualizar()"></select>
     <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Fecha de ejecución *</label>
-    <input id="pm-asig-fecha" type="date" class="inp" style="margin-bottom:6px">
+    <input id="pm-asig-fecha" type="date" class="inp" style="margin-bottom:6px" onchange="pmPrevisualizar()">
     <div style="font-size:.68rem;color:#64748B;margin-bottom:14px">La orden aparecerá en el Plan Diario del técnico ese día, como una actividad planeada.</div>
+    <div id="pm-asig-prev" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:8px">
       <button class="btn-g" style="flex:1" onclick="closeModal('modal-pm-asignar')">Cancelar</button>
       <button class="btn-p" id="btn-pm-asig" style="flex:1.4" onclick="pmConfirmarAsignacion()">Asignar</button>
@@ -3449,7 +3459,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.17.1';
+const FRONTEND_BUILD = '9.18.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3926,7 +3936,23 @@ Object.assign(TEXT_I18N,{
   'Herramientas':'Tools','Mis actividades':'My activities','Aprobaciones Weekend':'Weekend approvals','Aprobaciones de Weekend Work':'Weekend Work approvals',
   'Por aprobar':'To approve','Últimas 4 semanas':'Last 4 weeks','Seguimiento':'Follow-up','Seguimiento de la solicitud':'Request follow-up','Tu sesión venció':'Your session expired',
   'Aprobar':'Approve','Aprobar en lugar del responsable':'Approve in place of the approver','Rechazar la solicitud':'Reject the request','Departamento…':'Department…','Ayuda':'Help',
-  'Weekend Work (mi área)':'Weekend Work (my area)','Mostrar más':'Show more','Cambiar mi foto':'Change my photo',
+  'Weekend Work (mi área)':'Weekend Work (my area)','Mostrar más':'Show more',
+ 'Mantenimiento preventivo':'Preventive maintenance','401 equipos · 33 planes · las actividades diarias y semanales se cumplen con el checklist de Inspecciones':'401 assets · 33 plans · daily and weekly activities are covered by the Inspections checklist',
+ 'Equipos':'Assets','Programa':'Schedule','Tablero':'Dashboard','Equipo':'Asset','Clasificación':'Classification','Localización':'Location','Próxima orden':'Next order',
+ 'Buscar equipo, ID de SVISION o plan…':'Search asset, SVISION ID or plan…','Todas las localizaciones':'All locations','Todas las clasificaciones':'All classifications','Toda prioridad':'All priorities',
+ 'Planes y actividades':'Plans and activities','Frecuencia':'Frequency','Duración':'Duration','Última':'Last','Próxima':'Next','Requiere paro':'Requires shutdown','Materiales que consume':'Materials consumed','Todavía no hay órdenes ejecutadas para este equipo.':'No orders have been executed for this asset yet.',
+ 'Desde la semana del':'From the week of','Ver programa':'View schedule','Cumplimiento del programa:':'Program compliance:','Calculando programa…':'Calculating schedule…','Cargando equipos…':'Loading assets…','Cargando hoja de vida…':'Loading asset life sheet…','Sin órdenes esta semana.':'No orders this week.',
+ 'Asignar orden de preventivo':'Assign preventive work order','Técnico *':'Technician *','Fecha de ejecución *':'Execution date *','— Elige al técnico —':'— Choose the technician —','Asignar':'Assign','Desde':'From','Hasta':'To',
+ 'La orden aparecerá en el Plan Diario del técnico ese día, como una actividad planeada.':'The order will appear in the technician\'s Daily Plan that day, as a planned activity.',
+ 'Eléctrico':'Electrical','Climatización':'HVAC','Aire comprimido':'Compressed air','Hidráulico y sanitario':'Hydraulic and sanitary','Infraestructura':'Infrastructure','Ventilación':'Ventilation','Seguridad industrial':'Industrial safety',
+ 'Mantenimiento preventivo a tableros':'Preventive maintenance of switchboards','Mantenimiento a desconectadores':'Disconnect switch maintenance','Filtro de armónicas':'Harmonic filter','Iluminación interior':'Interior lighting','Iluminación perimetral':'Perimeter lighting',
+ 'Aires acondicionados (condensadoras y minisplit)':'Air conditioners (condensing units and minisplit)','Cassettes de aire acondicionado':'Air conditioning cassettes','Compresor Hitachi':'Hitachi compressor','Compresor Kaeser':'Kaeser compressor',
+ 'Inspección de cuarto de compresores':'Compressor room inspection','Limpieza de filtros':'Filter cleaning','Mantenimiento a bombas':'Pump maintenance','Hidroneumático':'Hydropneumatic tank','Cisterna':'Cistern','Mantenimiento a baños':'Restroom maintenance',
+ 'Inspección de tarja':'Sink inspection','Mantenimiento a cortinas':'Curtain maintenance','Mantenimiento a cierrapuertas':'Door closer maintenance','Transformadores secos':'Dry-type transformers','Transformadores con aislamiento de aceite':'Oil-insulated transformers',
+ 'Subestación, banco de capacitores y relés de protección SEPAM':'Substation, capacitor bank and SEPAM protection relays','Rampas y niveladores de andén':'Dock ramps and levelers','Extractores de aire industrial':'Industrial air extractors',
+ 'Secadores de aire comprimido':'Compressed air dryers','Recipientes sujetos a presión y válvula de alivio':'Pressure vessels and relief valve','PTAR / planta de tratamiento de aguas residuales':'WWTP / wastewater treatment plant',
+ 'Cortinas rápidas / puertas de alta velocidad':'Rapid curtains / high-speed doors','Bombas trituradoras y bombas pluviales':'Grinder pumps and stormwater pumps','Torre de enfriamiento':'Cooling tower','Tanques y suavizador de agua':'Water tanks and softener',
+ 'Plataforma de elevación':'Lifting platform','Botiquín de primeros auxilios':'First aid kit','Infraestructura y mobiliario menor':'Infrastructure and minor furniture','Cambiar mi foto':'Change my photo',
 'Todavía no hay documentos de fin de semana.':'There are no weekend documents yet.','Firmas como':'You sign as','. No tienes documentos pendientes.':'. You have no pending documents.',
  'Consulta de documentos. Tu usuario':'Viewing documents. Your user','no forma parte de la cadena de firmas.':'is not part of the signature chain.',
  'Asignar guardias y continuar':'Assign duty and continue','Firmar por ausencia':'Sign on behalf (absence)','Guardias':'Duty roster','Asignar guardias':'Assign duty',
@@ -4369,6 +4395,8 @@ const I18N_PATRONES=[
  [/^· Organiza: (.+)$/,'· Organizer: $1'],
  [/^(\d+) solicitud(?:es)? cerrada(?:s)? oculta(?:s)?\.$/,'$1 closed request(s) hidden.'],
  [/^Total: (\d+)$/,'Total: $1'],
+ [/^(\d+) de (\d+) equipos$/,'$1 of $2 assets'],[/^(\d+) por checklist$/,'$1 via checklist'],[/^([\d.]+) h de mantenimiento al año$/,'$1 h of maintenance per year'],
+ [/^\((\d+) de (\d+) órdenes\)$/,'($1 of $2 orders)'],[/^Semana del (.+)$/,'Week of $1'],[/^(\d+) órdenes ·$/,'$1 orders ·'],[/^de (\d+) h \((.+) %\) ·$/,'of $1 h ($2 %) ·'],[/^(\d+) equipo\(s\): (.+)$/,'$1 asset(s): $2'],[/^(\d+) cerradas$/,'$1 closed'],
 ];
 function uiPatron_(t){ for(const [re,rp] of I18N_PATRONES){ if(re.test(t)) return t.replace(re,rp); } return ''; }
 function uiText(es) {
@@ -4890,6 +4918,157 @@ function goPlanDiario(){
 // ══════════════════════════════════════════════════════════════
 let PM_DATA=null;
 const PM_PRIO_COLOR={Alta:['#FEE2E2','#B91C1C'],Media:['#FEF3C7','#B45309'],Baja:['#E0F2FE','#0369A1']};
+// ══ V9.18.0 — Mantenimiento preventivo completo (pantalla) ══
+const PM_ETAPA_COLOR={'Enviada':['#FEF3C7','#92400E'],'Confirmada':['#DBEAFE','#1E40AF'],'En proceso':['#E0E7FF','#3730A3'],'Completada':['#DCFCE7','#166534'],'Cerrada':['#E2E8F0','#334155']};
+const PM_ETAPA_EN={'Enviada':'Sent','Confirmada':'Confirmed','En proceso':'In progress','Completada':'Completed','Cerrada':'Closed'};
+const PM_MAT_EN={'Disponible':'Available','En compra':'On order','Recibido':'Received','Sin compra':'Not purchased','Sin solicitud':'No request','Omitido':'Skipped'};
+const PM_MAT_COLOR={'Disponible':['#DCFCE7','#166534'],'En compra':['#FEF3C7','#92400E'],'Recibido':['#DCFCE7','#166534'],'Sin compra':['#FEE2E2','#991B1B'],'Sin solicitud':['#FEE2E2','#991B1B'],'Omitido':['#E2E8F0','#334155']};
+const PM_CURSO_EN={'Vigente':'Valid','Por vencer':'Expiring','Vencido':'Expired','Sin registro':'No record'};
+const PM_CURSO_COLOR={'Vigente':['#DCFCE7','#166534'],'Por vencer':['#FEF3C7','#92400E'],'Vencido':['#FEE2E2','#991B1B'],'Sin registro':['#FEE2E2','#991B1B']};
+function pmT(es,en){return LANG==='en'?en:es;}
+function pmChip_(txt,c){return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700;font-size:.64rem;white-space:nowrap">${escapeHtml(txt)}</span>`;}
+function pmEtapaChip_(e){return pmChip_(pmT(e,PM_ETAPA_EN[e]||e),PM_ETAPA_COLOR[e]||['#F1F5F9','#475569']);}
+function pmCursoNombre_(c){return LANG==='en'&&typeof ENTR_CURSOS_EN!=='undefined'&&ENTR_CURSOS_EN[c]?ENTR_CURSOS_EN[c]:c;}
+function pmAlertasOrden_(o){
+  const a=[];
+  if(o.sinConfirmar24)a.push(`<div style="font-size:.64rem;color:#B45309;font-weight:700"><i class="fas fa-clock" style="margin-right:3px"></i>${pmT('Sin confirmar más de 24 h','Unconfirmed for over 24 h')}</div>`);
+  if(o.matPendientes>0)a.push(`<div style="font-size:.64rem;color:#92400E;font-weight:700"><i class="fas fa-box" style="margin-right:3px"></i>${pmT(o.matPendientes+' material(es) en compra',o.matPendientes+' material(s) on order')}</div>`);
+  else if(o.matTotal>0)a.push(`<div style="font-size:.64rem;color:#166534;font-weight:700"><i class="fas fa-box-open" style="margin-right:3px"></i>${pmT('Material recibido','Material received')}</div>`);
+  if((o.advertencias||[]).some(x=>x.tipo==='curso'&&x.gravedad==='alta'))a.push(`<div style="font-size:.64rem;color:#991B1B;font-weight:700"><i class="fas fa-graduation-cap" style="margin-right:3px"></i>${pmT('Curso vencido o sin registro','Course expired or missing')}</div>`);
+  return a.join('');
+}
+function pmAccionOrden_(o,lunes){
+  if(o.estatus==='Cerrada')return `<div style="margin-top:4px">${pmEtapaChip_('Cerrada')}<div style="font-size:.64rem;color:#64748B;margin-top:2px">${pmFechaCorta_(o.fechaCierre)}</div></div>`;
+  if(o.estatus==='Asignada'){
+    const libre=(o.etapa==='Enviada'||o.etapa==='Confirmada');
+    return `<div style="margin-top:4px">${pmEtapaChip_(o.etapa||'Enviada')}</div><div style="font-size:.66rem;color:#1D4ED8;margin-top:3px">${escapeHtml(o.tecnico||'')} · ${pmFechaCorta_(o.fechaEjecucion)}<br>${escapeHtml(o.folio||'')} · ${escapeHtml(o.idOrden||'')}</div>${pmAlertasOrden_(o)}
+ ${libre?`<button class="btn-g" style="padding:3px 9px;font-size:.66rem;margin-top:4px" onclick="pmLiberar('${o.idOrden}')">${pmT('Liberar','Release')}</button>`:''}`;
+  }
+  const i=PM_PROG_ORD.push(Object.assign({lunes},o))-1;
+  return `<button class="btn-p" style="padding:4px 11px;font-size:.7rem;margin-top:5px" onclick="pmAbrirAsignar(${i})"><i class="fas fa-user-plus" style="margin-right:4px"></i>${pmT('Asignar','Assign')}</button>`;
+}
+let PM_PREV_SEQ=0, PM_ASIG_PREV=null;
+function pmPreviewHtml_(p){
+  if(!p)return '';
+  const g={alta:['#FEE2E2','#991B1B','fa-circle-exclamation'],media:['#FEF3C7','#92400E','fa-triangle-exclamation'],info:['#EFF6FF','#1E40AF','fa-circle-info']};
+  let h='';
+  if(p.aCompra&&p.aCompra.length){
+    h+=`<div style="border:1px solid #FDE68A;background:#FFFBEB;border-radius:9px;padding:9px 11px;margin-bottom:8px"><div style="font-size:.74rem;font-weight:700;color:#92400E;margin-bottom:4px"><i class="fas fa-box" style="margin-right:5px"></i>${pmT('Material por solicitar a Compras ('+p.aCompra.length+')','Material to request from Purchasing ('+p.aCompra.length+')')}</div>
+      ${p.aCompra.map(m=>`<div style="font-size:.7rem;color:#78350F">${escapeHtml(m.codigo)} · ${escapeHtml(m.descripcion)} — <b>${m.cantidad} ${escapeHtml(m.unidad)}</b> <span style="color:#A16207">(${pmT('existencia','stock')} ${m.stock}, ${pmT('mínimo','min')} ${m.minimo})</span></div>`).join('')}
+      <div style="font-size:.66rem;color:#92400E;margin-top:4px">${pmT('Al asignar se crean solas en Compras (pasan por Ingeniería y Manager) y el técnico confirma la recepción antes de iniciar.','On assignment they are created automatically in Purchasing (Engineering and Manager review) and the technician confirms reception before starting.')}</div></div>`;
+  }else if(p.materialesTotal>0){
+    h+=`<div style="font-size:.7rem;color:#166534;margin-bottom:8px"><i class="fas fa-box-open" style="margin-right:5px"></i>${pmT('El material del plan está completo en inventario ('+p.materialesTotal+').','Plan material is fully stocked ('+p.materialesTotal+').')}</div>`;
+  }
+  h+=`<div style="font-size:.7rem;color:#334155;margin-bottom:8px"><i class="fas fa-calendar-check" style="margin-right:5px;color:#2563EB"></i>${pmT('Anticipación','Notice')}: <b>${Math.max(p.dias,0)} ${pmT('día(s)','day(s)')}</b> · ${pmT('recomendado','recommended')} ${p.requerida}${p.aCompra&&p.aCompra.length?' ('+pmT('entrega de material','material delivery')+')':''}</div>`;
+  if(p.cursos&&p.cursos.length){
+    h+=`<div style="margin-bottom:8px"><div style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:3px"><i class="fas fa-graduation-cap" style="margin-right:5px;color:#7C3AED"></i>${pmT('Cursos que pide este plan','Courses this plan requires')}</div>
+      ${p.cursos.map(c=>`<div style="font-size:.68rem;display:flex;gap:6px;align-items:center;margin-bottom:2px">${pmChip_(pmT(c.estado,PM_CURSO_EN[c.estado]||c.estado),PM_CURSO_COLOR[c.estado]||['#F1F5F9','#475569'])}<span>${escapeHtml(pmCursoNombre_(c.curso))}${c.obligatorio?'':' <i style="color:#94A3B8">('+pmT('recomendado','recommended')+')</i>'}${c.vence?' <span style="color:#94A3B8">· '+pmT('vence','expires')+' '+pmFechaCorta_(c.vence)+'</span>':''}</span></div>`).join('')}</div>`;
+  }
+  (p.advertencias||[]).filter(a=>a.gravedad!=='info').forEach(a=>{const c=g[a.gravedad]||g.info;
+    h+=`<div style="font-size:.68rem;background:${c[0]};color:${c[1]};border-radius:8px;padding:6px 9px;margin-bottom:4px"><i class="fas ${c[2]}" style="margin-right:5px"></i>${escapeHtml(pmT(a.es,a.en))}</div>`;});
+  if(p.requiereConfirmacion)h+=`<div style="font-size:.68rem;font-weight:700;color:#991B1B;margin-top:4px">${pmT('Hay advertencias graves: al asignar se te pedirá confirmarlas.','There are serious warnings: you will be asked to confirm them when assigning.')}</div>`;
+  return h;
+}
+async function pmPrevisualizar(){
+  const o=PM_ASIG_CTX, box=$('pm-asig-prev'); if(!o||!box)return;
+  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value; if(!tec||!fecha){box.innerHTML='';PM_ASIG_PREV=null;return;}
+  const seq=++PM_PREV_SEQ; box.innerHTML=`<div style="font-size:.7rem;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>${pmT('Revisando material, anticipación y cursos…','Checking material, notice and courses…')}</div>`;
+  try{const r=await api({action:'pmPreviewOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha}); if(seq!==PM_PREV_SEQ)return; PM_ASIG_PREV=r.preview||null; box.innerHTML=pmPreviewHtml_(r.preview);}
+  catch(e){if(seq===PM_PREV_SEQ)box.innerHTML='';}
+}
+async function pmConfirmarAsignacion(){
+  const o=PM_ASIG_CTX; if(!o)return;
+  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value;
+  if(!tec){toast(pmT('Elige al técnico','Choose the technician'),'err');return;} if(!fecha){toast(pmT('Indica la fecha','Enter the date'),'err');return;}
+  const b=$('btn-pm-asig'); b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>'+pmT('Asignando…','Assigning…');
+  try{
+    let r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha});
+    if(!r.success&&r.requiereConfirmacion){
+      const graves=(r.advertencias||[]).filter(a=>a.gravedad==='alta').map(a=>'• '+pmT(a.es,a.en)).join('\n');
+      if(!confirm(pmT('Esta orden tiene advertencias graves:\n\n','This order has serious warnings:\n\n')+graves+'\n\n'+pmT('¿Asignarla de todos modos?','Assign it anyway?'))){return;}
+      r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha,confirmoAdvertencias:true});
+    }
+    if(!r.success){toast(r.error||pmT('No se pudo asignar','Could not assign'),'err');return;}
+    toast(r.mensaje||pmT('Orden asignada','Order assigned')); closeModal('modal-pm-asignar'); pmCargarPrograma();
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{b.disabled=false;b.innerHTML=pmT('Asignar','Assign');}
+}
+function pmBarraEtapas_(x,etapas){
+  if(!x.total)return '<div style="height:10px;border-radius:999px;background:#E2E8F0"></div>';
+  return `<div style="display:flex;height:10px;border-radius:999px;overflow:hidden;background:#E2E8F0">${etapas.map(e=>x[e]?`<div title="${escapeHtml(pmT(e,PM_ETAPA_EN[e]))}: ${x[e]}" style="width:${x[e]*100/x.total}%;background:${PM_ETAPA_COLOR[e][1]};opacity:.85"></div>`:'').join('')}</div>`;
+}
+function pmTablaGrupo_(titulo,lista,etapas,vacio){
+  return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${titulo}</div>
+  ${lista.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="color:#64748B;text-align:left"><th style="padding:5px 6px"></th><th style="padding:5px 6px">${pmT('Órdenes','Orders')}</th><th style="padding:5px 6px;min-width:150px">${pmT('Etapas','Stages')}</th><th style="padding:5px 6px">${pmT('Horas','Hours')}</th><th style="padding:5px 6px">${pmT('Hechas','Done')}</th><th style="padding:5px 6px">${pmT('Vencidas','Overdue')}</th><th style="padding:5px 6px">${pmT('Sin confirmar','Unconfirmed')}</th></tr></thead><tbody>
+  ${lista.map(x=>`<tr style="border-top:1px solid #E2E8F0"><td style="padding:6px;font-weight:600;color:#0F2A4A">${escapeHtml(x.nombre)}</td><td style="padding:6px">${x.total}</td><td style="padding:6px">${pmBarraEtapas_(x,etapas)}</td><td style="padding:6px">${Math.round(x.horas*10)/10}</td><td style="padding:6px;color:#166534;font-weight:700">${x.hechas}</td><td style="padding:6px;${x.vencidas?'color:#B91C1C;font-weight:700':''}">${x.vencidas}</td><td style="padding:6px;${x.sinConfirmar?'color:#B45309;font-weight:700':''}">${x.sinConfirmar}</td></tr>`).join('')}</tbody></table></div>`:`<div style="font-size:.74rem;color:#94A3B8">${vacio}</div>`}</div>`;
+}
+function pmRenderTablero_(r){
+  const T=r.total, kpi=(lab,val,col,sub)=>`<div class="card" style="padding:12px 14px;min-width:140px;flex:1"><div style="font-size:.64rem;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.03em">${lab}</div><div style="font-size:1.45rem;font-weight:800;color:${col||'#0F2A4A'}">${val}</div>${sub?`<div style="font-size:.64rem;color:#94A3B8">${sub}</div>`:''}</div>`;
+  const cc=r.cumplimiento===null?'#64748B':(r.cumplimiento>=90?'#15803D':(r.cumplimiento>=80?'#B45309':'#B91C1C'));
+  const etapas=r.etapas||[];
+  let h=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+   ${kpi(pmT('Órdenes del periodo','Orders in period'),T.total,'#0F2A4A',r.desde+' → '+r.hasta)}
+   ${kpi(pmT('Cumplimiento','Compliance'),r.cumplimiento===null?'—':r.cumplimiento+' %',cc,pmT('de '+r.baseCumplimiento+' órdenes con fecha ya cumplida','of '+r.baseCumplimiento+' orders already due'))}
+   ${kpi(pmT('Vencidas','Overdue'),T.vencidas,T.vencidas?'#B91C1C':'#15803D',pmT('sin terminar y con fecha pasada','unfinished and past due'))}
+   ${kpi(pmT('Sin confirmar > 24 h','Unconfirmed > 24 h'),T.sinConfirmar,T.sinConfirmar?'#B45309':'#15803D')}
+   ${kpi(pmT('Material en compra','Material on order'),T.enCompra,T.enCompra?'#92400E':'#15803D',pmT('órdenes esperando material','orders waiting for material'))}
+   ${kpi(pmT('Alertas de curso','Course alerts'),r.alertasCurso,r.alertasCurso?'#B91C1C':'#15803D',pmT('curso vencido o sin registro','expired or missing course'))}
+   ${kpi(pmT('Vencidas sin asignar','Overdue, unassigned'),r.sinAsignarVencidas,r.sinAsignarVencidas?'#B91C1C':'#15803D',pmT('actividades del programa','program activities'))}
+   ${kpi(pmT('Horas','Hours'),r.horasHechas+' / '+r.horasPlaneadas,'#0F2A4A',pmT('hechas / planeadas','done / planned'))}</div>`;
+  h+=`<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${pmT('Órdenes por etapa','Orders by stage')}</div>${pmBarraEtapas_(T,etapas)}
+   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">${etapas.map(e=>`<div style="font-size:.72rem;display:flex;align-items:center;gap:6px">${pmEtapaChip_(e)}<b>${T[e]||0}</b></div>`).join('')}</div></div>`;
+  h+=pmTablaGrupo_(pmT('Por técnico','By technician'),r.porTecnico,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
+  h+=pmTablaGrupo_(pmT('Por sistema (categoría)','By system (category)'),r.porSistema,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
+  h+=pmTablaGrupo_(pmT('Por tipo','By type'),r.porTipo,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
+  const MOT={vencida:[pmT('Vencida','Overdue'),['#FEE2E2','#991B1B']],sinConfirmar:[pmT('Sin confirmar','Unconfirmed'),['#FEF3C7','#92400E']],material:[pmT('Material pendiente','Material pending'),['#FEF3C7','#92400E']],curso:[pmT('Curso','Course'),['#FEE2E2','#991B1B']]};
+  h+=`<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${pmT('Requieren atención','Need attention')}</div>
+   ${r.atencion.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="color:#64748B;text-align:left"><th style="padding:5px 6px">${pmT('Orden','Order')}</th><th style="padding:5px 6px">${pmT('Plan','Plan')}</th><th style="padding:5px 6px">${pmT('Técnico','Technician')}</th><th style="padding:5px 6px">${pmT('Fecha','Date')}</th><th style="padding:5px 6px">${pmT('Etapa','Stage')}</th><th style="padding:5px 6px">${pmT('Motivo','Reason')}</th></tr></thead><tbody>
+   ${r.atencion.map(a=>`<tr style="border-top:1px solid #E2E8F0"><td style="padding:6px;font-family:'Space Mono',monospace">${escapeHtml(a.idOrden)}</td><td style="padding:6px">${escapeHtml(a.plan)}</td><td style="padding:6px">${escapeHtml(a.tecnico)}</td><td style="padding:6px">${pmFechaCorta_(a.fechaEjecucion)}</td><td style="padding:6px">${pmEtapaChip_(a.etapa)}</td><td style="padding:6px;display:flex;gap:4px;flex-wrap:wrap">${a.motivos.map(m=>pmChip_(MOT[m][0],MOT[m][1])).join('')}</td></tr>`).join('')}</tbody></table></div>`:`<div style="font-size:.74rem;color:#15803D"><i class="fas fa-circle-check" style="margin-right:5px"></i>${pmT('Nada requiere atención en este periodo.','Nothing needs attention in this period.')}</div>`}</div>`;
+  return h;
+}
+async function pmCargarTablero(){
+  const box=$('pm-tablero'); if(!box)return;
+  box.innerHTML=`<div class="card" style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>${pmT('Calculando tablero…','Calculating dashboard…')}</div>`;
+  try{
+    const r=await api({action:'getPMTablero',token:SESSION.token,desde:($('pm-t-desde')||{}).value||'',hasta:($('pm-t-hasta')||{}).value||''});
+    if(!r.success){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||pmT('No disponible','Not available'))}</div>`;return;}
+    if($('pm-t-desde'))$('pm-t-desde').value=r.desde; if($('pm-t-hasta'))$('pm-t-hasta').value=r.hasta;
+    box.innerHTML=pmRenderTablero_(r);
+  }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+}
+function pmTab(t){
+  const todos=['equipos','programa','tablero'];
+  if(t==='tablero'){
+    todos.forEach(x=>{const p=$('pm-panel-'+x); if(p)p.style.display=x===t?'':'none'; const b=$('pm-tab-'+x); if(b){b.style.background=x===t?'#0F2A4A':'';b.style.color=x===t?'#fff':'';}});
+    pmCargarTablero(); return;
+  }
+  const p3=$('pm-panel-tablero'); if(p3)p3.style.display='none'; const b3=$('pm-tab-tablero'); if(b3){b3.style.background='';b3.style.color='';}
+  pmTabBase_(t);
+}
+// — Tarjeta del técnico (Plan Diario) —
+function pmTarjetaHtml_(d,st){
+  const pm=d.pm; if(!pm)return '';
+  const mats=pm.materiales||[], pend=st&&st.b==='PENDIENTE', id=escapeHtml(pm.idOrden);
+  let h=`<div style="margin:8px 0;padding:10px 12px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:9px;font-size:.72rem;color:#1E3A8A">
+   <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b><i class="fas fa-screwdriver-wrench" style="margin-right:5px"></i>${pmT('Orden de preventivo','Preventive work order')} <span class="mono">${id}</span></b>${pmEtapaChip_(pm.etapa)}</div>`;
+  if(pend&&!pm.confirmada)h+=`<div style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>${pmT('Confirma que recibiste esta orden.','Confirm that you received this order.')}</span><button class="btn-p" style="padding:4px 12px;font-size:.7rem" onclick="pmConfirmarOrdenUI('${id}')"><i class="fas fa-check" style="margin-right:4px"></i>${pmT('Confirmar orden','Confirm order')}</button></div>`;
+  else if(pm.confirmada)h+=`<div style="margin-top:5px;color:#166534"><i class="fas fa-circle-check" style="margin-right:4px"></i>${pmT('Orden confirmada','Order confirmed')}</div>`;
+  if(mats.length){
+    h+=`<div style="margin-top:7px"><b>${pmT('Material de esta orden','Material for this order')}</b>${mats.map(m=>`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px">${pmChip_(pmT(m.estado,PM_MAT_EN[m.estado]||m.estado),PM_MAT_COLOR[m.estado]||['#F1F5F9','#475569'])}<span>${escapeHtml(m.descripcion)} · ${m.cantidad} ${escapeHtml(m.unidad||'')}${m.compraFolio?' · <span class="mono">'+escapeHtml(m.compraFolio)+'</span>':''}</span></div>`).join('')}</div>`;
+    if(pend&&pm.matTotal>0&&pm.matPendientes===0&&!pm.materialesConfirmados)h+=`<div style="margin-top:7px"><button class="btn-p" style="padding:4px 12px;font-size:.7rem" onclick="pmConfirmarMaterialUI('${id}')"><i class="fas fa-box-open" style="margin-right:4px"></i>${pmT('Confirmar recepción de material','Confirm material received')}</button></div>`;
+    if(pend&&pm.bloqueoInicio)h+=`<div style="margin-top:7px;padding:7px 9px;background:#FEF3C7;color:#92400E;border-radius:8px"><i class="fas fa-lock" style="margin-right:4px"></i>${pmT('No puedes iniciar todavía: ','You cannot start yet: ')}${escapeHtml(pm.bloqueoInicio)}</div>`;
+  }
+  const malos=(pm.cursos||[]).filter(c=>c.obligatorio&&(c.estado==='Vencido'||c.estado==='Sin registro'));
+  if(malos.length)h+=`<div style="margin-top:7px;color:#991B1B"><i class="fas fa-graduation-cap" style="margin-right:4px"></i>${pmT('Curso por renovar: ','Course to renew: ')}${malos.map(c=>escapeHtml(pmCursoNombre_(c.curso))).join(', ')}</div>`;
+  return h+'</div>';
+}
+async function pmConfirmarOrdenUI(idOrden){
+  try{const r=await api({action:'pmConfirmarOrden',token:SESSION.token,idOrden}); if(!r.success){toast(r.error||'Error','err');return;} toast(pmT(r.mensaje||'Orden confirmada',r.yaConfirmada?'The order was already confirmed.':'Order confirmed.')); if(typeof loadDailyPlan==='function')loadDailyPlan();}catch(e){toast('Error: '+e.message,'err');}
+}
+async function pmConfirmarMaterialUI(idOrden){
+  try{const r=await api({action:'pmConfirmarMaterial',token:SESSION.token,idOrden}); if(!r.success){toast(r.error||'Error','err');return;} toast(pmT(r.mensaje||'Recepción confirmada','Reception confirmed. You can start the activity now.')); if(typeof loadDailyPlan==='function')loadDailyPlan();}catch(e){toast('Error: '+e.message,'err');}
+}
+
 function pmBadge_(t,map){const c=(map||PM_PRIO_COLOR)[t]||['#F1F5F9','#475569'];
   return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700;font-size:.66rem">${escapeHtml(t||'—')}</span>`;}
 function pmFechaCorta_(f){if(!f)return '—';const p=String(f).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
@@ -4900,7 +5079,7 @@ function goPreventivo(){
   if(!PM_DATA)pmCargarEquipos();
 }
 
-function pmTab(t){
+function pmTabBase_(t){
   ['equipos','programa'].forEach(x=>{
     $('pm-panel-'+x).style.display=x===t?'':'none';
     const b=$('pm-tab-'+x); if(b){b.style.background=x===t?'#0F2A4A':'';b.style.color=x===t?'#fff':'';}
@@ -4998,13 +5177,7 @@ async function pmVerEquipo(id){
 
 // ── V9.4.0: asignación de órdenes ───────────────────────────
 let PM_PROG=null, PM_PROG_ORD=[], PM_ASIG_CTX=null;
-function pmAccionOrden_(o,lunes){
-  if(o.estatus==='Cerrada')return `<div style="font-size:.66rem;color:#15803D;font-weight:700;margin-top:4px"><i class="fas fa-circle-check" style="margin-right:3px"></i>Cerrada ${pmFechaCorta_(o.fechaCierre)}</div>`;
-  if(o.estatus==='Asignada')return `<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px">${escapeHtml(o.tecnico||'')} · ${pmFechaCorta_(o.fechaEjecucion)}<br>${escapeHtml(o.folio||'')} · ${escapeHtml(o.idOrden||'')}</div>
-    <button class="btn-g" style="padding:3px 9px;font-size:.66rem;margin-top:4px" onclick="pmLiberar('${o.idOrden}')">Liberar</button>`;
-  const i=PM_PROG_ORD.push(Object.assign({lunes},o))-1;
-  return `<button class="btn-p" style="padding:4px 11px;font-size:.7rem;margin-top:5px" onclick="pmAbrirAsignar(${i})"><i class="fas fa-user-plus" style="margin-right:4px"></i>Asignar</button>`;
-}
+
 function pmAbrirAsignar(i){
   const o=PM_PROG_ORD[i]; if(!o)return; PM_ASIG_CTX=o;
   $('pm-asig-info').innerHTML=`<b>${escapeHtml(o.plan)}</b> · ${escapeHtml(o.localizacion)} · ${o.horas} h<br>
@@ -5013,20 +5186,10 @@ function pmAbrirAsignar(i){
   const tecs=(PM_PROG.tecnicos||[]).map(t=>typeof t==='string'?{username:t,nombre:t}:t);
   $('pm-asig-tec').innerHTML='<option value="">— Elige al técnico —</option>'+tecs.map(t=>`<option value="${escapeHtml(t.username||t.nombre)}">${escapeHtml(t.nombre||t.username)}</option>`).join('');
   const hoy=localDateKeyV843_(); $('pm-asig-fecha').value=o.lunes<hoy?hoy:o.lunes;
-  $('modal-pm-asignar').style.display='flex';
+  $('pm-asig-prev').innerHTML='';PM_ASIG_PREV=null;PM_PREV_SEQ++;
+ $('modal-pm-asignar').style.display='flex';
 }
-async function pmConfirmarAsignacion(){
-  const o=PM_ASIG_CTX; if(!o)return;
-  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value;
-  if(!tec){toast('Elige al técnico','err');return;} if(!fecha){toast('Indica la fecha','err');return;}
-  const b=$('btn-pm-asig'); b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>Asignando…';
-  try{
-    const r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha});
-    if(!r.success){toast(r.error||'No se pudo asignar','err');return;}
-    toast(r.mensaje||'Orden asignada'); closeModal('modal-pm-asignar'); pmCargarPrograma();
-  }catch(e){toast('Error: '+e.message,'err');}
-  finally{b.disabled=false;b.innerHTML='Asignar';}
-}
+
 async function pmLiberar(id){
   if(!confirm('¿Liberar la orden '+id+'? Se quitará del Plan Diario del técnico y sus equipos volverán al programa.'))return;
   try{const r=await api({action:'pmLiberarOrden',token:SESSION.token,idOrden:id});
@@ -8147,7 +8310,7 @@ async function confirmarEliminacionDuplicado(){
 }
 function renderUnifiedDailyCard_(d){
   const a=d.actividad||null,st=dailyBucketUnified_(d,a),supports=a?parseActSupports_(a):v840FrontParse_(d.tecnicosApoyoJSON);
-  let actions='';
+  let actions=''; const pmHtml=(typeof pmTarjetaHtml_==='function')?pmTarjetaHtml_(d,st):'';
   if(st.b==='PENDIENTE'&&!a){
     actions=`<button class="btn-p" onclick='openDailyStartModal("${d.id}","${d.folio}",${JSON.stringify(supports)})'>Iniciar</button> <button class="btn-red" onclick="deleteDuplicateActivityUI('daily','${d.id}','${d.folio||''}')"><i class="fas fa-trash"></i> Borrar duplicada</button>`;
   }else if(st.b==='EN_CURSO'){
@@ -8173,7 +8336,8 @@ function renderUnifiedDailyCard_(d){
     <div style="font-size:.7rem;color:#64748B">${escapeHtml(d.area||'')} · ${escapeHtml(d.categoria||'Sin categoría')}</div>
     ${unifiedTimeInfo_(a)}
     <div style="margin:7px 0"><b style="font-size:.67rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||s)}</span>`).join(''):'<span style="font-size:.67rem;color:#94A3B8">Sin apoyos</span>'}</div>
-    ${actions}
+    ${pmHtml}
+ ${actions}
   </div>`;
 }
 // V9.8.0 — El técnico de apoyo puede retirarse de la actividad (abierta o aún sin iniciar).
