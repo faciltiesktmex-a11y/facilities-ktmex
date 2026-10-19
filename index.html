@@ -270,6 +270,11 @@ body:has(#modal-ht[style*="display: flex"]) #offline-status{display:none!importa
  .wwa-tabla td{display:block;padding:2px 4px!important;white-space:normal!important}
  .wwd-nom{columns:1}
 }
+
+/* V9.17.1: ventana de hallazgos de LPA Quality — campos al ancho de la ventana */
+#modal-lpaq-nc .inp{box-sizing:border-box;width:100%}
+#modal-lpaq-nc label{display:block;margin:12px 0 5px;font-size:.78rem;font-weight:600;color:#475569}
+#modal-lpaq-nc label:first-of-type{margin-top:4px}
 </style>
 
 <!-- V8.2 PWA / modo offline piloto -->
@@ -1144,12 +1149,12 @@ const LPA_AREAS = {
         </select>
       </div>
       <div>
-        <label style="font-size:.7rem;color:#64748B;font-weight:650">Status / Estatus</label>
+        <label style="font-size:.7rem;color:#64748B;font-weight:650">Month / Mes</label>
         <input id="lpaq-month" type="month" class="inp" onchange="loadLpaQDashboard()" title="Mes del programa">
         <label style="display:flex;align-items:center;gap:6px;font-size:.7rem;color:#475569;white-space:nowrap">
           <input id="lpaq-scope-all" type="checkbox" onchange="loadLpaQDashboard()"> Ver año completo
         </label>
-        <select id="lpaq-program-status-filter" class="inp" onchange="renderLpaQProgram()">
+        <label style="font-size:.7rem;color:#64748B;font-weight:650;display:block;margin-top:8px">Status / Estatus</label><select id="lpaq-program-status-filter" class="inp" onchange="renderLpaQProgram()">
           <option value="">All</option>
           <option value="Programada">Scheduled</option>
           <option value="En tolerancia">Grace Period / En tolerancia</option>
@@ -1207,7 +1212,7 @@ const LPA_AREAS = {
 </div>
 
 <div id="modal-lpaq-nc" class="modal-bg" style="display:none">
- <div class="modal" style="max-width:620px">
+ <div class="modal-box" style="max-width:620px;padding:22px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong id="lpaqn-title">Nonconformity</strong><button class="btn-g" onclick="$('modal-lpaq-nc').style.display='none'" style="padding:5px 9px">×</button></div>
   <input type="hidden" id="lpaqn-id">
   <div id="lpaqn-info" style="font-size:.78rem;background:#F8FAFC;border-radius:10px;padding:10px;margin-bottom:10px"></div>
@@ -3444,7 +3449,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.17.0';
+const FRONTEND_BUILD = '9.17.1';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
