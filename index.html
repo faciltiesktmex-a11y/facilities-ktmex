@@ -105,41 +105,38 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .plat-acc .plat-btn-promover:hover{background:#B45309}
 .plat-acc .plat-btn-cancel{background:#fff;color:#B91C1C;border:1.5px solid #FCA5A5;box-shadow:none}
 .plat-acc .plat-btn-cancel:hover{background:#FEF2F2;border-color:#DC2626}
-/* V9.19.1 — Resumen del manager */
-#view-admin .mgr-compact > :not(.mgr-keep){display:none!important}
-.mgr-hero{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0F2747,#1D4ED8);color:#fff;border-radius:16px;padding:18px 20px;margin-bottom:14px}
-.mgr-hero h3{margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#fff}
-.mgr-hero p{margin:0;font-size:.78rem;color:#DBEAFE}
-.mgr-hero .mgr-all{background:#16A34A;color:#fff;border:0;border-radius:11px;padding:11px 18px;font-weight:800;font-size:.86rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px -8px rgba(0,0,0,.5)}
-.mgr-hero .mgr-all:hover{background:#15803D}
-.mgr-hero .mgr-all:disabled{background:#64748B;cursor:default;box-shadow:none}
-.mgr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.mgr-kpi{background:#fff;border:1px solid #E2E8F0;border-radius:13px;padding:13px 14px}
-.mgr-kpi b{display:block;font-size:1.45rem;font-family:'JetBrains Mono',monospace;color:var(--navy);line-height:1.1}
-.mgr-kpi span{font-size:.74rem;color:#64748B;font-weight:600}
-.mgr-kpi.warn b{color:#B45309}.mgr-kpi.ok b{color:#15803D}.mgr-kpi.info b{color:#1D4ED8}
-.mgr-sec{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748B;margin:4px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.mgr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-bottom:14px}
-.mgr-card{background:#fff;border:1px solid #E2E8F0;border-radius:13px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
-.mgr-card .mgr-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.mgr-card .mgr-tag{font-size:.64rem;font-weight:800;padding:3px 8px;border-radius:999px;background:#EFF6FF;color:#1D4ED8}
-.mgr-card .mgr-tag.buy{background:#FEF3C7;color:#92400E}
-.mgr-card .mgr-folio{font-family:'JetBrains Mono',monospace;font-size:.74rem;font-weight:700;color:#2563EB}
-.mgr-card .mgr-who{font-weight:700;color:var(--navy);font-size:.86rem}
-.mgr-card .mgr-desc{font-size:.76rem;color:#475569;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.mgr-card .mgr-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.7rem;color:#64748B}
-.mgr-card .mgr-foot .late{color:#B91C1C;font-weight:700}
-.mgr-card button{background:#fff;border:1px solid #CBD5E1;border-radius:8px;padding:5px 11px;font-size:.72rem;font-weight:700;color:#334155;cursor:pointer}
-.mgr-card button:hover{background:#F1F5F9}
-.mgr-res{font-size:.7rem;font-weight:700}.mgr-res.ok{color:#15803D}.mgr-res.err{color:#B91C1C}
-.mgr-empty{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534;border-radius:13px;padding:16px;font-size:.84rem;font-weight:600;margin-bottom:14px}
-.mgr-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:12px}
-.mgr-box{background:#fff;border:1px solid #E2E8F0;border-radius:13px;padding:12px 14px}
-.mgr-box h4{margin:0 0 8px;font-size:.8rem;color:var(--navy)}
-.mgr-row{display:flex;justify-content:space-between;font-size:.76rem;color:#475569;padding:4px 0;border-bottom:1px dashed #E2E8F0}
-.mgr-row:last-child{border-bottom:0}.mgr-row b{color:var(--navy)}
-.mgr-toggle{background:#fff;border:1px solid #CBD5E1;border-radius:10px;padding:8px 14px;font-size:.78rem;font-weight:700;color:#334155;cursor:pointer}
-.mgr-prog{height:8px;border-radius:999px;background:#E2E8F0;overflow:hidden;margin-top:8px}.mgr-prog span{display:block;height:100%;background:#16A34A;transition:width .2s}
+/* V9.19.2 — Bandeja del manager (opción B): columna izquierda fija, panel completo a la derecha */
+#view-admin .mgr-layout{display:grid;grid-template-columns:310px minmax(0,1fr);column-gap:18px;max-width:1560px!important}
+#view-admin .mgr-layout > *{grid-column:2;min-width:0}
+#view-admin .mgr-layout > :first-child{grid-column:1 / -1}
+#view-admin .mgr-layout > #mgr-resumen{grid-column:1;grid-row:2 / span 60;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;margin-bottom:0!important}
+#view-admin .mgr-layout #kpi-row{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important}
+@media (max-width:980px){#view-admin .mgr-layout{display:block}#view-admin .mgr-layout > #mgr-resumen{position:static;max-height:none;margin-bottom:16px!important}}
+.mgr-inbox{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:14px;padding:12px}
+.mgr-ih{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mgr-ih b{font-size:.95rem;color:var(--navy)}
+.mgr-badge{font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px;background:#FEF3C7;color:#92400E}
+.mgr-badge.ok{background:#DCFCE7;color:#166534}
+.mgr-all{width:100%;background:#16A34A;color:#fff;border:0;border-radius:10px;padding:10px;font-weight:800;font-size:.84rem;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.mgr-all:hover{background:#15803D}.mgr-all:disabled{background:#94A3B8;cursor:default}
+.mgr-conf{background:#fff;border:1.5px solid #86EFAC;border-radius:11px;padding:10px;margin-bottom:10px;font-size:.76rem;color:#334155}
+.mgr-conf ul{margin:6px 0 8px;padding-left:16px;max-height:140px;overflow:auto}
+.mgr-c{background:#fff;border:1px solid #E2E8F0;border-radius:11px;padding:10px;margin-bottom:8px}
+.mgr-c .k{font-size:.66rem;font-weight:800;letter-spacing:.02em}
+.mgr-c .k.sol{color:#1D4ED8}.mgr-c .k.cmp{color:#B45309}.mgr-c .k.ww{color:#7C3AED}
+.mgr-c .t{font-weight:700;color:var(--navy);font-size:.84rem;line-height:1.3;margin:2px 0;overflow-wrap:anywhere}
+.mgr-c .s{font-size:.72rem;color:#64748B}
+.mgr-c .s.late{color:#B91C1C;font-weight:700}
+.mgr-btns{display:flex;gap:6px;margin-top:8px}
+.mgr-btns button{flex:1;border-radius:8px;padding:6px 4px;font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid #CBD5E1;background:#fff;color:#334155}
+.mgr-btns .ap{border-color:#86EFAC;color:#15803D}.mgr-btns .ap:hover{background:#F0FDF4}
+.mgr-btns .rj{color:#B91C1C}.mgr-btns .rj:hover{background:#FEF2F2}
+.mgr-btns button:disabled{opacity:.55;cursor:default}
+.mgr-c textarea{width:100%;margin-top:8px;border:1px solid #CBD5E1;border-radius:8px;padding:6px 8px;font:inherit;font-size:.76rem;resize:vertical;box-sizing:border-box}
+.mgr-err{font-size:.72rem;color:#B91C1C;margin-top:4px}
+.mgr-done{font-size:.72rem;font-weight:700;margin-top:6px}.mgr-done.ok{color:#15803D}.mgr-done.err{color:#B91C1C}
+.mgr-empty{font-size:.8rem;color:#166534;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:11px;padding:12px;font-weight:600}
+.mgr-sec{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748B;margin:10px 0 6px}
 #platform-sign-modal-canvas{width:100%;height:300px;border:1px solid #CBD5E1;border-radius:8px;touch-action:none;background:#fff}
 .platform-admin-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
 @media(max-width:760px){.platform-v2-grid,.platform-sign-grid,.platform-admin-grid{grid-template-columns:1fr}.platform-check-row{grid-template-columns:minmax(145px,1fr) repeat(3,42px)!important}.platform-subnav{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.platform-subnav button{white-space:nowrap}}
@@ -2170,7 +2167,7 @@ const LPA_AREAS = {
       </div>
     </div>
 
-    <!-- V9.19.1: resumen del manager (Inagaki) con «Approve all pending» -->
+    <!-- V9.19.2: bandeja del manager (Inagaki) — columna izquierda; el panel completo sigue a la derecha -->
     <div id="mgr-resumen" class="mgr-keep" style="display:none;margin-bottom:18px"></div>
 
     <!-- MANAGER: cola persistente de aprobaciones (fuera de las pestañas) -->
@@ -3443,7 +3440,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.1';
+const FRONTEND_BUILD = '9.19.2';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -10174,6 +10171,7 @@ async function loadWeekendFlujo(){
 
 function renderWeekendFlujo(){
   const r=WW_FLUJO; if(!r)return;
+  try{if(mgrEsAprobador_()){MGR_WW=r.miEtapa?(r.pendientes||[]):[];MGR_WW_ETAPA=r.tituloEtapa||'';renderMgrResumen();}}catch(e){}   // V9.19.2
   const box=$('ww-flujo-lista');
 
   // V8.8.3 — El aviso de firma pendiente va arriba del todo, con su propio
@@ -11960,6 +11958,7 @@ async function refreshAdmin() {
     const esPresidente=!!(SESSION.user&&SESSION.user.soloWeekendWork);
     if($('manager-approval-box'))$('manager-approval-box').style.display=esPresidente?'none':'';
     await loadAdminBootstrap();
+    if(!esPresidente)mgrCargarWW_();   // V9.19.2: firmas de Weekend Works en la bandeja
     if(!window.__BOOT_OK){if(!esPresidente)renderManagerApprovalQueue();
     renderSolicitudes();}   // V9.16.0: el arranque ya las pintó; antes se pintaban dos veces
     switchTab(esPresidente?'weekend':'sol');
@@ -13056,7 +13055,7 @@ const estatusBadge = s => {
 };
 
 function renderManagerApprovalQueue(){
-  try{setTimeout(renderMgrResumen,0);}catch(e){}   // V9.19.1
+  try{setTimeout(renderMgrResumen,0);}catch(e){}   // V9.19.2
   const box=$('manager-approval-box'),tbody=$('manager-approval-tbody'),count=$('manager-approval-count');
   if(!box||!tbody)return;
   if(SESSION?.user?.rol!=='manager'){box.style.display='none';return;}
@@ -13079,15 +13078,16 @@ function renderManagerApprovalQueue(){
   </tr>`).join('');
 }
 // ══════════════════════════════════════════════════════════════
-// V9.19.1 — RESUMEN DEL MANAGER (Inagaki)
-// Vista corta arriba del Panel: lo que espera su firma (solicitudes de trabajo
-// y de compra en «Pendiente de Manager»), con un botón para aprobar todo.
-// «Approve all» usa las MISMAS acciones que el botón Aprobar de cada solicitud
-// (updateRequest mgr_autoriza / updateCompra mgr_aprueba), una por una, para
-// que el historial, las notificaciones y los permisos queden igual.
-// El detalle completo del panel sigue disponible con «Show full detail».
+// V9.19.2 — BANDEJA DEL MANAGER (Inagaki) · opción B
+// Columna izquierda con todo lo que espera su firma: solicitudes de trabajo y
+// de compra en «Pendiente de Manager» y documentos de Weekend Works en su turno.
+// Cada tarjeta se aprueba o rechaza ahí mismo con las MISMAS acciones del botón
+// de la ventana (updateRequest mgr_autoriza/mgr_rechaza, updateCompra
+// mgr_aprueba/mgr_rechaza); rechazar pide comentario. «Approve all» aprueba
+// solicitudes y compras (las firmas de Weekend Works se abren una por una).
+// A la derecha queda el Panel completo, igual que antes (pestañas y listas).
 // ══════════════════════════════════════════════════════════════
-let MGR_CORRIENDO=false, MGR_RES={};
+let MGR_CORRIENDO=false, MGR_RES={}, MGR_REJ=null, MGR_REJ_ERR='', MGR_CONF=false, MGR_WW=[], MGR_WW_ETAPA='', MGR_RECARGA=null;
 function mgrEsAprobador_(){return !!SESSION&&SESSION.user&&SESSION.user.rol==='manager'&&!SESSION.user.soloWeekendWork;}
 function mgrPendientes_(){
   const sol=(Array.isArray(SOL_DATA)?SOL_DATA:[]).filter(r=>String(r.estatus||'').trim()==='Pendiente de Manager').map(r=>({k:'sol',id:r.id,folio:r.folio,quien:r.nombre,depto:r.departamento,tipo:r.tipoSolicitud,desc:r.descripcion,fecha:r.authIngFecha||r.fecha}));
@@ -13095,80 +13095,84 @@ function mgrPendientes_(){
   return sol.concat(cmp).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
 }
 function mgrDias_(f){const d=new Date(f);if(isNaN(d))return 0;return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));}
-function mgrAplicarCompacto_(){
+function mgrAplicarLayout_(){
   const cont=$('view-admin')&&$('view-admin').firstElementChild; if(!cont)return;
-  if(!mgrEsAprobador_()){cont.classList.remove('mgr-compact');return;}
-  if(cont.firstElementChild)cont.firstElementChild.classList.add('mgr-keep');   // encabezado del panel
-  let compacto=true; try{compacto=localStorage.getItem('ktmex_mgr_detalle')!=='1';}catch(e){}
-  cont.classList.toggle('mgr-compact',compacto);
+  cont.classList.toggle('mgr-layout',mgrEsAprobador_());
 }
-function mgrToggleDetalle(){
-  const cont=$('view-admin').firstElementChild, abrir=cont.classList.contains('mgr-compact');
-  try{localStorage.setItem('ktmex_mgr_detalle',abrir?'1':'0');}catch(e){}
-  cont.classList.toggle('mgr-compact',!abrir); renderMgrResumen();
+async function mgrCargarWW_(){
+  if(!mgrEsAprobador_())return;
+  try{const r=await api({action:'getWeekendFlujo',token:SESSION.token});
+    if(r&&r.success){MGR_WW=r.miEtapa?(r.pendientes||[]):[];MGR_WW_ETAPA=r.tituloEtapa||'';renderMgrResumen();}}catch(e){}
+}
+function mgrTarjeta_(p){
+  const key=p.k+'|'+p.id, res=MGR_RES[key], d=mgrDias_(p.fecha);
+  const kind=p.k==='cmp'?'Purchase request':'Work request';
+  let pie;
+  if(res)pie=`<div class="mgr-done ${res.ok?'ok':'err'}">${escapeHtml(res.txt)}</div>`;
+  else if(MGR_REJ===key)pie=`<textarea id="mgr-rej-txt" rows="2" placeholder="Reason for rejecting (required)" oninput="if(MGR_REJ_ERR){MGR_REJ_ERR='';const e=document.getElementById('mgr-rej-err');if(e)e.remove();}"></textarea>${MGR_REJ_ERR?`<div class="mgr-err" id="mgr-rej-err">${escapeHtml(MGR_REJ_ERR)}</div>`:''}
+      <div class="mgr-btns"><button onclick="mgrCancelarRechazo()">Cancel</button><button class="rj" onclick="mgrRechazar('${p.k}','${p.id}')">Reject</button></div>`;
+  else pie=`<div class="mgr-btns"><button onclick="${p.k==='cmp'?`openCompraModal('${p.id}')`:`openSolicitudModal('${p.id}')`}">Review</button><button class="rj" ${MGR_CORRIENDO?'disabled':''} onclick="mgrPedirRechazo('${key}')">Reject</button><button class="ap" ${MGR_CORRIENDO?'disabled':''} onclick="mgrAprobarUno('${p.k}','${p.id}')">Approve</button></div>`;
+  return `<div class="mgr-c"><div class="k ${p.k}">${kind} · <span class="mono">${escapeHtml(p.folio||'—')}</span></div>
+    <div class="t">${escapeHtml(String(p.desc||'—').slice(0,120))}</div>
+    <div class="s">${escapeHtml(p.quien||'—')}${p.depto?' · '+escapeHtml(p.depto):''}${p.tipo?' · '+escapeHtml(p.tipo):''}</div>
+    <div class="s ${d>=3?'late':''}">${d===0?'Today':(d+' day'+(d===1?'':'s')+' waiting')}</div>${pie}</div>`;
 }
 function renderMgrResumen(){
   const box=$('mgr-resumen'); if(!box)return;
-  if(!mgrEsAprobador_()){box.style.display='none';mgrAplicarCompacto_();return;}
-  box.style.display=''; if($('manager-approval-box'))$('manager-approval-box').style.display='none';   // la tabla vieja queda reemplazada por las tarjetas
-  const pend=mgrPendientes_(), nSol=pend.filter(p=>p.k==='sol').length, nCmp=pend.length-nSol, viejo=pend.length?mgrDias_(pend[0].fecha):0;
-  const sol=Array.isArray(SOL_DATA)?SOL_DATA:[], cmp=Array.isArray(COMPRA_DATA)?COMPRA_DATA:[];
-  const cuenta=(arr,f)=>arr.filter(r=>f(String(r.estatus||''))).length, hace30=Date.now()-30*86400000;
-  const abiertas=sol.filter(r=>!esSolicitudCerrada_(r)&&!/Rechaz/.test(String(r.estatus||''))).length;
-  const compacto=$('view-admin').firstElementChild.classList.contains('mgr-compact');
-  const tarjeta=p=>{const d=mgrDias_(p.fecha),res=MGR_RES[p.k+'|'+p.id];
-    return `<div class="mgr-card"><div class="mgr-top"><span class="mgr-tag ${p.k==='cmp'?'buy':''}">${p.k==='cmp'?'Purchase request':'Work request'}</span><span class="mgr-folio">${escapeHtml(p.folio||'—')}</span></div>
-      <div class="mgr-who">${escapeHtml(p.quien||'—')}${p.depto?` <span style="font-weight:500;color:#64748B;font-size:.74rem">· ${escapeHtml(p.depto)}</span>`:''}</div>
-      <div class="mgr-desc">${escapeHtml(String(p.desc||'').slice(0,220))}</div>
-      <div class="mgr-foot"><span class="${d>=3?'late':''}">${d===0?'Today':(d+' day'+(d===1?'':'s')+' waiting')}${p.tipo?' · '+escapeHtml(p.tipo):''}</span>
-      ${res?`<span class="mgr-res ${res.ok?'ok':'err'}">${escapeHtml(res.txt)}</span>`:`<button onclick="${p.k==='cmp'?`openCompraModal('${p.id}')`:`openSolicitudModal('${p.id}')`}">Review</button>`}</div></div>`;};
-  box.innerHTML=`<div class="mgr-hero"><div><h3><i class="fas fa-user-check" style="margin-right:8px"></i>${pend.length?pend.length+' item'+(pend.length===1?'':'s')+' waiting for your approval':'Nothing waiting for your approval'}</h3>
-      <p>${pend.length?`${nSol} work request${nSol===1?'':'s'} · ${nCmp} purchase request${nCmp===1?'':'s'}${viejo?` · oldest: ${viejo} day${viejo===1?'':'s'}`:''}`:'All work and purchase requests have been reviewed.'}</p>
-      ${MGR_CORRIENDO?`<div class="mgr-prog"><span id="mgr-prog-bar" style="width:0%"></span></div>`:''}</div>
-      <button class="mgr-all" onclick="mgrAprobarTodo()" ${(!pend.length||MGR_CORRIENDO)?'disabled':''}><i class="fas fa-check-double"></i>${MGR_CORRIENDO?'Approving…':'Approve all pending'+(pend.length?' ('+pend.length+')':'')}</button></div>
-    <div class="mgr-kpis">
-      <div class="mgr-kpi warn"><b>${nSol}</b><span>Work requests to approve</span></div>
-      <div class="mgr-kpi warn"><b>${nCmp}</b><span>Purchase requests to approve</span></div>
-      <div class="mgr-kpi info"><b>${abiertas}</b><span>Open work requests</span></div>
-      <div class="mgr-kpi ok"><b>${sol.filter(r=>esSolicitudCerrada_(r)&&new Date(r.fechaCierre||r.fecha).getTime()>=hace30).length}</b><span>Closed in the last 30 days</span></div>
-    </div>
-    ${pend.length?`<div class="mgr-sec"><span>Waiting for your approval</span></div><div class="mgr-grid">${pend.map(tarjeta).join('')}</div>`:'<div class="mgr-empty"><i class="fas fa-circle-check" style="margin-right:8px"></i>You are up to date. New requests will appear here when Engineering sends them.</div>'}
-    <div class="mgr-strip">
-      <div class="mgr-box"><h4>Work requests in progress</h4>
-        <div class="mgr-row"><span>Pending Engineering review</span><b>${cuenta(sol,e=>e==='Pendiente de Ingeniería')}</b></div>
-        <div class="mgr-row"><span>Approved, waiting for a technician</span><b>${cuenta(sol,e=>e.indexOf('Aprobado por Manager')===0)}</b></div>
-        <div class="mgr-row"><span>Assigned / in execution</span><b>${cuenta(sol,e=>e==='Asignado a técnico'||e==='En ejecución'||e==='En espera de refacciones')}</b></div>
-        <div class="mgr-row"><span>Waiting for closure</span><b>${cuenta(sol,e=>e==='Trabajo completado'||e==='Pendiente de encuesta de satisfacción'||e==='Pendiente de cierre por Ingeniería')}</b></div></div>
-      <div class="mgr-box"><h4>Purchase requests in progress</h4>
-        <div class="mgr-row"><span>Pending Engineering review</span><b>${cuenta(cmp,e=>e==='Pendiente de Ingeniería')}</b></div>
-        <div class="mgr-row"><span>Authorized, with Purchasing</span><b>${cuenta(cmp,e=>e==='Autorizada para Compra'||e==='En cotización')}</b></div>
-        <div class="mgr-row"><span>Ordered</span><b>${cuenta(cmp,e=>e==='Ordenada')}</b></div>
-        <div class="mgr-row"><span>Received in the last 30 days</span><b>${cmp.filter(r=>r.estatus==='Recibida'&&new Date(r.fechaActualizacion||r.actualizado||r.fecha).getTime()>=hace30).length}</b></div></div>
-    </div>
-    <div style="display:flex;justify-content:center"><button class="mgr-toggle" onclick="mgrToggleDetalle()"><i class="fas ${compacto?'fa-chevron-down':'fa-chevron-up'}" style="margin-right:6px"></i>${compacto?'Show full detail (all lists and tabs)':'Hide full detail'}</button></div>`;
-  mgrAplicarCompacto_();
+  if(!mgrEsAprobador_()){box.style.display='none';mgrAplicarLayout_();return;}
+  box.style.display=''; if($('manager-approval-box'))$('manager-approval-box').style.display='none';   // la tabla vieja queda dentro de la bandeja
+  const pend=mgrPendientes_(), vivos=pend.filter(p=>!MGR_RES[p.k+'|'+p.id]), total=vivos.length+MGR_WW.length;
+  let h=`<div class="mgr-inbox"><div class="mgr-ih"><b><i class="fas fa-inbox" style="margin-right:7px"></i>Your inbox</b><span class="mgr-badge ${total?'':'ok'}">${total?total+' pending':'Up to date'}</span></div>`;
+  if(vivos.length)h+=`<button class="mgr-all" onclick="mgrPedirTodo()" ${MGR_CORRIENDO?'disabled':''}><i class="fas fa-check-double"></i>${MGR_CORRIENDO?'Approving…':'Approve all ('+vivos.length+')'}</button>`;
+  if(MGR_CONF&&vivos.length)h+=`<div class="mgr-conf"><b>Approve ${vivos.length} request${vivos.length===1?'':'s'}?</b><ul>${vivos.map(p=>`<li>${escapeHtml(p.folio||'—')} · ${escapeHtml(String(p.desc||'').slice(0,50))}</li>`).join('')}</ul>Work requests go back to Engineering for assignment and purchases go to Purchasing.${MGR_WW.length?' Weekend works still need your signature on each document.':''}
+      <div class="mgr-btns"><button onclick="MGR_CONF=false;renderMgrResumen()">Cancel</button><button class="ap" onclick="mgrAprobarTodo()">Approve ${vivos.length}</button></div></div>`;
+  if(!pend.length&&!MGR_WW.length)h+=`<div class="mgr-empty"><i class="fas fa-circle-check" style="margin-right:7px"></i>You're up to date. New requests appear here when Engineering sends them.</div>`;
+  if(pend.length)h+=pend.map(mgrTarjeta_).join('');
+  if(MGR_WW.length)h+=`<div class="mgr-sec">Weekend works · your signature</div>`+MGR_WW.map(w=>`<div class="mgr-c"><div class="k ww">Weekend work${MGR_WW_ETAPA?' · '+escapeHtml(MGR_WW_ETAPA):''}</div><div class="t">Saturday ${escapeHtml(w.sabado||'')}</div><div class="s">Signature needed</div><div class="mgr-btns"><button class="ap" onclick="wwAbrirFirma('${w.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Open to sign</button></div></div>`).join('');
+  h+='</div>';
+  box.innerHTML=h; mgrAplicarLayout_();
+}
+function mgrPedirRechazo(key){MGR_REJ=key;MGR_REJ_ERR='';renderMgrResumen();setTimeout(()=>{const t=$('mgr-rej-txt');if(t)t.focus();},20);}
+function mgrCancelarRechazo(){MGR_REJ=null;MGR_REJ_ERR='';renderMgrResumen();}
+function mgrPedirTodo(){MGR_CONF=true;renderMgrResumen();}
+function mgrRecargarLuego_(){clearTimeout(MGR_RECARGA);MGR_RECARGA=setTimeout(async()=>{try{await loadAdminBootstrap();}catch(e){} MGR_RES={};renderMgrResumen();},1800);}
+async function mgrAccion_(k,id,aprobar,comentario){
+  const r=await api(k==='cmp'?{action:'updateCompra',token:SESSION.token,id,authAction:aprobar?'mgr_aprueba':'mgr_rechaza',comentario}
+                             :{action:'updateRequest',token:SESSION.token,id,authAction:aprobar?'mgr_autoriza':'mgr_rechaza',comentario});
+  return r||{success:false};
+}
+async function mgrAprobarUno(k,id){
+  const key=k+'|'+id; MGR_RES[key]={ok:true,txt:'Approving…'}; renderMgrResumen();
+  try{const r=await mgrAccion_(k,id,true,'Approved from the manager inbox');
+    MGR_RES[key]=r.success?{ok:true,txt:k==='cmp'?'Approved · sent to Purchasing':'Approved · back to Engineering'}:{ok:false,txt:r.error||'Not approved'};
+  }catch(e){MGR_RES[key]={ok:false,txt:'Connection error'};}
+  renderMgrResumen(); mgrRecargarLuego_();
+}
+async function mgrRechazar(k,id){
+  const t=$('mgr-rej-txt'), c=t?t.value.trim():'';
+  if(!c){MGR_REJ_ERR='Write the reason first';renderMgrResumen();setTimeout(()=>{const x=$('mgr-rej-txt');if(x)x.focus();},20);return;}
+  const key=k+'|'+id; MGR_REJ=null; MGR_RES[key]={ok:true,txt:'Rejecting…'}; renderMgrResumen();
+  try{const r=await mgrAccion_(k,id,false,c);
+    MGR_RES[key]=r.success?{ok:false,txt:'Rejected · returned with your comment'}:{ok:false,txt:r.error||'Not rejected'};
+    if(r.success)toast('Request rejected.','ok');
+  }catch(e){MGR_RES[key]={ok:false,txt:'Connection error'};}
+  renderMgrResumen(); mgrRecargarLuego_();
 }
 async function mgrAprobarTodo(){
   if(!mgrEsAprobador_()||MGR_CORRIENDO)return;
-  const pend=mgrPendientes_(); if(!pend.length)return;
-  const lista=pend.slice(0,12).map(p=>`• ${p.folio||'—'} · ${p.quien||'—'} (${p.k==='cmp'?'purchase':'work'})`).join('\n')+(pend.length>12?`\n… and ${pend.length-12} more`:'');
-  if(!confirm(`Approve ${pend.length} pending request${pend.length===1?'':'s'}?\n\n${lista}\n\nEach one is approved exactly as with its own Approve button: work requests go back to Engineering for assignment and purchase requests go to Purchasing.`))return;
-  MGR_CORRIENDO=true; MGR_RES={}; renderMgrResumen();
-  let ok=0, i=0;
+  const pend=mgrPendientes_().filter(p=>!MGR_RES[p.k+'|'+p.id]); if(!pend.length)return;
+  MGR_CONF=false; MGR_CORRIENDO=true; renderMgrResumen();
+  let ok=0;
   for(const p of pend){
-    try{
-      const r=await api(p.k==='cmp'?{action:'updateCompra',token:SESSION.token,id:p.id,authAction:'mgr_aprueba',comentario:'Approved in bulk from the manager summary'}
-                                   :{action:'updateRequest',token:SESSION.token,id:p.id,authAction:'mgr_autoriza',comentario:'Approved in bulk from the manager summary'});
-      MGR_RES[p.k+'|'+p.id]=r&&r.success?{ok:true,txt:'Approved'}:{ok:false,txt:(r&&r.error)||'Not approved'};
-      if(r&&r.success)ok++;
-    }catch(e){MGR_RES[p.k+'|'+p.id]={ok:false,txt:'Connection error'};}
-    i++; const b=$('mgr-prog-bar'); if(b)b.style.width=Math.round(i*100/pend.length)+'%';
+    const key=p.k+'|'+p.id;
+    try{const r=await mgrAccion_(p.k,p.id,true,'Approved in bulk from the manager inbox');
+      MGR_RES[key]=r.success?{ok:true,txt:'Approved'}:{ok:false,txt:r.error||'Not approved'}; if(r.success)ok++;
+    }catch(e){MGR_RES[key]={ok:false,txt:'Connection error'};}
+    renderMgrResumen();
   }
   MGR_CORRIENDO=false;
   toast(`${ok} of ${pend.length} request${pend.length===1?'':'s'} approved.`,ok===pend.length?'ok':'err');
-  renderMgrResumen();
-  try{await loadAdminBootstrap();}catch(e){}
-  MGR_RES={}; renderMgrResumen();
+  renderMgrResumen(); mgrRecargarLuego_();
 }
 // V8.6.3: los estatus que se consideran CERRADOS y se ocultan por omisión.
 const ESTATUS_CERRADOS = [
