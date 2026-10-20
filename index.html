@@ -87,6 +87,24 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .platform-sign-canvas.locked{border:2px solid #22C55E;background:#F0FDF4;cursor:not-allowed}
 .platform-v2-modal{position:fixed;inset:0;background:rgba(15,42,74,.7);z-index:12000;display:none;align-items:center;justify-content:center;padding:15px}
 .platform-v2-modal-card{width:min(760px,100%);background:white;border-radius:14px;padding:15px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+/* V9.19.0 — Plataforma: el texto de los eventos del calendario se ajusta al recuadro del día */
+#platform-calendar .fc-daygrid-event{white-space:normal;align-items:flex-start}
+#platform-calendar .fc-daygrid-dot-event{padding:2px 4px;font-size:.72rem;line-height:1.25}
+#platform-calendar .fc-daygrid-dot-event .fc-daygrid-event-dot{flex:none;margin-top:5px}
+#platform-calendar .fc-daygrid-event .fc-event-time{flex:none}
+#platform-calendar .fc-daygrid-event .fc-event-title{white-space:normal;overflow:visible;overflow-wrap:anywhere;word-break:break-word;min-width:0}
+#platform-calendar .fc-daygrid-event-harness{margin-bottom:3px}
+#platform-calendar .fc-daygrid-block-event .fc-event-main{white-space:normal}
+@media (max-width:640px){#platform-calendar .fc-daygrid-dot-event{font-size:.6rem}#platform-calendar .fc-daygrid-dot-event .fc-event-time{display:none}}
+/* V9.19.0 — Gestión Facilities (Plataforma): botones separados y del mismo ancho */
+#platform-admin-body td{padding:14px 12px;vertical-align:top;border-bottom:1px solid #E2E8F0}
+#platform-admin-body tr:hover td{background:#F8FAFC}
+.plat-acc{display:flex;flex-direction:column;gap:8px;min-width:196px}
+.plat-acc button{width:100%;margin:0;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;font-size:.75rem;font-weight:700;border-radius:9px;white-space:nowrap;line-height:1.2}
+.plat-acc .plat-btn-promover{background:#D97706;color:#fff;border:0}
+.plat-acc .plat-btn-promover:hover{background:#B45309}
+.plat-acc .plat-btn-cancel{background:#fff;color:#B91C1C;border:1.5px solid #FCA5A5;box-shadow:none}
+.plat-acc .plat-btn-cancel:hover{background:#FEF2F2;border-color:#DC2626}
 #platform-sign-modal-canvas{width:100%;height:300px;border:1px solid #CBD5E1;border-radius:8px;touch-action:none;background:#fff}
 .platform-admin-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
 @media(max-width:760px){.platform-v2-grid,.platform-sign-grid,.platform-admin-grid{grid-template-columns:1fr}.platform-check-row{grid-template-columns:minmax(145px,1fr) repeat(3,42px)!important}.platform-subnav{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.platform-subnav button{white-space:nowrap}}
@@ -1900,80 +1918,8 @@ const LPA_AREAS = {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     V9.3.0 — MANTENIMIENTO PREVENTIVO (fase 1): equipos y programa
-     ══════════════════════════════════════════════════════════ -->
-<div id="view-pm" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
-  <div class="card" style="padding:18px 20px;margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-      <div>
-        <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-screwdriver-wrench" style="color:#2563EB;margin-right:8px"></i>Mantenimiento preventivo</h2>
-        <p style="font-size:.76rem;color:#64748B;margin:4px 0 0">401 equipos · 33 planes · las actividades diarias y semanales se cumplen con el checklist de Inspecciones</p>
-      </div>
-      <div style="display:flex;gap:7px">
-        <button class="btn-g" id="pm-tab-equipos" onclick="pmTab('equipos')"><i class="fas fa-gears" style="margin-right:5px"></i>Equipos</button>
-        <button class="btn-g" id="pm-tab-programa" onclick="pmTab('programa')"><i class="fas fa-calendar-week" style="margin-right:5px"></i>Programa</button>
-        <button class="btn-g" id="pm-tab-tablero" onclick="pmTab('tablero')"><i class="fas fa-chart-column" style="margin-right:5px"></i>Tablero</button>
-      </div>
-    </div>
-  </div>
-  <div id="pm-panel-tablero" style="display:none">
-    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="font-size:.78rem;color:#475569">Desde</span><input id="pm-t-desde" type="date" class="inp" style="width:auto">
-      <span style="font-size:.78rem;color:#475569">Hasta</span><input id="pm-t-hasta" type="date" class="inp" style="width:auto">
-      <button class="btn-p" onclick="pmCargarTablero()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
-    </div>
-    <div id="pm-tablero"></div>
-  </div>
-  <div id="pm-panel-equipos">
-    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <input id="pm-buscar" class="inp" placeholder="Buscar equipo, ID de SVISION o plan…" style="flex:1 1 240px" oninput="pmRenderEquipos()">
-      <select id="pm-f-loc" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Todas las localizaciones</option></select>
-      <select id="pm-f-clas" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Todas las clasificaciones</option></select>
-      <select id="pm-f-prio" class="inp" style="width:auto" onchange="pmRenderEquipos()"><option value="">Toda prioridad</option><option>Alta</option><option>Media</option><option>Baja</option></select>
-    </div>
-    <div id="pm-equipos" class="card" style="padding:0;overflow-x:auto"></div>
-  </div>
-  <div id="pm-panel-programa" style="display:none">
-    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="font-size:.78rem;color:#475569">Desde la semana del</span>
-      <input id="pm-desde" type="date" class="inp" style="width:auto">
-      <select id="pm-semanas" class="inp" style="width:auto"><option value="2">2 semanas</option><option value="4" selected>4 semanas</option><option value="8">8 semanas</option></select>
-      <button class="btn-p" onclick="pmCargarPrograma()">Ver programa</button>
-      <span id="pm-cumplimiento" style="font-size:.78rem;color:#0F2A4A;margin-left:auto"></span>
-    </div>
-    <div id="pm-programa"></div>
-  </div>
-</div>
-
-<!-- V9.4.0 — Asignar una orden de preventivo -->
-<div id="modal-pm-asignar" class="modal-bg" style="display:none">
-  <div class="card slide" style="width:100%;max-width:560px;padding:20px">
-    <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0 0 8px"><i class="fas fa-user-gear" style="color:#2563EB;margin-right:8px"></i>Asignar orden de preventivo</h3>
-    <div id="pm-asig-info" style="font-size:.76rem;color:#334155;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;margin-bottom:12px"></div>
-    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Técnico *</label>
-    <select id="pm-asig-tec" class="inp" style="margin-bottom:10px" onchange="pmPrevisualizar()"></select>
-    <label style="display:block;font-size:.76rem;font-weight:600;color:#334155;margin-bottom:4px">Fecha de ejecución *</label>
-    <input id="pm-asig-fecha" type="date" class="inp" style="margin-bottom:6px" onchange="pmPrevisualizar()">
-    <div style="font-size:.68rem;color:#64748B;margin-bottom:14px">La orden aparecerá en el Plan Diario del técnico ese día, como una actividad planeada.</div>
-    <div id="pm-asig-prev" style="margin-bottom:12px"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-g" style="flex:1" onclick="closeModal('modal-pm-asignar')">Cancelar</button>
-      <button class="btn-p" id="btn-pm-asig" style="flex:1.4" onclick="pmConfirmarAsignacion()">Asignar</button>
-    </div>
-  </div>
-</div>
-
-<!-- V9.3.0 — Hoja de vida de un equipo -->
-<div id="modal-pm-equipo" class="modal-bg" style="display:none">
-  <div class="card slide" style="width:100%;max-width:980px;padding:0;display:flex;flex-direction:column">
-    <div style="padding:16px 20px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div id="pm-eq-cab"></div>
-      <button class="btn-g" onclick="closeModal('modal-pm-equipo')">Cerrar</button>
-    </div>
-    <div id="pm-eq-body" style="padding:16px 20px;overflow:auto"></div>
-  </div>
-</div>
+<!-- V9.19.0 — CENTRO DE MANTENIMIENTO (preventivo): centro-mantenimiento.html dentro de un iframe, datos del servidor -->
+<div id="view-pm" style="display:none" class="fade"><div id="cm-contenido"></div></div>
 
 <div id="view-platform" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
@@ -3459,7 +3405,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.18.0';
+const FRONTEND_BUILD = '9.19.0';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4569,6 +4515,7 @@ function setLanguage(lang){
   }
   LANG=next;
   localStorage.setItem('ktmex_lang',LANG);
+  try{cmIdiomaCambiado_();}catch(e){}   // V9.19.0: el Centro de Mantenimiento cambia de idioma también
 
   // LPA Quality audit: translate only the visible form and question/criteria nodes.
   // This avoids rebuilding the full app and makes ES/EN effectively immediate.
@@ -4929,122 +4876,6 @@ function pmT(es,en){return LANG==='en'?en:es;}
 function pmChip_(txt,c){return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700;font-size:.64rem;white-space:nowrap">${escapeHtml(txt)}</span>`;}
 function pmEtapaChip_(e){return pmChip_(pmT(e,PM_ETAPA_EN[e]||e),PM_ETAPA_COLOR[e]||['#F1F5F9','#475569']);}
 function pmCursoNombre_(c){return LANG==='en'&&typeof ENTR_CURSOS_EN!=='undefined'&&ENTR_CURSOS_EN[c]?ENTR_CURSOS_EN[c]:c;}
-function pmAlertasOrden_(o){
-  const a=[];
-  if(o.sinConfirmar24)a.push(`<div style="font-size:.64rem;color:#B45309;font-weight:700"><i class="fas fa-clock" style="margin-right:3px"></i>${pmT('Sin confirmar más de 24 h','Unconfirmed for over 24 h')}</div>`);
-  if(o.matPendientes>0)a.push(`<div style="font-size:.64rem;color:#92400E;font-weight:700"><i class="fas fa-box" style="margin-right:3px"></i>${pmT(o.matPendientes+' material(es) en compra',o.matPendientes+' material(s) on order')}</div>`);
-  else if(o.matTotal>0)a.push(`<div style="font-size:.64rem;color:#166534;font-weight:700"><i class="fas fa-box-open" style="margin-right:3px"></i>${pmT('Material recibido','Material received')}</div>`);
-  if((o.advertencias||[]).some(x=>x.tipo==='curso'&&x.gravedad==='alta'))a.push(`<div style="font-size:.64rem;color:#991B1B;font-weight:700"><i class="fas fa-graduation-cap" style="margin-right:3px"></i>${pmT('Curso vencido o sin registro','Course expired or missing')}</div>`);
-  return a.join('');
-}
-function pmAccionOrden_(o,lunes){
-  if(o.estatus==='Cerrada')return `<div style="margin-top:4px">${pmEtapaChip_('Cerrada')}<div style="font-size:.64rem;color:#64748B;margin-top:2px">${pmFechaCorta_(o.fechaCierre)}</div></div>`;
-  if(o.estatus==='Asignada'){
-    const libre=(o.etapa==='Enviada'||o.etapa==='Confirmada');
-    return `<div style="margin-top:4px">${pmEtapaChip_(o.etapa||'Enviada')}</div><div style="font-size:.66rem;color:#1D4ED8;margin-top:3px">${escapeHtml(o.tecnico||'')} · ${pmFechaCorta_(o.fechaEjecucion)}<br>${escapeHtml(o.folio||'')} · ${escapeHtml(o.idOrden||'')}</div>${pmAlertasOrden_(o)}
- ${libre?`<button class="btn-g" style="padding:3px 9px;font-size:.66rem;margin-top:4px" onclick="pmLiberar('${o.idOrden}')">${pmT('Liberar','Release')}</button>`:''}`;
-  }
-  const i=PM_PROG_ORD.push(Object.assign({lunes},o))-1;
-  return `<button class="btn-p" style="padding:4px 11px;font-size:.7rem;margin-top:5px" onclick="pmAbrirAsignar(${i})"><i class="fas fa-user-plus" style="margin-right:4px"></i>${pmT('Asignar','Assign')}</button>`;
-}
-let PM_PREV_SEQ=0, PM_ASIG_PREV=null;
-function pmPreviewHtml_(p){
-  if(!p)return '';
-  const g={alta:['#FEE2E2','#991B1B','fa-circle-exclamation'],media:['#FEF3C7','#92400E','fa-triangle-exclamation'],info:['#EFF6FF','#1E40AF','fa-circle-info']};
-  let h='';
-  if(p.aCompra&&p.aCompra.length){
-    h+=`<div style="border:1px solid #FDE68A;background:#FFFBEB;border-radius:9px;padding:9px 11px;margin-bottom:8px"><div style="font-size:.74rem;font-weight:700;color:#92400E;margin-bottom:4px"><i class="fas fa-box" style="margin-right:5px"></i>${pmT('Material por solicitar a Compras ('+p.aCompra.length+')','Material to request from Purchasing ('+p.aCompra.length+')')}</div>
-      ${p.aCompra.map(m=>`<div style="font-size:.7rem;color:#78350F">${escapeHtml(m.codigo)} · ${escapeHtml(m.descripcion)} — <b>${m.cantidad} ${escapeHtml(m.unidad)}</b> <span style="color:#A16207">(${pmT('existencia','stock')} ${m.stock}, ${pmT('mínimo','min')} ${m.minimo})</span></div>`).join('')}
-      <div style="font-size:.66rem;color:#92400E;margin-top:4px">${pmT('Al asignar se crean solas en Compras (pasan por Ingeniería y Manager) y el técnico confirma la recepción antes de iniciar.','On assignment they are created automatically in Purchasing (Engineering and Manager review) and the technician confirms reception before starting.')}</div></div>`;
-  }else if(p.materialesTotal>0){
-    h+=`<div style="font-size:.7rem;color:#166534;margin-bottom:8px"><i class="fas fa-box-open" style="margin-right:5px"></i>${pmT('El material del plan está completo en inventario ('+p.materialesTotal+').','Plan material is fully stocked ('+p.materialesTotal+').')}</div>`;
-  }
-  h+=`<div style="font-size:.7rem;color:#334155;margin-bottom:8px"><i class="fas fa-calendar-check" style="margin-right:5px;color:#2563EB"></i>${pmT('Anticipación','Notice')}: <b>${Math.max(p.dias,0)} ${pmT('día(s)','day(s)')}</b> · ${pmT('recomendado','recommended')} ${p.requerida}${p.aCompra&&p.aCompra.length?' ('+pmT('entrega de material','material delivery')+')':''}</div>`;
-  if(p.cursos&&p.cursos.length){
-    h+=`<div style="margin-bottom:8px"><div style="font-size:.72rem;font-weight:700;color:#334155;margin-bottom:3px"><i class="fas fa-graduation-cap" style="margin-right:5px;color:#7C3AED"></i>${pmT('Cursos que pide este plan','Courses this plan requires')}</div>
-      ${p.cursos.map(c=>`<div style="font-size:.68rem;display:flex;gap:6px;align-items:center;margin-bottom:2px">${pmChip_(pmT(c.estado,PM_CURSO_EN[c.estado]||c.estado),PM_CURSO_COLOR[c.estado]||['#F1F5F9','#475569'])}<span>${escapeHtml(pmCursoNombre_(c.curso))}${c.obligatorio?'':' <i style="color:#94A3B8">('+pmT('recomendado','recommended')+')</i>'}${c.vence?' <span style="color:#94A3B8">· '+pmT('vence','expires')+' '+pmFechaCorta_(c.vence)+'</span>':''}</span></div>`).join('')}</div>`;
-  }
-  (p.advertencias||[]).filter(a=>a.gravedad!=='info').forEach(a=>{const c=g[a.gravedad]||g.info;
-    h+=`<div style="font-size:.68rem;background:${c[0]};color:${c[1]};border-radius:8px;padding:6px 9px;margin-bottom:4px"><i class="fas ${c[2]}" style="margin-right:5px"></i>${escapeHtml(pmT(a.es,a.en))}</div>`;});
-  if(p.requiereConfirmacion)h+=`<div style="font-size:.68rem;font-weight:700;color:#991B1B;margin-top:4px">${pmT('Hay advertencias graves: al asignar se te pedirá confirmarlas.','There are serious warnings: you will be asked to confirm them when assigning.')}</div>`;
-  return h;
-}
-async function pmPrevisualizar(){
-  const o=PM_ASIG_CTX, box=$('pm-asig-prev'); if(!o||!box)return;
-  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value; if(!tec||!fecha){box.innerHTML='';PM_ASIG_PREV=null;return;}
-  const seq=++PM_PREV_SEQ; box.innerHTML=`<div style="font-size:.7rem;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>${pmT('Revisando material, anticipación y cursos…','Checking material, notice and courses…')}</div>`;
-  try{const r=await api({action:'pmPreviewOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha}); if(seq!==PM_PREV_SEQ)return; PM_ASIG_PREV=r.preview||null; box.innerHTML=pmPreviewHtml_(r.preview);}
-  catch(e){if(seq===PM_PREV_SEQ)box.innerHTML='';}
-}
-async function pmConfirmarAsignacion(){
-  const o=PM_ASIG_CTX; if(!o)return;
-  const tec=$('pm-asig-tec').value, fecha=$('pm-asig-fecha').value;
-  if(!tec){toast(pmT('Elige al técnico','Choose the technician'),'err');return;} if(!fecha){toast(pmT('Indica la fecha','Enter the date'),'err');return;}
-  const b=$('btn-pm-asig'); b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>'+pmT('Asignando…','Assigning…');
-  try{
-    let r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha});
-    if(!r.success&&r.requiereConfirmacion){
-      const graves=(r.advertencias||[]).filter(a=>a.gravedad==='alta').map(a=>'• '+pmT(a.es,a.en)).join('\n');
-      if(!confirm(pmT('Esta orden tiene advertencias graves:\n\n','This order has serious warnings:\n\n')+graves+'\n\n'+pmT('¿Asignarla de todos modos?','Assign it anyway?'))){return;}
-      r=await api({action:'pmAsignarOrden',token:SESSION.token,asignaciones:o.asignaciones,tecnicoUsername:tec,fecha,confirmoAdvertencias:true});
-    }
-    if(!r.success){toast(r.error||pmT('No se pudo asignar','Could not assign'),'err');return;}
-    toast(r.mensaje||pmT('Orden asignada','Order assigned')); closeModal('modal-pm-asignar'); pmCargarPrograma();
-  }catch(e){toast('Error: '+e.message,'err');}
-  finally{b.disabled=false;b.innerHTML=pmT('Asignar','Assign');}
-}
-function pmBarraEtapas_(x,etapas){
-  if(!x.total)return '<div style="height:10px;border-radius:999px;background:#E2E8F0"></div>';
-  return `<div style="display:flex;height:10px;border-radius:999px;overflow:hidden;background:#E2E8F0">${etapas.map(e=>x[e]?`<div title="${escapeHtml(pmT(e,PM_ETAPA_EN[e]))}: ${x[e]}" style="width:${x[e]*100/x.total}%;background:${PM_ETAPA_COLOR[e][1]};opacity:.85"></div>`:'').join('')}</div>`;
-}
-function pmTablaGrupo_(titulo,lista,etapas,vacio){
-  return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${titulo}</div>
-  ${lista.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="color:#64748B;text-align:left"><th style="padding:5px 6px"></th><th style="padding:5px 6px">${pmT('Órdenes','Orders')}</th><th style="padding:5px 6px;min-width:150px">${pmT('Etapas','Stages')}</th><th style="padding:5px 6px">${pmT('Horas','Hours')}</th><th style="padding:5px 6px">${pmT('Hechas','Done')}</th><th style="padding:5px 6px">${pmT('Vencidas','Overdue')}</th><th style="padding:5px 6px">${pmT('Sin confirmar','Unconfirmed')}</th></tr></thead><tbody>
-  ${lista.map(x=>`<tr style="border-top:1px solid #E2E8F0"><td style="padding:6px;font-weight:600;color:#0F2A4A">${escapeHtml(x.nombre)}</td><td style="padding:6px">${x.total}</td><td style="padding:6px">${pmBarraEtapas_(x,etapas)}</td><td style="padding:6px">${Math.round(x.horas*10)/10}</td><td style="padding:6px;color:#166534;font-weight:700">${x.hechas}</td><td style="padding:6px;${x.vencidas?'color:#B91C1C;font-weight:700':''}">${x.vencidas}</td><td style="padding:6px;${x.sinConfirmar?'color:#B45309;font-weight:700':''}">${x.sinConfirmar}</td></tr>`).join('')}</tbody></table></div>`:`<div style="font-size:.74rem;color:#94A3B8">${vacio}</div>`}</div>`;
-}
-function pmRenderTablero_(r){
-  const T=r.total, kpi=(lab,val,col,sub)=>`<div class="card" style="padding:12px 14px;min-width:140px;flex:1"><div style="font-size:.64rem;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.03em">${lab}</div><div style="font-size:1.45rem;font-weight:800;color:${col||'#0F2A4A'}">${val}</div>${sub?`<div style="font-size:.64rem;color:#94A3B8">${sub}</div>`:''}</div>`;
-  const cc=r.cumplimiento===null?'#64748B':(r.cumplimiento>=90?'#15803D':(r.cumplimiento>=80?'#B45309':'#B91C1C'));
-  const etapas=r.etapas||[];
-  let h=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-   ${kpi(pmT('Órdenes del periodo','Orders in period'),T.total,'#0F2A4A',r.desde+' → '+r.hasta)}
-   ${kpi(pmT('Cumplimiento','Compliance'),r.cumplimiento===null?'—':r.cumplimiento+' %',cc,pmT('de '+r.baseCumplimiento+' órdenes con fecha ya cumplida','of '+r.baseCumplimiento+' orders already due'))}
-   ${kpi(pmT('Vencidas','Overdue'),T.vencidas,T.vencidas?'#B91C1C':'#15803D',pmT('sin terminar y con fecha pasada','unfinished and past due'))}
-   ${kpi(pmT('Sin confirmar > 24 h','Unconfirmed > 24 h'),T.sinConfirmar,T.sinConfirmar?'#B45309':'#15803D')}
-   ${kpi(pmT('Material en compra','Material on order'),T.enCompra,T.enCompra?'#92400E':'#15803D',pmT('órdenes esperando material','orders waiting for material'))}
-   ${kpi(pmT('Alertas de curso','Course alerts'),r.alertasCurso,r.alertasCurso?'#B91C1C':'#15803D',pmT('curso vencido o sin registro','expired or missing course'))}
-   ${kpi(pmT('Vencidas sin asignar','Overdue, unassigned'),r.sinAsignarVencidas,r.sinAsignarVencidas?'#B91C1C':'#15803D',pmT('actividades del programa','program activities'))}
-   ${kpi(pmT('Horas','Hours'),r.horasHechas+' / '+r.horasPlaneadas,'#0F2A4A',pmT('hechas / planeadas','done / planned'))}</div>`;
-  h+=`<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${pmT('Órdenes por etapa','Orders by stage')}</div>${pmBarraEtapas_(T,etapas)}
-   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">${etapas.map(e=>`<div style="font-size:.72rem;display:flex;align-items:center;gap:6px">${pmEtapaChip_(e)}<b>${T[e]||0}</b></div>`).join('')}</div></div>`;
-  h+=pmTablaGrupo_(pmT('Por técnico','By technician'),r.porTecnico,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
-  h+=pmTablaGrupo_(pmT('Por sistema (categoría)','By system (category)'),r.porSistema,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
-  h+=pmTablaGrupo_(pmT('Por tipo','By type'),r.porTipo,etapas,pmT('Sin órdenes en el periodo.','No orders in the period.'));
-  const MOT={vencida:[pmT('Vencida','Overdue'),['#FEE2E2','#991B1B']],sinConfirmar:[pmT('Sin confirmar','Unconfirmed'),['#FEF3C7','#92400E']],material:[pmT('Material pendiente','Material pending'),['#FEF3C7','#92400E']],curso:[pmT('Curso','Course'),['#FEE2E2','#991B1B']]};
-  h+=`<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-size:.86rem;font-weight:700;color:#0F2A4A;margin-bottom:8px">${pmT('Requieren atención','Need attention')}</div>
-   ${r.atencion.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="color:#64748B;text-align:left"><th style="padding:5px 6px">${pmT('Orden','Order')}</th><th style="padding:5px 6px">${pmT('Plan','Plan')}</th><th style="padding:5px 6px">${pmT('Técnico','Technician')}</th><th style="padding:5px 6px">${pmT('Fecha','Date')}</th><th style="padding:5px 6px">${pmT('Etapa','Stage')}</th><th style="padding:5px 6px">${pmT('Motivo','Reason')}</th></tr></thead><tbody>
-   ${r.atencion.map(a=>`<tr style="border-top:1px solid #E2E8F0"><td style="padding:6px;font-family:'Space Mono',monospace">${escapeHtml(a.idOrden)}</td><td style="padding:6px">${escapeHtml(a.plan)}</td><td style="padding:6px">${escapeHtml(a.tecnico)}</td><td style="padding:6px">${pmFechaCorta_(a.fechaEjecucion)}</td><td style="padding:6px">${pmEtapaChip_(a.etapa)}</td><td style="padding:6px;display:flex;gap:4px;flex-wrap:wrap">${a.motivos.map(m=>pmChip_(MOT[m][0],MOT[m][1])).join('')}</td></tr>`).join('')}</tbody></table></div>`:`<div style="font-size:.74rem;color:#15803D"><i class="fas fa-circle-check" style="margin-right:5px"></i>${pmT('Nada requiere atención en este periodo.','Nothing needs attention in this period.')}</div>`}</div>`;
-  return h;
-}
-async function pmCargarTablero(){
-  const box=$('pm-tablero'); if(!box)return;
-  box.innerHTML=`<div class="card" style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>${pmT('Calculando tablero…','Calculating dashboard…')}</div>`;
-  try{
-    const r=await api({action:'getPMTablero',token:SESSION.token,desde:($('pm-t-desde')||{}).value||'',hasta:($('pm-t-hasta')||{}).value||''});
-    if(!r.success){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||pmT('No disponible','Not available'))}</div>`;return;}
-    if($('pm-t-desde'))$('pm-t-desde').value=r.desde; if($('pm-t-hasta'))$('pm-t-hasta').value=r.hasta;
-    box.innerHTML=pmRenderTablero_(r);
-  }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
-}
-function pmTab(t){
-  const todos=['equipos','programa','tablero'];
-  if(t==='tablero'){
-    todos.forEach(x=>{const p=$('pm-panel-'+x); if(p)p.style.display=x===t?'':'none'; const b=$('pm-tab-'+x); if(b){b.style.background=x===t?'#0F2A4A':'';b.style.color=x===t?'#fff':'';}});
-    pmCargarTablero(); return;
-  }
-  const p3=$('pm-panel-tablero'); if(p3)p3.style.display='none'; const b3=$('pm-tab-tablero'); if(b3){b3.style.background='';b3.style.color='';}
-  pmTabBase_(t);
-}
 // — Tarjeta del técnico (Plan Diario) —
 function pmTarjetaHtml_(d,st){
   const pm=d.pm; if(!pm)return '';
@@ -5073,160 +4904,55 @@ function pmBadge_(t,map){const c=(map||PM_PRIO_COLOR)[t]||['#F1F5F9','#475569'];
   return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700;font-size:.66rem">${escapeHtml(t||'—')}</span>`;}
 function pmFechaCorta_(f){if(!f)return '—';const p=String(f).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 
-function goPreventivo(){
+// ══════════════════════════════════════════════════════════════
+// V9.19.0 — CENTRO DE MANTENIMIENTO
+// La pantalla del preventivo es centro-mantenimiento.html (archivo aparte, SIN datos):
+// se descarga, se le inyectan los datos de getCMDatos y se muestra en un iframe.
+// Cada acción del iframe llega por postMessage y se manda al servidor con la sesión;
+// solo se aceptan las acciones de la lista CM_OPS. El servidor valida sesión y rol.
+// ══════════════════════════════════════════════════════════════
+const CM_OPS={getCMDatos:1,getPMEquipoDetalle:1,getPMFotosEquipo:1,pmSubirFotoEquipo:1,pmGuardarUbicacion:1,pmReportarFalla:1,getPMSugerencias:1,
+  pmPreviewOrden:1,pmAsignarOrden:1,pmLiberarOrden:1,pmConfirmarOrden:1,pmConfirmarMaterial:1,pmOmitirMaterial:1};
+function cmCaja_(txt,rojo){return `<div class="card" style="padding:26px;text-align:center;color:${rojo?'#B91C1C':'#64748B'};font-size:.84rem;margin:26px auto;max-width:640px">${txt}</div>`;}
+function cmTraducciones_(r){
+  const t={}; if(typeof TEXT_I18N==='undefined')return t;
+  const add=x=>{x=String(x||'');if(x&&TEXT_I18N[x])t[x]=TEXT_I18N[x];};
+  (r.ordenes||[]).forEach(o=>{add(o.plan);add(o.sistema);}); (r.equipos||[]).forEach(e=>add(e.sistema));
+  return t;
+}
+function cmFotos_(r){
+  const out={}, quien=(r.tecnicos||[]).map(t=>t).concat([{username:SESSION.user.username,nombre:SESSION.user.nombre}]);
+  quien.forEach(t=>{const f=fotoDe_(t.nombre,t.username); if(f)out[String(t.username||'').toLowerCase()]=f;});
+  return out;
+}
+async function goPreventivo(){
   if(!requireLogin('pm'))return;
-  showView('pm'); pmTab('equipos');
-  if(!PM_DATA)pmCargarEquipos();
-}
-
-function pmTabBase_(t){
-  ['equipos','programa'].forEach(x=>{
-    $('pm-panel-'+x).style.display=x===t?'':'none';
-    const b=$('pm-tab-'+x); if(b){b.style.background=x===t?'#0F2A4A':'';b.style.color=x===t?'#fff':'';}
-  });
-  if(t==='programa'){
-    if(PM_DATA&&!PM_DATA.puedeAdministrar){$('pm-programa').innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B">El programa lo administra Ingeniería.</div>';return;}
-    if(!$('pm-desde').value)$('pm-desde').value=localDateKeyV843_();
-    if(!$('pm-programa').innerHTML)pmCargarPrograma();
-  }
-}
-
-async function pmCargarEquipos(){
-  $('pm-equipos').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando equipos…</div>';
+  showView('pm');
+  const cont=$('cm-contenido'); if(!cont)return;
+  if(!['tecnico','ingeniero','manager'].includes(SESSION.user.rol)){cont.innerHTML=cmCaja_(pmT('El Centro de Mantenimiento es para Ingeniería, técnicos y managers.','The Maintenance Center is for Engineering, technicians and managers.'),true);return;}
+  cont.innerHTML=cmCaja_('<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>'+pmT('Cargando el Centro de Mantenimiento…','Loading the Maintenance Center…'));
   try{
-    const r=await api({action:'getPMEquipos',token:SESSION.token});
-    if(!r.success){$('pm-equipos').innerHTML=`<div style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
-    PM_DATA=r;
-    const uniq=k=>[...new Set(r.equipos.map(e=>e[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
-    $('pm-f-loc').innerHTML='<option value="">Todas las localizaciones</option>'+uniq('localizacion').map(x=>`<option>${escapeHtml(x)}</option>`).join('');
-    $('pm-f-clas').innerHTML='<option value="">Todas las clasificaciones</option>'+uniq('clasificacion').map(x=>`<option>${escapeHtml(x)}</option>`).join('');
-    $('pm-tab-programa').style.display=r.puedeAdministrar?'':'none';
-    pmRenderEquipos();
-  }catch(e){$('pm-equipos').innerHTML=`<div style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
+    try{await cargarFotos_();}catch(e){}
+    const [r,html]=await Promise.all([api({action:'getCMDatos',token:SESSION.token}),obtenerHtmlDash_('centro-mantenimiento.html','Centro de Mantenimiento KTMEX')]);
+    if(!r||!r.success){cont.innerHTML=cmCaja_(escapeHtml((r&&r.error)||pmT('No disponible','Not available')),true);return;}
+    const boot={lang:LANG,soloIngles:isManagerProfile_(),layoutUrl:new URL('layout-centro-mantenimiento.png',location.href).href,
+      fotos:cmFotos_(r),trad:cmTraducciones_(r),cursosEn:(typeof ENTR_CURSOS_EN!=='undefined'?ENTR_CURSOS_EN:{}),servidor:r};
+    cont.innerHTML='<iframe id="cm-frame" title="Centro de Mantenimiento" style="width:100%;height:calc(100dvh - 64px);min-height:560px;border:0;display:block;background:transparent"></iframe>';
+    $('cm-frame').srcdoc=dashInyectar_(html,'cm-data',boot);
+  }catch(e){cont.innerHTML=cmCaja_(escapeHtml(e.message||String(e)),true);}
 }
-
-function pmRenderEquipos(){
-  if(!PM_DATA)return;
-  const q=($('pm-buscar').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const fl=$('pm-f-loc').value, fc=$('pm-f-clas').value, fp=$('pm-f-prio').value;
-  const lista=PM_DATA.equipos.filter(e=>{
-    if(fl&&e.localizacion!==fl)return false; if(fc&&e.clasificacion!==fc)return false; if(fp&&e.prioridad!==fp)return false;
-    if(!q)return true;
-    const t=(e.equipo+' '+e.idCMMS+' '+e.idEquipo+' '+e.planes.join(' ')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return t.indexOf(q)>=0;
-  });
-  const th='padding:9px 10px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.72rem;text-align:left;white-space:nowrap';
-  const td='padding:8px 10px;font-size:.76rem;border-bottom:1px solid #EEF1F6';
-  $('pm-equipos').innerHTML=`<div style="padding:9px 12px;font-size:.72rem;color:#64748B">${lista.length} de ${PM_DATA.equipos.length} equipos</div>
-    <table style="width:100%;border-collapse:collapse;min-width:820px">
-      <thead><tr>${['ID','Equipo','Clasificación','Localización','Prioridad','Actividades','Próxima orden',''].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
-      <tbody>${lista.slice(0,400).map(e=>`<tr style="cursor:pointer" onclick="pmVerEquipo('${e.idEquipo}')" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background=''">
-        <td style="${td};color:#64748B;white-space:nowrap">${escapeHtml(e.idEquipo)}<div style="font-size:.62rem">SVISION ${escapeHtml(e.idCMMS)}</div></td>
-        <td style="${td};font-weight:600;color:#0F2A4A">${escapeHtml(e.equipo)}</td>
-        <td style="${td}">${escapeHtml(e.clasificacion)}</td>
-        <td style="${td}">${escapeHtml(e.localizacion)}</td>
-        <td style="${td}">${pmBadge_(e.prioridad)}</td>
-        <td style="${td};text-align:center">${e.actividades}${e.porChecklist?`<div style="font-size:.62rem;color:#64748B">${e.porChecklist} por checklist</div>`:''}</td>
-        <td style="${td};white-space:nowrap">${pmFechaCorta_(e.proxima)}${e.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">${e.vencidas} vencida(s)</div>`:''}</td>
-        <td style="${td};color:#2563EB"><i class="fas fa-chevron-right"></i></td></tr>`).join('')}</tbody>
-    </table>`;
-}
-
-async function pmVerEquipo(id){
-  $('pm-eq-cab').innerHTML=''; $('pm-eq-body').innerHTML='<div style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando hoja de vida…</div>';
-  $('modal-pm-equipo').style.display='flex';
-  try{
-    const r=await api({action:'getPMEquipoDetalle',token:SESSION.token,idEquipo:id});
-    if(!r.success){$('pm-eq-body').innerHTML=`<div style="color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
-    const e=r.equipo;
-    $('pm-eq-cab').innerHTML=`<div style="font-size:.7rem;color:#64748B">${escapeHtml(e.idEquipo)} · SVISION ${escapeHtml(e.idCMMS)}</div>
-      <h3 style="font-size:1.05rem;font-weight:700;color:var(--navy);margin:2px 0 6px">${escapeHtml(e.equipo)}</h3>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${pmBadge_(e.prioridad)}
-        <span style="font-size:.74rem;color:#475569"><i class="fas fa-location-dot" style="margin-right:4px"></i>${escapeHtml(e.localizacion)}</span>
-        <span style="font-size:.74rem;color:#475569"><i class="fas fa-tag" style="margin-right:4px"></i>${escapeHtml(e.clasificacion)}</span>
-        <span style="font-size:.74rem;color:#475569"><i class="fas fa-clock" style="margin-right:4px"></i>${r.horasAnio} h de mantenimiento al año</span></div>`;
-    const th='padding:7px 9px;background:#0F2A4A;color:#FFFFFF;font-weight:600;font-size:.7rem;text-align:left';
-    const td='padding:7px 9px;font-size:.74rem;border-bottom:1px solid #EEF1F6;vertical-align:top';
-    const estadoInv={OK:['#DCFCE7','#15803D'],'Óptimo':['#DCFCE7','#15803D'],'Poco inventario':['#FEF3C7','#B45309'],'Sin material':['#FEE2E2','#B91C1C']};
-    $('pm-eq-body').innerHTML=`
-      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin-bottom:6px">Planes y actividades</div>
-      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:760px">
-        <thead><tr>${['Plan','Actividad','Frecuencia','Duración','Prioridad','Última','Próxima'].map(h=>`<th style="${th}">${h}</th>`).join('')}</tr></thead>
-        <tbody>${r.actividades.map(a=>`<tr>
-          <td style="${td};color:#64748B;white-space:nowrap">${escapeHtml(a.idPlan)}<div style="font-size:.64rem">${escapeHtml(a.sistema)}</div></td>
-          <td style="${td}"><b style="color:#0F2A4A">${escapeHtml(a.actividad)}</b><div style="font-size:.66rem;color:#64748B">${escapeHtml(a.plan)}${a.parte&&a.parte!=='General'?' · '+escapeHtml(a.parte):''} · ${escapeHtml(a.responsable)}</div>
-            ${a.requiereParoDias?`<span style="font-size:.62rem;color:#B91C1C;font-weight:700">Requiere paro</span>`:''}</td>
-          <td style="${td};white-space:nowrap">${escapeHtml(a.frecuencia)}</td>
-          <td style="${td};white-space:nowrap">${a.duracionMin} min</td>
-          <td style="${td}">${pmBadge_(a.prioridad)}</td>
-          <td style="${td};white-space:nowrap">${pmFechaCorta_(a.ultimaEjecucion)}</td>
-          <td style="${td};white-space:nowrap">${a.viaChecklist?'<span style="font-size:.66rem;color:#0369A1;font-weight:600"><i class="fas fa-list-check" style="margin-right:3px"></i>Checklist</span>':pmFechaCorta_(a.proximaFecha)}</td>
-        </tr>`).join('')}</tbody></table></div>
-      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin:16px 0 6px">Materiales que consume <span style="font-weight:400;font-size:.72rem;color:#64748B">(${r.materiales.length})</span></div>
-      ${r.materiales.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${r.materiales.map(m=>{const c=estadoInv[m.estadoStock]||['#F1F5F9','#475569'];
-        return `<div style="border:1px solid #E2E8F0;border-radius:8px;padding:6px 9px;font-size:.7rem;background:#fff"><b>${escapeHtml(m.codigo)}</b> ${escapeHtml(m.descripcion)}
-          <span style="margin-left:5px;padding:1px 7px;border-radius:999px;background:${c[0]};color:${c[1]};font-weight:700">${escapeHtml(String(m.stockActual))} ${escapeHtml(m.unidad||'')}</span></div>`;}).join('')}</div>`
-        :'<div style="font-size:.74rem;color:#94A3B8">Ningún material del inventario está ligado a los planes de este equipo.</div>'}
-      <div style="font-size:.84rem;font-weight:700;color:#0F2A4A;margin:16px 0 6px">Historial</div>
-      ${(r.historial||[]).length?`<div style="display:flex;flex-direction:column;gap:5px">${r.historial.map(h=>`<div style="font-size:.72rem;border:1px solid #E2E8F0;border-radius:8px;padding:6px 9px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span><b>${escapeHtml(h.idOrden)}</b> · ${escapeHtml(h.plan)} · ${escapeHtml(h.tecnico||'')} · ${escapeHtml(h.folio||'')}</span>
-        <span style="color:${h.estatus==='Cerrada'?'#15803D':'#B45309'};font-weight:700">${h.estatus==='Cerrada'?'Cerrada '+pmFechaCorta_(h.fechaCierre):'Asignada para '+pmFechaCorta_(h.fechaEjecucion)}</span></div>`).join('')}</div>`
-        :'<div style="font-size:.74rem;color:#94A3B8">Todavía no hay órdenes ejecutadas para este equipo.</div>'}`;
-  }catch(err){$('pm-eq-body').innerHTML=`<div style="color:#B91C1C">Error: ${escapeHtml(err.message||String(err))}</div>`;}
-}
-
-// ── V9.4.0: asignación de órdenes ───────────────────────────
-let PM_PROG=null, PM_PROG_ORD=[], PM_ASIG_CTX=null;
-
-function pmAbrirAsignar(i){
-  const o=PM_PROG_ORD[i]; if(!o)return; PM_ASIG_CTX=o;
-  $('pm-asig-info').innerHTML=`<b>${escapeHtml(o.plan)}</b> · ${escapeHtml(o.localizacion)} · ${o.horas} h<br>
-    ${o.equipos.length} equipo(s): ${o.equipos.map(x=>escapeHtml(x.equipo.split(' ').slice(0,4).join(' '))).join(' · ')}
-    ${o.requiereParoDias?'<br><b style="color:#B91C1C">Requiere paro de equipo</b>':''}`;
-  const tecs=(PM_PROG.tecnicos||[]).map(t=>typeof t==='string'?{username:t,nombre:t}:t);
-  $('pm-asig-tec').innerHTML='<option value="">— Elige al técnico —</option>'+tecs.map(t=>`<option value="${escapeHtml(t.username||t.nombre)}">${escapeHtml(t.nombre||t.username)}</option>`).join('');
-  const hoy=localDateKeyV843_(); $('pm-asig-fecha').value=o.lunes<hoy?hoy:o.lunes;
-  $('pm-asig-prev').innerHTML='';PM_ASIG_PREV=null;PM_PREV_SEQ++;
- $('modal-pm-asignar').style.display='flex';
-}
-
-async function pmLiberar(id){
-  if(!confirm('¿Liberar la orden '+id+'? Se quitará del Plan Diario del técnico y sus equipos volverán al programa.'))return;
-  try{const r=await api({action:'pmLiberarOrden',token:SESSION.token,idOrden:id});
-    if(!r.success){toast(r.error||'No se pudo liberar','err');return;} toast(r.mensaje||'Orden liberada'); pmCargarPrograma();}
-  catch(e){toast('Error: '+e.message,'err');}
-}
-
-async function pmCargarPrograma(){
-  const box=$('pm-programa');
-  box.innerHTML='<div class="card" style="padding:24px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Calculando programa…</div>';
-  try{
-    const r=await api({action:'getPMPrograma',token:SESSION.token,desde:$('pm-desde').value,semanas:$('pm-semanas').value});
-    if(!r.success){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">${escapeHtml(r.error||'No disponible')}</div>`;return;}
-    PM_PROG=r; PM_PROG_ORD=[];
-    $('pm-cumplimiento').innerHTML=r.cumplimiento===null?'':`Cumplimiento del programa: <b style="color:${r.cumplimiento>=90?'#15803D':(r.cumplimiento>=80?'#B45309':'#B91C1C')}">${r.cumplimiento} %</b> <span style="color:#64748B">(${r.ordenesCerradas} de ${r.ordenesVencidasOActuales} órdenes)</span>`;
-    box.innerHTML=r.semanas.map(w=>{
-      const pct=Math.min(100,w.porcentaje), col=w.porcentaje>90?'#DC2626':(w.porcentaje>60?'#D97706':'#16A34A');
-      return `<div class="card" style="padding:14px 16px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <b style="font-size:.9rem;color:#0F2A4A">Semana del ${pmFechaCorta_(w.lunes)}</b>
-          <span style="font-size:.74rem;color:#475569">${w.ordenes.length} órdenes · <b>${w.horas} h</b> de ${w.capacidad} h (${w.porcentaje} %)${w.cumplimiento!==null?` · <b>${w.cerradas}</b> cerradas`:''}</span>
-        </div>
-        <div style="height:8px;border-radius:999px;background:#E2E8F0;overflow:hidden;margin:7px 0 10px"><div style="height:100%;width:${pct}%;background:${col}"></div></div>
-        ${w.ordenes.length?`<div style="display:flex;flex-direction:column;gap:6px">${w.ordenes.map(o=>`
-          <div style="border:1px solid ${o.vencidas?'#FCA5A5':'#E2E8F0'};background:${o.vencidas?'#FEF2F2':'#fff'};border-radius:9px;padding:8px 11px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
-            <div style="flex:1;min-width:230px">
-              <div style="font-size:.78rem;font-weight:700;color:#0F2A4A">${escapeHtml(o.plan)} <span style="font-weight:400;color:#64748B">· ${escapeHtml(o.localizacion)}</span></div>
-              <div style="font-size:.68rem;color:#475569">${o.equipos.length} equipo(s): ${o.equipos.slice(0,4).map(x=>escapeHtml(x.equipo.split(' ').slice(0,4).join(' '))).join(' · ')}${o.equipos.length>4?' …':''}</div>
-              <div style="font-size:.66rem;color:#64748B">${o.actividades.slice(0,3).map(escapeHtml).join(' · ')}${o.actividades.length>3?' …':''}</div>
-            </div>
-            <div style="text-align:right;white-space:nowrap">${pmBadge_(o.prioridad)}<div style="font-size:.74rem;font-weight:700;color:#0F2A4A;margin-top:3px">${o.horas} h</div>
-              ${o.vencidas?`<div style="font-size:.64rem;color:#B91C1C;font-weight:700">Vencida</div>`:''}${o.requiereParoDias?`<div style="font-size:.64rem;color:#B91C1C">Requiere paro</div>`:''}
-              ${pmAccionOrden_(o,w.lunes)}</div>
-          </div>`).join('')}</div>`:'<div style="font-size:.74rem;color:#94A3B8">Sin órdenes esta semana.</div>'}
-      </div>`;}).join('');
-  }catch(e){box.innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
-}
+function cmIdiomaCambiado_(){const fr=$('cm-frame');if(fr&&fr.contentWindow){try{fr.contentWindow.postMessage({type:'cm-lang',lang:LANG},'*');}catch(e){}}}
+window.addEventListener('message',async ev=>{
+  const fr=$('cm-frame'); if(!fr||ev.source!==fr.contentWindow)return; const d=ev.data||{};
+  if(d.type==='cm-lang-cambio'){if(typeof setLanguage==='function')setLanguage(d.lang);return;}
+  if(d.type!=='cm-accion')return;
+  const responder=(ok,result,error)=>{try{fr.contentWindow.postMessage({type:'cm-resultado',id:d.id,ok,result,error},'*');}catch(e){}};
+  if(d.op==='irPlanDiario'){responder(true,{success:true});if(typeof goActividades==='function')goActividades();return;}
+  if(d.op==='irCompras'){responder(true,{success:true});if(typeof goAdmin==='function'){goAdmin();setTimeout(()=>{try{switchTab('compra');}catch(e){}},50);}return;}
+  if(!CM_OPS[d.op]||!SESSION){responder(false,null,'Acción no permitida');return;}
+  try{const r=await api(Object.assign({},d.payload||{},{action:d.op,token:SESSION.token}));responder(true,r);}
+  catch(e){responder(false,null,e.message||String(e));}
+});
 
 // ══════════════════════════════════════════════════════════════
 // V9.6.0 — VISOR COMÚN PARA HERRAMIENTAS EN ARCHIVO APARTE
@@ -9415,18 +9141,19 @@ function renderPlatformAdmin(){
   body.innerHTML=PLATFORM_ADMIN_DATA.length
     ? PLATFORM_ADMIN_DATA.slice().sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0)).map(x=>{
         const dates=(x.fechas||[]).map(d=>`${escapeHtml(d.date)} ${escapeHtml(d.start)}-${escapeHtml(d.end)}`).join('<br>');
-        let actions=`<button class="btn-g" onclick="$('plat-status-folio').value='${escapeHtml(x.folio)}';showPlatformTab('status');searchPlatformFolio()">Ver</button>`;
-        if(x.estatus==='Pendiente Andrés Ramírez'&&un==='aramirez')actions+=` <button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar Andrés</button>`;
-        if(x.estatus==='Pendiente Pedro Loya'&&un==='ploya')actions+=` <button class="btn-ok" onclick="approvePlatformUI('${x.id}')">Aprobar Pedro</button>`;
-        if(x.estatus==='Lista de Espera')actions+=` <button class="btn-p" style="background:#D97706" onclick="promotePlatformUI('${x.id}')">Promover</button>`;
-        if(x.estatus!=='Cancelada')actions+=` <button class="btn-red" onclick="cancelPlatformUI('${x.id}')">Cancelar / liberar fecha</button>`;
+        // V9.19.0: acciones en columna, con separación y el mismo ancho (antes quedaban pegadas en una línea).
+        let actions=`<button class="btn-g" onclick="$('plat-status-folio').value='${escapeHtml(x.folio)}';showPlatformTab('status');searchPlatformFolio()"><i class="fas fa-eye"></i>Ver</button>`;
+        if(x.estatus==='Pendiente Andrés Ramírez'&&un==='aramirez')actions+=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')"><i class="fas fa-check"></i>Aprobar Andrés</button>`;
+        if(x.estatus==='Pendiente Pedro Loya'&&un==='ploya')actions+=`<button class="btn-ok" onclick="approvePlatformUI('${x.id}')"><i class="fas fa-check"></i>Aprobar Pedro</button>`;
+        if(x.estatus==='Lista de Espera')actions+=`<button class="btn-p plat-btn-promover" onclick="promotePlatformUI('${x.id}')"><i class="fas fa-arrow-up"></i>Promover</button>`;
+        if(x.estatus!=='Cancelada')actions+=`<button class="btn-red plat-btn-cancel" onclick="cancelPlatformUI('${x.id}')"><i class="fas fa-calendar-xmark"></i>Cancelar / liberar fecha</button>`;
         return `<tr>
           <td><b class="mono">${escapeHtml(x.folio)}</b><br><small>${escapeHtml(x.prioridadTexto||'Sin prioridad')}</small></td>
           <td><b>${escapeHtml(x.nombre||'')}</b><br><small>${escapeHtml(x.area||'')}</small></td>
           <td>${escapeHtml(x.areaTrabajo||'')}<br><small>${escapeHtml(x.descripcion||'')}</small></td>
           <td style="font-size:.68rem">${dates}</td>
           <td>${platformBadge_(x.estatus)}${x.listaEsperaMotivo?`<div style="font-size:.62rem;color:#64748B;margin-top:3px">${escapeHtml(x.listaEsperaMotivo)}</div>`:''}${platformHistShort_(x)}</td>
-          <td>${actions}</td>
+          <td><div class="plat-acc">${actions}</div></td>
         </tr>`;
       }).join('')
     : '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94A3B8">Sin solicitudes</td></tr>';
