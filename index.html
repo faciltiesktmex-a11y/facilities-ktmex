@@ -121,6 +121,22 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .mgr-all:hover{background:#15803D}.mgr-all:disabled{background:#94A3B8;cursor:default}
 .mgr-conf{background:#fff;border:1.5px solid #86EFAC;border-radius:11px;padding:10px;margin-bottom:10px;font-size:.76rem;color:#334155}
 .mgr-conf ul{margin:6px 0 8px;padding-left:16px;max-height:140px;overflow:auto}
+/* V9.19.4: celular — totales en 2 columnas y filtros que no rebasan la pantalla */
+@media (max-width:700px){#view-admin #kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}#view-admin select.inp,#view-admin input.inp{max-width:100%;min-width:0!important}}
+/* V9.19.3: para Inagaki se quitan la barra de inventario y las tablas de abajo; Requests se ve en tarjetas */
+#view-admin .mgr-layout #admin-stock-alert{display:none!important}
+#view-admin .mgr-layout #panel-sol .sol-tabla{display:none!important}
+#view-admin .mgr-layout #mgr-sol-cards{display:grid!important}
+#view-admin .mgr-layout #panel-compra .compra-tabla,#view-admin .mgr-layout #panel-compra .compra-filtros{display:none!important}
+#view-admin .mgr-layout #mgr-compra-nota{display:block!important}
+.mgr-sol-grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.mgr-sol-grid .mgr-c{margin:0;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.mgr-sol-grid .mgr-c:hover{border-color:#93C5FD;box-shadow:0 4px 14px -8px rgba(15,23,42,.35)}
+.mgr-sol-grid .mgr-c .mgr-btns{margin-top:auto;padding-top:8px}
+.mgr-sol-grid .mgr-st{margin:6px 0 2px}
+.mgr-sol-more{grid-column:1 / -1;text-align:center;padding:6px}
+.mgr-sol-empty{grid-column:1 / -1;text-align:center;padding:36px;color:#94A3B8;background:#fff;border:1px dashed #CBD5E1;border-radius:12px}
+.mgr-nota{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px 18px;font-size:.84rem;color:#475569}
 .mgr-c{background:#fff;border:1px solid #E2E8F0;border-radius:11px;padding:10px;margin-bottom:8px}
 .mgr-c .k{font-size:.66rem;font-weight:800;letter-spacing:.02em}
 .mgr-c .k.sol{color:#1D4ED8}.mgr-c .k.cmp{color:#B45309}.mgr-c .k.ww{color:#7C3AED}
@@ -2269,7 +2285,7 @@ const LPA_AREAS = {
         </div>
         <div id="fs-ocultas" style="display:none;font-size:.72rem;color:#64748B;margin-top:8px"></div>
       </div>
-      <div class="card" style="overflow:hidden">
+      <div class="card sol-tabla" style="overflow:hidden">
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;min-width:800px">
             <thead>
@@ -2282,11 +2298,12 @@ const LPA_AREAS = {
           </table>
         </div>
       </div>
+      <div id="mgr-sol-cards" class="mgr-sol-grid" style="display:none"></div>
     </div>
 
     <!-- TAB: Compras -->
     <div id="panel-compra" style="display:none">
-      <div class="card" style="padding:12px 14px;margin-bottom:12px">
+      <div class="card compra-filtros" style="padding:12px 14px;margin-bottom:12px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
           <input id="fc-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio o solicitante…" oninput="renderCompras()">
           <select id="fc-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderCompras()">
@@ -2295,7 +2312,7 @@ const LPA_AREAS = {
 
         </div>
       </div>
-      <div class="card" style="overflow:hidden">
+      <div class="card compra-tabla" style="overflow:hidden">
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;min-width:800px">
             <thead>
@@ -2308,6 +2325,7 @@ const LPA_AREAS = {
           </table>
         </div>
       </div>
+      <div id="mgr-compra-nota" class="mgr-nota" style="display:none"><i class="fas fa-inbox" style="margin-right:8px"></i>Purchase requests waiting for your approval are in <b>Your inbox</b> on the left. Purchasing follows up on the rest.</div>
     </div>
 
     <!-- TAB: LPA -->
@@ -3440,7 +3458,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.2';
+const FRONTEND_BUILD = '9.19.4';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4110,6 +4128,7 @@ const MANAGER_EN_I18N = {
   'Plan Diario':'Daily Plan',
   'Analítica':'Analytics',
   'Buscar folio, nombre, área…':'Search folio, name, area…',
+  '🔍 Buscar folio, nombre, área…':'🔍 Search folio, name, area…','🔍 Buscar folio o solicitante…':'🔍 Search folio or requester…',
   'Todos los estatus':'All Statuses',
   'Todos los departamentos':'All Departments',
   'Todas las prioridades':'All Priorities',
@@ -4946,7 +4965,7 @@ function pmFechaCorta_(f){if(!f)return '—';const p=String(f).split('-');return
 // Cada acción del iframe llega por postMessage y se manda al servidor con la sesión;
 // solo se aceptan las acciones de la lista CM_OPS. El servidor valida sesión y rol.
 // ══════════════════════════════════════════════════════════════
-const CM_OPS={getCMDatos:1,getPMEquipoDetalle:1,getPMFotosEquipo:1,pmSubirFotoEquipo:1,pmGuardarUbicacion:1,pmReportarFalla:1,getPMSugerencias:1,
+const CM_OPS={getCMDatos:1,pmGuardarTurnos:1,getPMEquipoDetalle:1,getPMFotosEquipo:1,pmSubirFotoEquipo:1,pmGuardarUbicacion:1,pmReportarFalla:1,getPMSugerencias:1,
   pmPreviewOrden:1,pmAsignarOrden:1,pmLiberarOrden:1,pmConfirmarOrden:1,pmConfirmarMaterial:1,pmOmitirMaterial:1};
 function cmCaja_(txt,rojo){return `<div class="card" style="padding:26px;text-align:center;color:${rojo?'#B91C1C':'#64748B'};font-size:.84rem;margin:26px auto;max-width:640px">${txt}</div>`;}
 function cmTraducciones_(r){
@@ -12679,7 +12698,7 @@ function aplicarInventarioAdmin_(res) {
 
     const globalAlert=$('admin-stock-alert');
     if(globalAlert){
-      if(res.bajoMinimoCount>0){
+      if(res.bajoMinimoCount>0&&!mgrEsAprobador_()){   // V9.19.3: Inagaki no ve la barra de inventario
         globalAlert.style.display='';
         const examples=(res.bajoMinimoItems||[]).slice(0,5).map(x=>x.codigo).join(', ');
         $('admin-stock-alert-text').innerHTML=`<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo${examples?' · Ej.: '+examples:''}.`;
@@ -13114,7 +13133,7 @@ function mgrTarjeta_(p){
   else pie=`<div class="mgr-btns"><button onclick="${p.k==='cmp'?`openCompraModal('${p.id}')`:`openSolicitudModal('${p.id}')`}">Review</button><button class="rj" ${MGR_CORRIENDO?'disabled':''} onclick="mgrPedirRechazo('${key}')">Reject</button><button class="ap" ${MGR_CORRIENDO?'disabled':''} onclick="mgrAprobarUno('${p.k}','${p.id}')">Approve</button></div>`;
   return `<div class="mgr-c"><div class="k ${p.k}">${kind} · <span class="mono">${escapeHtml(p.folio||'—')}</span></div>
     <div class="t">${escapeHtml(String(p.desc||'—').slice(0,120))}</div>
-    <div class="s">${escapeHtml(p.quien||'—')}${p.depto?' · '+escapeHtml(p.depto):''}${p.tipo?' · '+escapeHtml(p.tipo):''}</div>
+    <div class="s"><span>${escapeHtml(p.quien||'—')}</span>${p.depto?' · <span>'+escapeHtml(p.depto)+'</span>':''}${p.tipo?' · <span>'+escapeHtml(p.tipo)+'</span>':''}</div>
     <div class="s ${d>=3?'late':''}">${d===0?'Today':(d+' day'+(d===1?'':'s')+' waiting')}</div>${pie}</div>`;
 }
 function renderMgrResumen(){
@@ -13131,6 +13150,25 @@ function renderMgrResumen(){
   if(MGR_WW.length)h+=`<div class="mgr-sec">Weekend works · your signature</div>`+MGR_WW.map(w=>`<div class="mgr-c"><div class="k ww">Weekend work${MGR_WW_ETAPA?' · '+escapeHtml(MGR_WW_ETAPA):''}</div><div class="t">Saturday ${escapeHtml(w.sabado||'')}</div><div class="s">Signature needed</div><div class="mgr-btns"><button class="ap" onclick="wwAbrirFirma('${w.id}')"><i class="fas fa-pen-nib" style="margin-right:5px"></i>Open to sign</button></div></div>`).join('');
   h+='</div>';
   box.innerHTML=h; mgrAplicarLayout_();
+}
+// V9.19.3 — Requests en tarjetas (mismo estilo que la bandeja). Respeta búsqueda, estatus, departamento y los totales.
+let MGR_SOL_LIM=60;
+function mgrSolTarjetas_(list){
+  const box=$('mgr-sol-cards'); if(!box)return;
+  if(!list.length){box.innerHTML='<div class="mgr-sol-empty"><i class="fas fa-inbox" style="font-size:1.6rem;display:block;margin-bottom:8px"></i>No requests match these filters.</div>';return;}
+  const tot=list.length;
+  box.innerHTML=list.slice(0,MGR_SOL_LIM).map(r=>{
+    const d=mgrDias_(r.fecha), tec=r.tecnico?escapeHtml(r.tecnico):'<span style="color:#94A3B8">Unassigned</span>';
+    const esMgr=String(r.estatus||'').trim()==='Pendiente de Manager';
+    return `<div class="mgr-c" onclick="openSolicitudModal('${r.id}')">
+      <div class="k sol">Work request · <span class="mono">${escapeHtml(r.folio||'—')}</span></div>
+      <div class="t">${escapeHtml(String(r.descripcion||r.tipoSolicitud||'—').slice(0,120))}</div>
+      <div class="s"><span>${escapeHtml(r.nombre||'—')}</span>${r.departamento?' · <span>'+escapeHtml(r.departamento)+'</span>':''}${r.tipoSolicitud?' · <span>'+escapeHtml(r.tipoSolicitud)+'</span>':''}</div>
+      <div class="mgr-st">${estatusBadge(r.estatus)}</div>
+      <div class="s"><i class="fas fa-user-gear" style="margin-right:5px;opacity:.6"></i>${tec}</div>
+      <div class="s ${esMgr&&d>=3?'late':''}">${fmtDate(r.fecha)}${d?' · '+d+' day'+(d===1?'':'s')+' ago':' · today'}</div>
+      <div class="mgr-btns"><button onclick="event.stopPropagation();openSolicitudModal('${r.id}')">Review</button><button onclick="event.stopPropagation();verHistorialRegistro('solicitud','${r.id}','${escapeHtml(r.folio||'')}')"><i class="fas fa-clock-rotate-left" style="margin-right:5px"></i>History</button></div>
+    </div>`;}).join('')+(tot>MGR_SOL_LIM?`<div class="mgr-sol-more"><button class="btn-g" style="width:auto" onclick="MGR_SOL_LIM+=60;renderSolicitudes()">Show more (${MGR_SOL_LIM} / ${tot})</button></div>`:'');
 }
 function mgrPedirRechazo(key){MGR_REJ=key;MGR_REJ_ERR='';renderMgrResumen();setTimeout(()=>{const t=$('mgr-rej-txt');if(t)t.focus();},20);}
 function mgrCancelarRechazo(){MGR_REJ=null;MGR_REJ_ERR='';renderMgrResumen();}
@@ -13213,6 +13251,7 @@ function renderSolicitudes() {
       : '';
   }
 
+  if(mgrEsAprobador_())mgrSolTarjetas_(list);   // V9.19.3: Inagaki ve las solicitudes en tarjetas
   const tbody=$('sol-tbody');
   if(!list.length){
     tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>'+uiText('Sin resultados')+'</td></tr>';
