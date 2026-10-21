@@ -1252,6 +1252,20 @@ const LPA_AREAS = {
         <button class="btn-p" onclick="resetAllLpaPasswords()" style="background:#B45309"><i class="fas fa-key" style="margin-right:5px"></i>Reiniciar todos</button>
       </div>
     </div>
+    <div style="border:1px solid #CBD5E1;border-radius:10px;padding:12px;margin-top:14px">
+      <h4 style="margin:0 0 10px;color:var(--navy)">Administrar usuarios de LPA Quality</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+        <input id="lpaq-new-username" class="inp" placeholder="Usuario (ej. ana.lopez)" autocomplete="off">
+        <input id="lpaq-new-name" class="inp" placeholder="Nombre completo" autocomplete="off">
+        <input id="lpaq-new-position" class="inp" placeholder="Puesto" value="LPA Auditor">
+        <select id="lpaq-new-level" class="inp"><option>N4</option><option>N3</option><option>N2</option><option>N1</option></select>
+        <input id="lpaq-new-areas" class="inp" placeholder="Áreas separadas por coma">
+        <input id="lpaq-new-email" class="inp" placeholder="Correo (opcional)" type="email">
+      </div>
+      <input id="lpaq-new-reason" class="inp" placeholder="Motivo / referencia (opcional)" style="margin-top:8px">
+      <button class="btn-p" onclick="crearUsuarioLpa()" style="margin-top:9px"><i class="fas fa-user-plus" style="margin-right:5px"></i>Agregar usuario</button>
+      <p style="font-size:.68rem;color:#64748B;margin:8px 0 0">Suspender = solo LPA Quality. Bloquear = desactiva la cuenta general de Facilities y cierra sesiones. Se conserva el historial.</p>
+    </div>
     <div id="pwd-temp-result" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px;margin-top:11px"></div>
     <div id="lpaq-pwd-summary" style="font-size:.72rem;color:#475569;margin-top:10px"></div>
     <div id="lpaq-pwd-table" style="margin-top:10px;max-height:340px;overflow:auto"></div>
@@ -8528,9 +8542,7 @@ async function loadLpaPasswordPanel(){
       r.usuarios.map(u=>`<tr style="border-bottom:1px solid #E2E8F0">
         <td style="padding:6px">${escapeHtml(u.nombre)}</td>
         <td style="padding:6px" class="mono">${escapeHtml(u.username)}</td>
-        <td style="padding:6px">${u.debeCambiarPassword
-            ?'<span class="badge b-wait">Cambio pendiente</span>'
-            :'<span class="badge b-done">Al corriente</span>'}${u.tieneHash?'':' <span class="badge" style="background:#FEE2E2;color:#B91C1C">Sin cifrar</span>'}</td>
+        <td style="padding:6px">${!u.activo?'<span class="badge" style="background:#FEE2E2;color:#991B1B">Bloqueado Facilities</span>':!u.accesoLpaActivo?'<span class="badge" style="background:#FEF3C7;color:#92400E">Suspendido LPA</span>':u.debeCambiarPassword?'<span class="badge b-wait">Cambio pendiente</span>':'<span class="badge b-done">Activo</span>'}${u.tieneHash?'':' <span class="badge" style="background:#FEE2E2;color:#B91C1C">Sin cifrar</span>'}</td>
         <td style="padding:6px">${u.passwordActual
             ? `<span class="mono" style="background:#EFF6FF;padding:2px 6px;border-radius:5px">${escapeHtml(u.passwordActual)}</span>
                <button class="btn-g" style="padding:2px 6px;margin-left:4px" title="Copiar" onclick="copiarTexto_('${escapeHtml(u.passwordActual)}')"><i class="fas fa-copy"></i></button>`
@@ -8543,9 +8555,37 @@ async function loadLpaPasswordPanel(){
         <td style="padding:6px;text-align:right;white-space:nowrap">
           <button class="btn-g" style="padding:4px 8px" onclick="resetOneLpaPassword('${escapeHtml(u.username)}')">Reiniciar</button>
           <button class="btn-g" style="padding:4px 8px;background:#DBEAFE;color:#1D4ED8" onclick="generarPasswordTemporal('${escapeHtml(u.username)}','${escapeHtml(u.nombre)}')">Generar temporal</button>
+          ${u.accesoLpaActivo?`<button class="btn-g" style="padding:4px 8px;background:#FEF3C7;color:#92400E" onclick="cambiarEstatusUsuarioLpa('${escapeHtml(u.username)}','SUSPENDIDO')">Suspender LPA</button>`:`<button class="btn-g" style="padding:4px 8px;background:#DCFCE7;color:#166534" onclick="cambiarEstatusUsuarioLpa('${escapeHtml(u.username)}','ACTIVO')">Reactivar LPA</button>`}
+          ${u.activo?`<button class="btn-g" style="padding:4px 8px;background:#FEE2E2;color:#991B1B" onclick="cambiarEstatusUsuarioLpa('${escapeHtml(u.username)}','BLOQUEADO')">Bloquear Facilities</button>`:`<button class="btn-g" style="padding:4px 8px;background:#DCFCE7;color:#166534" onclick="cambiarEstatusUsuarioLpa('${escapeHtml(u.username)}','ACTIVO')">Reactivar usuario</button>`}
         </td>
       </tr>`).join('')}</tbody></table>`;
   }catch(e){box.innerHTML='';toast('Error: '+e.message,'err');}
+}
+
+async function crearUsuarioLpa(){
+  const username=$('lpaq-new-username')?.value.trim(), nombre=$('lpaq-new-name')?.value.trim();
+  if(!username||!nombre){toast('Captura usuario y nombre completo.','err');return;}
+  if(!confirm('Se creará una cuenta exclusiva para LPA Quality con contraseña temporal y cambio obligatorio al iniciar sesión. ¿Continuar?'))return;
+  try{
+    const r=await api({action:'adminCreateLpaUser',token:SESSION.token,username,nombre,
+      puesto:$('lpaq-new-position').value.trim(),nivel:$('lpaq-new-level').value,
+      areas:$('lpaq-new-areas').value,email:$('lpaq-new-email').value.trim(),motivo:$('lpaq-new-reason').value.trim()});
+    if(!r.success){toast(r.error||'No se pudo crear el usuario','err');return;}
+    $('lpaq-new-username').value='';$('lpaq-new-name').value='';$('lpaq-new-areas').value='';$('lpaq-new-email').value='';
+    await loadLpaPasswordPanel();mostrarPasswordTemporal_(r.nombre,r.username,r.passwordTemporal);
+    toast(r.message||'Usuario creado','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function cambiarEstatusUsuarioLpa(username,status){
+  const label=status==='SUSPENDIDO'?'suspender solo el acceso a LPA Quality':status==='BLOQUEADO'?'bloquear la cuenta general de Facilities':'reactivar el acceso';
+  const motivo=prompt('Motivo para '+label+' a '+username+':','');
+  if(motivo===null)return;
+  if(!confirm('Confirmar: '+label+' para '+username+'?'))return;
+  try{
+    const r=await api({action:'adminSetLpaUserStatus',token:SESSION.token,username,status,motivo});
+    if(!r.success){toast(r.error||'No se pudo cambiar el estatus','err');return;}
+    toast(r.message||'Estatus actualizado','ok');await loadLpaPasswordPanel();
+  }catch(e){toast('Error: '+e.message,'err');}
 }
 
 async function resetAllLpaPasswords(){
