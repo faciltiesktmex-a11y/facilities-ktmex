@@ -1233,12 +1233,43 @@ const LPA_AREAS = {
 
     <div id="lpaq-program-table" style="margin-top:12px;overflow-x:auto"></div>
   </div>
+  <div class="card" style="padding:16px;margin-top:14px">
+    <strong style="font-size:.9rem">Auditorías realizadas / Completed audits</strong>
+    <p style="font-size:.7rem;color:#64748B;margin:4px 0">Consulta las auditorías ejecutadas en tus áreas autorizadas. Los Champions de Welding pueden consultar el historial de Welding.</p>
+    <div id="lpaq-audits-history" style="margin-top:12px;overflow-x:auto"></div>
+  </div>
 
   <div class="card" style="padding:16px">
     <strong style="font-size:.9rem">Nonconformities / No conformidades</strong>
     <div id="lpaq-nc-table" style="margin-top:12px;overflow-x:auto"></div>
   </div>
 
+  <!-- V4: Administración del catálogo de preguntas LPA Quality -->
+  <div id="lpaq-question-admin" class="card" style="display:none;padding:16px;margin-top:14px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+      <div><h3 style="margin:0;font-size:.9rem;color:var(--navy)">Administración de preguntas LPA</h3>
+      <p style="font-size:.7rem;color:#64748B;margin:4px 0">Agregar, editar o desactivar preguntas. Los IDs históricos no se reutilizan.</p></div>
+      <button class="btn-p" onclick="lpaqQuestionNew()">+ Nueva pregunta</button>
+    </div>
+    <div id="lpaq-question-admin-list" style="overflow-x:auto;margin-top:12px"></div>
+    <div id="lpaq-question-editor" style="display:none;border:1px solid #CBD5E1;border-radius:10px;padding:12px;margin-top:12px">
+      <input id="lpaq-q-id" class="inp" placeholder="ID (Q036, Q037...)">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px">
+        <input id="lpaq-q-category" class="inp" placeholder="Categoría">
+        <input id="lpaq-q-owner" class="inp" placeholder="Responsable / Owner">
+        <input id="lpaq-q-reaction" class="inp" placeholder="Reacción (A/B/C)">
+        <input id="lpaq-q-levels" class="inp" placeholder="Niveles separados por coma: N1,N2">
+        <input id="lpaq-q-es" class="inp" placeholder="Pregunta en español">
+        <input id="lpaq-q-en" class="inp" placeholder="Question in English">
+        <textarea id="lpaq-q-criteria-es" class="inp" placeholder="Criterio en español"></textarea>
+        <textarea id="lpaq-q-criteria-en" class="inp" placeholder="Audit criteria in English"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn-p" onclick="lpaqQuestionSave()">Guardar</button>
+        <button class="btn-g" onclick="lpaqQuestionEditorClose()">Cancelar</button>
+      </div>
+    </div>
+  </div>
   <!-- V8.6.0 — Administración de contraseñas LPA (solo LPA Quality Admin) -->
   <div id="lpaq-admin-pwd-panel" class="card" style="display:none;padding:16px;margin-top:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -7612,6 +7643,8 @@ async function loadLpaQDashboard(){
       (r.avisoCanal?`<div style="font-size:.66rem;color:#475569;margin-top:3px"><i class="fas fa-bell" style="margin-right:4px"></i>${r.avisoCanal}</div>`:'');
     if($('lpaq-admin-pwd-panel'))$('lpaq-admin-pwd-panel').style.display=r.access.qadmin?'':'none';
     lpaqRenderMedidores_(r.medidores);
+    renderLpaQAuditHistory(r.audits||[]);
+    if(r.access.qadmin){$('lpaq-question-admin').style.display='';loadLpaQQuestionAdmin();}else{$('lpaq-question-admin').style.display='none';}
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -7665,6 +7698,45 @@ function renderLpaQProgram(){
       `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
     return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${r.machine||'—'}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td>${action}</td></tr>`;
   }).join('')+'</tbody></table>';
+}
+function renderLpaQAuditHistory(rows){
+  const el=$('lpaq-audits-history'); if(!el)return;
+  if(!rows.length){el.innerHTML='<div style="font-size:.78rem;color:#94A3B8">No hay auditorías realizadas en las áreas autorizadas.</div>';return;}
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;min-width:760px"><thead><tr><th>Fecha</th><th>Folio</th><th>Auditor</th><th>Área</th><th>Máquina</th><th>Nivel</th><th>Conformes</th><th>NC</th></tr></thead><tbody>'+
+    rows.slice().sort((a,b)=>String(b.fecha||b.executionDate||'').localeCompare(String(a.fecha||a.executionDate||''))).map(r=>`<tr><td>${r.fecha||r.executionDate||''}</td><td>${r.folio||''}</td><td>${r.auditorNombre||r.auditor||''}</td><td>${r.area||''}</td><td>${r.machine||r.maquina||''}</td><td>${r.level||r.nivel||''}</td><td>${r.ok??''}</td><td>${r.nok??''}</td></tr>`).join('')+'</tbody></table>';
+}
+async function loadLpaQQuestionAdmin(){
+  if(!LPAQ_ACCESS?.qadmin)return;
+  const r=await api({action:'lpaqManageCatalog',token:SESSION.token,mode:'list'});
+  if(!r.success){toast(r.error||'No se pudo cargar el catálogo','err');return;}
+  window._lpaqAdminQuestions=r.questions||[];
+  $('lpaq-question-admin-list').innerHTML='<table style="width:100%;border-collapse:collapse;min-width:760px"><thead><tr><th>ID</th><th>Categoría</th><th>Pregunta ES</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
+    window._lpaqAdminQuestions.map(q=>`<tr><td>${q.id}</td><td>${q.category}</td><td>${q.es}</td><td>${q.active?'Activa':'Inactiva'}</td><td><button class="btn-g" onclick="lpaqQuestionEdit('${q.id}')">Editar</button> <button class="btn-g" onclick="lpaqQuestionDeactivate('${q.id}')">${q.active?'Desactivar':'Activar'}</button></td></tr>`).join('')+'</tbody></table>';
+}
+function lpaqQuestionNew(){
+  ['id','category','owner','reaction','levels','es','en','criteria-es','criteria-en'].forEach(k=>{const e=$('lpaq-q-'+k);if(e)e.value='';});
+  $('lpaq-q-id').disabled=false;$('lpaq-question-editor').style.display='';
+}
+function lpaqQuestionEdit(id){
+  const q=(window._lpaqAdminQuestions||[]).find(x=>x.id===id);if(!q)return;
+  const map={id:q.id,category:q.category,owner:q.owner,reaction:q.reaction,levels:(q.levels||[]).join(','),es:q.es,en:q.en,'criteria-es':q.criteria_es,'criteria-en':q.criteria_en};
+  Object.keys(map).forEach(k=>{const e=$('lpaq-q-'+k);if(e)e.value=map[k]||'';});
+  $('lpaq-q-id').disabled=true;$('lpaq-question-editor').style.display='';
+}
+function lpaqQuestionEditorClose(){$('lpaq-question-editor').style.display='none';}
+async function lpaqQuestionSave(){
+  const val=id=>String($('lpaq-q-'+id)?.value||'').trim();
+  const q={id:val('id'),category:val('category'),owner:val('owner'),reaction:val('reaction'),levels:val('levels').split(',').map(x=>x.trim().toUpperCase()).filter(Boolean),es:val('es'),en:val('en'),criteria_es:val('criteria-es'),criteria_en:val('criteria-en'),active:true};
+  if(!q.id||!q.category||!q.es||!q.en||!q.levels.length){toast('Completa ID, categoría, preguntas y niveles.','err');return;}
+  const r=await api({action:'lpaqManageCatalog',token:SESSION.token,mode:'save',question:q});
+  if(r.success){toast('Pregunta guardada','ok');lpaqQuestionEditorClose();await loadLpaQQuestionAdmin();}else toast(r.error||'Error','err');
+}
+async function lpaqQuestionDeactivate(id){
+  const q=(window._lpaqAdminQuestions||[]).find(x=>x.id===id);if(!q)return;
+  const verb=q.active?'desactivar':'activar';
+  if(!confirm('¿Deseas '+verb+' la pregunta '+id+'? La pregunta no se eliminará físicamente para conservar el historial.'))return;
+  const r=await api({action:'lpaqManageCatalog',token:SESSION.token,mode:'toggle',id,active:!q.active});
+  if(r.success){await loadLpaQQuestionAdmin();toast('Catálogo actualizado','ok');}else toast(r.error||'Error','err');
 }
 function renderLpaQNC(){
   const rows=LPAQ_DASH.nc||[];
