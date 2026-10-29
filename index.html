@@ -3510,7 +3510,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.5';
+const FRONTEND_BUILD = '9.19.6';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -5018,7 +5018,8 @@ function pmFechaCorta_(f){if(!f)return '—';const p=String(f).split('-');return
 // solo se aceptan las acciones de la lista CM_OPS. El servidor valida sesión y rol.
 // ══════════════════════════════════════════════════════════════
 const CM_OPS={getCMDatos:1,pmGuardarTurnos:1,getPMEquipoDetalle:1,getPMFotosEquipo:1,pmSubirFotoEquipo:1,pmGuardarUbicacion:1,pmReportarFalla:1,getPMSugerencias:1,
-  pmPreviewOrden:1,pmAsignarOrden:1,pmLiberarOrden:1,pmConfirmarOrden:1,pmConfirmarMaterial:1,pmOmitirMaterial:1};
+  pmPreviewOrden:1,pmAsignarOrden:1,pmLiberarOrden:1,pmConfirmarOrden:1,pmConfirmarMaterial:1,pmOmitirMaterial:1,
+  getCMMatriz:1,cmMxGuardar:1};   // V9.19.6: matriz de datos
 function cmCaja_(txt,rojo){return `<div class="card" style="padding:26px;text-align:center;color:${rojo?'#B91C1C':'#64748B'};font-size:.84rem;margin:26px auto;max-width:640px">${txt}</div>`;}
 function cmTraducciones_(r){
   const t={}; if(typeof TEXT_I18N==='undefined')return t;
@@ -5054,6 +5055,16 @@ window.addEventListener('message',async ev=>{
   if(d.type==='cm-lang-cambio'){if(typeof setLanguage==='function')setLanguage(d.lang);return;}
   if(d.type!=='cm-accion')return;
   const responder=(ok,result,error)=>{try{fr.contentWindow.postMessage({type:'cm-resultado',id:d.id,ok,result,error},'*');}catch(e){}};
+  // V9.19.6: «Exportar a Excel» de la matriz; la descarga la hace el sistema (el Centro vive en un iframe).
+  if(d.op==='descargar'){
+    try{const p=d.payload||{}, nombre=String(p.nombre||'archivo.xls').replace(/[^\w.\-]+/g,'_').slice(0,120);
+      if(!/\.xls$/i.test(nombre)||String(p.contenido||'').length>15e6)throw new Error('Archivo no permitido');
+      const url=URL.createObjectURL(new Blob(['\ufeff'+String(p.contenido||'')],{type:'application/vnd.ms-excel;charset=utf-8'}));
+      const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+      responder(true,{success:true,nombre});}
+    catch(e){responder(false,null,e.message||String(e));}
+    return;
+  }
   if(d.op==='irPlanDiario'){responder(true,{success:true});if(typeof goActividades==='function')goActividades();return;}
   if(d.op==='irCompras'){responder(true,{success:true});if(typeof goAdmin==='function'){goAdmin();setTimeout(()=>{try{switchTab('compra');}catch(e){}},50);}return;}
   if(!CM_OPS[d.op]||!SESSION){responder(false,null,'Acción no permitida');return;}
