@@ -3510,7 +3510,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.6';
+const FRONTEND_BUILD = '9.19.7';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -13948,13 +13948,14 @@ async function loadComprasRol() {
   try {
     const res = await api({action:'getCompras', token:SESSION.token});
     if (res.success) {
-      CR_DATA = res.compras || [];
+      CR_DATA = res.compras || []; CR_RESUMEN = res.resumen || null;   // V9.19.7
       renderComprasRol();
       renderComprasRolKPIs();
     } else toast(res.error||'Error al cargar solicitudes de compra','err');
   } catch(e) { toast('Error de conexión: '+e.message,'err'); }
 }
 
+let CR_RESUMEN=null;
 function renderComprasRolKPIs() {
   $('cr-kpi-total').textContent = CR_DATA.length;
   $('cr-kpi-sol').textContent   = CR_DATA.filter(r=>r.estatus==='Autorizada para Compra').length;
@@ -13993,6 +13994,11 @@ function renderComprasRol() {
   if (!list.length) {
     const ordenadas = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra'+
+      // V9.19.7: si no hay nada que ver, se explica por qué
+      ((!CR_DATA.length&&CR_RESUMEN)?'<div style="font-size:.74rem;color:#475569;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto">'+
+        (!CR_RESUMEN.reconocido?'Tu usuario no está en el reparto de Compras. Pide a Ingeniería que lo revise.':
+         (CR_RESUMEN.esperandoAutorizacion?'Hay '+CR_RESUMEN.esperandoAutorizacion+' solicitud'+(CR_RESUMEN.esperandoAutorizacion===1?'':'es')+' de Facilities esperando la autorización de Ingeniería o del Manager. Te llegan aquí cuando el Manager las autoriza.':
+          'Todavía no hay solicitudes autorizadas por el Manager.'))+'</div>':'')+
       ((!fe&&ordenadas)?'<div style="font-size:.74rem;color:#7C3AED;margin-top:8px">Hay '+ordenadas+' ordenada'+(ordenadas===1?'':'s')+' oculta'+(ordenadas===1?'':'s')+'. Elige “Ordenada” en el filtro para verlas.</div>':'')+
       '</td></tr>';
     return;
@@ -15086,6 +15092,13 @@ function exportChecklistMonthlyExcel(){
   body.v81-sidebar-collapsed #v81-bottom-tools #lang-switch,
   body.v81-sidebar-collapsed #v81-bottom-tools #btn-logout{display:none!important}
   body.v81-sidebar-collapsed #v81-collapse i{transform:rotate(180deg)}
+  /* V9.19.7: la columna medía 100% + 28 px de relleno y la parte de abajo quedaba fuera de la pantalla
+     (botón de contraer, campana, idioma y Salir cortados). Ahora el relleno cuenta dentro del alto, el menú
+     se desplaza y la barra de herramientas queda fija abajo, siempre visible. */
+  nav>div{box-sizing:border-box!important;height:100vh!important;height:100dvh!important}
+  #v81-bottom-tools{position:sticky;bottom:-14px;z-index:2;margin-bottom:-14px;padding:8px 0 14px!important;background:#10213D;box-shadow:0 -10px 14px -8px rgba(5,12,28,.85)}
+  #v81-bottom-tools #notif-bell{flex:0 0 auto}
+  nav>div::-webkit-scrollbar{width:6px}nav>div::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:6px}
 }
 @media (max-width:1000px){
   body{padding-left:0!important}
