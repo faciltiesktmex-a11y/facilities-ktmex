@@ -121,6 +121,28 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 .mgr-all:hover{background:#15803D}.mgr-all:disabled{background:#94A3B8;cursor:default}
 .mgr-conf{background:#fff;border:1.5px solid #86EFAC;border-radius:11px;padding:10px;margin-bottom:10px;font-size:.76rem;color:#334155}
 .mgr-conf ul{margin:6px 0 8px;padding-left:16px;max-height:140px;overflow:auto}
+/* V9.19.8: los campos medían 100% + relleno y se salían de su columna (fechas, números). Ahora el relleno cuenta
+   dentro del ancho y las columnas de las rejillas pueden encogerse. */
+.inp{box-sizing:border-box;max-width:100%;min-width:0}
+input[type=date].inp,input[type=time].inp,input[type=number].inp,select.inp{min-width:0}
+[style*="grid-template-columns"]>*{min-width:0}
+/* V9.19.8 — Panel de Compras con bandeja (como la ventana de Inagaki) */
+.cr-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
+.cr-inbox{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.cr-main{min-width:0}
+.cr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px}
+.cr-kpi{padding:12px 14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;font:inherit;border:1.5px solid transparent;transition:border-color .15s,box-shadow .15s}
+.cr-kpi:hover{border-color:#93C5FD}
+.cr-kpi-on{border-color:#2563EB!important;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.cr-kl{font-size:.66rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em}
+.cr-kpi b{font-size:1.6rem;line-height:1.1}
+.cr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.cr-grid .mgr-c{margin:0;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.cr-grid .mgr-c:hover{border-color:#93C5FD;box-shadow:0 4px 14px -8px rgba(15,23,42,.35)}
+.cr-grid .mgr-c .mgr-btns,.cr-inbox .mgr-c .mgr-btns{margin-top:auto;padding-top:8px;flex-wrap:wrap}
+.cr-inbox .mgr-c{cursor:pointer}
+@media (max-width:980px){.cr-layout{display:block}.cr-inbox{position:static;max-height:none;margin-bottom:16px}}
+@media (max-width:700px){.cr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V9.19.4: celular — totales en 2 columnas y filtros que no rebasan la pantalla */
 @media (max-width:700px){#view-admin #kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}#view-admin select.inp,#view-admin input.inp{max-width:100%;min-width:0!important}}
 /* V9.19.3: para Inagaki se quitan la barra de inventario y las tablas de abajo; Requests se ve en tarjetas */
@@ -1712,7 +1734,7 @@ const LPA_AREAS = {
 </div>
 
 <!-- ══════════════════════ VIEW: PANEL COMPRAS (rol compras) ══ -->
-<div id="view-compras-rol" style="display:none;max-width:1100px;margin:0 auto;padding:24px 16px" class="fade">
+<div id="view-compras-rol" style="display:none;max-width:1500px;margin:0 auto;padding:24px 16px" class="fade">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
@@ -1726,66 +1748,39 @@ const LPA_AREAS = {
     <button onclick="loadComprasRol()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
   </div>
 
-  <!-- KPIs -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
-    <div class="card" style="padding:14px 16px">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total</p>
-      <p id="cr-kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
-    </div>
-    <div class="card" style="padding:14px 16px">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Autorizadas</p>
-      <p id="cr-kpi-sol" class="mono" style="font-size:1.8rem;font-weight:700;color:#D97706;margin:0">0</p>
-    </div>
-    <div class="card" style="padding:14px 16px">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En cotización</p>
-      <p id="cr-kpi-cot" class="mono" style="font-size:1.8rem;font-weight:700;color:#2563EB;margin:0">0</p>
-    </div>
-    <div class="card" style="padding:14px 16px;cursor:pointer" onclick="verComprasOrdenadas()" title="Ver las solicitudes ordenadas">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Ordenadas</p>
-      <p id="cr-kpi-ord" class="mono" style="font-size:1.8rem;font-weight:700;color:#7C3AED;margin:0">0</p>
-      <p style="font-size:.62rem;color:#7C3AED;margin:2px 0 0"><i class="fas fa-eye-slash" style="margin-right:3px"></i>ocultas · clic para ver</p>
-    </div>
-    <div class="card" style="padding:14px 16px">
-      <p style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Recibidas</p>
-      <p id="cr-kpi-rec" class="mono" style="font-size:1.8rem;font-weight:700;color:#16A34A;margin:0">0</p>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="card" style="padding:12px 14px;margin-bottom:12px">
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-      <input id="cr-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante…" oninput="renderComprasRol()">
-      <select id="cr-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
-        <!-- V8.6.3: por omisión las ORDENADAS quedan fuera de la lista.
-             Se ven eligiendo "Ordenada" o "Todas". -->
-        <option value="">Activas (sin ordenadas)</option>
-        <option value="__ALL__">Todas (incluye ordenadas)</option>
-        <option>Autorizada para Compra</option>
-        <option>En cotización</option>
-        <option>Ordenada</option>
-        <option>Recibida</option>
-        <option>Cancelada</option>
-      </select>
-      <select id="cr-prio" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
-        <option value="">Todas las prioridades</option>
-        <option>Alta</option><option>Media</option><option>Baja</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Tabla -->
-  <div class="card" style="overflow:hidden">
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;min-width:700px">
-        <thead>
-          <tr>
-            <th>Folio</th><th>Fecha</th><th>Solicitante</th><th>Prioridad</th>
-            <th style="text-align:left">Descripción</th><th>Cantidad</th>
-            <th>F. Requerida</th><th>Estatus</th><th style="text-align:center">Gestionar</th>
-          </tr>
-        </thead>
-        <tbody id="cr-tbody"></tbody>
-      </table>
+  <!-- V9.19.8 — Ventana de Compras como la de Inagaki: bandeja a la izquierda con lo que hay que atender,
+       totales que filtran y la lista en tarjetas solo cuando hay un filtro. -->
+  <div class="cr-layout" id="cr-layout">
+    <aside id="cr-inbox" class="cr-inbox"></aside>
+    <div class="cr-main">
+      <div class="cr-kpis">
+        <button type="button" class="card cr-kpi" data-cr-kpi="total" onclick="crKpiClick('total')"><span class="cr-kl">Total</span><b id="cr-kpi-total" class="mono" style="color:var(--navy)">0</b></button>
+        <button type="button" class="card cr-kpi" data-cr-kpi="sol" onclick="crKpiClick('sol')"><span class="cr-kl">Autorizadas</span><b id="cr-kpi-sol" class="mono" style="color:#D97706">0</b></button>
+        <button type="button" class="card cr-kpi" data-cr-kpi="cot" onclick="crKpiClick('cot')"><span class="cr-kl">En cotización</span><b id="cr-kpi-cot" class="mono" style="color:#2563EB">0</b></button>
+        <button type="button" class="card cr-kpi" data-cr-kpi="ord" onclick="crKpiClick('ord')"><span class="cr-kl">En requisición</span><b id="cr-kpi-ord" class="mono" style="color:#7C3AED">0</b></button>
+        <button type="button" class="card cr-kpi" data-cr-kpi="rec" onclick="crKpiClick('rec')"><span class="cr-kl">PO</span><b id="cr-kpi-rec" class="mono" style="color:#16A34A">0</b></button>
+        <button type="button" class="card cr-kpi" data-cr-kpi="can" onclick="crKpiClick('can')"><span class="cr-kl">Canceladas</span><b id="cr-kpi-can" class="mono" style="color:#B91C1C">0</b></button>
+      </div>
+      <div class="card" style="padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="cr-search" type="text" class="inp" style="flex:1;min-width:180px;padding:8px 12px" placeholder="🔍 Buscar folio, solicitante, descripción…" oninput="renderComprasRol()">
+          <select id="cr-est" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
+            <option value="">Elige un estatus…</option>
+            <option value="__ALL__">Todas</option>
+            <option value="Autorizada para Compra">Autorizada para Compra</option>
+            <option value="En cotización">En cotización</option>
+            <option value="Ordenada">En requisición</option>
+            <option value="Recibida">PO</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+          <select id="cr-prio" class="inp" style="width:auto;padding:8px 12px;cursor:pointer" onchange="renderComprasRol()">
+            <option value="">Todas las prioridades</option>
+            <option>Alta</option><option>Media</option><option>Baja</option>
+          </select>
+        </div>
+      </div>
+      <div id="cr-cards" class="cr-grid"></div>
+      <table style="display:none"><tbody id="cr-tbody"></tbody></table>
     </div>
   </div>
 </div>
@@ -3510,7 +3505,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.7';
+const FRONTEND_BUILD = '9.19.8';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3947,8 +3942,13 @@ const TEXT_I18N = {
   'Sin registros para estos filtros':'No records for these filters',
   'Autorizadas':'Authorized',
   'En cotización':'Quoting',
-  'Ordenada':'Ordered',
-  'Recibida':'Received',
+  'Ordenada':'In requisition',
+  'Recibida':'PO',
+  'En requisición':'In requisition',
+  'PO':'PO',
+  'Canceladas':'Cancelled',
+  'Tu bandeja':'Your inbox',
+  'Por atender':'To handle',
   'Cancelada':'Cancelled',
   'Comentarios':'Comments',
   'Guardar':'Save',
@@ -4414,8 +4414,8 @@ const STATUS_I18N = {
   'Rechazada por Manager':'Rejected by Manager',
   'Autorizada para Compra':'Authorized for Purchasing',
   'En cotización':'Quoting',
-  'Ordenada':'Ordered',
-  'Recibida':'Received',
+  'Ordenada':'In requisition',
+  'Recibida':'PO',
   'Cancelada':'Cancelled',
   'Solicitada':'Requested',
   'En curso':'In Progress',
@@ -4457,7 +4457,9 @@ function uiText(es) {
   const trimmed=raw.trim();
   return TEXT_I18N[raw] || TEXT_I18N[trimmed] || STATUS_I18N[raw] || STATUS_I18N[trimmed] || uiPatron_(trimmed) || raw;
 }
-function statusLabel(s){ return LANG==='en' ? (STATUS_I18N[s]||s) : s; }
+// V9.19.8: en compras «Ordenada» se muestra como «En requisición» y «Recibida» como «PO» (el valor guardado no cambia).
+const COMPRA_TXT_ES={'Ordenada':'En requisición','Recibida':'PO'};
+function statusLabel(s){ return LANG==='en' ? (STATUS_I18N[s]||s) : (COMPRA_TXT_ES[s]||s); }
 
 function translateDynamicMessage(msg){
   if(LANG==='es' || !msg) return msg;
@@ -5063,6 +5065,15 @@ window.addEventListener('message',async ev=>{
       const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
       responder(true,{success:true,nombre});}
     catch(e){responder(false,null,e.message||String(e));}
+    return;
+  }
+  // V9.19.8: el Excel de Training se lee con el mismo lector que tenía la pestaña Training (que sale del panel).
+  if(d.op==='entrLeerExcel'){
+    try{const p=d.payload||{}; if(!(p.buf instanceof ArrayBuffer)||p.buf.byteLength>15e6)throw new Error('Archivo no válido.');
+      if(typeof XLSX==='undefined')await wwCargarScript_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+      const datos=entrParsearLibro_(XLSX.read(p.buf,{type:'array'}),XLSX), resumen=datos.resumen; delete datos.resumen;
+      responder(true,{success:true,datos,resumen});}
+    catch(e){responder(true,{success:false,error:e.message||String(e)});}
     return;
   }
   if(d.op==='irPlanDiario'){responder(true,{success:true});if(typeof goActividades==='function')goActividades();return;}
@@ -10287,7 +10298,7 @@ function configureManagerDashboardTabs(){
   }
   const canOps=canViewOperationsAnalytics();
   if($('tab-analytics'))$('tab-analytics').style.display=canOps?'':'none';
-  if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none'; if($('tab-entrenamientos'))$('tab-entrenamientos').style.display=puedeVerEntrenamientos_()?'':'none'; if($('tab-presupuesto'))$('tab-presupuesto').style.display=puedeVerPresupuesto_()?'':'none'; if($('tab-utilities'))$('tab-utilities').style.display=puedeVerUtilities_()?'':'none';   // V9.15.0   // V9.14.0
+  if($('tab-daily-dash'))$('tab-daily-dash').style.display=canOps?'':'none'; if($('tab-entrenamientos'))$('tab-entrenamientos').style.display='none';   /* V9.19.8: la capacitación se edita en el Centro de Mantenimiento */ if($('tab-presupuesto'))$('tab-presupuesto').style.display=puedeVerPresupuesto_()?'':'none'; if($('tab-utilities'))$('tab-utilities').style.display=puedeVerUtilities_()?'':'none';   // V9.15.0   // V9.14.0
   if($('manager-analytics-readonly-note'))$('manager-analytics-readonly-note').style.display=role==='manager'?'':'none';
   if(role!=='manager')return;
   if($('tab-inv'))$('tab-inv').style.display='none';
@@ -13956,70 +13967,92 @@ async function loadComprasRol() {
 }
 
 let CR_RESUMEN=null;
+// ══════════════════════════════════════════════════════════════
+// V9.19.8 — PANEL DE COMPRAS COMO LA VENTANA DE INAGAKI
+// · Bandeja a la izquierda: las «Autorizadas para Compra» que esperan atención.
+// · Los totales son botones de filtro; la lista (tarjetas) solo aparece con un filtro (total o estatus).
+// · Cada tarjeta cambia el estatus en un paso: En cotización → En requisición → PO (o Cancelar), con
+//   la misma acción del modal (updateCompra · estatus). «Ordenada» se muestra como «En requisición» y
+//   «Recibida» como «PO»; el valor guardado no cambia.
+// ══════════════════════════════════════════════════════════════
+let CR_KPI='', CR_RES={}, CR_LIM=60;
+const CR_KPI_PRED={total:()=>true,sol:e=>e==='Autorizada para Compra',cot:e=>e==='En cotización',ord:e=>e==='Ordenada',rec:e=>e==='Recibida',can:e=>e==='Cancelada'};
+const CR_SIG={'Autorizada para Compra':['En cotización','Ordenada','Cancelada'],'En cotización':['Ordenada','Cancelada'],'Ordenada':['Recibida','Cancelada'],'Recibida':[],'Cancelada':[]};
 function renderComprasRolKPIs() {
   $('cr-kpi-total').textContent = CR_DATA.length;
   $('cr-kpi-sol').textContent   = CR_DATA.filter(r=>r.estatus==='Autorizada para Compra').length;
   $('cr-kpi-cot').textContent   = CR_DATA.filter(r=>r.estatus==='En cotización').length;
   $('cr-kpi-ord').textContent   = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
   $('cr-kpi-rec').textContent   = CR_DATA.filter(r=>r.estatus==='Recibida').length;
+  if($('cr-kpi-can'))$('cr-kpi-can').textContent = CR_DATA.filter(r=>r.estatus==='Cancelada').length;
+  document.querySelectorAll('[data-cr-kpi]').forEach(b=>b.classList.toggle('cr-kpi-on',b.dataset.crKpi===CR_KPI));
 }
-
-// V8.6.3: atajo desde el KPI "Ordenadas" para mostrarlas sin buscar el filtro.
-function verComprasOrdenadas(){
-  const sel=$('cr-est'); if(!sel) return;
-  sel.value = sel.value==='Ordenada' ? '' : 'Ordenada';
-  renderComprasRol();
+function crKpiClick(k){CR_KPI=CR_KPI===k?'':k;CR_LIM=60;renderComprasRolKPIs();renderComprasRol();}
+function verComprasOrdenadas(){crKpiClick('ord');}
+function crDias_(f){const d=new Date(f);return isNaN(d)?0:Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));}
+function crBotonesEstatus_(r){
+  const res=CR_RES[r.id]; if(res)return `<div class="mgr-done ${res.ok?'ok':'err'}">${escapeHtml(res.txt)}</div>`;
+  const sig=CR_SIG[r.estatus]||[];
+  return `<div class="mgr-btns"><button onclick="event.stopPropagation();openCompraModalDesde(event,'${r.id}','rol')">Revisar</button>`+
+    sig.map(e=>`<button class="${e==='Cancelada'?'rj':'ap'}" onclick="event.stopPropagation();crCambiarEstatus('${r.id}','${e}')">${e==='Cancelada'?'Cancelar':escapeHtml(statusLabel(e))}</button>`).join('')+'</div>';
 }
-
+function crTarjeta_(r,enBandeja){
+  const d=crDias_(r.fecha), req=r.fechaRequerida?fmtDate(r.fechaRequerida):'';
+  return `<div class="mgr-c" onclick="openCompraModalDesde(event,'${r.id}','rol')">
+    <div class="k cmp">Solicitud de compra · <span class="mono">${escapeHtml(r.folio||'—')}</span>${r.prioridad?` <span class="badge b-${prioSlug(r.prioridad)}" style="margin-left:4px">${escapeHtml(r.prioridad)}</span>`:''}</div>
+    <div class="t">${escapeHtml(String(r.materialNuevoNombre||r.descripcion||'—').slice(0,120))}</div>
+    <div class="s"><span>${escapeHtml(r.nombre||'—')}</span>${r.cantidad?' · <span>'+escapeHtml(String(r.cantidad))+' '+escapeHtml(r.unidad||'')+'</span>':''}</div>
+    ${enBandeja?'':`<div class="mgr-st">${compraBadge(r.estatus)}</div>`}
+    ${req?`<div class="s"><i class="fas fa-calendar-day" style="margin-right:5px;opacity:.6"></i>Se requiere el ${req}</div>`:''}
+    <div class="s ${enBandeja&&d>=3?'late':''}">${fmtDate(r.fecha)}${d?' · hace '+d+' día'+(d===1?'':'s'):' · hoy'}</div>
+    ${crBotonesEstatus_(r)}
+  </div>`;
+}
+function renderComprasRolInbox_(){
+  const box=$('cr-inbox'); if(!box)return;
+  const pend=CR_DATA.filter(r=>r.estatus==='Autorizada para Compra').sort((a,b)=>((prioOrder[a.prioridad]??3)-(prioOrder[b.prioridad]??3))||new Date(a.fecha)-new Date(b.fecha));
+  const vivos=pend.filter(r=>!CR_RES[r.id]);
+  let h=`<div class="mgr-inbox"><div class="mgr-ih"><b><i class="fas fa-inbox" style="margin-right:7px"></i>Tu bandeja <span style="font-weight:600;color:#64748B;font-size:.8rem">· Por atender</span></b><span class="mgr-badge ${vivos.length?'':'ok'}">${vivos.length?vivos.length+' pendiente'+(vivos.length===1?'':'s'):'Al día'}</span></div>`;
+  if(!pend.length)h+=`<div class="mgr-empty"><i class="fas fa-circle-check" style="margin-right:7px"></i>No hay solicitudes autorizadas esperando. Te llegan aquí cuando el Manager las autoriza.${(CR_RESUMEN&&CR_RESUMEN.esperandoAutorizacion)?'<br><span style="font-size:.72rem">'+CR_RESUMEN.esperandoAutorizacion+' de Facilities esperan la autorización de Ingeniería o del Manager.</span>':''}</div>`;
+  h+=pend.map(r=>crTarjeta_(r,true)).join('');
+  box.innerHTML=h+'</div>';
+}
 function renderComprasRol() {
-  const q   = $('cr-search').value.toLowerCase();
-  const fe  = $('cr-est').value;
-  const fp  = $('cr-prio').value;
-
-  // V8.6.3: las solicitudes ya ORDENADAS se ocultan por omisión para que la
-  // lista muestre solo lo que requiere gestión. Aparecen al elegir "Ordenada"
-  // en el desplegable, o "Todas (incluye ordenadas)".
-  const verTodas = fe === '__ALL__';
+  renderComprasRolInbox_();
+  const q   = ($('cr-search')?.value||'').toLowerCase();
+  const fe  = $('cr-est')?.value||'';
+  const fp  = $('cr-prio')?.value||'';
+  const box = $('cr-cards'); if(!box)return;
+  if(!CR_KPI && !fe){
+    box.innerHTML=`<div class="mgr-hint"><i class="fas fa-filter ico"></i>Elige uno de los totales de arriba o un estatus para ver las solicitudes de compra.<br><span style="font-size:.76rem;color:#64748B">Las autorizadas que esperan atención están en <b>Tu bandeja</b>, a la izquierda.</span>`+
+      ((!CR_DATA.length&&CR_RESUMEN&&!CR_RESUMEN.reconocido)?'<div style="font-size:.74rem;color:#B91C1C;margin-top:8px">Tu usuario no está en el reparto de Compras. Pide a Ingeniería que lo revise.</div>':'')+'</div>';
+    return;
+  }
   const list = CR_DATA.filter(r =>
-    (!q  || [r.folio,r.nombre].some(v=>(v||'').toLowerCase().includes(q))) &&
-    (verTodas || !fe ? true : r.estatus===fe) &&
-    (verTodas || fe ? true : r.estatus!=='Ordenada') &&
+    (!q  || [r.folio,r.nombre,r.descripcion,r.materialNuevoNombre].some(v=>(v||'').toLowerCase().includes(q))) &&
+    (!CR_KPI || CR_KPI_PRED[CR_KPI](r.estatus)) &&
+    (!fe || fe==='__ALL__' || r.estatus===fe) &&
     (!fp || r.prioridad===fp)
   ).sort((a,b) => {
     const pd = (prioOrder[a.prioridad]??3) - (prioOrder[b.prioridad]??3);
     return pd !== 0 ? pd : new Date(b.fecha) - new Date(a.fecha);
   });
-
-  const tbody = $('cr-tbody');
-  if (!list.length) {
-    const ordenadas = CR_DATA.filter(r=>r.estatus==='Ordenada').length;
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94A3B8"><i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>Sin solicitudes de compra'+
-      // V9.19.7: si no hay nada que ver, se explica por qué
-      ((!CR_DATA.length&&CR_RESUMEN)?'<div style="font-size:.74rem;color:#475569;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto">'+
-        (!CR_RESUMEN.reconocido?'Tu usuario no está en el reparto de Compras. Pide a Ingeniería que lo revise.':
-         (CR_RESUMEN.esperandoAutorizacion?'Hay '+CR_RESUMEN.esperandoAutorizacion+' solicitud'+(CR_RESUMEN.esperandoAutorizacion===1?'':'es')+' de Facilities esperando la autorización de Ingeniería o del Manager. Te llegan aquí cuando el Manager las autoriza.':
-          'Todavía no hay solicitudes autorizadas por el Manager.'))+'</div>':'')+
-      ((!fe&&ordenadas)?'<div style="font-size:.74rem;color:#7C3AED;margin-top:8px">Hay '+ordenadas+' ordenada'+(ordenadas===1?'':'s')+' oculta'+(ordenadas===1?'':'s')+'. Elige “Ordenada” en el filtro para verlas.</div>':'')+
-      '</td></tr>';
-    return;
-  }
-  tbody.innerHTML = list.map(r => `
-    <tr class="tbl-row" onclick="openCompraModalDesde(event,'${r.id}','rol')">
-      <td><span class="mono" style="font-size:.75rem;font-weight:700;color:#D97706">${r.folio||'—'}</span></td>
-      <td style="color:#64748B;white-space:nowrap;font-size:.8rem">${fmtDate(r.fecha)}</td>
-      <td style="font-weight:500;color:var(--navy);font-size:.82rem">${r.nombre||'—'}</td>
-      <td><span class="badge b-${prioSlug(r.prioridad)}">${r.prioridad||'—'}</span></td>
-      <td style="font-size:.8rem;color:#334155;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.descripcion||''}">${r.descripcion||'—'}</td>
-      <td style="font-size:.8rem;color:#64748B;text-align:center">${r.cantidad||'—'} ${r.unidad||''}</td>
-      <td style="font-size:.78rem;color:#64748B;white-space:nowrap">${fmtDate(r.fechaRequerida)}</td>
-      <td>${compraBadge(r.estatus)}</td>
-      <td style="text-align:center">
-        <button onclick="event.stopPropagation();openCompraModalDesde(event,'${r.id}','rol')"
-          style="width:28px;height:28px;background:#FEF3C7;border:none;border-radius:7px;cursor:pointer;color:#D97706">
-          <i class="fas fa-pen-to-square" style="font-size:.72rem"></i>
-        </button>
-      </td>
-    </tr>`).join('');
+  if(!list.length){box.innerHTML='<div class="mgr-sol-empty"><i class="fas fa-cart-shopping" style="font-size:1.6rem;display:block;margin-bottom:8px"></i>Ninguna solicitud de compra coincide con este filtro.</div>';return;}
+  box.innerHTML=list.slice(0,CR_LIM).map(r=>crTarjeta_(r,false)).join('')+
+    (list.length>CR_LIM?`<div class="mgr-sol-more"><button class="btn-g" style="width:auto" onclick="CR_LIM+=60;renderComprasRol()">Mostrar más (${CR_LIM} / ${list.length})</button></div>`:'');
+}
+async function crCambiarEstatus(id,estatus){
+  const r=CR_DATA.find(x=>x.id===id); if(!r)return;
+  let comentario='';
+  if(estatus==='Cancelada'){comentario=prompt('Motivo para cancelar '+(r.folio||'')+':','');if(comentario===null)return;comentario=comentario.trim();if(!comentario){toast('Escribe el motivo para cancelar.','err');return;}}
+  else if(!confirm('¿Pasar '+(r.folio||'la solicitud')+' a «'+statusLabel(estatus)+'»?'))return;
+  CR_RES[id]={ok:true,txt:'Guardando…'}; renderComprasRol();
+  try{const res=await api({action:'updateCompra',token:SESSION.token,id,estatus,comentario});
+    CR_RES[id]=res.success?{ok:estatus!=='Cancelada',txt:'Ahora: '+statusLabel(estatus)}:{ok:false,txt:res.error||'No se pudo cambiar'};
+    if(res.success)toast((r.folio||'Solicitud')+' → '+statusLabel(estatus),'ok');
+  }catch(e){CR_RES[id]={ok:false,txt:'Error de conexión'};}
+  renderComprasRol();
+  clearTimeout(window._crRecarga); window._crRecarga=setTimeout(async()=>{await loadComprasRol();CR_RES={};renderComprasRol();},1500);
 }
 
 // Función unificada que abre el modal de compra tanto desde el Admin
