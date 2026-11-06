@@ -1236,7 +1236,7 @@ const LPA_AREAS = {
       <div><strong style="font-size:.9rem">Audit Schedule</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:minmax(230px,1fr) minmax(170px,.55fr);gap:10px;margin-top:14px;align-items:end">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin-top:14px;align-items:end">
       <div>
         <label style="font-size:.7rem;color:#64748B;font-weight:650">Auditor / Auditor</label>
         <select id="lpaq-auditor-filter" class="inp" onchange="renderLpaQProgram()">
@@ -1261,6 +1261,24 @@ const LPA_AREAS = {
     </div>
 
     <div id="lpaq-program-table" style="margin-top:12px;overflow-x:auto"></div>
+  </div>
+  <!-- V9.19.9 — La administración de LPA programa auditorías (así se arma el calendario de Kojima) -->
+  <div id="lpaq-programar" class="card" style="display:none;padding:16px;margin-top:14px">
+    <strong style="font-size:.9rem"><i class="fas fa-calendar-plus" style="color:#2563EB;margin-right:6px"></i>Programar auditoría</strong>
+    <p style="font-size:.7rem;color:#64748B;margin:4px 0 10px">Agrega auditorías al programa de cualquier auditor con acceso a LPA (por ejemplo, la gerencia). Se habilitan un día antes de la fecha, igual que las del calendario oficial. Abajo puedes eliminar cualquier auditoría pendiente (del calendario o programada aquí); las realizadas no se eliminan.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+      <div><label class="entr-l">Auditor</label><select id="lpaqp-auditor" class="inp" onchange="lpaqpAuditorCambio()"></select></div>
+      <div><label class="entr-l">Fecha</label><input id="lpaqp-fecha" type="date" class="inp"></div>
+      <div><label class="entr-l">Área</label><select id="lpaqp-area" class="inp"></select></div>
+      <div><label class="entr-l">Máquina / línea</label><input id="lpaqp-maquina" class="inp" placeholder="Ej. W00014"></div>
+      <div><label class="entr-l">Nivel</label><select id="lpaqp-nivel" class="inp"><option>N1</option><option>N2</option><option>N3</option><option>N4</option></select></div>
+    </div>
+    <button class="btn-p" style="width:auto;margin-top:10px" onclick="lpaqpProgramar()"><i class="fas fa-plus" style="margin-right:6px"></i>Programar</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
+      <strong style="font-size:.8rem;color:#334155">Eliminar auditoría</strong>
+      <input id="lpaqp-buscar" class="inp" style="flex:1;min-width:200px" placeholder="Buscar por auditor, área, máquina o fecha" oninput="lpaqpListar_()">
+    </div>
+    <div id="lpaqp-lista" style="margin-top:8px;overflow-x:auto"></div>
   </div>
   <div class="card" style="padding:16px;margin-top:14px">
     <strong style="font-size:.9rem">Auditorías realizadas / Completed audits</strong>
@@ -1340,15 +1358,16 @@ const LPA_AREAS = {
   <div class="card" style="padding:16px;margin-bottom:14px">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
       <div><label>Area *</label><select id="lpaq-area" class="inp"></select></div>
-      <div><label>Level *</label><select id="lpaq-level" class="inp" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
+      <div><label>Level *</label><select id="lpaq-level" class="inp" disabled title="El nivel lo fija la auditoría programada" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
       <div><label>Execution Date *</label><input id="lpaq-date" type="date" class="inp" readonly><div style="font-size:.62rem;color:#64748B;margin-top:3px">System-controlled date</div></div>
       <div><label>Shift</label><select id="lpaq-shift" class="inp"><option value="">—</option><option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option></select></div>
       <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"></div>
-      <div><label>Part Number</label><input id="lpaq-part" class="inp" placeholder="Part No."></div>
+      <div><label>Part Number *</label><input id="lpaq-part" class="inp" placeholder="Part No." oninput="lpaqActualizarGuardar_()"></div>
     </div>
   </div>
   <div id="lpaq-checklist"></div>
-  <button id="lpaq-submit-btn" class="btn-p" onclick="submitLpaQuality()" style="width:100%;margin-top:14px"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Save Quality LPA</button>
+  <div id="lpaq-progress" style="font-size:.74rem;color:#B45309;margin-top:12px;text-align:center"></div>
+  <button id="lpaq-submit-btn" class="btn-p" onclick="submitLpaQuality()" disabled style="width:100%;margin-top:6px"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Save Quality LPA</button>
 </div>
 
 <div id="modal-lpaq-nc" class="modal-bg" style="display:none">
@@ -3505,7 +3524,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.8';
+const FRONTEND_BUILD = '9.19.10';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -7663,7 +7682,7 @@ async function loadLpaQDashboard(){
     }
     const month=$('lpaq-month')?.value||'';
     const scope=$('lpaq-scope-all')?.checked?'all':'month';
-    const r=await api({action:'getLpaQualityDashboard',token:SESSION.token,month,scope});
+    const r=await api({action:'getLpaQualityDashboard',token:SESSION.token,month,scope,refresh:window.LPAQ_REFRESH?'1':''}); window.LPAQ_REFRESH=false;   // V9.19.9: tras programar, sin la memoria de 90 s
     if(!r.success){toast(r.error||'LPA Quality error','err');if(tbl)tbl.innerHTML='';return;}
     LPAQ_ACCESS=r.access; LPAQ_DASH=r;
     if(Array.isArray(r.catalog)&&r.catalog.length)LPAQ_CATALOG=r.catalog;   // V9.19.5: preguntas vigentes
@@ -7676,6 +7695,7 @@ async function loadLpaQDashboard(){
     lpaqRenderMedidores_(r.medidores);
     renderLpaQAuditHistory(r.audits||[]);
     if(r.access.qadmin){$('lpaq-question-admin').style.display='';loadLpaQQuestionAdmin();}else{$('lpaq-question-admin').style.display='none';}
+    lpaqpRender_(r);   // V9.19.9
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -7729,6 +7749,58 @@ function renderLpaQProgram(){
       `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
     return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${r.machine||'—'}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td>${action}</td></tr>`;
   }).join('')+'</tbody></table>';
+}
+// V9.19.9 — Programar auditorías (solo LPA Quality Admin)
+const LPAQP_FUENTE='Programada por administración';
+function lpaqpRender_(r){
+  const box=$('lpaq-programar'); if(!box)return;
+  if(!r.access||!r.access.qadmin){box.style.display='none';return;}
+  box.style.display='';
+  const aud=r.access.auditores||[], sa=$('lpaqp-auditor'), prev=sa.value;
+  sa.innerHTML='<option value="">— Elige auditor —</option>'+aud.map(a=>`<option value="${escapeHtml(a.username)}" data-nivel="${escapeHtml(a.nivel||'')}">${escapeHtml(a.nombre)}${a.nivel?' · '+escapeHtml(a.nivel):''}</option>`).join('');
+  if(prev)sa.value=prev;
+  const areas=(r.access.areas||[]).slice().sort();
+  const sx=$('lpaqp-area'), pa=sx.value; sx.innerHTML=areas.map(a=>`<option>${escapeHtml(a)}</option>`).join(''); if(pa)sx.value=pa;
+  if(!$('lpaqp-fecha').value)$('lpaqp-fecha').value=localDateKeyV843_();
+  LPAQP_PROG=r.program||[]; lpaqpListar_();
+}
+// V9.19.10 — Lista para eliminar: cualquier auditoría pendiente del periodo que se muestra.
+let LPAQP_PROG=[];
+function lpaqpListar_(){
+  const el=$('lpaqp-lista'); if(!el)return;
+  const un=($('lpaqp-auditor')?.value||'').toLowerCase(), q=lpaqpNorm_($('lpaqp-buscar')?.value||'');
+  const pend=LPAQP_PROG.filter(p=>!['Realizada','Vencida realizada'].includes(p.estatus)&&!p.auditId);
+  let rows;
+  if(q)rows=pend.filter(p=>lpaqpNorm_([p.fechaProgramada,p.auditorNombre,p.auditorUsername,p.area,p.machine,p.nivel].join(' ')).includes(q));
+  else if(un)rows=pend.filter(p=>String(p.auditorUsername||'').toLowerCase()===un);
+  else rows=pend.filter(p=>String(p.source||'').indexOf(LPAQP_FUENTE)===0);
+  if(!rows.length){el.innerHTML='<div style="font-size:.74rem;color:#94A3B8">'+(q||un?'No hay auditorías pendientes con ese filtro en el periodo que se muestra.':'Elige un auditor o escribe en el buscador para ver sus auditorías pendientes. Sin filtro se muestran las que programaste aquí.')+'</div>';return;}
+  const max=150, extra=rows.length>max?`<div style="font-size:.7rem;color:#B45309;margin-top:6px">Se muestran ${max} de ${rows.length}. Afina el buscador.</div>`:'';
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;min-width:640px"><thead><tr><th>Fecha</th><th>Auditor</th><th>Área</th><th>Máquina</th><th>Nivel</th><th>Estatus</th><th>Origen</th><th></th></tr></thead><tbody>'+
+    rows.slice(0,max).map(p=>`<tr><td>${escapeHtml(p.fechaProgramada||'')}</td><td>${escapeHtml(p.auditorNombre||p.auditorUsername||'')}${p.auditorUsername?'':' <span class="badge b-media">sin cuenta</span>'}</td><td>${escapeHtml(p.area||'')}</td><td>${escapeHtml(p.machine||'—')}</td><td>${escapeHtml(p.nivel||'')}</td><td>${escapeHtml(p.estatus||'')}</td>
+      <td style="font-size:.66rem;color:#64748B">${String(p.source||'').indexOf(LPAQP_FUENTE)===0?'Administración':'Calendario'}</td>
+      <td><button class="btn-g" style="padding:4px 9px;color:#B91C1C;border-color:#FCA5A5" onclick="lpaqpCancelar('${escapeHtml(p.id)}')"><i class="fas fa-trash" style="margin-right:4px"></i>Eliminar</button></td></tr>`).join('')+'</tbody></table>'+extra;
+}
+function lpaqpNorm_(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
+function lpaqpAuditorCambio(){const o=$('lpaqp-auditor').selectedOptions[0];const n=o&&o.getAttribute('data-nivel');if(n&&['N1','N2','N3','N4'].includes(n))$('lpaqp-nivel').value=n;
+  const ger=LPAQP_GERENCIA_N1.includes(($('lpaqp-auditor').value||'').toLowerCase()); if(ger)$('lpaqp-nivel').value='N1'; $('lpaqp-nivel').disabled=ger; lpaqpListar_();}
+const LPAQP_GERENCIA_N1=['ainagaki','itsuki.aso','ykojima'];   // V9.19.10: solo auditan N1
+async function lpaqpProgramar(){
+  const q={auditorUsername:$('lpaqp-auditor').value,fecha:$('lpaqp-fecha').value,area:$('lpaqp-area').value,machine:$('lpaqp-maquina').value.trim(),nivel:$('lpaqp-nivel').value};
+  if(!q.auditorUsername||!q.fecha||!q.area){toast('Elige auditor, fecha y área.','err');return;}
+  try{const r=await api(Object.assign({action:'lpaqProgramarAuditoria',token:SESSION.token,modo:'crear'},q));
+    if(!r.success){toast(r.error||'No se pudo programar','err');return;}
+    toast('Auditoría programada para '+(r.auditorNombre||q.auditorUsername)+' el '+r.fecha,'ok'); $('lpaqp-maquina').value=''; window.LPAQ_REFRESH=true; loadLpaQDashboard();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function lpaqpCancelar(id){
+  const p=LPAQP_PROG.find(x=>String(x.id)===String(id));
+  const motivo=prompt('Eliminar la auditoría'+(p?' de '+(p.auditorNombre||p.auditorUsername)+' del '+p.fechaProgramada+' ('+p.area+', '+p.nivel+')':'')+'.\nEscribe el motivo:','');
+  if(motivo===null)return;
+  if(!motivo.trim()){toast('Escribe el motivo para eliminar la auditoría.','err');return;}
+  try{const r=await api({action:'lpaqProgramarAuditoria',token:SESSION.token,modo:'cancelar',id,motivo:motivo.trim()});
+    if(!r.success){toast(r.error||'No se pudo eliminar','err');return;} toast('Auditoría eliminada','ok'); window.LPAQ_REFRESH=true; loadLpaQDashboard();
+  }catch(e){toast('Error: '+e.message,'err');}
 }
 function renderLpaQAuditHistory(rows){
   const el=$('lpaq-audits-history'); if(!el)return;
@@ -7857,6 +7929,7 @@ function updateLpaQAuditLanguageFast(){
 
 function renderLpaQChecklist(){
   const level=$('lpaq-level').value||'N4'; $('lpaq-form-level').textContent=level;
+  $('lpaq-level').disabled=true;   // V9.19.10: solo el checklist de su nivel
   const qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
   $('lpaq-checklist').innerHTML=qs.map((q,i)=>`
    <div class="card lpaq-item" data-qid="${q.id}" style="padding:15px;margin-bottom:10px">
@@ -7889,7 +7962,33 @@ function renderLpaQChecklist(){
       ${q.reaction==='D'?'<textarea class="inp lpaq-just" rows="2" placeholder="Technical justification / Justificación técnica *" style="margin-top:8px"></textarea>':''}
     </div>
    </div>`).join('');
+  lpaqActualizarGuardar_();
 }
+// V9.19.10 — «Save Quality LPA» se habilita solo con el checklist lleno y el número de parte.
+function lpaqFaltantes_(){
+  const level=$('lpaq-level').value||'N4', qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
+  let sinResp=0, ncInc=0;
+  qs.forEach(q=>{
+    const res=document.querySelector(`input[name="lpaq-${q.id}"]:checked`)?.value||'';
+    if(!res){sinResp++;return;}
+    if(res==='NOK'){const c=document.querySelector(`.lpaq-item[data-qid="${q.id}"]`); if(!c)return;
+      const ok=(c.querySelector('.lpaq-finding')?.value.trim())&&(c.querySelector('.lpaq-resp-area')?.value)&&(c.querySelector('.lpaq-photo')?.files?.length)&&(q.reaction!=='D'||c.querySelector('.lpaq-just')?.value.trim());
+      if(!ok)ncInc++;}
+  });
+  return {total:qs.length,sinResp,ncInc,sinParte:!($('lpaq-part')?.value||'').trim()};
+}
+function lpaqActualizarGuardar_(){
+  const b=$('lpaq-submit-btn'), msg=$('lpaq-progress'); if(!b)return;
+  const f=lpaqFaltantes_(), en=LANG==='en', listo=!f.sinResp&&!f.ncInc&&!f.sinParte&&f.total>0;
+  b.disabled=!listo; b.style.opacity=listo?'':'.55'; b.style.cursor=listo?'':'not-allowed';
+  const p=[];
+  if(f.sinResp)p.push(en?`${f.total-f.sinResp} of ${f.total} questions answered`:`${f.total-f.sinResp} de ${f.total} preguntas respondidas`);
+  if(f.ncInc)p.push(en?`${f.ncInc} NOK without finding, area or photo`:`${f.ncInc} NOK sin hallazgo, área o foto`);
+  if(f.sinParte)p.push(en?'Part Number is required':'Falta el número de parte');
+  if(msg){msg.textContent=listo?'':p.join(' · ');msg.style.display=listo?'none':'';}
+}
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#lpaq-checklist'))lpaqActualizarGuardar_();},true);
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#lpaq-checklist'))lpaqActualizarGuardar_();},true);
 function toggleLpaQNC(qid,on,clearWhenHidden=false){
   const el=$('lpaq-nc-'+qid); if(!el) return;
   el.style.display=on?'':'none';
@@ -7914,6 +8013,7 @@ async function submitLpaQuality(){
   }
   const area=$('lpaq-area').value, level=$('lpaq-level').value, fecha=$('lpaq-date').value;
   if(!area||!level||!fecha){toast('Complete required fields / Completa los campos obligatorios','err');return;}
+  if(!$('lpaq-part').value.trim()){toast('Part Number is required / El número de parte es obligatorio','err');$('lpaq-part').focus();return;}
   const qs=LPAQ_CATALOG.filter(q=>q.active&&q.levels.includes(level));
   const responses=[]; let invalid=false;
   for(const q of qs){
@@ -7938,10 +8038,10 @@ async function submitLpaQuality(){
   if(invalid){toast('All questions require OK, NOK or N/A / Todas las preguntas requieren respuesta','err');return;}
   const btn=$('lpaq-submit-btn');btn.disabled=true;
   try{
-    const r=await api({action:'submitLpaQuality',token:SESSION.token,programId:LPAQ_PROGRAM_ID,area,level,fecha,turno:$('lpaq-shift').value,linea:$('lpaq-line').value,parte:$('lpaq-part').value,responses});
+    const r=await api({action:'submitLpaQuality',token:SESSION.token,programId:LPAQ_PROGRAM_ID,area,level,fecha,turno:$('lpaq-shift').value,linea:$('lpaq-line').value,parte:$('lpaq-part').value.trim(),responses});
     if(r.success){toast(`LPA Quality saved · ${r.folio} · NC: ${r.ncCount}`,'ok');goLpaQuality();}
     else toast(r.error||'Error','err');
-  }finally{btn.disabled=false;}
+  }finally{btn.disabled=false;lpaqActualizarGuardar_();}
 }
 function openLpaQNC(id){
   const r=(LPAQ_DASH.nc||[]).find(x=>x.id===id);if(!r)return;
@@ -13845,7 +13945,7 @@ function renderCompraCotizaciones(r){
   const sent=String(r.cotizacionesEstado||'')==='Enviadas a Ingeniería';
   if(statusEl){statusEl.textContent=sent?('Enviadas a Ingeniería'+(r.cotizacionesEnviadasFecha?' · '+fmtDate(r.cotizacionesEnviadasFecha):'')):(quotes.length?'Cotizaciones cargadas en borrador · Pendientes de enviar':'Compras puede cargar varias cotizaciones y enviarlas juntas a Ingeniería.');statusEl.style.color=sent?'#15803D':(quotes.length?'#B45309':'#94A3B8');}
   if(sendBtn){sendBtn.style.display=canUpload?'':'none';sendBtn.disabled=!quotes.length||sent;sendBtn.innerHTML=sent?'<i class="fas fa-circle-check" style="margin-right:5px"></i>Cotizaciones enviadas':'<i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar cotizaciones a Ingeniería';}
-  list.innerHTML=quotes.length?quotes.map((q,i)=>`<a href="${escapeHtml(q.url||'#')}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;background:#FFF7F7;border:1px solid #FECACA;border-radius:8px;text-decoration:none"><span style="font-size:.76rem;color:#991B1B;font-weight:700"><i class="fas fa-file-pdf" style="margin-right:6px"></i>${escapeHtml(q.nombre||('Cotización '+(i+1)))}</span><span style="font-size:.65rem;color:#94A3B8">${q.fecha?fmtDate(q.fecha):''} · ${escapeHtml(q.usuario||'Compras')}</span></a>`).join(''):'<p style="font-size:.74rem;color:#94A3B8;margin:0">Aún no hay cotizaciones PDF adjuntas.</p>';
+  list.innerHTML=quotes.length?quotes.map((q,i)=>`<div style="display:flex;align-items:center;gap:6px"><a href="${escapeHtml(q.url||'#')}" target="_blank" rel="noopener" style="flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;background:#FFF7F7;border:1px solid #FECACA;border-radius:8px;text-decoration:none"><span style="font-size:.76rem;color:#991B1B;font-weight:700;overflow-wrap:anywhere"><i class="fas fa-file-pdf" style="margin-right:6px"></i>${escapeHtml(q.nombre||('Cotización '+(i+1)))}</span><span style="font-size:.65rem;color:#94A3B8">${q.fecha?fmtDate(q.fecha):''} · ${escapeHtml(q.usuario||'Compras')}</span></a>${canUpload?`<button class="btn-g mc-quote-del" title="Eliminar cotización" style="padding:8px 10px;color:#B91C1C;border-color:#FCA5A5" onclick="deleteCompraCotizacionUI(${i})"><i class="fas fa-trash"></i></button>`:''}</div>`).join(''):'<p style="font-size:.74rem;color:#94A3B8;margin:0">Aún no hay cotizaciones PDF adjuntas.</p>';
 }
 async function uploadCompraCotizacion(){
   if(!CUR_COMPRA||!SESSION||SESSION.user.rol!=='compras')return;
@@ -13863,6 +13963,23 @@ async function uploadCompraCotizacion(){
     const refreshed=src.find(x=>x.id===CUR_COMPRA.id);
     if(refreshed){CUR_COMPRA=refreshed;renderCompraCotizaciones(refreshed);renderCompraHistorial(refreshed);}
   }catch(e){toast('Error al cargar PDF: '+e.message,'err');}
+}
+// V9.19.10 — Compras elimina una cotización cargada (también si ya se envió).
+async function deleteCompraCotizacionUI(i){
+  if(!CUR_COMPRA||!SESSION||SESSION.user.rol!=='compras')return;
+  let quotes=[];try{quotes=JSON.parse(CUR_COMPRA.cotizacionesPDF||'[]');if(!Array.isArray(quotes))quotes=[];}catch(e){quotes=[];}
+  const q=quotes[i]; if(!q)return;
+  if(!confirm('¿Eliminar la cotización «'+(q.nombre||('Cotización '+(i+1)))+'»?'+(q.enviada?'\nYa se envió a Ingeniería: dejará de verla.':'')))return;
+  try{
+    const res=await api({action:'deleteCompraCotizacion',token:SESSION.token,id:CUR_COMPRA.id,idx:i,url:q.url||''});
+    if(!res.success){toast(res.error||'No se pudo eliminar la cotización','err');return;}
+    toast('Cotización eliminada');
+    CUR_COMPRA.cotizacionesPDF=JSON.stringify(res.cotizaciones||[]);CUR_COMPRA.cotizacionesEstado=res.estado||'';
+    renderCompraCotizaciones(CUR_COMPRA);
+    if(CR_MODAL_ORIGEN==='rol')await loadComprasRol();else await loadCompras();
+    const src=CR_MODAL_ORIGEN==='rol'?CR_DATA:COMPRA_DATA, refreshed=src.find(x=>x.id===CUR_COMPRA.id);
+    if(refreshed){CUR_COMPRA=refreshed;renderCompraCotizaciones(refreshed);renderCompraHistorial(refreshed);}
+  }catch(e){toast('Error al eliminar: '+e.message,'err');}
 }
 async function sendCompraCotizacionesUI(){
   if(!CUR_COMPRA||!SESSION||SESSION.user.rol!=='compras')return;
