@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- KTMEX Facilities V9.19.11 — Gemelo digital de Welding para LPA Quality.
+     SIN DATOS: el layout, las máquinas y las auditorías llegan por postMessage desde index.html
+     (solo a usuarios con sesión). Abierto solo, este archivo no muestra nada. -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welding Digital Twin · KTMEX</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============ Tokens de tema ============ */
+    :root {
+      --bg: #0c1016;
+      --panel: rgba(16, 21, 29, 0.86);
+      --panel-solid: #121821;
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #e7ecf3;
+      --muted: #8794a6;
+      --accent: #22d3ee;
+      --chip: rgba(148, 163, 184, 0.09);
+      --chip-hover: rgba(148, 163, 184, 0.18);
+      --label-bg: rgba(10, 14, 20, 0.82);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+      --orange: #f97316;
+      --blue: #3b82f6;
+      --sidebar-w: 300px;
+    }
+    body.light {
+      --bg: #eef1f5;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-solid: #ffffff;
+      --border: rgba(15, 23, 42, 0.12);
+      --text: #0f172a;
+      --muted: #5f6b7d;
+      --accent: #0891b2;
+      --chip: rgba(15, 23, 42, 0.05);
+      --chip-hover: rgba(15, 23, 42, 0.1);
+      --label-bg: rgba(255, 255, 255, 0.92);
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+    button, select, input { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+
+    #scene { position: fixed; inset: 0; }
+    #scene canvas { display: block; }
+    .label-layer { position: absolute; inset: 0; pointer-events: none; }
+
+    /* ============ Sidebar ============ */
+    .sidebar { position: fixed; top: 16px; left: 16px; bottom: 16px; width: var(--sidebar-w); z-index: 10;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform .3s ease; }
+    .brand { display: flex; gap: 12px; align-items: center; padding: 18px 18px 12px; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 10px; flex: none; position: relative;
+      background: linear-gradient(135deg, var(--orange), #facc15 45%, var(--blue)); box-shadow: 0 0 18px rgba(249,115,22,.35); }
+    .brand-mark::after { content: ''; position: absolute; inset: 8px; border-radius: 4px; background: var(--panel-solid); }
+    .kicker { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--accent); }
+    .brand h1 { font-size: 16px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+
+    .search { padding: 2px 16px 10px; position: relative; }
+    .search input { width: 100%; padding: 10px 12px; border-radius: 10px; outline: none; font-size: 13px;
+      background: var(--chip); border: 1px solid var(--border); }
+    .search input:focus { border-color: var(--accent); }
+    .results { list-style: none; position: absolute; left: 16px; right: 16px; top: 46px; z-index: 3; max-height: 260px; overflow: auto;
+      background: var(--panel-solid); border: 1px solid var(--border); border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
+    .results.hidden { display: none; }
+    .results button { width: 100%; text-align: left; display: flex; gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 7px; font-size: 12px; }
+    .results button:hover, .results button.kb { background: var(--chip-hover); }
+    .results b { font-family: 'JetBrains Mono', monospace; color: var(--c); }
+    .results small { color: var(--muted); }
+    .results .empty { padding: 8px; font-size: 12px; color: var(--muted); }
+
+    .scroll { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+    .scroll::-webkit-scrollbar, .results::-webkit-scrollbar, .panel::-webkit-scrollbar { width: 6px; }
+    .scroll::-webkit-scrollbar-thumb, .results::-webkit-scrollbar-thumb, .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+    .sec { padding: 10px 4px 6px; }
+    .sec h3 { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 2px 8px; }
+
+    .zone-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .zone-btn { padding: 8px 4px 7px; border-radius: 10px; background: var(--chip); border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all .15s; }
+    .zone-btn b { font-size: 18px; font-weight: 800; color: var(--c); line-height: 1; }
+    .zone-btn small { font-size: 10px; color: var(--muted); }
+    .zone-btn:hover { border-color: var(--c); }
+    .zone-btn.active { background: color-mix(in srgb, var(--c) 18%, transparent); border-color: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 35%, transparent); }
+
+    .zone-detail { margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
+    .zone-detail.hidden { display: none; }
+    .zone-detail .zd-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .zone-detail .zd-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .chip { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 3px 6px; border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); }
+    .chip:hover, .chip.active { background: color-mix(in srgb, var(--c) 32%, transparent); }
+    .chip em { font-style: normal; color: var(--muted); margin-left: 4px; }
+
+    .area-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 9px; text-align: left; font-size: 12.5px; }
+    .area-btn:hover { background: var(--chip-hover); }
+    .area-btn.active { background: color-mix(in srgb, var(--c) 18%, transparent); }
+    .area-btn i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 8px var(--c); flex: none; }
+    .area-btn span { flex: 1; }
+    .area-btn small { color: var(--muted); font-size: 10.5px; }
+
+    .btn-row { display: flex; gap: 6px; margin-bottom: 10px; }
+    .btn { flex: 1; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--chip); border: 1px solid var(--border); transition: all .15s; }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; padding: 4px 2px; }
+    .field select { background: var(--chip); border: 1px solid var(--border); border-radius: 8px; padding: 5px 6px; font-size: 11.5px; max-width: 150px; }
+    .field select option { background: var(--panel-solid); }
+    .toggle { display: flex; align-items: center; gap: 10px; padding: 5px 2px; font-size: 12px; cursor: pointer; user-select: none; }
+    .toggle input { appearance: none; flex: none; width: 30px; height: 17px; border-radius: 20px; background: var(--chip-hover); position: relative; cursor: pointer; transition: background .2s; }
+    .toggle input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--muted); transition: all .2s; }
+    .toggle input:checked { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+    .toggle input:checked::after { left: 15px; background: var(--accent); }
+
+    .legend div { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); padding: 2px 2px; }
+    .legend i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+    .stats { border-top: 1px solid var(--border); padding: 11px 18px; display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); }
+    .stats b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text); }
+
+    /* ============ Panel de información ============ */
+    .panel { position: fixed; top: 16px; right: 16px; width: 350px; max-height: calc(100% - 200px); overflow: auto; z-index: 11;
+      background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border); border-top: 3px solid var(--c, var(--accent)); border-radius: 16px;
+      box-shadow: var(--shadow), 0 0 30px color-mix(in srgb, var(--c, var(--accent)) 18%, transparent);
+      padding: 14px 16px 16px; transition: opacity .2s, transform .2s; }
+    .panel.hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+    .p-head { display: flex; align-items: center; gap: 8px; }
+    .p-head .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+    .p-head .p-kicker { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); flex: 1; }
+    .p-head .close { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); font-size: 18px; }
+    .p-head .close:hover { background: var(--chip-hover); color: var(--text); }
+    .p-title { font-size: 14.5px; font-weight: 500; line-height: 1.5; margin: 8px 0 12px; color: var(--muted); }
+    .p-title b { color: var(--text); font-weight: 700; }
+    .p-title b.code { font-family: 'JetBrains Mono', monospace; color: var(--c); }
+    .p-title i { font-style: normal; opacity: .4; margin: 0 4px; }
+    .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 10px; }
+    .p-grid div { background: var(--chip); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; }
+    .p-grid span { display: block; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .p-grid b { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+    .p-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; padding: 6px 0; border-top: 1px dashed var(--border); }
+    .p-row span { color: var(--muted); flex: none; }
+    .p-row b { font-weight: 500; text-align: right; }
+    .panel p { font-size: 12px; line-height: 1.55; color: var(--muted); margin: 6px 0 2px; }
+    .panel h4 { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
+    .p-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    /* ============ Etiquetas 3D (CSS2DRenderer) ============ */
+    .lbl { pointer-events: none; user-select: none; white-space: nowrap; }
+    .lbl-bay { display: flex; flex-direction: column; align-items: center; }
+    .lbl-bay b { font-size: 40px; font-weight: 800; line-height: 1; color: var(--c); text-shadow: 0 0 18px color-mix(in srgb, var(--c) 60%, transparent); }
+    .lbl-bay span { white-space: normal; max-width: 120px; text-align: center; line-height: 1.3; font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+    .lbl-m { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+      background: var(--label-bg); color: var(--text); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); border-left: 3px solid var(--c);
+      transition: transform .15s, box-shadow .15s; }
+    .lbl-m.active { transform: scale(1.25); box-shadow: 0 0 16px color-mix(in srgb, var(--c) 70%, transparent); }
+    .lbl-area { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c);
+      background: var(--label-bg); border: 1px dashed color-mix(in srgb, var(--c) 75%, transparent); padding: 4px 9px; border-radius: 6px; transition: transform .15s; }
+    .lbl-area.active { transform: scale(1.12); }
+    .lbl-axis { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; color: var(--muted); border: 1.5px solid var(--muted); background: var(--label-bg); }
+    .lbl-col { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); }
+    .lbl-aisle { font-size: 9.5px; letter-spacing: .1em; color: #facc15; opacity: .85; font-weight: 600; }
+    .lbl-rose { font-size: 15px; font-weight: 800; color: #94a3b8; }
+    .lbl-rose.north { color: #ef4444; font-size: 18px; text-shadow: 0 0 10px rgba(239,68,68,.5); }
+    .lbl-cardinal { font-size: 13px; font-weight: 800; letter-spacing: .35em; text-transform: uppercase; color: var(--muted); opacity: .8; }
+    .lbl-cardinal.north { color: #ef4444; opacity: 1; }
+
+    /* ============ Brújula (HUD) ============ */
+    .compass { position: fixed; right: 16px; bottom: 44px; z-index: 9; width: 108px; padding: 8px 6px 7px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color .15s; }
+    .compass:hover { border-color: var(--accent); }
+    .compass svg { width: 88px; height: 88px; display: block; overflow: visible; }
+    .compass .c-ring { fill: var(--chip); stroke: var(--muted); stroke-width: 1; opacity: .9; }
+    .compass #compassTicks line { stroke: var(--muted); stroke-width: 1; opacity: .55; }
+    .compass #compassTicks line.major { stroke-width: 2; opacity: .95; }
+    .compass .c-n { fill: #ef4444; filter: drop-shadow(0 0 4px rgba(239,68,68,.6)); }
+    .compass .c-s { fill: var(--muted); }
+    .compass .c-hub { fill: var(--panel-solid); stroke: var(--muted); }
+    .compass text { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800; fill: var(--text); text-anchor: middle; dominant-baseline: central; }
+    .compass text.tn { fill: #ef4444; font-size: 13px; }
+    .compass .c-heading { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+    .compass .c-hint { font-size: 8.5px; color: var(--muted); opacity: .7; }
+
+    .kt-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+    .lg-est { display: none !important; }
+    body.est .lg-est { display: flex !important; }
+    body.est .lg-tag { display: none !important; }
+    .lpa-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+    .lpa-sum button { padding: 8px 4px; border-radius: 10px; background: var(--chip); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .lpa-sum button.active { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+    .lpa-sum b { font-size: 18px; font-weight: 800; color: var(--c); line-height: 1; }
+    .lpa-sum small { font-size: 10px; color: var(--muted); text-align: center; }
+    .lpa-list { margin-top: 6px; }
+    .aud { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: 11.5px; padding: 6px 0; border-top: 1px dashed var(--border); }
+    .aud i { width: 9px; height: 9px; border-radius: 50%; background: var(--e); box-shadow: 0 0 6px var(--e); }
+    .aud small { color: var(--muted); display: block; }
+    .aud em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--e); white-space: nowrap; }
+    .aud.foco { background: color-mix(in srgb, var(--c) 10%, transparent); border-radius: 8px; padding: 6px; }
+    .lbl-misc { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+    /* ============ Tooltip, ayuda, carga ============ */
+    .tooltip { position: fixed; z-index: 20; pointer-events: none; transform: translate(14px, 14px);
+      background: var(--panel-solid); border: 1px solid var(--border); border-left: 3px solid var(--c, var(--accent));
+      border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: var(--shadow); }
+    .tooltip.hidden { display: none; }
+    .tooltip b { font-family: 'JetBrains Mono', monospace; color: var(--c); margin-right: 6px; }
+    .tooltip small { color: var(--muted); }
+    .hint { position: fixed; bottom: 14px; left: calc(var(--sidebar-w) + 32px); right: 16px; z-index: 5; pointer-events: none;
+      display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-size: 11px; color: var(--muted); }
+    .hint kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 6px; margin-right: 4px; border-radius: 5px;
+      background: var(--chip-hover); border: 1px solid var(--border); color: var(--text); }
+    .loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 24px; text-align: center; background: var(--bg); transition: opacity .5s; }
+    .loading.done { opacity: 0; pointer-events: none; }
+    .loading small { max-width: 400px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .spinner { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .menu-btn { display: none; position: fixed; top: 14px; left: 14px; z-index: 12; width: 42px; height: 42px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 18px; }
+
+    @media (max-width: 820px) {
+      .menu-btn { display: block; }
+      .sidebar { top: 0; left: 0; bottom: 0; border-radius: 0 16px 16px 0; width: min(86vw, 320px); transform: translateX(-105%); }
+      body.menu-open .sidebar { transform: none; }
+      .panel { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 55%; }
+      .hint { display: none; }
+      .compass { top: 12px; right: 12px; bottom: auto; width: 76px; padding: 6px 4px; }
+      .compass svg { width: 62px; height: 62px; }
+      .compass .c-hint { display: none; }
+    }
+  </style>
+
+  <!-- GSAP (animación de cámara) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- Three.js como ES Modules desde CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="scene"></div>
+  <button id="menuBtn" class="menu-btn" aria-label="Menú">☰</button>
+
+  <!-- ===================== MENÚ LATERAL ===================== -->
+  <aside id="sidebar" class="sidebar">
+    <header class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="kicker">DIGITAL TWIN · WELDING</div>
+        <h1 data-en="Welding Machine Layout">Lay-Out Máquinas de Welding</h1><div id="ktSub" class="kt-sub"></div>
+      </div>
+    </header>
+
+    <div class="search">
+      <input id="search" type="search" placeholder="Buscar máquina o área… (ej. W00128)" data-en-ph="Search machine or area… (e.g. W00128)" autocomplete="off" />
+      <ul id="results" class="results hidden"></ul>
+    </div>
+
+    <div class="scroll">
+      <section class="sec">
+        <h3 data-en="Zones · Lines">Zonas · Líneas</h3>
+        <div id="zoneGrid" class="zone-grid"></div>
+        <div id="zoneDetail" class="zone-detail hidden"></div>
+      </section>
+
+      <section class="sec">
+        <h3 data-en="Special areas">Áreas especiales</h3>
+        <div id="areaList"></div>
+      </section>
+
+      <section class="sec">
+        <h3 data-en="View">Vista</h3>
+        <div class="btn-row">
+          <button id="btnHome" class="btn" data-en="⟲ Overview">⟲ Vista general</button>
+          <button id="btnTop" class="btn" data-en="▦ 2D plan">▦ Planta 2D</button>
+        </div>
+        <label class="field"><span data-en="Machine labels">Etiquetas de máquinas</span>
+          <select id="selLabels">
+            <option value="auto" data-en="Automatic (on zoom)">Automáticas (al acercar)</option>
+            <option value="all" data-en="All">Todas</option>
+            <option value="off" data-en="Hidden">Ocultas</option>
+          </select>
+        </label>
+        <label class="field"><span data-en="Machine color">Color de máquinas</span>
+          <select id="selColor">
+            <option value="etiqueta" data-en="By drawing tag">Por etiqueta del plano</option>
+            <option value="zona" data-en="By zone">Por zona</option>
+            <option value="estatus" data-en="By LPA audit status">Por estatus de auditoría LPA</option>
+          </select>
+        </label>
+        <label class="toggle"><input type="checkbox" id="tglAxes" checked /><span data-en="Columns and structural axes">Columnas y ejes estructurales</span></label>
+        <label class="toggle"><input type="checkbox" id="tglAisles" checked /><span data-en="Aisles">Pasillos</span></label>
+        <label class="toggle"><input type="checkbox" id="tglTheme" /><span data-en="Light theme">Tema claro</span></label>
+      </section>
+
+      <section class="sec legend">
+        <h3 data-en="Legend">Leyenda</h3>
+        <div class="lg-tag"><i style="background:var(--orange)"></i><span data-en="Machine with yellow tag on drawing">Máquina con etiqueta amarilla en plano</span></div>
+        <div class="lg-tag"><i style="background:var(--blue)"></i><span data-en="Machine with grey tag on drawing">Máquina con etiqueta gris en plano</span></div>
+        <div class="lg-est"><i style="background:#ef4444"></i><span data-en="LPA audit overdue">Auditoría LPA vencida</span></div>
+        <div class="lg-est"><i style="background:#f59e0b"></i><span data-en="LPA audit pending">Auditoría LPA pendiente</span></div>
+        <div class="lg-est"><i style="background:#22c55e"></i><span data-en="LPA audit done">Auditoría LPA realizada</span></div>
+        <div class="lg-est"><i style="background:#64748b"></i><span data-en="No LPA audit in the period">Sin auditoría LPA en el periodo</span></div>
+        <div><i style="border:1px dashed #facc15"></i><span data-en="Pedestrian / forklift aisle">Pasillo peatonal / montacargas</span></div>
+        <div><i style="border:1px solid var(--muted)"></i><span data-en="Grid: 1 m · major line every 4 m">Cuadrícula: 1 m · línea mayor cada 4 m</span></div>
+        <div><i style="background:#ef4444;clip-path:polygon(50% 0,100% 100%,0 100%)"></i><span data-en="Compass: North is red">Brújula: el Norte se marca en rojo</span></div>
+      </section>
+    </div>
+
+    <footer id="stats" class="stats"></footer>
+  </aside>
+
+  <!-- Panel de información (Raycaster) -->
+  <section id="panel" class="panel hidden" aria-live="polite"></section>
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <!-- Brújula: gira con la cámara. Clic = orientar la vista con el Norte arriba -->
+  <button id="compass" class="compass" title="Clic: poner el Norte hacia arriba" aria-label="Brújula">
+    <svg viewBox="-50 -50 100 100" aria-hidden="true">
+      <circle r="46" class="c-ring" />
+      <g id="compassRose">
+        <g id="compassTicks"></g>
+        <polygon points="0,-20 5,0 -5,0" class="c-n" />
+        <polygon points="0,20 5,0 -5,0" class="c-s" />
+        <circle r="4" class="c-hub" />
+        <text x="0" y="-29" class="tn">N</text>
+        <text x="29" y="0">E</text>
+        <text x="0" y="29">S</text>
+        <text x="-29" y="0">O</text>
+      </g>
+    </svg>
+    <span id="compassHeading" class="c-heading">Vista hacia N</span>
+    <span class="c-hint" data-en="click: North up">clic: Norte arriba</span>
+  </button>
+
+  <div class="hint">
+    <span data-en-html="<kbd>Drag</kbd>rotate"><kbd>Arrastrar</kbd>rotar</span>
+    <span data-en-html="<kbd>Wheel</kbd>zoom"><kbd>Rueda</kbd>zoom</span>
+    <span data-en-html="<kbd>Right click</kbd>pan"><kbd>Clic der.</kbd>desplazar</span>
+    <span data-en-html="<kbd>Click</kbd>inspect"><kbd>Clic</kbd>inspeccionar</span>
+    <span data-en-html="<kbd>Double click</kbd>focus"><kbd>Doble clic</kbd>enfocar</span>
+    <span data-en-html="<kbd>Esc</kbd>close panel"><kbd>Esc</kbd>cerrar panel</span>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p id="loadTitle">Cargando gemelo digital…</p>
+    <small id="loadMsg">Esperando los datos de KTMEX Facilities…</small>
+  </div>
+
+  <script type="module">
+/* ======================================================================
+   LAY-OUT MÁQUINAS DE WELDING · DIGITAL TWIN  (Three.js r160 + GSAP)
+   ----------------------------------------------------------------------
+   ÍNDICE DEL ARCHIVO
+     1. CONFIGURACIÓN GENERAL
+     2. DATOS DEL LAYOUT ......... zonas, áreas especiales, ejes, pasillos
+     3. DATOS DE MÁQUINAS ........ 👉 AQUÍ SE AGREGAN / EDITAN MÁQUINAS
+     4. Escena, cámara, luces y controles
+     5. Constructores 3D (piso, zonas, pasillos, columnas, áreas, máquinas)
+     6. Interacción (Raycaster, hover, panel de información)
+     7. Navegación (menú lateral, búsqueda, vuelos de cámara con GSAP)
+     8. Loop de render
+
+   SISTEMA DE COORDENADAS — todo en METROS, igual que las cotas del plano
+   (las cotas del PDF están en mm: 8000 mm = 8.0 m):
+     X = distancia desde el borde IZQUIERDO del plano  (crece hacia la Zona A)
+     Z = distancia desde el borde SUPERIOR del plano   (crece hacia abajo)
+   Así puedes medir en el PDF y escribir el valor directo en los datos.
+   ====================================================================== */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ======================================================================
+   1. CONFIGURACIÓN GENERAL
+   ====================================================================== */
+const CONFIG = {
+  // Punto del plano (m) que queda en el centro de la escena 3D.
+  // Múltiplos de 4 para que la cuadrícula mayor (4 m) coincida con el plano.
+  origen: { x: 48, z: 36 },
+  // Tamaño por defecto de cada máquina (m). Se puede sobrescribir por máquina.
+  maquina: { w: 1.5, d: 1.2, h: 1.5 },
+  // Distancia de cámara (m) bajo la cual se muestran las etiquetas en modo "Automáticas".
+  distanciaEtiquetas: 38,
+  tipoMaquina: 'Welding',
+  // 🧭 NORTE: ángulo del Norte real, en grados, medido en sentido horario desde
+  // la parte SUPERIOR del plano. 0 = el Norte está hacia arriba del plano.
+  // Ej.: si el Norte real apunta hacia la derecha del plano (lado Zona A) → 90.
+  norte: 0,
+  colorEtiqueta: { amarilla: '#f97316', gris: '#3b82f6' }, // naranja / azul metálico
+};
+
+/* ======================================================================
+   2–3. DATOS (V9.19.11 KTMEX): ya no viven en este archivo.
+   index.html los manda por postMessage después de pedirlos al servidor con la
+   sesión del usuario. Mismo origen obligatorio.
+   ====================================================================== */
+const DATOS = await new Promise((resolve) => {
+  window.addEventListener('message', (e) => {
+    if (e.source !== window.parent || e.origin !== location.origin) return;
+    const d = e.data;
+    if (d && d.tipo === 'ktmex-twin-init' && d.layout) resolve(d);
+  });
+  if (window.parent && window.parent !== window) window.parent.postMessage({ tipo: 'ktmex-twin-listo' }, location.origin);
+  else document.getElementById('loadMsg').textContent = 'Abre el mapa desde KTMEX Facilities → LPA Quality. / Open the map from KTMEX Facilities → LPA Quality.';
+});
+const EN = DATOS.lang === 'en';
+const T = (es, en) => (EN ? en : es);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+if (EN) {
+  document.documentElement.lang = 'en';
+  document.querySelectorAll('[data-en]').forEach((el) => { el.textContent = el.dataset.en; });
+  document.querySelectorAll('[data-en-html]').forEach((el) => { el.innerHTML = el.dataset.enHtml; });
+  document.querySelectorAll('[data-en-ph]').forEach((el) => { el.placeholder = el.dataset.enPh; });
+}
+const L = DATOS.layout;
+const PLANTA = L.planta, ZONAS = L.zonas, AREAS = L.areas, EJES = L.ejes, EXTRAS = L.extras || [], MAQUINAS = L.maquinas;
+if (L.config) Object.assign(CONFIG, L.config);
+
+// ---- Auditorías LPA sobre las máquinas ----
+const MODO = DATOS.modo === 'seguimiento' ? 'seguimiento' : 'enfocar';
+const AUDS = Array.isArray(DATOS.auditorias) ? DATOS.auditorias : [];
+const AUD_BY = {};
+AUDS.forEach((a) => { (AUD_BY[a.maquina] = AUD_BY[a.maquina] || []).push(a); });
+Object.values(AUD_BY).forEach((l) => l.sort((x, y) => String(x.fecha).localeCompare(String(y.fecha))));
+const EST_COLOR = { vencida: '#ef4444', pendiente: '#f59e0b', realizada: '#22c55e', ninguna: '#64748b' };
+const EST_TXT = { vencida: T('Vencida', 'Overdue'), pendiente: T('Pendiente', 'Pending'), realizada: T('Realizada', 'Done'), ninguna: T('Sin auditoría', 'No audit') };
+function estadoMaquina(id) {
+  const l = AUD_BY[id]; if (!l || !l.length) return 'ninguna';
+  if (l.some((a) => a.grupo === 'vencida')) return 'vencida';
+  if (l.some((a) => a.grupo === 'pendiente')) return 'pendiente';
+  return 'realizada';
+}
+document.getElementById('ktSub').textContent = DATOS.titulo || '';
+
+/* ======================================================================
+   4. ESCENA, CÁMARA, LUCES Y CONTROLES
+   ====================================================================== */
+const THEMES = {
+  dark:  { bg: 0x0c1016, floor: 0x10151c, slab: 0x161d27, aisle: 0x0e1218, grid1: 0x19222d, grid2: 0x283546, plant: 0x52627a, column: 0x6b7686, rack: 0x334155 },
+  light: { bg: 0xeef1f5, floor: 0xe2e7ee, slab: 0xfafbfc, aisle: 0xd8dee7, grid1: 0xd3d9e1, grid2: 0xb7c2d0, plant: 0x8a98ab, column: 0x9aa5b4, rack: 0xa8b3c2 },
+};
+let theme = THEMES.dark;
+
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // limita el costo en pantallas 4K
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;               // sombras suaves
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.95;
+container.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.className = 'label-layer';
+container.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(theme.bg);
+scene.fog = new THREE.Fog(theme.bg, 150, 320);
+
+// Entorno de reflexión suave → da el look "azul metálico" a las máquinas
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 900);
+const VIEW_DIR = new THREE.Vector3(0.16, 0.8, 0.58).normalize();      // dirección "isométrica" de vuelo
+const HOME = { target: new THREE.Vector3(-7, 0, 1), dist: 108 };
+camera.position.copy(HOME.target).addScaledVector(VIEW_DIR, HOME.dist);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.screenSpacePanning = false;        // el pan se desliza sobre el piso
+controls.maxPolarAngle = Math.PI * 0.47;    // no permite bajar del piso
+controls.minDistance = 3;
+controls.maxDistance = 240;
+controls.update();
+
+// Iluminación: ambiental (hemisférica + ambient) y direccional con sombras suaves
+scene.add(new THREE.HemisphereLight(0xdbe7ff, 0x1b2029, 0.45));
+scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(-40, 90, 45);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 46, bottom: -46, near: 10, far: 250 });
+sun.shadow.radius = 3;
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.03;
+scene.add(sun);
+
+/* ======================================================================
+   5. CONSTRUCTORES 3D
+   ====================================================================== */
+// ---- utilidades ----
+const toWorld = (x, z) => new THREE.Vector3(x - CONFIG.origen.x, 0, z - CONFIG.origen.z);
+const rectInfo = (r) => {
+  const w = r.x2 - r.x1, d = r.z2 - r.z1;
+  return { w, d, center: toWorld(r.x1 + w / 2, r.z1 + d / 2) };
+};
+const zonaById = Object.fromEntries(ZONAS.map((z) => [z.id, z]));
+const f1 = (n) => n.toFixed(1);
+
+function makeLabel(html, cls, color) {
+  const wrap = document.createElement('div');
+  const el = document.createElement('div');
+  el.className = 'lbl ' + cls;
+  el.innerHTML = html;
+  if (color) el.style.setProperty('--c', color);
+  wrap.appendChild(el);
+  const obj = new CSS2DObject(wrap);
+  obj.userData.el = el;
+  return obj;
+}
+function rectLoop(w, d, y, inset = 0) {
+  const hw = w / 2 - inset, hd = d / 2 - inset;
+  return new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-hw, y, -hd), new THREE.Vector3(hw, y, -hd),
+    new THREE.Vector3(hw, y, hd), new THREE.Vector3(-hw, y, hd),
+  ]);
+}
+
+const pickTargets = [];             // objetos que el Raycaster evalúa
+const groups = {
+  axes: new THREE.Group(),
+  aisles: new THREE.Group(),
+};
+scene.add(groups.axes, groups.aisles);
+
+// ---- 5.1 Piso + cuadrícula de escala ----
+const floorMat = new THREE.MeshStandardMaterial({ color: theme.floor, roughness: 0.95 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.02;
+floor.receiveShadow = true;
+floor.userData = { kind: 'suelo' };
+scene.add(floor);
+pickTargets.push(floor);
+
+let grids;
+function buildGrid() {
+  if (grids) { scene.remove(grids); grids.children.forEach((g) => { g.geometry.dispose(); g.material.dispose(); }); }
+  grids = new THREE.Group();
+  const minor = new THREE.GridHelper(128, 128, theme.grid1, theme.grid1);   // 1 m
+  const major = new THREE.GridHelper(128, 32, theme.grid2, theme.grid2);    // 4 m (módulo de cotas 4000 mm)
+  minor.position.y = 0.001; major.position.y = 0.003;
+  minor.material.transparent = major.material.transparent = true;
+  minor.material.opacity = 0.6; major.material.opacity = 0.9;
+  grids.add(minor, major);
+  scene.add(grids);
+}
+buildGrid();
+
+// ---- 5.2 Contorno de la nave ----
+const plantMat = new THREE.LineBasicMaterial({ color: theme.plant });
+{
+  const r = rectInfo(PLANTA);
+  const outline = new THREE.LineLoop(rectLoop(r.w, r.d, 0.02), plantMat);
+  outline.position.copy(r.center);
+  scene.add(outline);
+  const t = makeLabel(T('Lay-Out máquinas de welding · Escala 1 : 1 (m)', 'Welding machine layout · Scale 1 : 1 (m)'), 'lbl-misc');
+  t.position.copy(toWorld(PLANTA.x1 + r.w / 2, PLANTA.z2 + 4.6));
+  scene.add(t);
+}
+
+// ---- 5.3 Zonas / bahías (se comportan como "suelo": clic = cerrar panel) ----
+const zoneObjs = {};
+const slabMats = [];
+for (const z of ZONAS) {
+  const r = rectInfo(z);
+  const mat = new THREE.MeshStandardMaterial({ color: theme.slab, roughness: 0.9, emissive: z.color, emissiveIntensity: 0.0 });
+  slabMats.push(mat);
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(r.w, 0.05, r.d), mat);
+  slab.position.copy(r.center).setY(0.025);
+  slab.receiveShadow = true;
+  slab.userData = { kind: 'suelo', zona: z.id };
+  scene.add(slab);
+  pickTargets.push(slab);
+
+  const outline = new THREE.LineLoop(rectLoop(r.w, r.d, 0.03),
+    new THREE.LineBasicMaterial({ color: z.color, transparent: true, opacity: 0.55 }));
+  slab.add(outline);
+
+  const label = makeLabel(`<b>${z.id}</b><span>${z.nombre}</span>`, 'lbl-bay', z.color);
+  label.position.copy(toWorld(z.x1 + r.w / 2, z.z1 - 2.2));
+  scene.add(label);
+
+  zoneObjs[z.id] = { slab, outline, label, info: r };
+}
+
+// ---- 5.4 Pasillos (se calculan solos a partir de los huecos entre bahías) ----
+const aisleMats = [];
+{
+  const sorted = [...ZONAS].sort((a, b) => a.x1 - b.x1);
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const x1 = sorted[i].x2, x2 = sorted[i + 1].x1;
+    if (x2 - x1 < 1) continue;
+    const r = rectInfo({ x1, x2, z1: PLANTA.z1 + 4, z2: PLANTA.z2 - 1 });
+    const m = new THREE.MeshStandardMaterial({ color: theme.aisle, roughness: 1 });
+    aisleMats.push(m);
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), m);
+    strip.rotation.x = -Math.PI / 2;
+    strip.position.copy(r.center).setY(0.008);
+    strip.receiveShadow = true;
+    groups.aisles.add(strip);
+    // bordes punteados amarillos (seguridad)
+    const edge = new THREE.LineSegments(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-r.w / 2 + 0.25, 0.02, -r.d / 2), new THREE.Vector3(-r.w / 2 + 0.25, 0.02, r.d / 2),
+        new THREE.Vector3(r.w / 2 - 0.25, 0.02, -r.d / 2), new THREE.Vector3(r.w / 2 - 0.25, 0.02, r.d / 2)]),
+      new THREE.LineDashedMaterial({ color: 0xfacc15, dashSize: 1.2, gapSize: 0.8, transparent: true, opacity: 0.75 }));
+    edge.computeLineDistances();
+    edge.position.copy(r.center);
+    groups.aisles.add(edge);
+    const lbl = makeLabel(`${T('PASILLO', 'AISLE')} ${f1(x2 - x1)} m`, 'lbl-aisle');
+    lbl.position.copy(r.center).setY(0.05);
+    groups.aisles.add(lbl);
+  }
+}
+
+// ---- 5.5 Columnas y ejes estructurales ----
+const columnMat = new THREE.MeshStandardMaterial({ color: theme.column, roughness: 0.6, metalness: 0.4 });
+const axisLineMat = new THREE.LineDashedMaterial({ color: theme.plant, dashSize: 0.6, gapSize: 0.9, transparent: true, opacity: 0.6 });
+{
+  const colGeo = new THREE.CylinderGeometry(0.22, 0.22, 7, 12);
+  const baseGeo = new THREE.BoxGeometry(0.8, 0.12, 0.8);
+  const xs = EJES.columnas.map((c) => c.x), zs = EJES.filas.map((f) => f.z);
+  const xMin = PLANTA.x1, xMax = PLANTA.x2, zMin = PLANTA.z1, zMax = PLANTA.z2;
+
+  for (const f of EJES.filas) {
+    const a = toWorld(xMin - 1, f.z), b = toWorld(xMax + 1, f.z);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a.setY(0.015), b.setY(0.015)]), axisLineMat);
+    line.computeLineDistances();
+    groups.axes.add(line);
+    const bubble = makeLabel(f.id, 'lbl-axis');
+    bubble.position.copy(toWorld(xMin - 3, f.z));
+    groups.axes.add(bubble);
+  }
+  for (const c of EJES.columnas) {
+    const a = toWorld(c.x, zMin - 1), b = toWorld(c.x, zMax + 1);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a.setY(0.015), b.setY(0.015)]), axisLineMat);
+    line.computeLineDistances();
+    groups.axes.add(line);
+    const bubble = makeLabel(c.id, 'lbl-axis');
+    bubble.position.copy(toWorld(c.x, zMax + 2.5));
+    groups.axes.add(bubble);
+  }
+  for (const x of xs) for (const z of zs) {
+    const p = toWorld(x, z);
+    const col = new THREE.Mesh(colGeo, columnMat);
+    col.position.copy(p).setY(3.5);
+    col.castShadow = true;
+    const base = new THREE.Mesh(baseGeo, columnMat);
+    base.position.copy(p).setY(0.06);
+    groups.axes.add(col, base);
+    const fila = EJES.filas.find((f) => f.z === z).id, colId = EJES.columnas.find((c) => c.x === x).id;
+    const tag = makeLabel(fila + colId, 'lbl-col');
+    tag.position.copy(p).setY(7.4);
+    groups.axes.add(tag);
+  }
+}
+
+// ---- 5.6 Estructuras aéreas (flow racks) ----
+const rackMat = new THREE.MeshStandardMaterial({ color: theme.rack, roughness: 0.6, metalness: 0.5, transparent: true, opacity: 0.85 });
+for (const e of EXTRAS) {
+  const r = rectInfo(e);
+  const rack = new THREE.Mesh(new THREE.BoxGeometry(r.w, e.h, r.d), rackMat);
+  rack.position.copy(r.center).setY(e.y);
+  rack.castShadow = true;
+  scene.add(rack);
+}
+
+// ---- 5.7 Áreas especiales ----
+const areaObjs = {};
+for (const a of AREAS) {
+  const r = rectInfo(a);
+  const geo = new THREE.BoxGeometry(r.w, a.h, r.d);
+  const mat = new THREE.MeshStandardMaterial({
+    color: a.color, emissive: a.color, emissiveIntensity: 0.25,
+    transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide,
+  });
+  const box = new THREE.Mesh(geo, mat);
+  box.position.copy(r.center).setY(a.h / 2);
+  box.renderOrder = 2;
+  box.userData = { kind: 'area', id: a.id };
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: a.color }));
+  box.add(edges);
+  scene.add(box);
+  pickTargets.push(box);
+
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d),
+    new THREE.MeshBasicMaterial({ color: a.color, transparent: true, opacity: 0.2, depthWrite: false }));
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.copy(r.center).setY(0.06);
+  scene.add(pad);
+
+  const label = makeLabel(a.nombre, 'lbl-area', a.color);
+  label.position.set(0, a.h / 2 + 0.7 + (a.etiquetaY ?? 0), 0); // etiquetaY: subir la etiqueta si se encima con otra
+  box.add(label);
+
+  areaObjs[a.id] = { data: a, box, edges, label, info: r, color: new THREE.Color(a.color) };
+}
+
+// ---- 5.8 MÁQUINAS DE SOLDADURA ----
+// Optimización: en vez de 1 malla por máquina (≈160 draw calls) se usa InstancedMesh:
+// 1 draw call por pieza (cuerpo, franja de neón, poste y brazo de la pistola),
+// sin importar si hay 50 o 500 máquinas.
+const N = MAQUINAS.length;
+const unitBox = new THREE.BoxGeometry(1, 1, 1);
+const bodyMesh = new THREE.InstancedMesh(unitBox, new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.5 }), N);
+const capMesh  = new THREE.InstancedMesh(unitBox, new THREE.MeshBasicMaterial({ toneMapped: false }), N);
+const postMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.08, 1, 8),
+  new THREE.MeshStandardMaterial({ color: 0x9aa4b2, roughness: 0.4, metalness: 0.7 }), N);
+const armMesh  = new THREE.InstancedMesh(unitBox, new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.4, metalness: 0.6 }), N);
+bodyMesh.castShadow = bodyMesh.receiveShadow = true;
+postMesh.castShadow = armMesh.castShadow = true;
+bodyMesh.userData = { kind: 'maquina' };
+scene.add(bodyMesh, capMesh, postMesh, armMesh);
+pickTargets.push(bodyMesh);
+
+const machines = [];               // estado en tiempo de ejecución (posición mundo, etiqueta, colores)
+const pivot = new THREE.Object3D(); // ayuda para componer transformaciones por instancia
+const part = new THREE.Object3D();
+pivot.add(part);
+
+// 🔁 BUCLE PRINCIPAL: recorre el array MAQUINAS y crea cada bloque 3D + su etiqueta
+for (let i = 0; i < N; i++) {
+  const m = MAQUINAS[i];
+  const w = m.w ?? CONFIG.maquina.w, d = m.d ?? CONFIG.maquina.d, h = m.h ?? CONFIG.maquina.h;
+  const pos = toWorld(m.x, m.z);
+
+  pivot.position.copy(pos);
+  pivot.rotation.set(0, THREE.MathUtils.degToRad(m.rot ?? 0), 0);
+
+  const setPart = (mesh, px, py, pz, sx, sy, sz) => {
+    part.position.set(px, py, pz);
+    part.scale.set(sx, sy, sz);
+    pivot.updateMatrixWorld(true);
+    mesh.setMatrixAt(i, part.matrixWorld);
+  };
+  setPart(bodyMesh, 0, h / 2, 0, w, h, d);                              // gabinete / celda
+  setPart(capMesh, 0, h + 0.02, 0, w * 1.02, 0.04, d * 1.02);           // franja de neón
+  setPart(postMesh, w / 2 - 0.2, h + 0.45, -d / 2 + 0.2, 1, 0.9, 1);   // poste de la pistola
+  setPart(armMesh, w / 2 - 0.5, h + 0.88, -d / 2 + 0.2, 0.7, 0.08, 0.08); // brazo
+
+  const label = makeLabel(m.id, 'lbl-m', '#ffffff');
+  label.position.copy(pos).setY(h + 1.25);
+  label.visible = false;
+  scene.add(label);
+
+  machines.push({ ...m, i, w, d, h, world: pos, label });
+}
+[bodyMesh, capMesh, postMesh, armMesh].forEach((im) => { im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); });
+
+// ---- colores de máquinas (por etiqueta del plano o por zona) ----
+let colorMode = AUDS.length && MODO === 'seguimiento' ? 'estatus' : 'etiqueta';
+document.body.classList.toggle('est', colorMode === 'estatus');
+document.getElementById('selColor').value = colorMode;
+if (!AUDS.length) document.querySelector('#selColor option[value="estatus"]').remove();
+const tmpC = new THREE.Color(), WHITE = new THREE.Color(0xffffff), STEEL = new THREE.Color(0x475569);
+function baseColorOf(m) {
+  if (colorMode === 'estatus') return new THREE.Color(EST_COLOR[estadoMaquina(m.id)]);
+  return new THREE.Color(colorMode === 'zona' ? zonaById[m.zona].color : (CONFIG.colorEtiqueta[m.etiqueta] ?? CONFIG.colorEtiqueta.gris));
+}
+function paintMachine(m) {
+  const base = baseColorOf(m);
+  const isSel = state.sel?.kind === 'maquina' && state.sel.i === m.i;
+  const isHov = state.hover?.kind === 'maquina' && state.hover.i === m.i;
+  tmpC.copy(base).lerp(STEEL, 0.25);                       // cuerpo metálico del color base
+  if (isHov) tmpC.lerp(WHITE, 0.3);
+  if (isSel) tmpC.lerp(WHITE, 0.18);
+  bodyMesh.setColorAt(m.i, tmpC);
+  capMesh.setColorAt(m.i, isSel ? WHITE : base);
+  bodyMesh.instanceColor.needsUpdate = capMesh.instanceColor.needsUpdate = true;
+  m.label.userData.el.style.setProperty('--c', '#' + base.getHexString());
+  m.label.userData.el.classList.toggle('active', isSel || isHov);
+}
+const state = { hover: null, sel: null, zone: null, labelMode: 'auto' };
+machines.forEach(paintMachine);
+
+// Marcador de selección (anillo + haz de luz)
+const marker = new THREE.Group();
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, side: THREE.DoubleSide, toneMapped: false }));
+ring.rotation.x = -Math.PI / 2;
+ring.position.y = 0.07;
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 8, 8, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }));
+beam.position.y = 4;
+marker.add(ring, beam);
+marker.visible = false;
+scene.add(marker);
+
+// ---- 5.9 Brújula: rosa de los vientos 3D + letreros cardinales ----
+const NORTE = new THREE.Vector3(Math.sin(THREE.MathUtils.degToRad(CONFIG.norte)), 0, -Math.cos(THREE.MathUtils.degToRad(CONFIG.norte)));
+const ESTE = new THREE.Vector3(-NORTE.z, 0, NORTE.x);
+const PLANT_C = rectInfo(PLANTA);
+const CARDINALES = [
+  { id: 'N', nombre: T('Norte', 'North'), v: NORTE, rot: 0 },
+  { id: 'E', nombre: T('Este', 'East'), v: ESTE, rot: -Math.PI / 2 },
+  { id: 'S', nombre: T('Sur', 'South'), v: NORTE.clone().negate(), rot: Math.PI },
+  { id: 'O', nombre: T('Oeste', 'West'), v: ESTE.clone().negate(), rot: Math.PI / 2 },
+];
+{
+  // rosa de los vientos sobre el piso, en la esquina superior derecha de la nave
+  const rose = new THREE.Group();
+  rose.position.copy(toWorld(PLANTA.x2 + 9, PLANTA.z1 + 8)).setY(0.04);
+  rose.rotation.y = -THREE.MathUtils.degToRad(CONFIG.norte);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+  for (const [r1, r2] of [[3.7, 3.85], [2.1, 2.18]]) {
+    const ringM = new THREE.Mesh(new THREE.RingGeometry(r1, r2, 64), ringMat);
+    ringM.rotation.x = -Math.PI / 2;
+    rose.add(ringM);
+  }
+  for (const c of CARDINALES) {
+    const len = c.id === 'N' ? 3.6 : 2.9;
+    const shape = new THREE.Shape();
+    shape.moveTo(0, len); shape.lineTo(0.7, 0); shape.lineTo(-0.7, 0); shape.closePath();
+    const tri = new THREE.Mesh(new THREE.ShapeGeometry(shape),
+      new THREE.MeshBasicMaterial({ color: c.id === 'N' ? 0xef4444 : 0x94a3b8, side: THREE.DoubleSide, toneMapped: false }));
+    tri.rotation.x = -Math.PI / 2;
+    const holder = new THREE.Group();
+    holder.rotation.y = c.rot;
+    holder.position.y = 0.01;
+    holder.add(tri);
+    rose.add(holder);
+    const lbl = makeLabel(c.id, 'lbl-rose' + (c.id === 'N' ? ' north' : ''));
+    const local = new THREE.Vector3(0, 0, -5.2).applyAxisAngle(new THREE.Vector3(0, 1, 0), c.rot);
+    lbl.position.copy(local);
+    rose.add(lbl);
+  }
+  scene.add(rose);
+
+  // letreros NORTE / SUR / ESTE / OESTE alrededor de la nave
+  const hw = PLANT_C.w / 2, hd = PLANT_C.d / 2;
+  for (const c of CARDINALES) {
+    const t = Math.min(hw / Math.max(Math.abs(c.v.x), 1e-6), hd / Math.max(Math.abs(c.v.z), 1e-6));
+    const lbl = makeLabel(c.nombre, 'lbl-cardinal' + (c.id === 'N' ? ' north' : ''));
+    lbl.position.copy(PLANT_C.center).addScaledVector(c.v, t + 9).setY(0.1);
+    scene.add(lbl);
+  }
+}
+
+// Sector de la planta (N, NE, …) y rumbo en grados desde el centro de la nave
+const PUNTOS = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+const abrevRumbo = (deg) => PUNTOS[Math.round(deg / 45) % 8];
+const rumboDe = (v) => (THREE.MathUtils.radToDeg(Math.atan2(v.dot(ESTE), v.dot(NORTE))) + 360) % 360;
+function orientacion(world) {
+  const p = world.clone().sub(PLANT_C.center).setY(0);
+  const extN = Math.abs(NORTE.x) * PLANT_C.w / 2 + Math.abs(NORTE.z) * PLANT_C.d / 2;
+  const extE = Math.abs(ESTE.x) * PLANT_C.w / 2 + Math.abs(ESTE.z) * PLANT_C.d / 2;
+  const v = p.dot(NORTE) / extN, u = p.dot(ESTE) / extE, th = 0.33;
+  const ns = v > th ? 'N' : v < -th ? 'S' : '', ew = u > th ? 'E' : u < -th ? 'O' : '';
+  const nombres = EN ? { N: 'North', S: 'South', E: 'East', O: 'West', NE: 'Northeast', NO: 'Northwest', SE: 'Southeast', SO: 'Southwest' }
+    : { N: 'Norte', S: 'Sur', E: 'Este', O: 'Oeste', NE: 'Noreste', NO: 'Noroeste', SE: 'Sureste', SO: 'Suroeste' };
+  const sector = nombres[ns + ew] ?? T('Centro', 'Center');
+  const rumbo = rumboDe(p);
+  return { sector, rumbo, abrev: abrevRumbo(rumbo) };
+}
+const filasOrientacion = (world) => {
+  const o = orientacion(world);
+  return `<div class="p-row"><span>🧭 ${T('Sector de la planta', 'Plant sector')}</span><b>${o.sector}</b></div>
+    <div class="p-row"><span>${T('Rumbo desde el centro de la nave', 'Bearing from building center')}</span><b>${Math.round(o.rumbo) % 360}° (${o.abrev})</b></div>`;
+};
+
+/* ======================================================================
+   6. INTERACCIÓN: RAYCASTER, HOVER Y PANEL
+   ====================================================================== */
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const panel = document.getElementById('panel');
+const tooltip = document.getElementById('tooltip');
+
+function pick(clientX, clientY) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const hit = raycaster.intersectObjects(pickTargets, false)[0];
+  if (!hit) return null;
+  const k = hit.object.userData.kind;
+  if (k === 'maquina') return { kind: 'maquina', i: hit.instanceId };
+  if (k === 'area') return { kind: 'area', id: hit.object.userData.id };
+  return { kind: 'suelo' };
+}
+const same = (a, b) => a && b && a.kind === b.kind && a.i === b.i && a.id === b.id;
+
+function paintArea(id) {
+  const o = areaObjs[id]; if (!o) return;
+  const isSel = state.sel?.kind === 'area' && state.sel.id === id;
+  const isHov = state.hover?.kind === 'area' && state.hover.id === id;
+  o.box.material.opacity = 0.16 + (isHov ? 0.1 : 0) + (isSel ? 0.14 : 0);
+  o.box.material.emissiveIntensity = 0.25 + (isHov ? 0.3 : 0) + (isSel ? 0.45 : 0);
+  o.edges.material.color.copy(isSel ? WHITE : o.color);
+  o.label.userData.el.classList.toggle('active', isSel || isHov);
+}
+function repaint(target) {
+  if (!target) return;
+  if (target.kind === 'maquina') paintMachine(machines[target.i]);
+  if (target.kind === 'area') paintArea(target.id);
+}
+
+function setHover(t) {
+  if (same(t, state.hover) || (!t && !state.hover)) return;
+  const prev = state.hover;
+  state.hover = t && t.kind !== 'suelo' ? t : null;
+  repaint(prev); repaint(state.hover);
+  renderer.domElement.style.cursor = state.hover ? 'pointer' : '';
+}
+
+function select(t, fly = false) {
+  const prev = state.sel;
+  state.sel = t && t.kind !== 'suelo' ? t : null;
+  repaint(prev); repaint(state.sel);
+  const selM = state.sel?.kind === 'maquina' ? machines[state.sel.i].id : null;
+  const selA = state.sel?.kind === 'area' ? state.sel.id : null;
+  document.querySelectorAll('[data-machine]').forEach((b) => b.classList.toggle('active', b.dataset.machine === selM));
+  document.querySelectorAll('[data-area]').forEach((b) => b.classList.toggle('active', b.dataset.area === selA));
+  if (!state.sel) { marker.visible = false; panel.classList.add('hidden'); return; }
+
+  if (state.sel.kind === 'maquina') {
+    const m = machines[state.sel.i];
+    marker.position.copy(m.world);
+    ring.userData.base = Math.max(m.w, m.d) * 0.85;
+    showMachinePanel(m);
+    if (fly) focusMachine(m);
+  } else {
+    const a = areaObjs[state.sel.id];
+    marker.position.copy(a.info.center);
+    ring.userData.base = Math.max(a.info.w, a.info.d) * 0.62;
+    showAreaPanel(a);
+    if (fly) focusArea(a);
+  }
+  marker.visible = true;
+}
+
+// --- clic vs. arrastre (para no seleccionar al rotar la cámara) ---
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, b: e.button }; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || down.b !== 0) { down = null; return; }
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+  down = null;
+  if (moved > 5) return;
+  select(pick(e.clientX, e.clientY));          // clic en suelo / vacío → oculta el panel
+});
+renderer.domElement.addEventListener('dblclick', (e) => {
+  const t = pick(e.clientX, e.clientY);
+  if (t && t.kind !== 'suelo') select(t, true);
+});
+
+// --- hover (limitado a 1 raycast por frame) ---
+let hoverEvt = null;
+renderer.domElement.addEventListener('pointermove', (e) => { hoverEvt = e; });
+renderer.domElement.addEventListener('pointerleave', () => { hoverEvt = null; setHover(null); tooltip.classList.add('hidden'); });
+function processHover() {
+  if (!hoverEvt) return;
+  const e = hoverEvt; hoverEvt = null;
+  if (e.buttons) { tooltip.classList.add('hidden'); return; }
+  const t = pick(e.clientX, e.clientY);
+  setHover(t);
+  if (state.hover) {
+    let code, sub, color;
+    if (state.hover.kind === 'maquina') {
+      const m = machines[state.hover.i];
+      code = m.id; sub = `${T('Zona', 'Zone')} ${m.zona} · ${AUD_BY[m.id] ? EST_TXT[estadoMaquina(m.id)] : CONFIG.tipoMaquina}`; color = '#' + baseColorOf(m).getHexString();
+    } else {
+      const a = areaObjs[state.hover.id].data;
+      code = a.nombre; sub = a.tipo; color = a.color;
+    }
+    tooltip.style.setProperty('--c', color);
+    tooltip.innerHTML = `<b>${code}</b><small>${sub}</small>`;
+    tooltip.style.left = e.clientX + 'px';
+    tooltip.style.top = e.clientY + 'px';
+    tooltip.classList.remove('hidden');
+  } else tooltip.classList.add('hidden');
+}
+
+// --- panel de información ---
+function nearestMachines(p, count = 4, exclude) {
+  return machines.filter((m) => m !== exclude)
+    .map((m) => ({ m, dist: m.world.distanceTo(p) }))
+    .sort((a, b) => a.dist - b.dist).slice(0, count);
+}
+const chip = (m, extra = '') =>
+  `<button class="chip" data-machine="${m.id}" style="--c:#${baseColorOf(m).getHexString()}">${m.id}${extra}</button>`;
+
+function audPanel(id) {
+  const l = AUD_BY[id];
+  if (!l || !l.length) return AUDS.length ? `<div class="p-row"><span>${T('Auditoría LPA', 'LPA audit')}</span><b>${T('Ninguna en el periodo', 'None in the period')}</b></div>` : '';
+  const max = 10;
+  return `<h4>${T('Auditorías LPA', 'LPA audits')} (${l.length})</h4>` + l.slice(0, max).map((a) =>
+    `<div class="aud${a.id === DATOS.focoAuditoria ? ' foco' : ''}" style="--e:${EST_COLOR[a.grupo] || EST_COLOR.ninguna}"><i></i>
+      <div><b>${esc(a.fecha)}</b> · ${esc(a.nivel)}<small>${esc(a.auditor || '—')}${a.area ? ' · ' + esc(a.area) : ''}</small></div>
+      <em>${esc(EN ? (a.estatusEn || a.estatus) : a.estatus)}</em></div>`).join('') +
+    (l.length > max ? `<p>${T('y', 'and')} ${l.length - max} ${T('más', 'more')}</p>` : '');
+}
+function showMachinePanel(m) {
+  const z = zonaById[m.zona];
+  const color = '#' + baseColorOf(m).getHexString();
+  const near = nearestMachines(m.world, 4, m).map(({ m: n, dist }) => chip(n, `<em>${f1(dist)} m</em>`)).join('');
+  panel.style.setProperty('--c', color);
+  panel.innerHTML = `
+    <div class="p-head"><span class="dot"></span><span class="p-kicker">${T('Máquina de soldadura', 'Welding machine')}</span>
+      <button class="close" data-act="close" aria-label="${T('Cerrar', 'Close')}">×</button></div>
+    <h2 class="p-title">${T('Máquina', 'Machine')}: <b class="code">${m.id}</b><i>|</i>${T('Zona', 'Zone')}: <b>${m.zona}</b><i>|</i>${T('Línea', 'Line')}: <b>${esc(z.nombre)}</b></h2>
+    ${audPanel(m.id)}
+    <div class="p-grid">
+      <div><span>${T('Posición X', 'Position X')}</span><b>${f1(m.x)} m</b></div>
+      <div><span>${T('Posición Z', 'Position Z')}</span><b>${f1(m.z)} m</b></div>
+      <div><span>${T('Huella (an × fo)', 'Footprint (w × d)')}</span><b>${f1(m.w)} × ${f1(m.d)} m</b></div>
+      <div><span>${T('Altura', 'Height')}</span><b>${f1(m.h)} m</b></div>
+    </div>
+    <div class="p-row"><span>${T('Zona · Línea', 'Zone · Line')}</span><b>${z.id} · ${esc(z.nombre)}</b></div>
+    ${filasOrientacion(m.world)}
+    <div class="p-row"><span>${T('Etiqueta en plano', 'Drawing tag')}</span><b>${m.etiqueta === 'amarilla' ? T('Amarilla', 'Yellow') : T('Gris', 'Grey')}</b></div>
+    ${m.nombre ? `<div class="p-row"><span>${T('Descripción', 'Description')}</span><b>${esc(m.nombre)}</b></div>` : ''}
+    <h4>${T('Máquinas más cercanas', 'Nearest machines')}</h4><div class="chips">${near}</div>
+    <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar cámara', '◎ Focus camera')}</button><button class="btn" data-act="zone" data-zone="${m.zona}">${T('Ver Zona', 'View Zone')} ${m.zona}</button></div>`;
+  panel.classList.remove('hidden');
+}
+
+function showAreaPanel(o) {
+  const a = o.data, r = o.info;
+  const pad = 4; // m alrededor del área
+  const inside = machines.filter((m) => m.x >= a.x1 - pad && m.x <= a.x2 + pad && m.z >= a.z1 - pad && m.z <= a.z2 + pad);
+  panel.style.setProperty('--c', a.color);
+  panel.innerHTML = `
+    <div class="p-head"><span class="dot"></span><span class="p-kicker">${T('Área especial', 'Special area')}</span>
+      <button class="close" data-act="close" aria-label="${T('Cerrar', 'Close')}">×</button></div>
+    <h2 class="p-title">${T('Área', 'Area')}: <b>${esc(a.nombre)}</b><i>|</i>${T('Zona', 'Zone')}: <b>${a.zona}</b><i>|</i>${T('Tipo', 'Type')}: <b>${esc(a.tipo)}</b></h2>
+    <div class="p-grid">
+      <div><span>${T('Ancho', 'Width')}</span><b>${f1(r.w)} m</b></div>
+      <div><span>${T('Largo', 'Length')}</span><b>${f1(r.d)} m</b></div>
+      <div><span>${T('Superficie', 'Surface')}</span><b>${(r.w * r.d).toFixed(0)} m²</b></div>
+      <div><span>${T('Altura bloque', 'Block height')}</span><b>${f1(a.h)} m</b></div>
+    </div>
+    ${filasOrientacion(r.center)}
+    <p>${esc(a.desc)}</p>
+    ${inside.length ? `<h4>${T('Máquinas a menos de', 'Machines within')} ${pad} m</h4><div class="chips">${inside.map((m) => chip(m)).join('')}</div>` : ''}
+    <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar cámara', '◎ Focus camera')}</button></div>`;
+  panel.classList.remove('hidden');
+}
+
+panel.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'close') return select(null);
+  if (act === 'focus' && state.sel) return state.sel.kind === 'maquina' ? focusMachine(machines[state.sel.i]) : focusArea(areaObjs[state.sel.id]);
+  if (act === 'zone') return goZone(e.target.closest('[data-zone]').dataset.zone);
+  const mb = e.target.closest('[data-machine]');
+  if (mb) selectMachineById(mb.dataset.machine);
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') select(null);
+  if (e.target.tagName !== 'INPUT' && (e.key === 'h' || e.key === 'H')) goHome();
+});
+
+/* ======================================================================
+   7. NAVEGACIÓN: VUELOS DE CÁMARA (GSAP), MENÚ LATERAL, BÚSQUEDA
+   ====================================================================== */
+let manualFly = null; // respaldo por si GSAP no carga
+function flyTo(target, dist, dir = VIEW_DIR, duration = 1.5) {
+  const pos = target.clone().addScaledVector(dir.clone().normalize(), dist);
+  const gsap = window.gsap;
+  if (gsap) {
+    gsap.ticker.lagSmoothing(0); // tiempo real aunque haya frames lentos
+    gsap.killTweensOf([camera.position, controls.target]);
+    gsap.to(controls.target, { x: target.x, y: target.y, z: target.z, duration, ease: 'power3.inOut' });
+    gsap.to(camera.position, { x: pos.x, y: pos.y, z: pos.z, duration, ease: 'power3.inOut' });
+  } else {
+    manualFly = { t: 0, duration, p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target.clone() };
+  }
+}
+controls.addEventListener('start', () => {            // el usuario toma el control → cancela el vuelo
+  window.gsap?.killTweensOf([camera.position, controls.target]);
+  manualFly = null;
+});
+
+function fitDistance(w, d, margin = 1.15) {
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const span = Math.max(d, w / Math.max(camera.aspect * 0.8, 0.5));
+  return (span * margin) / (2 * Math.tan(vFov / 2)) + 4;
+}
+function focusMachine(m) { flyTo(m.world.clone().setY(0.8), 11); }
+function focusArea(o) { flyTo(o.info.center.clone(), Math.max(fitDistance(o.info.w, o.info.d, 1.6), 16)); }
+
+function goZone(id) {
+  const o = zoneObjs[id];
+  state.zone = id;
+  for (const [zid, z] of Object.entries(zoneObjs)) {
+    const on = zid === id;
+    z.slab.material.emissiveIntensity = on ? 0.09 : 0;
+    z.outline.material.opacity = on ? 1 : 0.4;
+  }
+  document.querySelectorAll('.zone-btn').forEach((b) => b.classList.toggle('active', b.dataset.zone === id));
+  renderZoneDetail(id);
+  flyTo(o.info.center.clone(), fitDistance(o.info.w, o.info.d, 0.85));
+  if (window.innerWidth <= 820) document.body.classList.remove('menu-open');
+}
+function clearZone() {
+  state.zone = null;
+  for (const z of Object.values(zoneObjs)) { z.slab.material.emissiveIntensity = 0; z.outline.material.opacity = 0.55; }
+  document.querySelectorAll('.zone-btn').forEach((b) => b.classList.remove('active'));
+  document.getElementById('zoneDetail').classList.add('hidden');
+}
+function goHome() { select(null); clearZone(); flyTo(HOME.target.clone(), HOME.dist); }
+function goTop() { flyTo(HOME.target.clone().setX(-4), 112, NORTE.clone().multiplyScalar(-0.002).setY(1)); }
+
+// ---- Brújula en pantalla (HUD): gira con la cámara; clic = Norte hacia arriba ----
+const compassEl = document.getElementById('compass');
+const roseEl = document.getElementById('compassRose');
+const headingEl = document.getElementById('compassHeading');
+{
+  const ticks = document.getElementById('compassTicks');
+  let html = '';
+  for (let d = 0; d < 360; d += 10) {
+    const major = d % 90 === 0, r1 = major ? 37 : 41, a = THREE.MathUtils.degToRad(d);
+    html += `<line x1="${(Math.sin(a) * r1).toFixed(2)}" y1="${(-Math.cos(a) * r1).toFixed(2)}" x2="${(Math.sin(a) * 45).toFixed(2)}" y2="${(-Math.cos(a) * 45).toFixed(2)}" class="${major ? 'major' : ''}"/>`;
+  }
+  ticks.innerHTML = html;
+}
+const _fwd = new THREE.Vector3(), _up = new THREE.Vector3(), _v = new THREE.Vector3(), _r = new THREE.Vector3();
+let lastAng = null;
+function updateCompass() {
+  camera.getWorldDirection(_fwd);
+  _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+  _v.set(_fwd.x + _up.x, 0, _fwd.z + _up.z);         // dirección "arriba de la pantalla" sobre el piso
+  if (_v.lengthSq() < 1e-8) return;
+  _v.normalize();
+  _r.set(-_v.z, 0, _v.x);                             // "derecha de la pantalla" sobre el piso
+  const ang = THREE.MathUtils.radToDeg(Math.atan2(NORTE.dot(_r), NORTE.dot(_v)));
+  if (lastAng !== null && Math.abs(ang - lastAng) < 0.1) return;
+  lastAng = ang;
+  roseEl.setAttribute('transform', `rotate(${ang.toFixed(1)})`);
+  roseEl.querySelectorAll('text').forEach((t) => t.setAttribute('transform', `rotate(${(-ang).toFixed(1)} ${t.getAttribute('x')} ${t.getAttribute('y')})`));
+  const rumbo = rumboDe(_v);
+  headingEl.textContent = `${T('Vista hacia', 'Facing')} ${abrevRumbo(rumbo)} · ${Math.round(rumbo) % 360}°`;
+}
+compassEl.addEventListener('click', () => {
+  const off = camera.position.clone().sub(controls.target);
+  const horiz = Math.max(Math.hypot(off.x, off.z), 0.002);
+  const dir = NORTE.clone().multiplyScalar(-horiz).setY(off.y);  // cámara al sur del objetivo → Norte arriba
+  flyTo(controls.target.clone(), off.length(), dir, 1.0);
+});
+
+function selectMachineById(id) {
+  const m = machines.find((x) => x.id === id);
+  if (m) select({ kind: 'maquina', i: m.i }, true);
+}
+function selectArea(id) { select({ kind: 'area', id }, true); }
+
+// ---- Botones de zonas (A–G) ----
+const zoneGrid = document.getElementById('zoneGrid');
+const byZone = (id) => machines.filter((m) => m.zona === id);
+zoneGrid.innerHTML = [...ZONAS].sort((a, b) => a.id.localeCompare(b.id)).map((z) =>
+  `<button class="zone-btn" data-zone="${z.id}" style="--c:${z.color}" title="${T('Zona', 'Zone')} ${z.id} — ${esc(z.nombre)}">
+     <b>${z.id}</b><small>${byZone(z.id).length} ${T('máq.', 'mach.')}</small></button>`).join('');
+zoneGrid.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-zone]');
+  if (b) goZone(b.dataset.zone);
+});
+
+function renderZoneDetail(id) {
+  const z = zonaById[id], list = byZone(id).sort((a, b) => a.z - b.z || a.x - b.x);
+  const el = document.getElementById('zoneDetail');
+  el.innerHTML = `<div class="zd-title">${T('Zona', 'Zone')} ${z.id} · ${list.length} ${T('máquinas', 'machines')}</div>
+    <div class="zd-sub">${esc(z.nombre)} · ${f1(z.x2 - z.x1)} × ${f1(z.z2 - z.z1)} m · 🧭 ${orientacion(zoneObjs[id].info.center).sector}</div>
+    <div class="chips">${list.map((m) => chip(m)).join('')}</div>`;
+  el.classList.remove('hidden');
+}
+document.getElementById('zoneDetail').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-machine]');
+  if (b) selectMachineById(b.dataset.machine);
+});
+
+// ---- Áreas especiales ----
+const areaList = document.getElementById('areaList');
+areaList.innerHTML = AREAS.map((a) =>
+  `<button class="area-btn" data-area="${a.id}" style="--c:${a.color}"><i></i><span>${esc(a.nombre)}</span><small>${T('Zona', 'Zone')} ${a.zona}</small></button>`).join('');
+areaList.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-area]');
+  if (b) { selectArea(b.dataset.area); if (window.innerWidth <= 820) document.body.classList.remove('menu-open'); }
+});
+
+// ---- Búsqueda ----
+const searchEl = document.getElementById('search'), resultsEl = document.getElementById('results');
+let found = [];
+searchEl.addEventListener('input', () => {
+  const q = searchEl.value.trim().toLowerCase();
+  if (!q) { resultsEl.classList.add('hidden'); return; }
+  found = [
+    ...machines.filter((m) => m.id.toLowerCase().includes(q) || ('zona ' + m.zona).toLowerCase() === q)
+      .map((m) => ({ type: 'm', id: m.id, label: m.id, sub: `${T('Zona', 'Zone')} ${m.zona}${AUD_BY[m.id] ? ' · ' + EST_TXT[estadoMaquina(m.id)] : ''}`, color: '#' + baseColorOf(m).getHexString() })),
+    ...AREAS.filter((a) => a.nombre.toLowerCase().includes(q) || a.tipo.toLowerCase().includes(q))
+      .map((a) => ({ type: 'a', id: a.id, label: a.nombre, sub: a.tipo, color: a.color })),
+  ].slice(0, 40);
+  resultsEl.innerHTML = found.length
+    ? found.map((r, k) => `<li><button data-k="${k}" style="--c:${r.color}"><b>${r.label}</b><small>${r.sub}</small></button></li>`).join('')
+    : `<li class="empty">${T('Sin resultados', 'No results')}</li>`;
+  resultsEl.classList.remove('hidden');
+});
+const openResult = (r) => {
+  if (!r) return;
+  r.type === 'm' ? selectMachineById(r.id) : selectArea(r.id);
+  resultsEl.classList.add('hidden');
+  searchEl.blur();
+};
+searchEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') openResult(found[0]); if (e.key === 'Escape') resultsEl.classList.add('hidden'); });
+resultsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) openResult(found[+b.dataset.k]); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.search')) resultsEl.classList.add('hidden'); });
+
+// ---- Controles de vista ----
+document.getElementById('btnHome').addEventListener('click', goHome);
+document.getElementById('btnTop').addEventListener('click', goTop);
+document.getElementById('menuBtn').addEventListener('click', () => document.body.classList.toggle('menu-open'));
+document.getElementById('selLabels').addEventListener('change', (e) => { state.labelMode = e.target.value; updateLabels(true); });
+document.getElementById('selColor').addEventListener('change', (e) => {
+  colorMode = e.target.value;
+  document.body.classList.toggle('est', colorMode === 'estatus');
+  machines.forEach(paintMachine);
+  if (state.zone) renderZoneDetail(state.zone);
+  if (state.sel?.kind === 'maquina') showMachinePanel(machines[state.sel.i]);
+});
+document.getElementById('tglAxes').addEventListener('change', (e) => { groups.axes.visible = e.target.checked; });
+document.getElementById('tglAisles').addEventListener('change', (e) => { groups.aisles.visible = e.target.checked; });
+document.getElementById('tglTheme').addEventListener('change', (e) => applyTheme(e.target.checked ? 'light' : 'dark'));
+
+function applyTheme(name) {
+  theme = THEMES[name];
+  document.body.classList.toggle('light', name === 'light');
+  scene.background.set(theme.bg);
+  scene.fog.color.set(theme.bg);
+  floorMat.color.set(theme.floor);
+  slabMats.forEach((m) => m.color.set(theme.slab));
+  aisleMats.forEach((m) => m.color.set(theme.aisle));
+  plantMat.color.set(theme.plant);
+  axisLineMat.color.set(theme.plant);
+  columnMat.color.set(theme.column);
+  rackMat.color.set(theme.rack);
+  WHITE.set(name === 'light' ? 0x0f172a : 0xffffff);
+  ring.material.color.copy(WHITE); beam.material.color.copy(WHITE);
+  machines.forEach(paintMachine);
+  Object.keys(areaObjs).forEach(paintArea);
+  buildGrid();
+}
+
+// ---- Seguimiento LPA (resumen en el menú) ----
+if (AUDS.length && MODO === 'seguimiento') {
+  const sec = document.createElement('section');
+  sec.className = 'sec'; sec.id = 'lpaSec';
+  const porEst = { vencida: [], pendiente: [], realizada: [] };
+  machines.forEach((m) => { const e = estadoMaquina(m.id); if (porEst[e]) porEst[e].push(m); });
+  const sinPlano = Object.keys(AUD_BY).filter((id) => !machines.some((m) => m.id === id));
+  sec.innerHTML = `<h3>${T('Seguimiento LPA', 'LPA tracking')}${DATOS.periodo ? ' · ' + esc(DATOS.periodo) : ''}</h3>
+    <div class="lpa-sum">${['vencida', 'pendiente', 'realizada'].map((e) =>
+      `<button data-est="${e}" style="--c:${EST_COLOR[e]}"><b>${porEst[e].length}</b><small>${T('máquinas', 'machines')} · ${EST_TXT[e].toLowerCase()}</small></button>`).join('')}</div>
+    <div class="zd-sub">${AUDS.length} ${T('auditorías en', 'audits on')} ${Object.keys(AUD_BY).length} ${T('máquinas', 'machines')}${sinPlano.length ? ` · ${sinPlano.length} ${T('sin ubicar en el plano', 'not on the layout')}: ${sinPlano.map(esc).join(', ')}` : ''}</div>
+    <div id="lpaList" class="lpa-list chips"></div>`;
+  document.querySelector('.scroll').prepend(sec);
+  sec.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-est]');
+    if (b) {
+      const on = !b.classList.contains('active');
+      sec.querySelectorAll('[data-est]').forEach((x) => x.classList.toggle('active', x === b && on));
+      document.getElementById('lpaList').innerHTML = on ? porEst[b.dataset.est].sort((x, y) => x.id.localeCompare(y.id)).map((m) => chip(m)).join('') : '';
+      return;
+    }
+    const mb = e.target.closest('[data-machine]');
+    if (mb) selectMachineById(mb.dataset.machine);
+  });
+}
+
+// ---- Estadísticas ----
+document.getElementById('stats').innerHTML = `
+  <div><b>${ZONAS.length}</b>${T('Zonas', 'Zones')}</div>
+  <div><b>${machines.length}</b>${T('Máquinas', 'Machines')}</div>
+  <div><b>${AREAS.length}</b>${T('Áreas', 'Areas')}</div>
+  <div><b>${EJES.filas.length * EJES.columnas.length}</b>${T('Columnas', 'Columns')}</div>`;
+
+/* ======================================================================
+   8. LOOP DE RENDER
+   ====================================================================== */
+// Etiquetas de máquinas con "nivel de detalle": solo se muestran las cercanas
+// (evita saturar la vista y el DOM con ~160 etiquetas a la vez).
+function updateLabels() {
+  const camPos = camera.position;
+  const selId = state.sel?.kind === 'maquina' ? state.sel.i : -1;
+  const hovId = state.hover?.kind === 'maquina' ? state.hover.i : -1;
+  for (const m of machines) {
+    let v;
+    if (state.labelMode === 'all') v = true;
+    else if (state.labelMode === 'off') v = false;
+    else v = m.world.distanceTo(camPos) < CONFIG.distanciaEtiquetas;
+    m.label.visible = v || m.i === selId || m.i === hovId;
+  }
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+const clock = new THREE.Clock();
+let frame = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  if (manualFly) {                                  // interpolación lineal suavizada (sin GSAP)
+    manualFly.t = Math.min(1, manualFly.t + dt / manualFly.duration);
+    const k = manualFly.t < 0.5 ? 4 * manualFly.t ** 3 : 1 - (-2 * manualFly.t + 2) ** 3 / 2;
+    camera.position.lerpVectors(manualFly.p0, manualFly.p1, k);
+    controls.target.lerpVectors(manualFly.t0, manualFly.t1, k);
+    if (manualFly.t >= 1) manualFly = null;
+  }
+  controls.update();
+  processHover();
+  if (frame++ % 6 === 0) updateLabels();
+  updateCompass();
+
+  if (marker.visible) {
+    const s = (ring.userData.base ?? 1) * (1 + Math.sin(t * 3) * 0.06);
+    ring.scale.set(s, s, s);
+    ring.material.opacity = 0.65 + Math.sin(t * 3) * 0.3;
+  }
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+});
+
+document.getElementById('loading').classList.add('done');
+
+// Foco inicial: la máquina de la auditoría que se abrió desde LPA
+if (DATOS.foco) {
+  const mf = machines.find((x) => x.id === DATOS.foco);
+  if (mf) setTimeout(() => selectMachineById(mf.id), 350);
+}
+window.parent?.postMessage({ tipo: 'ktmex-twin-ok', maquinas: machines.length }, location.origin);
+
+// Acceso desde la consola del navegador para depurar: twin.machines, twin.select…
+window.twin = { scene, camera, controls, machines, ZONAS, AREAS, goZone, selectMachineById, selectArea, estadoMaquina, state };
+
+</script>
+</body>
+</html>

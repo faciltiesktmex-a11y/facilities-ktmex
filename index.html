@@ -1234,6 +1234,7 @@ const LPA_AREAS = {
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div><strong style="font-size:.9rem">Audit Schedule</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
+      <button id="lpaq-wtwin-seg" class="btn-g" style="display:none;padding:7px 12px" onclick="abrirSeguimientoWelding()"><i class="fas fa-cubes" style="margin-right:6px;color:#0E7490"></i><span id="lpaq-wtwin-seg-t">Seguimiento Welding</span></button>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin-top:14px;align-items:end">
@@ -1361,7 +1362,7 @@ const LPA_AREAS = {
       <div><label>Level *</label><select id="lpaq-level" class="inp" disabled title="El nivel lo fija la auditoría programada" onchange="renderLpaQChecklist()"><option>N1</option><option>N2</option><option>N3</option><option selected>N4</option></select></div>
       <div><label>Execution Date *</label><input id="lpaq-date" type="date" class="inp" readonly><div style="font-size:.62rem;color:#64748B;margin-top:3px">System-controlled date</div></div>
       <div><label>Shift</label><select id="lpaq-shift" class="inp"><option value="">—</option><option>Turno Verde</option><option>Turno Azul</option><option>Turno Mixto</option></select></div>
-      <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"></div>
+      <div><label>Process / Line</label><input id="lpaq-line" class="inp" placeholder="Line / Process"><div id="lpaq-line-twin" style="display:none;margin-top:6px;font-size:.72rem;color:#0E7490"></div></div>
       <div><label>Part Number *</label><input id="lpaq-part" class="inp" placeholder="Part No." oninput="lpaqActualizarGuardar_()"></div>
     </div>
   </div>
@@ -3524,7 +3525,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.10';
+const FRONTEND_BUILD = '9.19.11';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -7696,6 +7697,7 @@ async function loadLpaQDashboard(){
     renderLpaQAuditHistory(r.audits||[]);
     if(r.access.qadmin){$('lpaq-question-admin').style.display='';loadLpaQQuestionAdmin();}else{$('lpaq-question-admin').style.display='none';}
     lpaqpRender_(r);   // V9.19.9
+    if($('lpaq-wtwin-seg')){$('lpaq-wtwin-seg').style.display=r.access.weldingSeguimiento?'':'none';$('lpaq-wtwin-seg-t').textContent=LANG==='en'?'Welding tracking':'Seguimiento Welding';}   // V9.19.11
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -7747,8 +7749,43 @@ function renderLpaQProgram(){
     let action=r.canStart?`<button class="btn-p" onclick="openLpaQProgramAudit('${r.id}')" style="padding:5px 9px">${LANG==='en'?'Start':'Comenzar'}</button>`:
       r.lockedFuture?`<span style="font-size:.7rem;color:#64748B"><i class="fas fa-lock" style="margin-right:4px"></i>${LANG==='en'?'Available on':'Disponible el'} ${r.disponibleDesde||r.fechaProgramada}</span>`:
       `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
-    return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${r.machine||'—'}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td>${action}</td></tr>`;
+    const mapa=r.wMaquina?`<button class="btn-g lpaq-mapa" title="${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona||'')} · ${escapeHtml(r.wLinea||'')}" onclick="abrirMapaWelding('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem;white-space:nowrap"><i class="fas fa-map-marker-alt" style="margin-right:4px;color:#0E7490"></i>${LANG==='en'?'Map':'Mapa'}</button>`:'';
+    const maq=r.wMaquina?`${escapeHtml(r.machine||'')}<div style="font-size:.64rem;color:#0E7490">${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona)} · ${escapeHtml(r.wLinea||'')}</div>`:(r.machine||'—');
+    return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${maq}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td style="white-space:nowrap">${action}${mapa}</td></tr>`;
   }).join('')+'</tbody></table>';
+}
+// V9.19.11 — Gemelo digital de Welding. El HTML del mapa no trae datos: se los manda esta página
+// por postMessage (mismo origen) después de pedirlos al servidor con la sesión.
+let WTWIN_DATOS=null;
+function wtwinAbrir_(datos){
+  WTWIN_DATOS=datos;
+  const m=$('wtwin-modal'), f=$('wtwin-frame');
+  m.style.display=''; document.body.style.overflow='hidden'; $('wtwin-close-t').textContent=LANG==='en'?'Close map':'Cerrar mapa';
+  f.src='welding-twin.html?v='+encodeURIComponent(typeof FRONTEND_BUILD!=='undefined'?FRONTEND_BUILD:'1');
+}
+window.addEventListener('message',e=>{
+  const f=$('wtwin-frame'); if(!f||e.source!==f.contentWindow||e.origin!==location.origin)return;
+  if(e.data&&e.data.tipo==='ktmex-twin-listo'&&WTWIN_DATOS)f.contentWindow.postMessage(Object.assign({tipo:'ktmex-twin-init',lang:LANG==='en'?'en':'es'},WTWIN_DATOS),location.origin);
+});
+function cerrarMapaWelding(){const m=$('wtwin-modal');if(!m)return;m.style.display='none';$('wtwin-frame').src='about:blank';document.body.style.overflow='';WTWIN_DATOS=null;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wtwin-modal')?.style.display==='')cerrarMapaWelding();});
+async function abrirMapaWelding(programId){
+  const p=(LPAQ_DASH?.program||[]).find(x=>String(x.id)===String(programId));
+  try{
+    const r=await api({action:'getWeldingTwin',token:SESSION.token,modo:'enfocar',programId});
+    if(!r.success){toast(r.error||'No se pudo abrir el mapa','err');return;}
+    r.titulo=(LANG==='en'?'LPA audit · ':'Auditoría LPA · ')+(p?`${p.fechaProgramada} · ${p.nivel} · ${p.auditorNombre||p.auditorUsername||''}`:r.foco);
+    wtwinAbrir_(r);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function abrirSeguimientoWelding(){
+  try{
+    const month=$('lpaq-month')?.value||'';
+    const r=await api({action:'getWeldingTwin',token:SESSION.token,modo:'seguimiento',month});
+    if(!r.success){toast(r.error||'No se pudo abrir el seguimiento','err');return;}
+    r.titulo=(LANG==='en'?'LPA tracking · ':'Seguimiento LPA · ')+r.periodo+' · '+r.auditorias.length+(LANG==='en'?' audits':' auditorías');
+    wtwinAbrir_(r);
+  }catch(e){toast('Error: '+e.message,'err');}
 }
 // V9.19.9 — Programar auditorías (solo LPA Quality Admin)
 const LPAQP_FUENTE='Programada por administración';
@@ -7874,6 +7911,8 @@ function openLpaQProgramAudit(id){
   $('lpaq-date').value=localDateKeyV843_();
   $('lpaq-date').readOnly=true;
   $('lpaq-line').value=r.machine||'';
+  const lt=$('lpaq-line-twin');   // V9.19.11
+  if(lt){if(r.wMaquina){lt.style.display='';lt.innerHTML=`<i class="fas fa-map-marker-alt" style="margin-right:4px"></i>${LANG==='en'?'Zone':'Zona'} <b>${escapeHtml(r.wZona)}</b> · ${escapeHtml(r.wLinea||'')} · <a href="#" onclick="abrirMapaWelding('${escapeHtml(r.id)}');return false" style="color:#0E7490;font-weight:700">${LANG==='en'?'View on map':'Ver en el mapa'}</a>`;}else{lt.style.display='none';lt.innerHTML='';}}
   $('lpaq-part').value='';
   $('lpaq-form-level').textContent=r.nivel;
   renderLpaQChecklist();
@@ -15589,5 +15628,10 @@ setInterval(()=>{if(navigator.onLine)syncOfflineChecklists();},30000);
 if(typeof window.performLogin==='function'){const __offLogin=window.performLogin;window.performLogin=async function(){const r=await __offLogin.apply(this,arguments);setTimeout(syncOfflineChecklists,500);return r;};}
 
 </script>
+<!-- V9.19.11 — Gemelo digital de Welding (welding-twin.html, sin datos; se los manda esta página) -->
+<div id="wtwin-modal" style="display:none;position:fixed;inset:0;z-index:2147483000;background:#0c1016">
+  <iframe id="wtwin-frame" title="Welding digital twin" style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+  <button id="wtwin-close" onclick="cerrarMapaWelding()" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:2;height:38px;padding:0 16px;border-radius:999px;border:1px solid rgba(148,163,184,.4);background:rgba(16,21,29,.9);color:#e7ecf3;font:600 13px/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.35)" aria-label="Cerrar mapa">✕ <span id="wtwin-close-t">Cerrar mapa</span></button>
+</div>
 </body>
 </html>
