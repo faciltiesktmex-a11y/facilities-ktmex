@@ -1079,7 +1079,7 @@ const LPA_AREAS = {
     <h2 style="font-size:1.3rem;font-weight:700;color:var(--navy);margin:0 0 4px">Auditorías LPA</h2>
     <div id="lpa-module-selector" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
       <button class="btn-p" onclick="showFacilitiesLpaCards()" style="width:auto;padding:9px 16px"><i class="fas fa-screwdriver-wrench" style="margin-right:6px"></i><span>Facilities LPA</span></button>
-      <button class="btn-g" onclick="goLpaQuality()" style="width:auto;padding:9px 16px"><i class="fas fa-award" style="margin-right:6px"></i><span>Quality LPA</span></button>
+      <button class="btn-g" id="btn-quality-lpa" onclick="goLpaQuality()" style="width:auto;padding:9px 16px"><i class="fas fa-award" style="margin-right:6px"></i><span>Quality LPA</span></button>
     </div>
     <p style="color:#64748B;font-size:.82rem;margin:0">FT-FAC-LPA-01 · Facilities & Utilities · KTMEX</p>
   </div>
@@ -1354,7 +1354,8 @@ const LPA_AREAS = {
 <div id="view-lpa-quality-form" style="display:none;max-width:1000px;margin:0 auto;padding:20px 16px" class="fade">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
     <button class="btn-g" onclick="goLpaQuality()" style="padding:7px 12px"><i class="fas fa-arrow-left"></i></button>
-    <div><h2 style="font-size:1.1rem;margin:0;color:var(--navy)">LPA Quality · <span id="lpaq-form-level">N4</span></h2><p style="font-size:.72rem;color:#64748B;margin:2px 0 0">OK / NOK / N/A</p></div>
+    <div style="flex:1"><h2 style="font-size:1.1rem;margin:0;color:var(--navy)">LPA Quality · <span id="lpaq-form-level">N4</span></h2><p style="font-size:.72rem;color:#64748B;margin:2px 0 0">OK / NOK / N/A</p></div>
+    <button class="btn-g" id="lpaq-print-form" onclick="imprimirChecklistLpaQ(LPAQ_PROGRAM_ID)" style="padding:7px 12px;white-space:nowrap"><i class="fas fa-print" style="margin-right:6px"></i><span class="lpaq-print-t">Imprimir checklist</span></button>
   </div>
   <div class="card" style="padding:16px;margin-bottom:14px">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
@@ -3525,7 +3526,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.11';
+const FRONTEND_BUILD = '9.19.14';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4879,6 +4880,7 @@ function configureRoleUI() {
 function roleCanView(v) {
   if(!SESSION)return true;
   const role=SESSION.user.rol;
+  if(['lpa-quality','lpa-quality-form'].includes(v)&&typeof sinQualityLpa_==='function'&&sinQualityLpa_())return false;   // V9.19.14
   // V8.7.1: Weekend Work Request es de acceso libre, así que ningún rol
   // la tiene bloqueada.
   if(v==='weekend')return true;
@@ -4971,11 +4973,19 @@ function irDirectoALpaSiAplica_(){
   return true;
 }
 
+// V9.19.14 — Técnicos (incluido el técnico administrador) e ingenieros de Facilities ya no entran a
+// Quality LPA; conservan Facilities LPA. Dulce Rangel conserva su acceso.
+function sinQualityLpa_(){
+  const u=SESSION&&SESSION.user; if(!u)return false;
+  if(u.lpaQualityAdmin)return false;
+  return !!u.sinQualityLpa||['tecnico','ingeniero'].includes(String(u.rol||''));
+}
 function goLpaSelect() {
   if (!requireLogin('lpa-select')) return;
   if (SESSION.user.rol === 'compras') { toast('Compras no tiene acceso a Auditoría LPA.','err'); goComprasRol(); return; }
   if (SESSION.user.rol === 'lpa') { goLpaQuality(); return; }
   showView('lpa-select');
+  const bq=$('btn-quality-lpa'); if(bq)bq.style.display=sinQualityLpa_()?'none':'';   // V9.19.14
 }
 function goActividades() {
   if (!requireLogin('actividades')) return;
@@ -7114,6 +7124,7 @@ async function performLogin() {
     // directo a esa pantalla y en inglés.
     // V9.4.1: Compras con acceso a LPA (Karina Sánchez).
     if(res.tieneLPA)SESSION.user.tieneLPA=true;
+    if(res.sinQualityLpa)SESSION.user.sinQualityLpa=true;   // V9.19.14
     if(res.aprobadorWW)SESSION.user.aprobadorWW=true;   // V9.9.0
     if(res.soloWeekendWork){
       SESSION.user.soloWeekendWork=true;
@@ -7634,6 +7645,7 @@ let LPAQ_NC_DRAFT={};
 function showFacilitiesLpaCards(){ if($('lpa-facilities-wrap')) $('lpa-facilities-wrap').style.display=''; }
 async function goLpaQuality(){
   if(!requireLogin('lpa-quality')) return;
+  if(sinQualityLpa_()){toast('Quality LPA no está disponible para técnicos ni ingenieros de Facilities.','err');return;}   // V9.19.14
   showView('lpa-quality');
   await loadLpaQDashboard();
 }
@@ -7751,8 +7763,69 @@ function renderLpaQProgram(){
       `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
     const mapa=r.wMaquina?`<button class="btn-g lpaq-mapa" title="${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona||'')} · ${escapeHtml(r.wLinea||'')}" onclick="abrirMapaWelding('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem;white-space:nowrap"><i class="fas fa-map-marker-alt" style="margin-right:4px;color:#0E7490"></i>${LANG==='en'?'Map':'Mapa'}</button>`:'';
     const maq=r.wMaquina?`${escapeHtml(r.machine||'')}<div style="font-size:.64rem;color:#0E7490">${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona)} · ${escapeHtml(r.wLinea||'')}</div>`:(r.machine||'—');
-    return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${maq}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td style="white-space:nowrap">${action}${mapa}</td></tr>`;
+    const impr=`<button class="btn-g lpaq-print" title="${LANG==='en'?'Print blank checklist':'Imprimir checklist en blanco'}" onclick="imprimirChecklistLpaQ('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem"><i class="fas fa-print"></i></button>`;   // V9.19.12
+    return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${maq}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td style="white-space:nowrap">${action}${mapa}${impr}</td></tr>`;
   }).join('')+'</tbody></table>';
+}
+// V9.19.12 — Checklist LPA en blanco para imprimir y llenar en piso.
+// Usa las preguntas vigentes del nivel de la auditoría programada (las mismas del formulario).
+function lpaqChecklistImprimibleHtml_(r){
+  const en=LANG==='en', T=(es,e)=>en?e:es, E=escapeHtml;
+  const nivel=String(r.nivel||'N4').toUpperCase();
+  const qs=(LPAQ_CATALOG||[]).filter(q=>q.active!==false&&(q.levels||[]).includes(nivel));
+  const linea=r.wMaquina?`${E(r.machine||'')} · ${T('Zona','Zone')} ${E(r.wZona||'')} · ${E(r.wLinea||'')}`:E(r.machine||'');
+  const caja='<span class="box"></span>';
+  const filas=qs.map((q,i)=>`<tr><td class="n">${i+1}</td><td class="cat">${E(q.category||'')}<div class="id">${E(q.id)} · ${T('Reacción','Reaction')} ${E(q.reaction||'')}</div></td>
+    <td><b>${E(en?(q.en||q.es):(q.es||q.en))}</b>${(en?q.criteria_en:q.criteria_es)?`<div class="crit">${E(en?q.criteria_en:q.criteria_es)}</div>`:''}</td>
+    <td class="c">${caja}</td><td class="c">${caja}</td><td class="c">${caja}</td><td class="obs"></td></tr>`).join('');
+  const lineas=n=>Array.from({length:n},()=>'<div class="ln"></div>').join('');
+  return `<!doctype html><html lang="${en?'en':'es'}"><head><meta charset="utf-8"><title>LPA ${E(nivel)} · ${E(r.area||'')} · ${E(r.fechaProgramada||'')}</title><style>
+    @page{size:letter;margin:10mm}
+    *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;color:#0F172A;font-size:10.5px;margin:0}
+    h1{font-size:16px;margin:0} .sub{color:#475569;font-size:10px;margin-top:2px}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0F172A;padding-bottom:6px;margin-bottom:8px}
+    .lvl{font-size:22px;font-weight:800;border:2px solid #0F172A;border-radius:6px;padding:2px 10px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #64748B;margin-bottom:8px}
+    .grid div{border:1px solid #CBD5E1;padding:4px 6px;min-height:30px} .grid span{display:block;font-size:8.5px;color:#475569;text-transform:uppercase;letter-spacing:.04em}
+    .grid b{font-size:11px} .grid .w2{grid-column:span 2}
+    table{width:100%;border-collapse:collapse} th,td{border:1px solid #94A3B8;padding:4px 5px;vertical-align:top}
+    th{background:#E2E8F0;font-size:9px;text-transform:uppercase;letter-spacing:.03em} tr{break-inside:avoid}
+    .n{width:22px;text-align:center} .cat{width:92px;font-size:9.5px} .id{color:#64748B;font-size:8px;margin-top:2px}
+    .crit{color:#475569;font-size:9px;margin-top:2px} .c{width:34px;text-align:center;vertical-align:middle} .obs{width:150px}
+    .box{display:inline-block;width:13px;height:13px;border:1.5px solid #0F172A;border-radius:2px}
+    .leg{font-size:9px;color:#475569;margin:6px 0 10px} h2{font-size:12px;margin:12px 0 4px}
+    .nc{border:1px solid #94A3B8;padding:6px;margin-bottom:6px;break-inside:avoid} .nc .r{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:9px;color:#475569;margin-top:6px}
+    .ln{border-bottom:1px solid #94A3B8;height:18px}
+    .firmas{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:26px;break-inside:avoid} .firmas div{border-top:1px solid #0F172A;padding-top:4px;text-align:center;font-size:9.5px}
+    .pie{margin-top:10px;font-size:8.5px;color:#64748B}
+    @media screen{body{max-width:820px;margin:16px auto;padding:0 12px}}
+  </style></head><body>
+  <div class="head"><div><h1>KTMEX · LPA Quality</h1><div class="sub">${T('Checklist para llenar en piso · Captúrelo después en el sistema','Floor checklist · Enter it in the system afterwards')}</div></div><div class="lvl">${E(nivel)}</div></div>
+  <div class="grid">
+    <div><span>${T('Fecha programada','Scheduled date')}</span><b>${E(r.fechaProgramada||'')}</b></div>
+    <div><span>${T('Fecha de ejecución','Execution date')}</span><b></b></div>
+    <div class="w2"><span>${T('Auditor','Auditor')}</span><b>${E(r.auditorNombre||r.auditorUsername||'')}</b></div>
+    <div><span>${T('Área','Area')}</span><b>${E(r.area||'')}</b></div>
+    <div class="w2"><span>${T('Proceso / Línea / Máquina','Process / Line / Machine')}</span><b>${linea}</b></div>
+    <div><span>${T('Turno','Shift')}</span><b></b></div>
+    <div class="w2"><span>${T('Número de parte *','Part number *')}</span><b></b></div>
+    <div><span>${T('Folio del sistema','System folio')}</span><b></b></div>
+    <div><span>${T('Programa','Schedule')}</span><b>${E(r.id||'')}</b></div>
+  </div>
+  <div class="leg">${T('Marque una casilla por pregunta: OK = conforme · NOK = no conforme (llene un hallazgo abajo) · N/A = no aplica.','Tick one box per question: OK = conforming · NOK = nonconforming (fill in a finding below) · N/A = not applicable.')} ${qs.length} ${T('preguntas','questions')}.</div>
+  <table><thead><tr><th>#</th><th>${T('Categoría','Category')}</th><th>${T('Pregunta y criterio','Question and criteria')}</th><th>OK</th><th>NOK</th><th>N/A</th><th>${T('Observaciones','Notes')}</th></tr></thead><tbody>${filas||`<tr><td colspan="7">${T('No hay preguntas activas para este nivel.','No active questions for this level.')}</td></tr>`}</tbody></table>
+  <h2>${T('Hallazgos (NOK)','Findings (NOK)')}</h2>
+  ${[1,2,3].map(k=>`<div class="nc"><b>${T('Pregunta #','Question #')} ____ </b> ${T('Hallazgo','Finding')}:${lineas(2)}<div class="r"><div>${T('Área responsable','Responsible area')}:<div class="ln"></div></div><div>${T('Foto tomada','Photo taken')}: ${caja} ${T('Sí','Yes')}</div><div>${T('Justificación técnica (reacción D)','Technical justification (reaction D)')}:<div class="ln"></div></div></div></div>`).join('')}
+  <div class="firmas"><div>${T('Firma del auditor','Auditor signature')}</div><div>${T('Firma del responsable del área','Area owner signature')}</div></div>
+  <div class="pie">${T('Impreso','Printed')} ${new Date().toLocaleString(en?'en-US':'es-MX')} · ${T('Catálogo vigente','Current catalog')} · ${T('El papel no sustituye la captura en el sistema: ahí se suben las fotos y se avisa a los champions.','Paper does not replace the system entry: photos are uploaded and champions are notified there.')}</div>
+  <script>window.onload=function(){window.print()}<\/script></body></html>`;
+}
+function imprimirChecklistLpaQ(programId){
+  const r=(LPAQ_DASH?.program||[]).find(x=>String(x.id)===String(programId));
+  if(!r){toast(LANG==='en'?'Open a scheduled audit to print its checklist.':'Abre una auditoría programada para imprimir su checklist.','err');return;}
+  const w=window.open('','_blank');
+  if(!w){toast(LANG==='en'?'Allow pop-ups to print.':'Permite las ventanas emergentes para imprimir.','err');return;}
+  w.document.write(lpaqChecklistImprimibleHtml_(r)); w.document.close();
 }
 // V9.19.11 — Gemelo digital de Welding. El HTML del mapa no trae datos: se los manda esta página
 // por postMessage (mismo origen) después de pedirlos al servidor con la sesión.
@@ -7906,6 +7979,7 @@ function openLpaQProgramAudit(id){
     return;
   }
   LPAQ_PROGRAM_ID=id;
+  document.querySelectorAll('.lpaq-print-t').forEach(e=>e.textContent=LANG==='en'?'Print checklist':'Imprimir checklist');   // V9.19.12
   $('lpaq-area').innerHTML=`<option>${r.area}</option>`;
   $('lpaq-level').value=r.nivel;
   $('lpaq-date').value=localDateKeyV843_();
@@ -8346,6 +8420,28 @@ async function confirmarEliminacionDuplicado(){
   }catch(e){toast('Error: '+e.message,'err');}
   finally{btn.innerHTML='Eliminar';delMotivoCheck_();}
 }
+// V9.19.14 — El técnico renombra lo que él declaró (Plan Diario y espontáneas) mientras no esté cerrado.
+// No aplica a las del preventivo (traen el nombre de su orden) ni a las solicitudes asignadas.
+function puedeRenombrarDaily_(d,st){
+  if(!SESSION||SESSION.user.rol!=='tecnico')return false;
+  if(String(d.ordenPM||'').trim()||d.pm)return false;
+  if(st.b==='CERRADA')return false;
+  const yo=String(SESSION.user.username||'').toLowerCase(), dueño=String(d.tecnicoUsername||'').toLowerCase();
+  return !dueño||dueño===yo||String(d.tecnico||'').trim().toLowerCase()===String(SESSION.user.nombre||'').trim().toLowerCase();
+}
+async function renombrarActividadDiaria(id){
+  const d=(ACT_DATA.daily||[]).find(x=>String(x.id)===String(id)); if(!d)return;
+  const nuevo=prompt('Nuevo nombre de la actividad '+(d.folio||'')+':',d.descripcion||'');
+  if(nuevo===null)return;
+  const limpio=nuevo.replace(/\s+/g,' ').trim();
+  if(!limpio){toast('Escribe el nombre de la actividad.','err');return;}
+  if(limpio===String(d.descripcion||'').trim())return;
+  try{
+    const r=await api({action:'editarNombreActividadDiaria',token:SESSION.token,id,descripcion:limpio});
+    if(!r.success){toast(r.error||'No se pudo cambiar el nombre','err');return;}
+    d.descripcion=r.descripcion; renderMisActividades(); toast('Nombre actualizado');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
 function renderUnifiedDailyCard_(d){
   const a=d.actividad||null,st=dailyBucketUnified_(d,a),supports=a?parseActSupports_(a):v840FrontParse_(d.tecnicosApoyoJSON);
   let actions=''; const pmHtml=(typeof pmTarjetaHtml_==='function')?pmTarjetaHtml_(d,st):'';
@@ -8370,7 +8466,7 @@ function renderUnifiedDailyCard_(d){
     : '';
   return `<div class="card" style="padding:16px;border-left:4px solid ${borde}">
     <div style="display:flex;justify-content:space-between;gap:8px"><div>${chipArr}<span class="badge" style="background:${esp?'#F3E8FF':'#FFF7ED'};color:${esp?'#6D28D9':'#C2410C'}">${esp?'Espontánea · Plan Diario':'Plan Diario'}</span> <b class="mono">${escapeHtml(d.folio||'')}</b></div><span class="badge">${escapeHtml(st.t)}</span></div>
-    <div style="font-weight:700;margin-top:7px">${escapeHtml(d.descripcion||'')}</div>
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-top:7px"><div class="act-nombre" style="font-weight:700;flex:1;min-width:0;overflow-wrap:anywhere">${escapeHtml(d.descripcion||'')}</div>${puedeRenombrarDaily_(d,st)?`<button class="btn-g act-renombrar" title="Editar nombre" onclick="renombrarActividadDiaria('${escapeHtml(d.id)}')" style="padding:4px 9px;font-size:.7rem;white-space:nowrap"><i class="fas fa-pen" style="margin-right:4px"></i>Editar nombre</button>`:''}</div>
     <div style="font-size:.7rem;color:#64748B">${escapeHtml(d.area||'')} · ${escapeHtml(d.categoria||'Sin categoría')}</div>
     ${unifiedTimeInfo_(a)}
     <div style="margin:7px 0"><b style="font-size:.67rem;color:#64748B">Apoyos:</b> ${supports.length?supports.map(s=>`<span class="support-chip">${escapeHtml(s.nombre||s)}</span>`).join(''):'<span style="font-size:.67rem;color:#94A3B8">Sin apoyos</span>'}</div>
@@ -8504,11 +8600,19 @@ function renderMisActividades(){
     const spont=String(a?.tipoActividad||'')==='Espontánea sin folio'||String(s.tipoSolicitud||'').indexOf('Espontánea')===0;
     items.push({source:spont?'ESPONTANEA':'ASIGNADA',b:st.b,html:renderUnifiedWorkCard_(s,a,st,spont)});
   });
-  daily.forEach(function(d){
+  // V9.19.14: lo declarado por día (Plan Diario y espontáneas) va arriba, del día más reciente al más antiguo.
+  const dailyOrd=daily.slice().sort(function(x,y){
+    const fx=String(x.fecha||'').slice(0,10),fy=String(y.fecha||'').slice(0,10);
+    if(fx!==fy)return fx<fy?1:-1;
+    return String(x.creado||x.folio||'').localeCompare(String(y.creado||y.folio||''));
+  });
+  const itemsDia=[];
+  dailyOrd.forEach(function(d){
     const st=dailyBucketUnified_(d,d.actividad||null);
     const esp=!!(d.esEspontanea||String(d.origen||'')==='ESPONTANEA');
-    items.push({source:esp?'ESPONTANEA':'PLAN',b:st.b,html:renderUnifiedDailyCard_(d)});
+    itemsDia.push({source:esp?'ESPONTANEA':'PLAN',b:st.b,html:renderUnifiedDailyCard_(d)});
   });
+  items.unshift.apply(items,itemsDia);
   apoyos.forEach(function(x){
     const st=actBucketUnified_(x.solicitud||{},x.actividad||{});
     items.push({source:'APOYO',b:st.b,html:renderUnifiedSupportCard_(x)});
@@ -8521,10 +8625,16 @@ function renderMisActividades(){
     ['Falta material',counts.MATERIAL],['Cierre Ingeniería',counts.PEND_ING],['Cerradas',counts.CERRADA]
   ].map(x=>`<div class="card" style="padding:9px"><div style="font-size:.65rem;color:#64748B">${x[0]}</div><b style="font-size:1.15rem">${x[1]}</b></div>`).join('');
 
+  // V9.19.14: con «Todos» se ocultan cerradas, rechazadas y suspendidas; se ven al elegirlas en Estatus.
+  const OCULTAS=['CERRADA','RECHAZADA','SUSPENDIDA'];
+  let ocultas=0;
   const shown=items.filter(function(x){
-    return (sourceFilter==='TODAS'||x.source===sourceFilter)&&(statusFilter==='TODAS'||x.b===statusFilter);
+    if(!(sourceFilter==='TODAS'||x.source===sourceFilter))return false;
+    if(statusFilter==='TODAS'){if(OCULTAS.includes(x.b)){ocultas++;return false;}return true;}
+    return x.b===statusFilter;
   });
-  list.innerHTML=shown.length?shown.map(x=>x.html).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para estos filtros.</div>';
+  const aviso=ocultas?`<div id="act-ocultas" style="font-size:.72rem;color:#64748B;text-align:center;padding:2px 0 4px"><i class="fas fa-eye-slash" style="margin-right:5px"></i>${ocultas} ${ocultas===1?'actividad cerrada, rechazada o suspendida oculta':'actividades cerradas, rechazadas o suspendidas ocultas'}. Elige su estatus en el filtro para verlas.</div>`:'';
+  list.innerHTML=(shown.length?shown.map(x=>x.html).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8">No hay actividades para estos filtros.</div>')+aviso;
 }
 
 let ACT_START_SELECTED_FILE=null;
