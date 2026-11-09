@@ -2295,7 +2295,7 @@ const LPA_AREAS = {
 
     <!-- V9.4.0: los totales van debajo de las pestañas, con formato de botón -->
     <!-- KPIs / Seguimiento de flujo -->
-    <div style="display:grid;grid-template-columns:repeat(6,minmax(115px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(105px,1fr));gap:12px;margin-bottom:18px" id="kpi-row">
       <div class="card" style="padding:14px 16px">
         <p id="kpi-label-total" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Total solicitudes</p>
         <p id="kpi-total" class="mono" style="font-size:1.8rem;font-weight:700;color:var(--navy);margin:0">0</p>
@@ -2319,6 +2319,10 @@ const LPA_AREAS = {
       <div class="card" style="padding:14px 16px">
         <p id="kpi-label-ejec" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">En ejecución</p>
         <p id="kpi-ejec" class="mono" style="font-size:1.8rem;font-weight:700;color:#0891B2;margin:0">0</p>
+      </div>
+      <div class="card" style="padding:16px" id="kpi-card-cerr">
+        <p id="kpi-label-cerr" style="font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px">Cerradas</p>
+        <p id="kpi-cerr" class="mono" style="font-size:1.8rem;font-weight:700;color:#15803D;margin:0">0</p>
       </div>
     </div>
 
@@ -2999,6 +3003,18 @@ const LPA_AREAS = {
         <div id="act-antes-ok" style="display:none;padding:9px 11px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:9px;font-size:.72rem;color:#166534">
           <i class="fas fa-circle-check" style="margin-right:5px"></i>Ya registrada al iniciar la actividad.
           <a id="act-antes-link" href="#" target="_blank" style="color:#15803D;font-weight:700;margin-left:6px">Ver fotografía</a>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <img id="act-antes-thumb" alt="Fotografía del ANTES" style="width:84px;height:84px;object-fit:cover;border-radius:9px;border:2px solid #B45309;background:#FFF">
+            <div style="flex:1;font-size:.7rem;color:#166534">Revisa que sea la correcta. Si no, cámbiala.<br>
+              <button type="button" class="btn-g" id="act-antes-cambiar-btn" onclick="actAntesCambiar_(true)" style="margin-top:6px;padding:5px 10px;font-size:.72rem"><i class="fas fa-rotate" style="margin-right:5px"></i>Cambiar foto</button></div>
+          </div>
+          <div id="act-antes-cambio" style="display:none;margin-top:8px">
+            <input type="file" id="act-antes-nueva-file" accept="image/*" class="inp" style="padding:8px" onchange="actAntesNuevaInfo_()">
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+              <img id="act-antes-nueva-prev" alt="Nueva foto del ANTES" style="display:none;width:84px;height:84px;object-fit:cover;border-radius:9px;border:2px solid #2563EB">
+              <button type="button" class="btn-g" onclick="actAntesCambiar_(false)" style="padding:5px 10px;font-size:.72rem">Mantener la original</button>
+            </div>
+          </div>
         </div>
         <div id="act-antes-pedir" style="display:none">
           <div style="padding:9px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;font-size:.7rem;color:#92400E;margin-bottom:8px">
@@ -3006,11 +3022,14 @@ const LPA_AREAS = {
           </div>
           <input type="file" id="act-antes-file" accept="image/*" class="inp" style="padding:8px" onchange="actAntesInfo_()">
           <div id="act-antes-name" style="font-size:.68rem;color:#64748B;margin-top:4px">Sin fotografía seleccionada.</div>
+          <img id="act-antes-prev" alt="Vista previa del ANTES" style="display:none;width:84px;height:84px;object-fit:cover;border-radius:9px;border:2px solid #B45309;margin-top:6px">
         </div>
       </div>
 
       <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-images" style="color:#7C3AED;margin-right:5px"></i>Fotografías del DESPUÉS * <span style="font-weight:500;color:#64748B">(1 a 3)</span></label>
-      <input type="file" id="act-cierre-fotos" accept="image/*" multiple class="inp" style="padding:8px;margin-bottom:10px">
+      <input type="file" id="act-cierre-fotos" accept="image/*" multiple class="inp" style="padding:8px;margin-bottom:6px" onchange="actDespuesAgregar_(this)">
+      <div id="act-despues-prev" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+      <input type="file" id="act-despues-cambiar" accept="image/*" style="display:none" onchange="actDespuesCambiado_(this)">
       <label style="display:block;font-size:.8rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-file-pdf" style="color:#DC2626;margin-right:5px"></i>PDF de cierre <span style="font-weight:500;color:#64748B">(opcional)</span></label>
       <input type="file" id="act-cierre-pdf" accept="application/pdf,.pdf" class="inp" style="padding:8px;margin-bottom:10px">
       <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px">Comentario de cierre (opcional)</label>
@@ -3526,7 +3545,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.14';
+const FRONTEND_BUILD = '9.19.15';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -8454,7 +8473,7 @@ function renderUnifiedDailyCard_(d){
   }else if(st.b==='MATERIAL'){
     actions=`<button class="btn-p" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button>`;
   }else if(st.b==='PEND_ING'){
-    actions='<div style="padding:8px;background:#FFF7ED;border-radius:8px;color:#9A3412;font-size:.72rem">Trabajo terminado; esperando cierre de Ingeniería.</div>';
+    actions='<div style="padding:8px;background:#FFF7ED;border-radius:8px;color:#9A3412;font-size:.72rem">Trabajo terminado; esperando cierre de Ingeniería.</div>'+`${(a&&String(a.esApoyo||'').toUpperCase()!=='TRUE')?`<button class="btn-g act-revisar-fotos" onclick="abrirRevisionFotos('${escapeHtml(a.id)}','${escapeHtml(d.folio||'')}')" style="margin-top:7px;padding:6px 11px;font-size:.74rem"><i class="fas fa-images" style="margin-right:5px"></i>Revisar / cambiar fotos</button>`:''}`;
   }
   const esp=!!(d.esEspontanea||String(d.origen||'')==='ESPONTANEA');
   // V8.6.5: una actividad que viene de días anteriores se marca en azul,
@@ -8554,7 +8573,7 @@ function renderUnifiedWorkCard_(s,a,st,isSpont){
   if(st.b==='PAUSADA')action=`<button class="btn-p" onclick="reanudarActividadPausa('${a.id}')">Reanudar</button> <button class="btn-g" onclick="openActiveSupportModal('${a.id}','${s.folio}')">Apoyos</button>`;
   // V8.7.3: también se pueden ajustar apoyos mientras se espera material.
   if(st.b==='MATERIAL')action=`<button class="btn-p" onclick="reanudarActividad('${a.id}')">Material recibido / Reanudar</button> <button class="btn-g" onclick="openActiveSupportModal('${a.id}','${s.folio}')">Apoyos</button>`;
-  if(st.b==='PEND_ING')action='<div style="padding:8px;background:#FFF7ED;border-radius:8px;font-size:.72rem;color:#9A3412">Pendiente de cierre por Ingeniería.</div>';
+  if(st.b==='PEND_ING')action='<div style="padding:8px;background:#FFF7ED;border-radius:8px;font-size:.72rem;color:#9A3412">Pendiente de cierre por Ingeniería.</div>'+`${(a&&String(a.esApoyo||'').toUpperCase()!=='TRUE')?`<button class="btn-g act-revisar-fotos" onclick="abrirRevisionFotos('${escapeHtml(a.id)}','${escapeHtml(s.folio||a?.folio||'')}')" style="margin-top:7px;padding:6px 11px;font-size:.74rem"><i class="fas fa-images" style="margin-right:5px"></i>Revisar / cambiar fotos</button>`:''}`;
   if(st.b==='CONFIRMACION')action='<div style="padding:8px;background:#FDF2F8;border-radius:8px;font-size:.72rem">Pendiente de confirmación del solicitante.</div>';
   if(st.b==='CERRADA')action='<div style="padding:8px;background:#F0FDF4;border-radius:8px;font-size:.72rem;color:#166534">Actividad cerrada.</div>';
   if(st.b==='SUSPENDIDA')action='<div style="padding:8px;background:#FFFBEB;border-radius:8px;font-size:.72rem">Actividad suspendida.</div>';
@@ -8674,6 +8693,7 @@ async function openCerrarModal(actividadId, folio, fromDaily) {
   if($('act-antes-file'))$('act-antes-file').value='';
   if($('act-antes-name'))$('act-antes-name').textContent='Sin fotografía seleccionada.';
   ACT_ANTES_URL='';
+  ACT_DESPUES_FILES=[]; actDespuesRender_(); actAntesCambiar_(false); actPrev_('act-antes-prev',null);   // V9.19.15
 
   // Mientras llega la respuesta se oculta todo para no dar una señal falsa.
   if($('act-antes-ok'))$('act-antes-ok').style.display='none';
@@ -8690,6 +8710,7 @@ async function openCerrarModal(actividadId, folio, fromDaily) {
       $('act-antes-ok').style.display='';
       $('act-antes-pedir').style.display='none';
       if($('act-antes-link'))$('act-antes-link').href=ACT_ANTES_URL||'#';
+      if($('act-antes-thumb'))$('act-antes-thumb').src=driveMiniatura_(ACT_ANTES_URL,300);   // V9.19.15
     }else{
       $('act-antes-ok').style.display='none';
       $('act-antes-pedir').style.display='';
@@ -8704,9 +8725,50 @@ async function openCerrarModal(actividadId, folio, fromDaily) {
 function actAntesInfo_(){
   const f=$('act-antes-file')?.files?.[0];
   const box=$('act-antes-name');
+  actPrev_('act-antes-prev',f||null);   // V9.19.15
   if(!box)return;
   box.textContent=f?f.name:'Sin fotografía seleccionada.';
   box.style.color=f?'#15803D':'#64748B';
+}
+// V9.19.15 — Vista previa de las fotos antes de terminar: el técnico ve lo que eligió
+// y puede quitar o cambiar cada foto; también cambiar la del ANTES tomada al iniciar.
+let ACT_DESPUES_FILES=[], ACT_DESPUES_CAMBIAR_IDX=-1;
+const ACT_PREV_URLS={};
+function actPrev_(id,file){
+  const img=$(id); if(!img)return;
+  if(ACT_PREV_URLS[id]){try{URL.revokeObjectURL(ACT_PREV_URLS[id]);}catch(e){} delete ACT_PREV_URLS[id];}
+  if(file){ACT_PREV_URLS[id]=URL.createObjectURL(file);img.src=ACT_PREV_URLS[id];img.style.display='';}
+  else{img.removeAttribute('src');img.style.display='none';}
+}
+function actAntesCambiar_(on){
+  const box=$('act-antes-cambio'), btn=$('act-antes-cambiar-btn'); if(!box)return;
+  box.style.display=on?'':'none'; if(btn)btn.style.display=on?'none':'';
+  if(!on){const f=$('act-antes-nueva-file');if(f)f.value='';actPrev_('act-antes-nueva-prev',null);}
+}
+function actAntesNuevaInfo_(){actPrev_('act-antes-nueva-prev',$('act-antes-nueva-file')?.files?.[0]||null);}
+function actDespuesAgregar_(inp){
+  const nuevos=Array.from(inp.files||[]); inp.value='';
+  const libres=3-ACT_DESPUES_FILES.length;
+  if(nuevos.length>libres)toast(libres>0?`Solo caben ${libres} fotografía(s) más del DESPUÉS (máximo 3).`:'Ya tienes 3 fotografías del DESPUÉS. Quita o cambia una.','err');
+  ACT_DESPUES_FILES=ACT_DESPUES_FILES.concat(nuevos.slice(0,Math.max(0,libres)));
+  actDespuesRender_();
+}
+function actDespuesQuitar_(i){ACT_DESPUES_FILES.splice(i,1);actDespuesRender_();}
+function actDespuesCambiar_(i){ACT_DESPUES_CAMBIAR_IDX=i;const f=$('act-despues-cambiar');if(f){f.value='';f.click();}}
+function actDespuesCambiado_(inp){
+  const f=inp.files&&inp.files[0]; inp.value='';
+  if(f&&ACT_DESPUES_CAMBIAR_IDX>=0&&ACT_DESPUES_CAMBIAR_IDX<ACT_DESPUES_FILES.length){ACT_DESPUES_FILES[ACT_DESPUES_CAMBIAR_IDX]=f;actDespuesRender_();}
+  ACT_DESPUES_CAMBIAR_IDX=-1;
+}
+function actDespuesRender_(){
+  const box=$('act-despues-prev'); if(!box)return;
+  Object.keys(ACT_PREV_URLS).filter(k=>k.indexOf('despues-')===0).forEach(k=>{try{URL.revokeObjectURL(ACT_PREV_URLS[k]);}catch(e){} delete ACT_PREV_URLS[k];});
+  box.innerHTML=ACT_DESPUES_FILES.map((f,i)=>{const u=URL.createObjectURL(f);ACT_PREV_URLS['despues-'+i]=u;
+    return `<div class="act-despues-item" style="width:96px;text-align:center"><img src="${u}" alt="Foto ${i+1} del DESPUÉS" style="width:96px;height:96px;object-fit:cover;border-radius:9px;border:2px solid #15803D">
+      <div style="font-size:.62rem;color:#64748B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+      <div style="display:flex;gap:4px;justify-content:center;margin-top:3px"><button type="button" class="btn-g" onclick="actDespuesCambiar_(${i})" style="padding:3px 7px;font-size:.66rem">Cambiar</button><button type="button" class="btn-g" onclick="actDespuesQuitar_(${i})" style="padding:3px 7px;font-size:.66rem;color:#B91C1C">Quitar</button></div></div>`;}).join('')
+    +(ACT_DESPUES_FILES.length?`<div style="flex-basis:100%;font-size:.66rem;color:#64748B">${ACT_DESPUES_FILES.length} de 3 · Revisa que sean las correctas antes de confirmar.</div>`:'');
+  const inp=$('act-cierre-fotos'); if(inp)inp.disabled=ACT_DESPUES_FILES.length>=3;
 }
 async function confirmActividadFoto() {
   const btn=$('btn-act-foto-confirm');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:7px"></i>Guardando…';
@@ -8728,13 +8790,14 @@ async function confirmActividadFoto() {
       }
     }else{
       // V8.6.7: para cerrar se exigen las DOS evidencias.
-      const antesFile=$('act-antes-file')?.files?.[0]||null;
+      const antesNueva=ACT_ANTES_URL?($('act-antes-nueva-file')?.files?.[0]||null):null;   // V9.19.15: cambiar la del inicio
+      const antesFile=antesNueva||$('act-antes-file')?.files?.[0]||null;
       if(!ACT_ANTES_URL&&!antesFile){
         toast('Falta la fotografía del ANTES. Adjúntala para poder cerrar.','err');return;
       }
       if(antesFile&&antesFile.size>FOTO_TAM_ORIGINAL_MAX){toast('La fotografía del ANTES supera 40 MB','err');return;}
 
-      const fotos=Array.from($('act-cierre-fotos').files||[]),pdf=$('act-cierre-pdf').files[0]||null;
+      const fotos=ACT_DESPUES_FILES.slice(),pdf=$('act-cierre-pdf').files[0]||null;   // V9.19.15
       if(fotos.length<1){toast('Adjunta al menos una fotografía del DESPUÉS','err');return;}
       if(fotos.length>3){toast('Se permiten máximo 3 fotografías del DESPUÉS','err');return;}
       for(const f of fotos){if(f.size>FOTO_TAM_ORIGINAL_MAX){toast('Cada fotografía debe pesar máximo 40 MB','err');return;}}
@@ -8744,7 +8807,7 @@ async function confirmActividadFoto() {
       const pdfObj=pdf?{base64:await fileToBase64(pdf),name:pdf.name}:null;
       const fotoAntes=antesFile?{base64:await fileToBase64(antesFile),name:antesFile.name}:null;
       res=await api({action:'cerrarActividad',token:SESSION.token,actividadId:ACT_FOTO_TARGET,
-        imagenes,pdf:pdfObj,fotoAntes:fotoAntes,comentario:$('act-foto-comentario').value.trim()});
+        imagenes,pdf:pdfObj,fotoAntes:fotoAntes,reemplazarAntes:!!antesNueva,comentario:$('act-foto-comentario').value.trim()});
     }
     if(res.success){
       toast(ACT_FOTO_MODE==='cerrar'?`Actividad terminada · Pendiente de cierre por Ingeniería`:'Actividad iniciada');
@@ -8755,6 +8818,72 @@ async function confirmActividadFoto() {
   finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-check" style="margin-right:7px"></i>Confirmar';}
 }
 
+// V9.19.15 — Mientras espera el cierre de Ingeniería, el técnico revisa sus fotos y cambia
+// las que no eran: ANTES (reemplazar) y DESPUÉS (cambiar, agregar hasta 3, quitar dejando 1).
+let ACT_EVID={id:'',folio:'',antes:'',despues:[],accion:null};
+function actEvidModal_(){
+  let m=$('modal-act-evid'); if(m)return m;
+  m=document.createElement('div'); m.id='modal-act-evid'; m.className='modal-bg'; m.style.display='none';
+  m.innerHTML=`<div class="card slide" style="width:100%;max-width:470px;padding:22px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin:0">Revisar fotos</h3>
+      <button onclick="cerrarRevisionFotos()" style="width:30px;height:30px;background:#F1F5F9;border:none;border-radius:7px;cursor:pointer;color:#64748B"><i class="fas fa-xmark"></i></button></div>
+    <p id="act-evid-folio" class="mono" style="font-size:.82rem;color:#7C3AED;font-weight:700;margin:0 0 6px"></p>
+    <div style="font-size:.7rem;color:#64748B;margin-bottom:12px">Puedes cambiarlas mientras la actividad espera el cierre de Ingeniería. Ingeniería verá las nuevas.</div>
+    <div id="act-evid-body"><div style="text-align:center;color:#94A3B8;padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
+    <input type="file" id="act-evid-file" accept="image/*" style="display:none" onchange="actEvidArchivo_(this)">
+  </div>`;
+  document.body.appendChild(m); return m;
+}
+async function abrirRevisionFotos(actividadId,folio){
+  const m=actEvidModal_(); ACT_EVID={id:actividadId,folio:folio,antes:'',despues:[],accion:null};
+  $('act-evid-folio').textContent=folio||''; $('act-evid-body').innerHTML='<div style="text-align:center;color:#94A3B8;padding:20px"><i class="fas fa-spinner fa-spin"></i></div>';
+  m.style.display='flex';
+  try{
+    const r=await api({action:'getActivityEvidence',token:SESSION.token,actividadId});
+    if(!r.success){$('act-evid-body').innerHTML=`<div style="color:#B91C1C;font-size:.78rem">${escapeHtml(r.error||'No se pudieron cargar las fotos')}</div>`;return;}
+    ACT_EVID.antes=r.fotoAntesURL||''; ACT_EVID.despues=r.fotosDespues||[]; ACT_EVID.puede=r.puedeCambiar!==false;
+    actEvidRender_();
+  }catch(e){$('act-evid-body').innerHTML=`<div style="color:#B91C1C;font-size:.78rem">Error: ${escapeHtml(e.message)}</div>`;}
+}
+function cerrarRevisionFotos(){const m=$('modal-act-evid');if(m)m.style.display='none';if(ACT_EVID.cambio)loadMisActividades(true);}
+function actEvidThumb_(url,borde,etq){return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" title="Abrir en Drive"><img src="${escapeHtml(driveMiniatura_(url,300))}" alt="${etq}" style="display:block;width:96px;height:96px;overflow:hidden;font-size:.6rem;object-fit:cover;border-radius:9px;border:2px solid ${borde};background:#F8FAFC"></a>`;}
+function actEvidRender_(){
+  const b=$('act-evid-body'), p=ACT_EVID.puede;
+  const btn=(txt,acc,etapa,url,rojo)=>p?`<button type="button" class="btn-g act-evid-btn" data-acc="${acc}" onclick="actEvidPedir_('${acc}','${etapa}','${escapeHtml(url||'')}')" style="padding:3px 8px;font-size:.66rem${rojo?';color:#B91C1C':''}">${txt}</button>`:'';
+  b.innerHTML=`<div style="font-size:.78rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-clock-rotate-left" style="color:#B45309;margin-right:5px"></i>ANTES</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">${ACT_EVID.antes?`<div style="text-align:center">${actEvidThumb_(ACT_EVID.antes,'#B45309','Foto del ANTES')}<div style="margin-top:3px">${btn('Cambiar','reemplazar','antes',ACT_EVID.antes)}</div></div>`:'<span style="font-size:.72rem;color:#94A3B8">Sin foto del ANTES</span>'}</div>
+    <div style="font-size:.78rem;font-weight:700;color:#334155;margin-bottom:6px"><i class="fas fa-images" style="color:#15803D;margin-right:5px"></i>DESPUÉS (${ACT_EVID.despues.length} de 3)</div>
+    <div id="act-evid-despues" style="display:flex;flex-wrap:wrap;gap:8px">${ACT_EVID.despues.map((f,i)=>`<div class="act-evid-item" style="text-align:center">${actEvidThumb_(f.url,'#15803D','Foto '+(i+1)+' del DESPUÉS')}
+      <div style="display:flex;gap:4px;justify-content:center;margin-top:3px">${btn('Cambiar','reemplazar','despues',f.url)}${ACT_EVID.despues.length>1?btn('Quitar','quitar','despues',f.url,true):''}</div></div>`).join('')}
+      ${p&&ACT_EVID.despues.length<3?`<button type="button" class="btn-g act-evid-agregar" onclick="actEvidPedir_('agregar','despues','')" style="width:96px;height:96px;border-style:dashed;font-size:.7rem"><i class="fas fa-plus" style="display:block;margin-bottom:4px"></i>Agregar foto</button>`:''}</div>
+    ${p?'':'<div style="font-size:.72rem;color:#9A3412;margin-top:10px">Esta actividad ya no espera el cierre de Ingeniería; las fotos ya no se pueden cambiar.</div>'}
+    <div id="act-evid-estado" style="font-size:.72rem;color:#64748B;margin-top:10px"></div>`;
+}
+async function actEvidPedir_(accion,etapa,url){
+  ACT_EVID.accion={accion,etapa,url};
+  if(accion==='quitar'){
+    if(!confirm('¿Quitar esta fotografía del DESPUÉS?'))return;
+    return actEvidEnviar_(null);
+  }
+  const f=$('act-evid-file'); f.value=''; f.click();
+}
+async function actEvidArchivo_(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f||!ACT_EVID.accion)return;
+  if(f.size>FOTO_TAM_ORIGINAL_MAX){toast('La foto supera 40 MB.','err');return;}
+  actEvidEnviar_(f);
+}
+async function actEvidEnviar_(file){
+  const a=ACT_EVID.accion, est=$('act-evid-estado');
+  document.querySelectorAll('#act-evid-body button').forEach(b=>b.disabled=true);
+  if(est)est.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>Guardando…';
+  try{
+    const foto=file?{base64:await fileToBase64(file),name:file.name}:null;
+    const r=await api({action:'cambiarEvidenciaActividad',token:SESSION.token,actividadId:ACT_EVID.id,accion:a.accion,etapa:a.etapa,url:a.url,foto});
+    if(!r.success){toast(r.error||'No se pudo cambiar la foto','err');actEvidRender_();return;}
+    ACT_EVID.antes=r.fotoAntesURL||''; ACT_EVID.despues=r.fotosDespues||[]; ACT_EVID.cambio=true;
+    actEvidRender_(); toast(a.accion==='quitar'?'Fotografía quitada':a.accion==='agregar'?'Fotografía agregada':'Fotografía cambiada');
+  }catch(e){toast('Error: '+e.message,'err');actEvidRender_();}
+}
 let ACT_PAUSA_TARGET='';
 function openPausaActividadModal(id,folio){ACT_PAUSA_TARGET=id;$('act-pausa-folio').textContent=folio;$('act-pausa-motivo').value='';$('act-pausa-comentario').value='';$('modal-act-pausa').style.display='flex';}
 async function confirmarPausaActividad(){
@@ -13384,7 +13513,8 @@ let DASH_KPI_FILTRO=null, DASH_KPI_ACTIVO='';
 const DASH_KPI_PRED={
   sol:{ing:e=>e==='Pendiente de Ingeniería',mgr:e=>e==='Pendiente de Manager',
     apro:e=>['Aprobado por Manager — Pendiente de asignación','Asignado a técnico','En ejecución','Trabajo completado','Pendiente de cierre por Ingeniería'].includes(e),
-    rech:e=>String(e||'').startsWith('Rechazado'),ejec:e=>['Asignado a técnico','En ejecución'].includes(e)},
+    rech:e=>String(e||'').startsWith('Rechazado'),ejec:e=>['Asignado a técnico','En ejecución'].includes(e),
+    cerr:e=>['Cerrada','Pendiente de encuesta de satisfacción'].includes(e)},   // V9.19.15
   compra:{ing:e=>e==='Pendiente de Ingeniería',mgr:e=>e==='Pendiente de Manager',apro:e=>e==='Autorizada para Compra',
     rech:e=>['Rechazada por Ingeniería','Rechazada por Manager'].includes(e),ejec:e=>['En cotización','Ordenada'].includes(e)}
 };
@@ -13393,12 +13523,12 @@ function dashKpiClick_(clave){
   if(clave==='total'&&mgrEsAprobador_()&&DASH_KPI_ACTIVO!=='total'){DASH_KPI_FILTRO=()=>true;DASH_KPI_ACTIVO='total';}   // V9.19.5
   else if(DASH_KPI_ACTIVO===clave||clave==='total'){DASH_KPI_FILTRO=null;DASH_KPI_ACTIVO='';}
   else{DASH_KPI_FILTRO=(DASH_KPI_PRED[tab]||{})[clave]||null;DASH_KPI_ACTIVO=DASH_KPI_FILTRO?clave:'';}
-  ['total','ing','mgr','apro','rech','ejec'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c)c.classList.toggle('kpi-activo',k===DASH_KPI_ACTIVO);});
+  ['total','ing','mgr','apro','rech','ejec','cerr'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c)c.classList.toggle('kpi-activo',k===DASH_KPI_ACTIVO);});
   if(tab==='compra'){if(typeof renderCompras==='function')renderCompras();}
   else if(typeof renderSolicitudes==='function')renderSolicitudes();
 }
 function dashKpiConectar_(){
-  ['total','ing','mgr','apro','rech','ejec'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c&&!c.dataset.kpi){c.dataset.kpi=k;c.onclick=()=>dashKpiClick_(k);c.title='Filtrar la tabla';}});
+  ['total','ing','mgr','apro','rech','ejec','cerr'].forEach(k=>{const c=$('kpi-'+k)?.closest('.card');if(c&&!c.dataset.kpi){c.dataset.kpi=k;c.onclick=()=>dashKpiClick_(k);c.title='Filtrar la tabla';}});
 }
 
 function renderDashboardKPIs_(tab){
@@ -13415,6 +13545,9 @@ function renderDashboardKPIs_(tab){
   }
   row.style.display='grid';
 
+  const cerrCard=$('kpi-card-cerr');   // V9.19.15: «Cerradas» solo en Solicitudes
+  if(cerrCard)cerrCard.style.display=tab==='sol'?'':'none';
+  row.style.gridTemplateColumns=tab==='sol'?'repeat(7,minmax(105px,1fr))':'repeat(6,minmax(115px,1fr))';
   if(tab==='compra'){
     const data=Array.isArray(COMPRA_DATA)?COMPRA_DATA:[];
     setDashboardKpiLabels_([
@@ -13449,6 +13582,8 @@ function renderDashboardKPIs_(tab){
     ).length;
     $('kpi-rech').textContent=data.filter(r=>String(r.estatus||'').startsWith('Rechazado')).length;
     $('kpi-ejec').textContent=data.filter(r=>['Asignado a técnico','En ejecución'].includes(r.estatus)).length;
+    if($('kpi-cerr'))$('kpi-cerr').textContent=data.filter(r=>['Cerrada','Pendiente de encuesta de satisfacción'].includes(r.estatus)).length;   // V9.19.15
+    if($('kpi-label-cerr'))$('kpi-label-cerr').textContent=isManagerProfile_()?'Closed':'Cerradas';
   }
 }
 function renderKPIs(){ renderDashboardKPIs_(dashboardActiveTab_()); }
