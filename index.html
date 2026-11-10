@@ -1234,7 +1234,10 @@ const LPA_AREAS = {
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div><strong style="font-size:.9rem">Audit Schedule</strong><div style="font-size:.72rem;color:#64748B">N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates</div></div>
-      <button id="lpaq-wtwin-seg" class="btn-g" style="display:none;padding:7px 12px" onclick="abrirSeguimientoWelding()"><i class="fas fa-cubes" style="margin-right:6px;color:#0E7490"></i><span id="lpaq-wtwin-seg-t">Seguimiento Welding</span></button>
+      <div id="lpaq-wtwin-seg" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">
+        <select id="lpaq-wtwin-planta" class="inp" style="width:auto;padding:6px 8px;font-size:.78rem"><option value="welding">Welding</option><option value="estampado">Estampado</option><option value="blanking">Blanking</option></select>
+        <button class="btn-g" style="padding:7px 12px" onclick="abrirSeguimientoWelding()"><i class="fas fa-cubes" style="margin-right:6px;color:#0E7490"></i><span id="lpaq-wtwin-seg-t">Seguimiento en planta</span></button>
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin-top:14px;align-items:end">
@@ -3545,7 +3548,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.15';
+const FRONTEND_BUILD = '9.19.16';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4491,6 +4494,8 @@ const I18N_PATRONES=[
  [/^\((\d+) de (\d+) órdenes\)$/,'($1 of $2 orders)'],[/^Semana del (.+)$/,'Week of $1'],[/^(\d+) órdenes ·$/,'$1 orders ·'],[/^de (\d+) h \((.+) %\) ·$/,'of $1 h ($2 %) ·'],[/^(\d+) equipo\(s\): (.+)$/,'$1 asset(s): $2'],[/^(\d+) cerradas$/,'$1 closed'],
 ];
 function uiPatron_(t){ for(const [re,rp] of I18N_PATRONES){ if(re.test(t)) return t.replace(re,rp); } return ''; }
+// V9.19.16: textos de los mapas de planta para la gerencia en inglés
+Object.assign(TEXT_I18N,{'Estampado':'Stamping','Seguimiento en planta':'Plant tracking','Cerrar mapa':'Close map'});
 function uiText(es) {
   if(LANG==='es') return es;
   const raw=String(es??'');
@@ -4801,6 +4806,11 @@ async function api(data) {
     if ($('btn-logout')) $('btn-logout').style.display = 'none';
     if ($('nav-admin')) $('nav-admin').innerHTML =
       '<i class="fas fa-lock" style="margin-right:5px"></i>Admin';
+  }
+  // V9.19.16: la pantalla es más nueva que el Apps Script publicado → explicar qué falta en vez de «Acción no reconocida».
+  if (/^Acción no reconocida/i.test(err) && res && res.success === false) {
+    res.errorOriginal = err;
+    res.error = 'El servidor todavía no tiene esta función: falta publicar el Code.gs de la versión '+(typeof FRONTEND_BUILD!=='undefined'?FRONTEND_BUILD:'nueva')+' (Apps Script → Implementar → Administrar implementaciones → ✏️ → Nueva versión).';
   }
 
   return res;
@@ -7728,7 +7738,8 @@ async function loadLpaQDashboard(){
     renderLpaQAuditHistory(r.audits||[]);
     if(r.access.qadmin){$('lpaq-question-admin').style.display='';loadLpaQQuestionAdmin();}else{$('lpaq-question-admin').style.display='none';}
     lpaqpRender_(r);   // V9.19.9
-    if($('lpaq-wtwin-seg')){$('lpaq-wtwin-seg').style.display=r.access.weldingSeguimiento?'':'none';$('lpaq-wtwin-seg-t').textContent=LANG==='en'?'Welding tracking':'Seguimiento Welding';}   // V9.19.11
+    if($('lpaq-wtwin-seg')){$('lpaq-wtwin-seg').style.display=r.access.weldingSeguimiento?'flex':'none';$('lpaq-wtwin-seg-t').textContent=LANG==='en'?'Plant tracking':'Seguimiento en planta';   // V9.19.11/16
+      const op=$('lpaq-wtwin-planta')?.querySelector('option[value="estampado"]'); if(op)op.textContent=LANG==='en'?'Stamping':'Estampado';}
     const k=r.kpis||{};
     $('lpaq-kpi-program').textContent=(k.programCompliance??0)+'%';
     $('lpaq-kpi-close').textContent=(k.onTimeClosure??0)+'%';
@@ -7780,8 +7791,9 @@ function renderLpaQProgram(){
     let action=r.canStart?`<button class="btn-p" onclick="openLpaQProgramAudit('${r.id}')" style="padding:5px 9px">${LANG==='en'?'Start':'Comenzar'}</button>`:
       r.lockedFuture?`<span style="font-size:.7rem;color:#64748B"><i class="fas fa-lock" style="margin-right:4px"></i>${LANG==='en'?'Available on':'Disponible el'} ${r.disponibleDesde||r.fechaProgramada}</span>`:
       `<span style="font-size:.7rem;color:#94A3B8">${LANG==='en'?'View only':'Solo consulta'}</span>`;
-    const mapa=r.wMaquina?`<button class="btn-g lpaq-mapa" title="${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona||'')} · ${escapeHtml(r.wLinea||'')}" onclick="abrirMapaWelding('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem;white-space:nowrap"><i class="fas fa-map-marker-alt" style="margin-right:4px;color:#0E7490"></i>${LANG==='en'?'Map':'Mapa'}</button>`:'';
-    const maq=r.wMaquina?`${escapeHtml(r.machine||'')}<div style="font-size:.64rem;color:#0E7490">${LANG==='en'?'Zone':'Zona'} ${escapeHtml(r.wZona)} · ${escapeHtml(r.wLinea||'')}</div>`:(r.machine||'—');
+    const mTxt=LANG==='en'?(r.mTextoEn||r.mTexto||''):(r.mTexto||'');   // V9.19.16: Welding, Estampado o Blanking
+    const mapa=r.mPlanta?`<button class="btn-g lpaq-mapa" title="${escapeHtml(mTxt)}" onclick="abrirMapaWelding('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem;white-space:nowrap"><i class="fas fa-map-marker-alt" style="margin-right:4px;color:#0E7490"></i>${LANG==='en'?'Map':'Mapa'}</button>`:'';
+    const maq=r.mPlanta?`${escapeHtml(r.machine||'')}<div style="font-size:.64rem;color:#0E7490">${escapeHtml(mTxt)}</div>`:(r.machine||'—');
     const impr=`<button class="btn-g lpaq-print" title="${LANG==='en'?'Print blank checklist':'Imprimir checklist en blanco'}" onclick="imprimirChecklistLpaQ('${escapeHtml(r.id)}')" style="padding:4px 8px;margin-left:6px;font-size:.7rem"><i class="fas fa-print"></i></button>`;   // V9.19.12
     return `<tr><td>${r.fechaProgramada||''}</td><td>${r.auditorNombre||r.auditorUsername||''}</td><td>${r.area||''}</td><td>${maq}</td><td>${r.nivel||''}</td><td><span class="badge ${cls}">${st}</span></td><td style="white-space:nowrap">${action}${mapa}${impr}</td></tr>`;
   }).join('')+'</tbody></table>';
@@ -7853,14 +7865,22 @@ function wtwinAbrir_(datos){
   WTWIN_DATOS=datos;
   const m=$('wtwin-modal'), f=$('wtwin-frame');
   m.style.display=''; document.body.style.overflow='hidden'; $('wtwin-close-t').textContent=LANG==='en'?'Close map':'Cerrar mapa';
-  f.src='welding-twin.html?v='+encodeURIComponent(typeof FRONTEND_BUILD!=='undefined'?FRONTEND_BUILD:'1');
+  const archivo=(datos.planta&&datos.planta!=='welding')?'plant-twin.html':'welding-twin.html';   // V9.19.16
+  f.src=archivo+'?v='+encodeURIComponent(typeof FRONTEND_BUILD!=='undefined'?FRONTEND_BUILD:'1');
+  f.onload=()=>{try{f.focus();}catch(e){}};   // el teclado (Esc) va al mapa, no a la app
 }
 window.addEventListener('message',e=>{
   const f=$('wtwin-frame'); if(!f||e.source!==f.contentWindow||e.origin!==location.origin)return;
   if(e.data&&e.data.tipo==='ktmex-twin-listo'&&WTWIN_DATOS)f.contentWindow.postMessage(Object.assign({tipo:'ktmex-twin-init',lang:LANG==='en'?'en':'es'},WTWIN_DATOS),location.origin);
 });
 function cerrarMapaWelding(){const m=$('wtwin-modal');if(!m)return;m.style.display='none';$('wtwin-frame').src='about:blank';document.body.style.overflow='';WTWIN_DATOS=null;}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wtwin-modal')?.style.display==='')cerrarMapaWelding();});
+// V9.19.16: Esc ya no saca del mapa (se usaba para cerrar el panel de información y sacaba al usuario).
+// Si la app tiene el foco, el Esc se pasa al mapa para que cierre su panel. El mapa se cierra con «Cerrar mapa».
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||$('wtwin-modal')?.style.display!=='')return;
+  e.preventDefault();
+  const f=$('wtwin-frame'); try{f.contentWindow.postMessage({tipo:'ktmex-twin-esc'},location.origin);f.focus();}catch(x){}
+});
 async function abrirMapaWelding(programId){
   const p=(LPAQ_DASH?.program||[]).find(x=>String(x.id)===String(programId));
   try{
@@ -7873,9 +7893,12 @@ async function abrirMapaWelding(programId){
 async function abrirSeguimientoWelding(){
   try{
     const month=$('lpaq-month')?.value||'';
-    const r=await api({action:'getWeldingTwin',token:SESSION.token,modo:'seguimiento',month});
+    const planta=$('lpaq-wtwin-planta')?.value||'welding';
+    const r=await api({action:'getWeldingTwin',token:SESSION.token,modo:'seguimiento',month,planta});
     if(!r.success){toast(r.error||'No se pudo abrir el seguimiento','err');return;}
-    r.titulo=(LANG==='en'?'LPA tracking · ':'Seguimiento LPA · ')+r.periodo+' · '+r.auditorias.length+(LANG==='en'?' audits':' auditorías');
+    if(!r.planta)r.planta=planta;
+    const pn={welding:'Welding',estampado:LANG==='en'?'Stamping':'Estampado',blanking:'Blanking'}[r.planta]||'';
+    r.titulo=(LANG==='en'?'LPA tracking · ':'Seguimiento LPA · ')+pn+' · '+r.periodo+' · '+r.auditorias.length+(LANG==='en'?' audits':' auditorías');
     wtwinAbrir_(r);
   }catch(e){toast('Error: '+e.message,'err');}
 }
@@ -8005,7 +8028,7 @@ function openLpaQProgramAudit(id){
   $('lpaq-date').readOnly=true;
   $('lpaq-line').value=r.machine||'';
   const lt=$('lpaq-line-twin');   // V9.19.11
-  if(lt){if(r.wMaquina){lt.style.display='';lt.innerHTML=`<i class="fas fa-map-marker-alt" style="margin-right:4px"></i>${LANG==='en'?'Zone':'Zona'} <b>${escapeHtml(r.wZona)}</b> · ${escapeHtml(r.wLinea||'')} · <a href="#" onclick="abrirMapaWelding('${escapeHtml(r.id)}');return false" style="color:#0E7490;font-weight:700">${LANG==='en'?'View on map':'Ver en el mapa'}</a>`;}else{lt.style.display='none';lt.innerHTML='';}}
+  if(lt){if(r.mPlanta){lt.style.display='';lt.innerHTML=`<i class="fas fa-map-marker-alt" style="margin-right:4px"></i>${escapeHtml(LANG==='en'?(r.mTextoEn||r.mTexto||''):(r.mTexto||''))} · <a href="#" onclick="abrirMapaWelding('${escapeHtml(r.id)}');return false" style="color:#0E7490;font-weight:700">${LANG==='en'?'View on map':'Ver en el mapa'}</a>`;}else{lt.style.display='none';lt.innerHTML='';}}
   $('lpaq-part').value='';
   $('lpaq-form-level').textContent=r.nivel;
   renderLpaQChecklist();

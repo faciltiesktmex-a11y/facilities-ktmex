@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- KTMEX Facilities V9.19.11 — Gemelo digital de Welding para LPA Quality.
+<!-- KTMEX Facilities V9.19.16 — Gemelo digital de Welding para LPA Quality.
      SIN DATOS: el layout, las máquinas y las auditorías llegan por postMessage desde index.html
      (solo a usuarios con sesión). Abierto solo, este archivo no muestra nada. -->
 <head>
@@ -1361,6 +1361,10 @@ if (DATOS.foco) {
   const mf = machines.find((x) => x.id === DATOS.foco);
   if (mf) setTimeout(() => selectMachineById(mf.id), 350);
 }
+window.addEventListener('message', (e) => {
+  if (e.source !== window.parent || e.origin !== location.origin) return;
+  if (e.data && e.data.tipo === 'ktmex-twin-esc') select(null);   // V9.19.16: Esc en la app cierra el panel, no el mapa
+});
 window.parent?.postMessage({ tipo: 'ktmex-twin-ok', maquinas: machines.length }, location.origin);
 
 // Acceso desde la consola del navegador para depurar: twin.machines, twin.select…

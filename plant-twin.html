@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- KTMEX Facilities V9.19.16 — Gemelo digital de planta (Estampado, Blanking) para LPA Quality.
+     SIN DATOS: el layout y las auditorías llegan por postMessage desde index.html (solo con sesión).
+     Abierto solo, este archivo no muestra nada. Motor compartido para todos los layouts. -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plant Digital Twin · KTMEX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ============ Tokens de tema ============ */
+    :root {
+      --bg: #0c1016;
+      --panel: rgba(16, 21, 29, 0.86);
+      --panel-solid: #121821;
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #e7ecf3;
+      --muted: #8794a6;
+      --accent: #22d3ee;
+      --chip: rgba(148, 163, 184, 0.09);
+      --chip-hover: rgba(148, 163, 184, 0.18);
+      --label-bg: rgba(10, 14, 20, 0.82);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+      --orange: #f97316;
+      --blue: #3b82f6;
+      --sidebar-w: 300px;
+    }
+    body.light {
+      --bg: #eef1f5;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-solid: #ffffff;
+      --border: rgba(15, 23, 42, 0.12);
+      --text: #0f172a;
+      --muted: #5f6b7d;
+      --accent: #0891b2;
+      --chip: rgba(15, 23, 42, 0.05);
+      --chip-hover: rgba(15, 23, 42, 0.1);
+      --label-bg: rgba(255, 255, 255, 0.92);
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+    button, select, input { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+
+    #scene { position: fixed; inset: 0; }
+    #scene canvas { display: block; }
+    .label-layer { position: absolute; inset: 0; pointer-events: none; }
+
+    /* ============ Sidebar ============ */
+    .sidebar { position: fixed; top: 16px; left: 16px; bottom: 16px; width: var(--sidebar-w); z-index: 10;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform .3s ease; }
+    .brand { display: flex; gap: 12px; align-items: center; padding: 18px 18px 12px; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 10px; flex: none; position: relative;
+      background: linear-gradient(135deg, var(--orange), #facc15 45%, var(--blue)); box-shadow: 0 0 18px rgba(249,115,22,.35); }
+    .brand-mark::after { content: ''; position: absolute; inset: 8px; border-radius: 4px; background: var(--panel-solid); }
+    .kicker { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--accent); }
+    .brand h1 { font-size: 16px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+
+    .search { padding: 2px 16px 10px; position: relative; }
+    .search input { width: 100%; padding: 10px 12px; border-radius: 10px; outline: none; font-size: 13px;
+      background: var(--chip); border: 1px solid var(--border); }
+    .search input:focus { border-color: var(--accent); }
+    .results { list-style: none; position: absolute; left: 16px; right: 16px; top: 46px; z-index: 3; max-height: 260px; overflow: auto;
+      background: var(--panel-solid); border: 1px solid var(--border); border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
+    .results.hidden { display: none; }
+    .results button { width: 100%; text-align: left; display: flex; gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 7px; font-size: 12px; }
+    .results button:hover, .results button.kb { background: var(--chip-hover); }
+    .results b { font-family: 'JetBrains Mono', monospace; color: var(--c); }
+    .results small { color: var(--muted); }
+    .results .empty { padding: 8px; font-size: 12px; color: var(--muted); }
+
+    .scroll { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+    .scroll::-webkit-scrollbar, .results::-webkit-scrollbar, .panel::-webkit-scrollbar { width: 6px; }
+    .scroll::-webkit-scrollbar-thumb, .results::-webkit-scrollbar-thumb, .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+    .sec { padding: 10px 4px 6px; }
+    .sec h3 { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 2px 8px; }
+
+    .zone-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .zone-btn { padding: 8px 4px 7px; border-radius: 10px; background: var(--chip); border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all .15s; }
+    .zone-btn b { font-size: 18px; font-weight: 800; color: var(--c); line-height: 1; }
+    .zone-btn small { font-size: 10px; color: var(--muted); }
+    .zone-btn:hover { border-color: var(--c); }
+    .zone-btn.active { background: color-mix(in srgb, var(--c) 18%, transparent); border-color: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 35%, transparent); }
+
+    .zone-detail { margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
+    .zone-detail.hidden { display: none; }
+    .zone-detail .zd-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .zone-detail .zd-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .chip { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 3px 6px; border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); }
+    .chip:hover, .chip.active { background: color-mix(in srgb, var(--c) 32%, transparent); }
+    .chip em { font-style: normal; color: var(--muted); margin-left: 4px; }
+
+    .area-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 9px; text-align: left; font-size: 12.5px; }
+    .area-btn:hover { background: var(--chip-hover); }
+    .area-btn.active { background: color-mix(in srgb, var(--c) 18%, transparent); }
+    .area-btn i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 8px var(--c); flex: none; }
+    .area-btn span { flex: 1; }
+    .area-btn small { color: var(--muted); font-size: 10.5px; }
+
+    .btn-row { display: flex; gap: 6px; margin-bottom: 10px; }
+    .btn { flex: 1; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--chip); border: 1px solid var(--border); transition: all .15s; }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; padding: 4px 2px; }
+    .field select { background: var(--chip); border: 1px solid var(--border); border-radius: 8px; padding: 5px 6px; font-size: 11.5px; max-width: 150px; }
+    .field select option { background: var(--panel-solid); }
+    .toggle { display: flex; align-items: center; gap: 10px; padding: 5px 2px; font-size: 12px; cursor: pointer; user-select: none; }
+    .toggle input { appearance: none; flex: none; width: 30px; height: 17px; border-radius: 20px; background: var(--chip-hover); position: relative; cursor: pointer; transition: background .2s; }
+    .toggle input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--muted); transition: all .2s; }
+    .toggle input:checked { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+    .toggle input:checked::after { left: 15px; background: var(--accent); }
+
+    .legend div { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); padding: 2px 2px; }
+    .legend i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+    .stats { border-top: 1px solid var(--border); padding: 11px 18px; display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); }
+    .stats b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text); }
+
+    /* ============ Panel de información ============ */
+    .panel { position: fixed; top: 16px; right: 16px; width: 350px; max-height: calc(100% - 200px); overflow: auto; z-index: 11;
+      background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border); border-top: 3px solid var(--c, var(--accent)); border-radius: 16px;
+      box-shadow: var(--shadow), 0 0 30px color-mix(in srgb, var(--c, var(--accent)) 18%, transparent);
+      padding: 14px 16px 16px; transition: opacity .2s, transform .2s; }
+    .panel.hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+    .p-head { display: flex; align-items: center; gap: 8px; }
+    .p-head .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+    .p-head .p-kicker { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); flex: 1; }
+    .p-head .close { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); font-size: 18px; }
+    .p-head .close:hover { background: var(--chip-hover); color: var(--text); }
+    .p-title { font-size: 14.5px; font-weight: 500; line-height: 1.5; margin: 8px 0 12px; color: var(--muted); }
+    .p-title b { color: var(--text); font-weight: 700; }
+    .p-title b.code { font-family: 'JetBrains Mono', monospace; color: var(--c); }
+    .p-title i { font-style: normal; opacity: .4; margin: 0 4px; }
+    .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 10px; }
+    .p-grid div { background: var(--chip); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; }
+    .p-grid span { display: block; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .p-grid b { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+    .p-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; padding: 6px 0; border-top: 1px dashed var(--border); }
+    .p-row span { color: var(--muted); flex: none; }
+    .p-row b { font-weight: 500; text-align: right; }
+    .panel p { font-size: 12px; line-height: 1.55; color: var(--muted); margin: 6px 0 2px; }
+    .panel h4 { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
+    .p-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    /* ============ Etiquetas 3D (CSS2DRenderer) ============ */
+    .lbl { pointer-events: none; user-select: none; white-space: nowrap; }
+    .lbl-bay { display: flex; flex-direction: column; align-items: center; }
+    .lbl-bay b { font-size: 40px; font-weight: 800; line-height: 1; color: var(--c); text-shadow: 0 0 18px color-mix(in srgb, var(--c) 60%, transparent); }
+    .lbl-bay span { white-space: normal; max-width: 120px; text-align: center; line-height: 1.3; font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+    .lbl-m { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+      background: var(--label-bg); color: var(--text); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); border-left: 3px solid var(--c);
+      transition: transform .15s, box-shadow .15s; }
+    .lbl-m.active { transform: scale(1.25); box-shadow: 0 0 16px color-mix(in srgb, var(--c) 70%, transparent); }
+    .lbl-area { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c);
+      background: var(--label-bg); border: 1px dashed color-mix(in srgb, var(--c) 75%, transparent); padding: 4px 9px; border-radius: 6px; transition: transform .15s; }
+    .lbl-area.active { transform: scale(1.12); }
+    .lbl-axis { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; color: var(--muted); border: 1.5px solid var(--muted); background: var(--label-bg); }
+    .lbl-col { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); }
+    .lbl-aisle { font-size: 9.5px; letter-spacing: .1em; color: #facc15; opacity: .85; font-weight: 600; }
+    .lbl-rose { font-size: 15px; font-weight: 800; color: #94a3b8; }
+    .lbl-rose.north { color: #ef4444; font-size: 18px; text-shadow: 0 0 10px rgba(239,68,68,.5); }
+    .lbl-cardinal { font-size: 13px; font-weight: 800; letter-spacing: .35em; text-transform: uppercase; color: var(--muted); opacity: .8; }
+    .lbl-cardinal.north { color: #ef4444; opacity: 1; }
+
+    /* ============ Brújula (HUD) ============ */
+    .compass { position: fixed; right: 16px; bottom: 44px; z-index: 9; width: 108px; padding: 8px 6px 7px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color .15s; }
+    .compass:hover { border-color: var(--accent); }
+    .compass svg { width: 88px; height: 88px; display: block; overflow: visible; }
+    .compass .c-ring { fill: var(--chip); stroke: var(--muted); stroke-width: 1; opacity: .9; }
+    .compass #compassTicks line { stroke: var(--muted); stroke-width: 1; opacity: .55; }
+    .compass #compassTicks line.major { stroke-width: 2; opacity: .95; }
+    .compass .c-n { fill: #ef4444; filter: drop-shadow(0 0 4px rgba(239,68,68,.6)); }
+    .compass .c-s { fill: var(--muted); }
+    .compass .c-hub { fill: var(--panel-solid); stroke: var(--muted); }
+    .compass text { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800; fill: var(--text); text-anchor: middle; dominant-baseline: central; }
+    .compass text.tn { fill: #ef4444; font-size: 13px; }
+    .compass .c-heading { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+    .compass .c-hint { font-size: 8.5px; color: var(--muted); opacity: .7; }
+
+    .lbl-misc { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+    /* ============ Tooltip, ayuda, carga ============ */
+    .tooltip { position: fixed; z-index: 20; pointer-events: none; transform: translate(14px, 14px);
+      background: var(--panel-solid); border: 1px solid var(--border); border-left: 3px solid var(--c, var(--accent));
+      border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: var(--shadow); }
+    .tooltip.hidden { display: none; }
+    .tooltip b { font-family: 'JetBrains Mono', monospace; color: var(--c); margin-right: 6px; }
+    .tooltip small { color: var(--muted); }
+    .hint { position: fixed; bottom: 14px; left: calc(var(--sidebar-w) + 32px); right: 16px; z-index: 5; pointer-events: none;
+      display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-size: 11px; color: var(--muted); }
+    .hint kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 6px; margin-right: 4px; border-radius: 5px;
+      background: var(--chip-hover); border: 1px solid var(--border); color: var(--text); }
+    .loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 24px; text-align: center; background: var(--bg); transition: opacity .5s; }
+    .loading.done { opacity: 0; pointer-events: none; }
+    .loading small { max-width: 400px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .spinner { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .menu-btn { display: none; position: fixed; top: 14px; left: 14px; z-index: 12; width: 42px; height: 42px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 18px; }
+
+    @media (max-width: 820px) {
+      .menu-btn { display: block; }
+      .sidebar { top: 0; left: 0; bottom: 0; border-radius: 0 16px 16px 0; width: min(86vw, 320px); transform: translateX(-105%); }
+      body.menu-open .sidebar { transform: none; }
+      .panel { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 55%; }
+      .hint { display: none; }
+      .compass { top: 12px; right: 12px; bottom: auto; width: 76px; padding: 6px 4px; }
+      .compass svg { width: 62px; height: 62px; }
+      .compass .c-hint { display: none; }
+    }
+  
+    /* ============ Añadidos: líneas, pasillos y seguridad ============ */
+    .line-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .line-btn { padding: 7px 4px 6px; border-radius: 10px; background: var(--chip); border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 1px; transition: all .15s; min-width: 0; }
+    .line-btn b { font-size: 13px; font-weight: 800; color: var(--c); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .line-btn small { font-size: 9.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .line-btn:hover { border-color: var(--c); }
+    .line-btn.active { background: color-mix(in srgb, var(--c) 18%, transparent); border-color: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 35%, transparent); }
+
+    .aisle-card { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; margin-bottom: 6px;
+      background: var(--chip); border: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .aisle-card .sw { width: 34px; height: 14px; border-radius: 4px; flex: none; }
+    .aisle-card .sw.seguro { background: #16a34a; box-shadow: 0 0 10px rgba(22,163,74,.5); }
+    .aisle-card .sw.precaucion { background: repeating-linear-gradient(45deg, #facc15 0 6px, #111 6px 12px); }
+    .aisle-card div { flex: 1; min-width: 0; }
+    .aisle-card b { display: block; font-size: 12.5px; }
+    .aisle-card small { display: block; font-size: 10.5px; color: var(--muted); line-height: 1.35; }
+    .aisle-card input { appearance: none; width: 30px; height: 17px; border-radius: 20px; background: var(--chip-hover); position: relative; flex: none; cursor: pointer; }
+    .aisle-card input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--muted); transition: all .2s; }
+    .aisle-card input:checked { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+    .aisle-card input:checked::after { left: 15px; background: var(--accent); }
+
+    .sub-h { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 10px 2px 4px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; margin-top: 2px; }
+    .badge.seguro { background: rgba(22,163,74,.16); color: #4ade80; border: 1px solid rgba(74,222,128,.4); }
+    .badge.precaucion { background: rgba(250,204,21,.14); color: #facc15; border: 1px solid rgba(250,204,21,.45); }
+    .badge.riesgo { background: rgba(249,115,22,.14); color: #fb923c; border: 1px solid rgba(251,146,60,.45); }
+    body.light .badge.seguro { color: #15803d; }
+    body.light .badge.precaucion { color: #a16207; }
+    body.light .badge.riesgo { color: #c2410c; }
+    .p-note { font-size: 11.5px; line-height: 1.5; padding: 8px 10px; border-radius: 10px; margin-top: 8px;
+      background: color-mix(in srgb, var(--c) 10%, transparent); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); color: var(--text); }
+
+    .lbl-line { display: flex; flex-direction: column; align-items: center; }
+    .lbl-line b { font-size: 22px; font-weight: 800; line-height: 1; color: var(--c); text-shadow: 0 0 16px color-mix(in srgb, var(--c) 60%, transparent);
+      background: var(--label-bg); padding: 4px 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); }
+    .lbl-line span { font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+    .lbl-line.active b { box-shadow: 0 0 18px color-mix(in srgb, var(--c) 70%, transparent); }
+    .lbl-crane { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: #facc15; background: var(--label-bg);
+      border: 1px solid rgba(250,204,21,.55); padding: 2px 7px; border-radius: 5px; }
+    .lbl-crane.active { box-shadow: 0 0 14px rgba(250,204,21,.6); }
+    .lbl-risk { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fb923c; background: var(--label-bg);
+      border: 1px dashed rgba(251,146,60,.8); padding: 3px 8px; border-radius: 6px; }
+    .lbl-risk.active { box-shadow: 0 0 14px rgba(251,146,60,.6); }
+    .lbl-aisle-id { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+      background: var(--label-bg); color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); }
+    .lbl-aisle-id.active { transform: scale(1.2); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 70%, transparent); }
+    body.hide-aisle-ids .lbl-aisle-id { visibility: hidden; }
+    .err { color: #f87171; }
+
+  .kt-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+  .lg-est { display: none !important; } body.est .lg-est { display: flex !important; }
+  #colorField { display: none; } body.has-aud #colorField { display: flex; }
+  .lpa-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+  .lpa-sum button { padding: 8px 4px; border-radius: 10px; background: var(--chip, rgba(148,163,184,.12)); border: 1px solid var(--border, rgba(148,163,184,.25)); display: flex; flex-direction: column; align-items: center; gap: 2px; color: inherit; cursor: pointer; font: inherit; }
+  .lpa-sum button.active { border-color: var(--c); }
+  .lpa-sum b { font-size: 18px; font-weight: 800; color: var(--c); line-height: 1; }
+  .lpa-sum small { font-size: 10px; opacity: .7; text-align: center; }
+  .aud { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: 11.5px; padding: 6px 0; border-top: 1px dashed rgba(148,163,184,.3); }
+  .aud i { width: 9px; height: 9px; border-radius: 50%; background: var(--e); box-shadow: 0 0 6px var(--e); }
+  .aud small { opacity: .7; display: block; }
+  .aud em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--e); white-space: nowrap; }
+  .aud.foco { background: rgba(148,163,184,.12); border-radius: 8px; padding: 6px; }
+</style>
+  <!-- GSAP (animación de cámara) y Three.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="scene"></div>
+  <button id="menuBtn" class="menu-btn" aria-label="Menú">☰</button>
+
+  <aside id="sidebar" class="sidebar">
+    <header class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="kicker" id="kicker">DIGITAL TWIN</div>
+        <h1 id="layoutName">Layout</h1><div id="ktSub" class="kt-sub"></div>
+      </div>
+    </header>
+
+    <div class="search">
+      <input id="search" type="search" placeholder="Buscar equipo, línea, área o pasillo…" data-en-ph="Search equipment, line, area or aisle…" autocomplete="off" />
+      <ul id="results" class="results hidden"></ul>
+    </div>
+
+    <div class="scroll">
+      <section class="sec">
+        <h3 data-en="Production lines">Líneas de producción</h3>
+        <div id="lineGrid" class="line-grid"></div>
+        <div id="lineDetail" class="zone-detail hidden"></div>
+      </section>
+
+      <section class="sec">
+        <h3 data-en="Aisles">Pasillos</h3>
+        <label class="aisle-card" title="Mostrar / ocultar">
+          <span class="sw seguro"></span>
+          <div><b data-en="Safe (green)">Seguro (verde)</b><small id="sumSeguro">Se puede caminar seguro</small></div>
+          <input type="checkbox" id="tglSeguro" checked />
+        </label>
+        <label class="aisle-card" title="Mostrar / ocultar">
+          <span class="sw precaucion"></span>
+          <div><b data-en="Caution (yellow)">Precaución (amarillo)</b><small id="sumPrecaucion">Tráfico de grúa con troqueles, rollos, etc.</small></div>
+          <input type="checkbox" id="tglPrecaucion" checked />
+        </label>
+        <label class="toggle"><input type="checkbox" id="tglSafety" /><span data-en="Safety mode (highlight aisles)">Modo seguridad (resaltar pasillos)</span></label>
+        <label class="toggle"><input type="checkbox" id="tglAisleIds" checked /><span data-en="Aisle numbers">Números de pasillo</span></label>
+      </section>
+
+      <section class="sec">
+        <h3 data-en="Special areas">Áreas especiales</h3>
+        <div id="areaList"></div>
+      </section>
+
+      <section class="sec">
+        <h3 data-en="View">Vista</h3>
+        <div class="btn-row">
+          <button id="btnHome" class="btn" data-en="⟲ Overview">⟲ Vista general</button>
+          <button id="btnTop" class="btn" data-en="▦ 2D plan">▦ Planta 2D</button>
+        </div>
+        <label class="field" id="colorField"><span data-en="Equipment color">Color de equipos</span>
+          <select id="selColor">
+            <option value="linea" data-en="By line">Por línea</option>
+            <option value="estatus" data-en="By LPA audit status">Por estatus de auditoría LPA</option>
+          </select>
+        </label>
+        <label class="field"><span data-en="Equipment labels">Etiquetas de equipos</span>
+          <select id="selLabels">
+            <option value="auto" data-en="Automatic (on zoom)">Automáticas (al acercar)</option>
+            <option value="all" data-en="All">Todas</option>
+            <option value="off" data-en="Hidden">Ocultas</option>
+          </select>
+        </label>
+        <label class="toggle"><input type="checkbox" id="tglCranes" checked /><span data-en="Overhead cranes">Grúas viajeras</span></label>
+        <label class="toggle"><input type="checkbox" id="tglAnim" checked /><span data-en="Animate cranes and traffic">Animar grúas y tráfico</span></label>
+        <label class="toggle"><input type="checkbox" id="tglColumns" checked /><span data-en="Structural columns">Columnas estructurales</span></label>
+        <label class="toggle"><input type="checkbox" id="tglTheme" /><span data-en="Light theme">Tema claro</span></label>
+      </section>
+
+      <section class="sec legend">
+        <h3 data-en="Legend">Leyenda</h3>
+        <div class="lg-est"><i style="background:#ef4444"></i><span data-en="LPA audit overdue">Auditoría LPA vencida</span></div>
+        <div class="lg-est"><i style="background:#f59e0b"></i><span data-en="LPA audit pending">Auditoría LPA pendiente</span></div>
+        <div class="lg-est"><i style="background:#22c55e"></i><span data-en="LPA audit done">Auditoría LPA realizada</span></div>
+        <div class="lg-est"><i style="background:#64748b"></i><span data-en="No LPA audit in the period">Sin auditoría LPA en el periodo</span></div>
+        <div><i style="background:#16a34a"></i><span data-en="Safe aisle: you can walk">Pasillo seguro: se puede caminar</span></div>
+        <div><i style="background:repeating-linear-gradient(45deg,#facc15 0 3px,#111 3px 6px)"></i><span data-en="Caution: crane / dies / coils traffic">Precaución: tráfico de grúa / troqueles / rollos</span></div>
+        <div><i style="background:repeating-linear-gradient(45deg,#f97316 0 3px,transparent 3px 6px);border:1px solid #f97316"></i><span data-en="Transfer cart route">Ruta de carro de transferencia</span></div>
+        <div><i style="background:#eab308"></i><span data-en="Overhead crane (O/H crane)">Grúa viajera (O/H crane)</span></div>
+        <div><i style="background:#ef4444;clip-path:polygon(50% 0,100% 100%,0 100%)"></i><span data-en="Compass: North is red">Brújula: el Norte se marca en rojo</span></div>
+        <div><i style="border:1px solid var(--muted)"></i><span data-en="Grid: 1 m · major line every 4 m">Cuadrícula: 1 m · línea mayor cada 4 m</span></div>
+        <div id="escalaNota" style="font-size:10.5px;opacity:.8"></div>
+      </section>
+    </div>
+
+    <footer id="stats" class="stats"></footer>
+  </aside>
+
+  <section id="panel" class="panel hidden" aria-live="polite"></section>
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <button id="compass" class="compass" title="Clic: poner el Norte hacia arriba" aria-label="Brújula">
+    <svg viewBox="-50 -50 100 100" aria-hidden="true">
+      <circle r="46" class="c-ring" />
+      <g id="compassRose">
+        <g id="compassTicks"></g>
+        <polygon points="0,-20 5,0 -5,0" class="c-n" />
+        <polygon points="0,20 5,0 -5,0" class="c-s" />
+        <circle r="4" class="c-hub" />
+        <text x="0" y="-29" class="tn">N</text>
+        <text x="29" y="0">E</text>
+        <text x="0" y="29">S</text>
+        <text x="-29" y="0">O</text>
+      </g>
+    </svg>
+    <span id="compassHeading" class="c-heading">Vista hacia N</span>
+    <span class="c-hint" data-en="click: North up">clic: Norte arriba</span>
+  </button>
+
+  <div class="hint">
+    <span data-en-html="<kbd>Drag</kbd>rotate"><kbd>Arrastrar</kbd>rotar</span>
+    <span data-en-html="<kbd>Wheel</kbd>zoom"><kbd>Rueda</kbd>zoom</span>
+    <span data-en-html="<kbd>Right click</kbd>pan"><kbd>Clic der.</kbd>desplazar</span>
+    <span data-en-html="<kbd>Click</kbd>inspect"><kbd>Clic</kbd>inspeccionar</span>
+    <span data-en-html="<kbd>Double click</kbd>focus"><kbd>Doble clic</kbd>enfocar</span>
+    <span data-en-html="<kbd>Esc</kbd>close panel"><kbd>Esc</kbd>cerrar panel</span>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando gemelo digital…</p>
+    <small id="loadMsg">Esperando los datos de KTMEX Facilities…</small>
+  </div>
+
+  <!-- Motor 3D compartido. Los datos del layout los manda index.html. -->
+  <script type="module">
+/* ======================================================================
+   MOTOR DE GEMELO DIGITAL DE PLANTA  (Three.js r160 + GSAP)
+   ----------------------------------------------------------------------
+   Este archivo es el MISMO para todos los layouts (Blanking, Estampado…).
+   Lo que cambia entre plantas está en data-<layout>.js (window.LAYOUT):
+     líneas y equipos · áreas · zonas de riesgo · grúas · columnas ·
+     troqueles en piso · pasillos (seguro / precaución)
+
+   ÍNDICE
+     1. Configuración
+     2. Escena, cámara, luces
+     3. Constructores 3D
+     4. Interacción (Raycaster, hover, panel)
+     5. Navegación (menú, búsqueda, vuelos de cámara)
+     6. Brújula
+     7. Loop de render
+
+   COORDENADAS: metros. X = desde el borde IZQUIERDO del plano,
+                Z = desde el borde SUPERIOR del plano.
+   ====================================================================== */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* V9.19.16 KTMEX: los datos del layout NO viven en este archivo; index.html los manda por
+   postMessage (mismo origen) después de pedirlos al servidor con la sesión del usuario. */
+const DATOS = await new Promise((resolve) => {
+  window.addEventListener('message', (e) => {
+    if (e.source !== window.parent || e.origin !== location.origin) return;
+    const d = e.data;
+    if (d && d.tipo === 'ktmex-twin-init' && d.layout) resolve(d);
+  });
+  if (window.parent && window.parent !== window) window.parent.postMessage({ tipo: 'ktmex-twin-listo' }, location.origin);
+  else document.getElementById('loadMsg').textContent = 'Abre el mapa desde KTMEX Facilities → LPA Quality. / Open the map from KTMEX Facilities → LPA Quality.';
+});
+const EN = DATOS.lang === 'en';
+const T = (es, en) => (EN ? en : es);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+if (EN) {
+  document.documentElement.lang = 'en';
+  document.querySelectorAll('[data-en]').forEach((el) => { el.textContent = el.dataset.en; });
+  document.querySelectorAll('[data-en-html]').forEach((el) => { el.innerHTML = el.dataset.enHtml; });
+  document.querySelectorAll('[data-en-ph]').forEach((el) => { el.placeholder = el.dataset.enPh; });
+}
+const L = DATOS.layout;
+// ---- Auditorías LPA por línea ----
+const MODO = DATOS.modo === 'seguimiento' ? 'seguimiento' : 'enfocar';
+const AUDS = Array.isArray(DATOS.auditorias) ? DATOS.auditorias : [];
+const AUD_BY = {};
+AUDS.forEach((a) => { (AUD_BY[a.maquina] = AUD_BY[a.maquina] || []).push(a); });
+Object.values(AUD_BY).forEach((l) => l.sort((x, y) => String(x.fecha).localeCompare(String(y.fecha))));
+const EST_COLOR = { vencida: '#ef4444', pendiente: '#f59e0b', realizada: '#22c55e', ninguna: '#64748b' };
+const EST_TXT = { vencida: T('Vencida', 'Overdue'), pendiente: T('Pendiente', 'Pending'), realizada: T('Realizada', 'Done'), ninguna: T('Sin auditoría', 'No audit') };
+function estadoLinea(id) {
+  const l = AUD_BY[id]; if (!l || !l.length) return 'ninguna';
+  if (l.some((a) => a.grupo === 'vencida')) return 'vencida';
+  if (l.some((a) => a.grupo === 'pendiente')) return 'pendiente';
+  return 'realizada';
+}
+const equipoPrincipal = (ln) => (ln.equipos.find((q) => q.forma === 'prensa') || ln.equipos[0] || {}).id;
+let colorMode = AUDS.length && MODO === 'seguimiento' ? 'estatus' : 'linea';
+if (AUDS.length) document.body.classList.add('has-aud');
+document.getElementById('ktSub').textContent = DATOS.titulo || '';
+
+/* ======================================================================
+   1. CONFIGURACIÓN
+   ====================================================================== */
+const CONFIG = {
+  anchoPasillo: 1.6,          // m, ancho con que se dibujan los pasillos
+  distanciaEtiquetas: 55,     // m, etiquetas de equipos visibles bajo esta distancia de cámara (modo auto)
+  alturaGrua: 10,             // m, altura del puente de las grúas viajeras
+  alturaColumna: 11,
+  textos: {
+    seguro: 'Pasillo marcado en VERDE: se puede caminar seguro.',
+    precaucion: 'Pasillo marcado en AMARILLO: camine con precaución, hay tráfico de grúa con troqueles, rollos, etc. No transite bajo cargas suspendidas.',
+  },
+};
+const P = L.planta;
+const ORIGEN = { x: Math.round((P.x1 + P.x2) / 2 / 4) * 4, z: Math.round((P.z1 + P.z2) / 2 / 4) * 4 };
+
+document.title = `${L.meta.nombre} · Digital Twin`;
+document.getElementById('layoutName').textContent = L.meta.nombre;
+document.getElementById('kicker').textContent = L.meta.kicker;
+document.getElementById('escalaNota').textContent = L.meta.escala ? L.meta.escala + '.' : '';
+if (EN && L.meta.kickerEn) document.getElementById('kicker').textContent = L.meta.kickerEn;
+
+/* ======================================================================
+   2. ESCENA, CÁMARA, LUCES
+   ====================================================================== */
+const THEMES = {
+  dark:  { bg: 0x0c1016, floor: 0x10151c, slab: 0x151b24, grid1: 0x19222d, grid2: 0x283546, plant: 0x52627a, column: 0x6b7686, die: 0x5b6676 },
+  light: { bg: 0xeef1f5, floor: 0xe2e7ee, slab: 0xf7f9fb, grid1: 0xd3d9e1, grid2: 0xb7c2d0, plant: 0x8a98ab, column: 0x9aa5b4, die: 0x8794a6 },
+};
+let theme = THEMES.dark;
+
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.95;
+container.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.className = 'label-layer';
+container.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(theme.bg);
+scene.fog = new THREE.Fog(theme.bg, 170, 360);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+const plantW = P.x2 - P.x1, plantD = P.z2 - P.z1;
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 1000);
+const VIEW_DIR = new THREE.Vector3(0.12, 0.82, 0.56).normalize();
+const toWorld = (x, z) => new THREE.Vector3(x - ORIGEN.x, 0, z - ORIGEN.z);
+const plantCenter = toWorld((P.x1 + P.x2) / 2, (P.z1 + P.z2) / 2);
+const HOME = { target: plantCenter.clone().add(new THREE.Vector3(-plantW * 0.12, 0, 2)), dist: Math.max(plantW, plantD * 1.6) * 1.12 };
+camera.position.copy(HOME.target).addScaledVector(VIEW_DIR, HOME.dist);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.screenSpacePanning = false;
+controls.maxPolarAngle = Math.PI * 0.47;
+controls.minDistance = 3;
+controls.maxDistance = 300;
+controls.update();
+
+scene.add(new THREE.HemisphereLight(0xdbe7ff, 0x1b2029, 0.45));
+scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(-plantW * 0.4, 95, plantD * 0.7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+const sh = Math.max(plantW, plantD) * 0.62;
+Object.assign(sun.shadow.camera, { left: -sh, right: sh, top: sh, bottom: -sh, near: 10, far: 300 });
+sun.shadow.radius = 3;
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.03;
+scene.add(sun);
+
+/* ======================================================================
+   3. CONSTRUCTORES 3D
+   ====================================================================== */
+const f1 = (n) => n.toFixed(1);
+const rectInfo = (r) => {
+  const w = r.x2 - r.x1, d = r.z2 - r.z1;
+  return { w, d, center: toWorld(r.x1 + w / 2, r.z1 + d / 2) };
+};
+function makeLabel(html, cls, color) {
+  const wrap = document.createElement('div');
+  const el = document.createElement('div');
+  el.className = 'lbl ' + cls;
+  el.innerHTML = html;
+  if (color) el.style.setProperty('--c', color);
+  wrap.appendChild(el);
+  const obj = new CSS2DObject(wrap);
+  obj.userData.el = el;
+  return obj;
+}
+function rectLoop(w, d, y) {
+  return new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-w / 2, y, -d / 2), new THREE.Vector3(w / 2, y, -d / 2),
+    new THREE.Vector3(w / 2, y, d / 2), new THREE.Vector3(-w / 2, y, d / 2)]);
+}
+function canvasTexture(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+const pickTargets = [];
+const entities = new Map();   // id → { kind, data, meshes, label, center, size, paint(h,s) }
+const layers = { columns: new THREE.Group(), cranes: new THREE.Group(), seguro: new THREE.Group(), precaucion: new THREE.Group() };
+Object.values(layers).forEach((g) => scene.add(g));
+const WHITE = new THREE.Color(0xffffff);
+
+function register(id, ent, meshes) {
+  ent.id = id;
+  ent.meshes = meshes;
+  meshes.forEach((m) => { m.userData.id = id; pickTargets.push(m); });
+  entities.set(id, ent);
+  return ent;
+}
+
+// ---- 3.1 Piso, cuadrícula y contorno ----
+const floorMat = new THREE.MeshStandardMaterial({ color: theme.floor, roughness: 0.95 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.02;
+floor.receiveShadow = true;
+floor.userData.id = '__suelo';
+scene.add(floor);
+pickTargets.push(floor);
+
+const slabMat = new THREE.MeshStandardMaterial({ color: theme.slab, roughness: 0.9 });
+{
+  const r = rectInfo(P);
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(r.w, 0.04, r.d), slabMat);
+  slab.position.copy(r.center).setY(0.0);
+  slab.receiveShadow = true;
+  slab.userData.id = '__suelo';
+  scene.add(slab);
+  pickTargets.push(slab);
+}
+let grids;
+function buildGrid() {
+  if (grids) { scene.remove(grids); grids.children.forEach((g) => { g.geometry.dispose(); g.material.dispose(); }); }
+  grids = new THREE.Group();
+  const size = Math.ceil(Math.max(plantW, plantD) / 8) * 8 + 32;
+  const minor = new THREE.GridHelper(size, size, theme.grid1, theme.grid1);
+  const major = new THREE.GridHelper(size, size / 4, theme.grid2, theme.grid2);
+  minor.position.y = 0.022; major.position.y = 0.024;
+  minor.material.transparent = major.material.transparent = true;
+  minor.material.opacity = 0.5; major.material.opacity = 0.85;
+  grids.add(minor, major);
+  scene.add(grids);
+}
+buildGrid();
+const plantMat = new THREE.LineBasicMaterial({ color: theme.plant });
+{
+  const r = rectInfo(P);
+  const outline = new THREE.LineLoop(rectLoop(r.w, r.d, 0.05), plantMat);
+  outline.position.copy(r.center);
+  scene.add(outline);
+  const t = makeLabel(`${L.meta.nombre} · escala 1 : 1 (m)`, 'lbl-misc');
+  t.position.copy(toWorld((P.x1 + P.x2) / 2, P.z2 + 4.5));
+  scene.add(t);
+}
+
+// ---- 3.2 Columnas estructurales ----
+const columnMat = new THREE.MeshStandardMaterial({ color: theme.column, roughness: 0.6, metalness: 0.4 });
+if (L.columnas) {
+  const geo = new THREE.BoxGeometry(0.6, CONFIG.alturaColumna, 0.6);
+  for (const x of L.columnas.xs) for (const z of L.columnas.zs) {
+    const c = new THREE.Mesh(geo, columnMat);
+    c.position.copy(toWorld(x, z)).setY(CONFIG.alturaColumna / 2);
+    c.castShadow = true;
+    layers.columns.add(c);
+  }
+}
+
+// ---- 3.3 Líneas de producción y equipos ----
+const STEEL = new THREE.Color(0x475569);
+const lineObjs = {};
+const equipMats = [];        // para "modo seguridad"
+const equipLabels = [];
+for (const ln of L.lineas) {
+  const col = new THREE.Color(ln.color);
+  let bx1 = Infinity, bz1 = Infinity, bx2 = -Infinity, bz2 = -Infinity, maxH = 0;
+  for (const e of ln.equipos) {
+    bx1 = Math.min(bx1, e.x1); bz1 = Math.min(bz1, e.z1); bx2 = Math.max(bx2, e.x2); bz2 = Math.max(bz2, e.z2); maxH = Math.max(maxH, e.h);
+    const r = rectInfo(e);
+    const g = new THREE.Group();
+    g.position.copy(r.center);
+    scene.add(g);
+    const mat = new THREE.MeshStandardMaterial({ color: col.clone().lerp(STEEL, 0.35), roughness: 0.5, metalness: 0.5, emissive: ln.color, emissiveIntensity: 0.05, transparent: true, opacity: 1 });
+    const capMat = new THREE.MeshBasicMaterial({ color: ln.color, toneMapped: false, transparent: true, opacity: 1 });
+    equipMats.push(mat, capMat);
+    const meshes = [];
+    const box = (w, h, d, y, m = mat) => {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      b.position.y = y + h / 2;
+      b.castShadow = b.receiveShadow = true;
+      g.add(b); meshes.push(b);
+      return b;
+    };
+    if (e.forma === 'prensa') {
+      const hb = e.h * 0.22, hc = e.h * 0.16, hm = e.h - hb - hc;
+      box(r.w, hb, r.d, 0);                                   // bancada / bolster
+      box(r.w * 0.72, hm, r.d * 0.72, hb);                    // cuerpo / columnas
+      box(r.w * 0.9, hc, r.d * 0.9, hb + hm);                 // corona
+      box(r.w * 0.92, 0.06, r.d * 0.92, e.h, capMat);         // franja neón
+    } else {
+      box(r.w, e.h, r.d, 0);
+      box(r.w * 1.01, 0.05, r.d * 1.01, e.h, capMat);
+    }
+    const cur = col.clone();   // V9.19.16: color vigente (línea o estatus LPA)
+    const label = makeLabel(`${e.id}`, 'lbl-m', ln.color);
+    label.position.set(0, e.h + 1.0, 0);
+    label.visible = false;
+    g.add(label);
+    equipLabels.push({ label, world: r.center, id: e.id });
+    register(e.id, {
+      kind: 'equipo', data: e, linea: ln, label, center: r.center.clone().setY(e.h / 2), size: { w: r.w, d: r.d, h: e.h },
+      paint(h, s) {
+        mat.emissiveIntensity = 0.05 + (h ? 0.3 : 0) + (s ? 0.5 : 0);
+        capMat.color.copy(s ? cur.clone().lerp(WHITE, 0.45) : cur);
+        label.userData.el.classList.toggle('active', h || s);
+      },
+      setColor(hex) { cur.set(hex); mat.color.copy(cur.clone().lerp(STEEL, 0.35)); mat.emissive.set(hex); capMat.color.copy(cur); },
+    }, meshes);
+  }
+  const bb = { x1: bx1, z1: bz1, x2: bx2, z2: bz2 };
+  const r = rectInfo(bb);
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(r.w + 2, r.d + 2), new THREE.MeshBasicMaterial({ color: ln.color, transparent: true, opacity: 0.06, depthWrite: false }));
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.copy(r.center).setY(0.03);
+  scene.add(pad);
+  const outline = new THREE.LineLoop(rectLoop(r.w + 2, r.d + 2, 0.04), new THREE.LineDashedMaterial({ color: ln.color, dashSize: 0.8, gapSize: 0.5, transparent: true, opacity: 0.5 }));
+  outline.computeLineDistances();
+  outline.position.copy(r.center);
+  scene.add(outline);
+  const label = makeLabel(`<b>${ln.id}</b><span>${ln.sub}</span>`, 'lbl-line', ln.color);
+  label.position.copy(r.center).setY(maxH + 2.6);
+  scene.add(label);
+  lineObjs[ln.id] = { data: ln, bb, info: r, pad, outline, label, maxH };
+}
+
+// ---- 3.4 Áreas especiales ----
+for (const a of L.areas) {
+  const r = rectInfo(a);
+  const h = Math.max(a.h, 0.1);
+  const geo = new THREE.BoxGeometry(r.w, h, r.d);
+  const mat = new THREE.MeshStandardMaterial({ color: a.color, emissive: a.color, emissiveIntensity: 0.2, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide });
+  const box = new THREE.Mesh(geo, mat);
+  box.position.copy(r.center).setY(h / 2 + 0.02);
+  box.renderOrder = 2;
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: a.color }));
+  box.add(edges);
+  scene.add(box);
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), new THREE.MeshBasicMaterial({ color: a.color, transparent: true, opacity: 0.12, depthWrite: false }));
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.copy(r.center).setY(0.035);
+  scene.add(pad);
+  const label = makeLabel(a.nombre, 'lbl-area', a.color);
+  label.position.set(0, h / 2 + 0.8, 0);
+  box.add(label);
+  const ac = new THREE.Color(a.color);
+  register(a.id, {
+    kind: 'area', data: a, label, center: r.center.clone(), size: { w: r.w, d: r.d, h },
+    paint(hv, s) {
+      mat.opacity = 0.16 + (hv ? 0.1 : 0) + (s ? 0.14 : 0);
+      mat.emissiveIntensity = 0.2 + (hv ? 0.3 : 0) + (s ? 0.45 : 0);
+      edges.material.color.copy(s ? WHITE : ac);
+      label.userData.el.classList.toggle('active', hv || s);
+    },
+  }, [box]);
+}
+
+// ---- 3.5 Zonas de riesgo (carros de transferencia) ----
+const hatchTex = canvasTexture(64, 64, (g, w, h) => {
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(249,115,22,0.85)';
+  g.lineWidth = 9;
+  for (let i = -w; i < w * 2; i += 22) { g.beginPath(); g.moveTo(i, h); g.lineTo(i + h, 0); g.stroke(); }
+});
+for (const rz of L.riesgo || []) {
+  const meshes = [];
+  const mats = [];
+  let cx = 0, cz = 0, area = 0;
+  for (const rr of rz.rects) {
+    const r = rectInfo(rr);
+    const geo = new THREE.PlaneGeometry(r.w, r.d);
+    const uv = geo.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * r.w / 2.2, uv.getY(i) * r.d / 2.2);
+    const mat = new THREE.MeshBasicMaterial({ map: hatchTex, transparent: true, opacity: 0.75, depthWrite: false });
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.copy(r.center).setY(0.045);
+    const ol = new THREE.LineLoop(rectLoop(r.w, r.d, 0.05), new THREE.LineBasicMaterial({ color: 0xf97316 }));
+    ol.position.copy(r.center);
+    scene.add(m, ol);
+    meshes.push(m); mats.push(mat);
+    cx += r.center.x * r.w * r.d; cz += r.center.z * r.w * r.d; area += r.w * r.d;
+  }
+  const center = new THREE.Vector3(cx / area, 0, cz / area);
+  const big = rz.rects.reduce((a, b) => ((b.x2 - b.x1) * (b.z2 - b.z1) > (a.x2 - a.x1) * (a.z2 - a.z1) ? b : a));
+  const label = makeLabel(rz.nombre, 'lbl-risk');
+  label.position.copy(rectInfo(big).center).setY(0.6);
+  scene.add(label);
+  const bx1 = Math.min(...rz.rects.map((q) => q.x1)), bx2 = Math.max(...rz.rects.map((q) => q.x2));
+  const bz1 = Math.min(...rz.rects.map((q) => q.z1)), bz2 = Math.max(...rz.rects.map((q) => q.z2));
+  register(rz.id, {
+    kind: 'riesgo', data: rz, label, center, size: { w: bx2 - bx1, d: bz2 - bz1, h: 0 }, area,
+    paint(h, s) { mats.forEach((m) => { m.opacity = 0.75 + (h || s ? 0.25 : 0); }); label.userData.el.classList.toggle('active', h || s); },
+  }, meshes);
+}
+
+// ---- 3.6 Troqueles / contenedores en piso (InstancedMesh: 1 draw call) ----
+const dieItems = [];
+for (const grp of L.troqueles || []) for (const x of grp.xs) for (const z of grp.zs) dieItems.push({ x, z, w: grp.w, d: grp.d, h: grp.h, nombre: grp.nombre });
+let dieMesh = null;
+const dieMat = new THREE.MeshStandardMaterial({ color: theme.die, roughness: 0.55, metalness: 0.45, transparent: true, opacity: 1 });
+if (dieItems.length) {
+  dieMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), dieMat, dieItems.length);
+  const o = new THREE.Object3D();
+  dieItems.forEach((t, i) => {
+    o.position.copy(toWorld(t.x, t.z)).setY(t.h / 2);
+    o.scale.set(t.w, t.h, t.d);
+    o.updateMatrix();
+    dieMesh.setMatrixAt(i, o.matrix);
+    dieMesh.setColorAt(i, new THREE.Color(0xffffff));
+  });
+  dieMesh.castShadow = dieMesh.receiveShadow = true;
+  dieMesh.computeBoundingSphere();
+  dieMesh.userData.id = '__troquel';
+  scene.add(dieMesh);
+  pickTargets.push(dieMesh);
+}
+
+// ---- 3.7 Grúas viajeras (puente + carro animado) ----
+const craneMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45, metalness: 0.5, emissive: 0xeab308, emissiveIntensity: 0.05 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6, metalness: 0.5 });
+const cranes = [];
+(L.gruas || []).forEach((gr, idx) => {
+  const r = rectInfo(gr);
+  const H = CONFIG.alturaGrua;
+  const g = new THREE.Group();
+  g.position.copy(r.center);
+  layers.cranes.add(g);
+  const mat = craneMat.clone();
+  const meshes = [];
+  const add = (geo, m, x, y, z) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); me.castShadow = true; g.add(me); meshes.push(me); return me; };
+  add(new THREE.BoxGeometry(r.w, 0.8, 0.9), mat, 0, H, 0);                       // puente
+  add(new THREE.BoxGeometry(0.9, 0.7, Math.max(2.5, r.d * 0.6)), mat, -r.w / 2, H - 0.1, 0);   // testeros
+  add(new THREE.BoxGeometry(0.9, 0.7, Math.max(2.5, r.d * 0.6)), mat, r.w / 2, H - 0.1, 0);
+  const trolley = new THREE.Group();
+  g.add(trolley);
+  const tb = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.9, 1.6), darkMat); tb.position.y = H + 0.75; tb.castShadow = true; trolley.add(tb); meshes.push(tb);
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 3.6, 6), darkMat); cable.position.y = H - 1.8; trolley.add(cable);
+  const hook = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.6), mat); hook.position.y = H - 3.8; trolley.add(hook); meshes.push(hook);
+  // huella de la zona de la grúa en el piso
+  const zone = new THREE.LineLoop(rectLoop(r.w, r.d, 0.06), new THREE.LineDashedMaterial({ color: 0xeab308, dashSize: 0.6, gapSize: 0.5, transparent: true, opacity: 0.7 }));
+  zone.computeLineDistances();
+  g.add(zone);
+  const label = makeLabel(`🏗 ${gr.nombre}`, 'lbl-crane');
+  label.position.set(0, H + 1.6, 0);
+  g.add(label);
+  cranes.push({ trolley, w: r.w, phase: idx * 1.7, speed: 0.16 + (idx % 3) * 0.05 });
+  register(gr.id, {
+    kind: 'grua', data: gr, label, center: r.center.clone().setY(H), size: { w: r.w, d: r.d, h: H },
+    paint(h, s) { mat.emissiveIntensity = 0.05 + (h ? 0.35 : 0) + (s ? 0.6 : 0); label.userData.el.classList.toggle('active', h || s); },
+  }, meshes);
+});
+
+// ---- 3.8 Pasillos: tiras con textura (verde = seguro, amarillo/negro = precaución) ----
+const texSeguro = canvasTexture(256, 64, (g, w, h) => {
+  g.fillStyle = '#15803d'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#22c55e'; g.fillRect(0, 0, w, 7); g.fillRect(0, h - 7, w, 7);
+  g.fillStyle = 'rgba(240,253,244,0.85)';
+  for (let x = 20; x < w; x += 64) {                 // chevrons ">" de dirección peatonal
+    g.beginPath(); g.moveTo(x, 18); g.lineTo(x + 16, h / 2); g.lineTo(x, h - 18); g.lineTo(x + 8, h / 2); g.closePath(); g.fill();
+  }
+});
+const texPrecaucion = canvasTexture(128, 64, (g, w, h) => {
+  g.fillStyle = '#111111'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#facc15';
+  for (let i = -h; i < w + h; i += 32) { g.beginPath(); g.moveTo(i, h); g.lineTo(i + 16, h); g.lineTo(i + 16 + h, 0); g.lineTo(i + h, 0); g.closePath(); g.fill(); }
+});
+const AISLE = {
+  seguro: { tex: texSeguro, tile: 4, color: '#22c55e', cap: 0x15803d, nombre: 'Seguro', y: 0.07 },
+  precaucion: { tex: texPrecaucion, tile: 2, color: '#facc15', cap: 0xfacc15, nombre: 'Precaución', y: 0.075 },
+};
+const aisleList = [];
+for (const p of L.pasillos || []) {
+  const cfg = AISLE[p.tipo];
+  if (!cfg) continue;
+  const A = toWorld(p.a[0], p.a[1]), B = toWorld(p.b[0], p.b[1]);
+  const len = A.distanceTo(B);
+  if (len < 0.3) continue;
+  const W = CONFIG.anchoPasillo;
+  const geo = new THREE.PlaneGeometry(len, W);
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * len / cfg.tile);
+  const mat = new THREE.MeshBasicMaterial({ map: cfg.tex, transparent: true, opacity: 0.92, depthWrite: false, toneMapped: false });
+  const strip = new THREE.Mesh(geo, mat);
+  strip.rotation.x = -Math.PI / 2;
+  const holder = new THREE.Group();
+  holder.position.copy(A).add(B).multiplyScalar(0.5).setY(cfg.y);
+  holder.rotation.y = -Math.atan2(B.z - A.z, B.x - A.x);
+  holder.add(strip);
+  layers[p.tipo].add(holder);
+  const capMat = new THREE.MeshBasicMaterial({ color: cfg.cap, transparent: true, opacity: 0.92, depthWrite: false, toneMapped: false });
+  for (const E of [A, B]) {
+    const cap = new THREE.Mesh(new THREE.CircleGeometry(W / 2, 20), capMat);
+    cap.rotation.x = -Math.PI / 2;
+    cap.position.copy(E).setY(cfg.y - 0.002);
+    layers[p.tipo].add(cap);
+  }
+  const label = makeLabel(p.id, 'lbl-aisle-id', cfg.color);
+  label.position.copy(holder.position).setY(0.4);
+  if (len > 3) layers[p.tipo].add(label);
+  const item = { ...p, A, B, len, label };
+  aisleList.push(item);
+  register(p.id, {
+    kind: 'pasillo', data: item, label, center: holder.position.clone(), size: { w: Math.abs(B.x - A.x) + W, d: Math.abs(B.z - A.z) + W, h: 0 },
+    paint(h, s) { mat.opacity = h || s ? 1 : 0.92; mat.color.setScalar(s ? 1.35 : h ? 1.2 : 1); capMat.color.set(cfg.cap).multiplyScalar(s ? 1.35 : h ? 1.2 : 1); label.userData.el.classList.toggle('active', h || s); },
+  }, [strip]);
+}
+const sumLen = (t) => aisleList.filter((a) => a.tipo === t).reduce((s, a) => s + a.len, 0);
+
+// Distancia de un punto (mundo) a un tramo de pasillo
+const _ab = new THREE.Vector3(), _ap = new THREE.Vector3();
+function distToAisle(pt, a) {
+  _ab.subVectors(a.B, a.A).setY(0);
+  _ap.subVectors(pt, a.A).setY(0);
+  const t = THREE.MathUtils.clamp(_ap.dot(_ab) / Math.max(_ab.lengthSq(), 1e-6), 0, 1);
+  return _ap.sub(_ab.multiplyScalar(t)).length();
+}
+// distancia desde el borde de un rectángulo (aprox.: muestreo del tramo)
+function rectToAisle(center, w, d, a) {
+  let best = Infinity;
+  const p = new THREE.Vector3();
+  for (let i = 0; i <= 24; i++) {
+    p.lerpVectors(a.A, a.B, i / 24);
+    const dx = Math.max(Math.abs(p.x - center.x) - w / 2, 0), dz = Math.max(Math.abs(p.z - center.z) - d / 2, 0);
+    best = Math.min(best, Math.hypot(dx, dz));
+  }
+  return best;
+}
+function nearestAisle(center, w, d, tipo) {
+  let best = null;
+  for (const a of aisleList) {
+    if (a.tipo !== tipo) continue;
+    const dist = rectToAisle(center, w, d, a);
+    if (!best || dist < best.dist) best = { a, dist };
+  }
+  return best;
+}
+
+// Marcador de selección
+const marker = new THREE.Group();
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 64), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, side: THREE.DoubleSide, toneMapped: false }));
+ring.rotation.x = -Math.PI / 2;
+ring.position.y = 0.1;
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 14, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+beam.position.y = 7;
+marker.add(ring, beam);
+marker.visible = false;
+scene.add(marker);
+
+/* ======================================================================
+   6. BRÚJULA (3D + datos de orientación) — se usa en paneles
+   ====================================================================== */
+const NORTE = new THREE.Vector3(Math.sin(THREE.MathUtils.degToRad(L.norte || 0)), 0, -Math.cos(THREE.MathUtils.degToRad(L.norte || 0)));
+const ESTE = new THREE.Vector3(-NORTE.z, 0, NORTE.x);
+const PLANT_C = rectInfo(P);
+const CARDINALES = [
+  { id: 'N', nombre: T('Norte', 'North'), v: NORTE, rot: 0 },
+  { id: 'E', nombre: T('Este', 'East'), v: ESTE, rot: -Math.PI / 2 },
+  { id: 'S', nombre: T('Sur', 'South'), v: NORTE.clone().negate(), rot: Math.PI },
+  { id: 'O', nombre: T('Oeste', 'West'), v: ESTE.clone().negate(), rot: Math.PI / 2 },
+];
+{
+  const rose = new THREE.Group();
+  rose.position.copy(toWorld(P.x2 + 9, P.z1 + 8)).setY(0.05);
+  rose.rotation.y = -THREE.MathUtils.degToRad(L.norte || 0);
+  const rm = new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+  for (const [a, b] of [[3.7, 3.85], [2.1, 2.18]]) { const m = new THREE.Mesh(new THREE.RingGeometry(a, b, 64), rm); m.rotation.x = -Math.PI / 2; rose.add(m); }
+  for (const c of CARDINALES) {
+    const len = c.id === 'N' ? 3.6 : 2.9;
+    const s = new THREE.Shape(); s.moveTo(0, len); s.lineTo(0.7, 0); s.lineTo(-0.7, 0); s.closePath();
+    const tri = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshBasicMaterial({ color: c.id === 'N' ? 0xef4444 : 0x94a3b8, side: THREE.DoubleSide, toneMapped: false }));
+    tri.rotation.x = -Math.PI / 2;
+    const hld = new THREE.Group(); hld.rotation.y = c.rot; hld.position.y = 0.01; hld.add(tri); rose.add(hld);
+    const lbl = makeLabel(c.id, 'lbl-rose' + (c.id === 'N' ? ' north' : ''));
+    lbl.position.copy(new THREE.Vector3(0, 0, -5.2).applyAxisAngle(new THREE.Vector3(0, 1, 0), c.rot));
+    rose.add(lbl);
+  }
+  scene.add(rose);
+  for (const c of CARDINALES) {
+    const t = Math.min(PLANT_C.w / 2 / Math.max(Math.abs(c.v.x), 1e-6), PLANT_C.d / 2 / Math.max(Math.abs(c.v.z), 1e-6));
+    const lbl = makeLabel(c.nombre, 'lbl-cardinal' + (c.id === 'N' ? ' north' : ''));
+    lbl.position.copy(PLANT_C.center).addScaledVector(c.v, t + 10).setY(0.1);
+    scene.add(lbl);
+  }
+}
+const PUNTOS = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+const abrevRumbo = (deg) => PUNTOS[Math.round(deg / 45) % 8];
+const rumboDe = (v) => (THREE.MathUtils.radToDeg(Math.atan2(v.dot(ESTE), v.dot(NORTE))) + 360) % 360;
+function orientacion(world) {
+  const p = world.clone().sub(PLANT_C.center).setY(0);
+  const extN = Math.abs(NORTE.x) * PLANT_C.w / 2 + Math.abs(NORTE.z) * PLANT_C.d / 2;
+  const extE = Math.abs(ESTE.x) * PLANT_C.w / 2 + Math.abs(ESTE.z) * PLANT_C.d / 2;
+  const v = p.dot(NORTE) / extN, u = p.dot(ESTE) / extE, th = 0.33;
+  const k = (v > th ? 'N' : v < -th ? 'S' : '') + (u > th ? 'E' : u < -th ? 'O' : '');
+  const nombres = EN ? { N: 'North', S: 'South', E: 'East', O: 'West', NE: 'Northeast', NO: 'Northwest', SE: 'Southeast', SO: 'Southwest' } : { N: 'Norte', S: 'Sur', E: 'Este', O: 'Oeste', NE: 'Noreste', NO: 'Noroeste', SE: 'Sureste', SO: 'Suroeste' };
+  const rumbo = rumboDe(p);
+  return { sector: nombres[k] ?? T('Centro', 'Center'), rumbo, abrev: abrevRumbo(rumbo) };
+}
+const filasOrientacion = (world) => {
+  const o = orientacion(world);
+  return `<div class="p-row"><span>🧭 ${T('Sector de la planta', 'Plant sector')}</span><b>${o.sector}</b></div>
+    <div class="p-row"><span>${T('Rumbo desde el centro de la nave', 'Bearing from building center')}</span><b>${Math.round(o.rumbo) % 360}° (${o.abrev})</b></div>`;
+};
+function direccionTramo(a) {
+  const v = a.B.clone().sub(a.A).setY(0);
+  const r = rumboDe(v) % 180;  // un tramo se recorre en ambos sentidos
+  if (r < 22.5 || r >= 157.5) return 'Norte – Sur';
+  if (r < 67.5) return 'Noreste – Suroeste';
+  if (r < 112.5) return 'Este – Oeste';
+  return 'Noroeste – Sureste';
+}
+
+/* ======================================================================
+   4. INTERACCIÓN
+   ====================================================================== */
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const panel = document.getElementById('panel');
+const tooltip = document.getElementById('tooltip');
+const state = { hover: null, sel: null, line: null, labelMode: 'auto', safety: false, anim: true };
+
+function isShown(o) { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; }
+function pick(cx, cy) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  ndc.set(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(pickTargets.filter(isShown), false);
+  for (const h of hits) {
+    const id = h.object.userData.id;
+    if (id === '__suelo') return null;
+    if (id === '__troquel') return { id: '__troquel', i: h.instanceId };
+    if (entities.has(id)) return { id };
+  }
+  return null;
+}
+const keyOf = (t) => (t ? (t.id === '__troquel' ? 'T' + t.i : t.id) : null);
+function paint(t) {
+  if (!t) return;
+  if (t.id === '__troquel') {
+    const on = keyOf(t) === keyOf(state.hover) || keyOf(t) === keyOf(state.sel);
+    dieMesh.setColorAt(t.i, new THREE.Color(on ? 0xfacc15 : 0xffffff));
+    dieMesh.instanceColor.needsUpdate = true;
+    return;
+  }
+  const e = entities.get(t.id);
+  e?.paint(keyOf(t) === keyOf(state.hover), keyOf(t) === keyOf(state.sel));
+}
+function setHover(t) {
+  if (keyOf(t) === keyOf(state.hover)) return;
+  const prev = state.hover;
+  state.hover = t;
+  paint(prev); paint(t);
+  renderer.domElement.style.cursor = t ? 'pointer' : '';
+}
+function select(t, fly = false) {
+  const prev = state.sel;
+  state.sel = t;
+  paint(prev); paint(t);
+  const selId = t?.id;
+  document.querySelectorAll('[data-go]').forEach((b) => b.classList.toggle('active', !!selId && b.dataset.go === selId));
+  if (!t) { marker.visible = false; panel.classList.add('hidden'); return; }
+  let center, size;
+  if (t.id === '__troquel') {
+    const d = dieItems[t.i];
+    center = toWorld(d.x, d.z); size = { w: d.w, d: d.d, h: d.h };
+    showDiePanel(d);
+  } else {
+    const e = entities.get(t.id);
+    center = e.center; size = e.size;
+    showPanel(e);
+  }
+  marker.position.copy(center).setY(0);
+  ring.userData.base = Math.max(size.w, size.d) * 0.62 + 0.4;
+  marker.visible = true;
+  if (fly) focus(center, size);
+}
+function goEntity(id) { if (entities.has(id)) select({ id }, true); }
+
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, b: e.button }; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || down.b !== 0) { down = null; return; }
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+  down = null;
+  if (moved > 5) return;
+  select(pick(e.clientX, e.clientY));        // clic en piso → cierra el panel
+});
+renderer.domElement.addEventListener('dblclick', (e) => { const t = pick(e.clientX, e.clientY); if (t) select(t, true); });
+let hoverEvt = null;
+renderer.domElement.addEventListener('pointermove', (e) => { hoverEvt = e; });
+renderer.domElement.addEventListener('pointerleave', () => { hoverEvt = null; setHover(null); tooltip.classList.add('hidden'); });
+function processHover() {
+  if (!hoverEvt) return;
+  const e = hoverEvt; hoverEvt = null;
+  if (e.buttons) { tooltip.classList.add('hidden'); return; }
+  const t = pick(e.clientX, e.clientY);
+  setHover(t);
+  if (!t) { tooltip.classList.add('hidden'); return; }
+  let code, sub, color;
+  if (t.id === '__troquel') { code = 'Troquel'; sub = dieItems[t.i].nombre; color = '#94a3b8'; }
+  else {
+    const en = entities.get(t.id), d = en.data;
+    if (en.kind === 'equipo') { code = d.id; sub = `${d.nombre} · ${en.linea.nombre}${AUD_BY[en.linea.id] ? ' · ' + EST_TXT[estadoLinea(en.linea.id)] : ''}`; color = en.linea.color; }
+    else if (en.kind === 'pasillo') { code = d.id; sub = `Pasillo ${AISLE[d.tipo].nombre.toLowerCase()} · ${f1(d.len)} m`; color = AISLE[d.tipo].color; }
+    else if (en.kind === 'grua') { code = d.nombre; sub = 'Grúa viajera'; color = '#eab308'; }
+    else if (en.kind === 'riesgo') { code = d.nombre; sub = 'Zona de riesgo'; color = '#f97316'; }
+    else { code = d.nombre; sub = d.tipo; color = d.color; }
+  }
+  tooltip.style.setProperty('--c', color);
+  tooltip.innerHTML = `<b>${code}</b><small>${sub}</small>`;
+  tooltip.style.left = e.clientX + 'px';
+  tooltip.style.top = e.clientY + 'px';
+  tooltip.classList.remove('hidden');
+}
+
+// ---- Panel de información ----
+const chipGo = (id, text, color, extra = '') => `<button class="chip" data-go="${id}" style="--c:${color}">${text}${extra}</button>`;
+const aisleChip = (n) => n ? chipGo(n.a.id, n.a.id, AISLE[n.a.tipo].color, `<em>${f1(n.dist)} m</em>`) : '<span class="chip" style="--c:#64748b">—</span>';
+function head(kicker, color, title) {
+  panel.style.setProperty('--c', color);
+  return `<div class="p-head"><span class="dot"></span><span class="p-kicker">${kicker}</span>
+      <button class="close" data-act="close" aria-label="${T('Cerrar', 'Close')}">×</button></div>
+    <h2 class="p-title">${title}</h2>`;
+}
+const sep = '<i>|</i>';
+function audPanel(lineId) {
+  const l = AUD_BY[lineId];
+  if (!l || !l.length) return AUDS.length ? `<div class="p-row"><span>${T('Auditoría LPA', 'LPA audit')}</span><b>${T('Ninguna en el periodo', 'None in the period')}</b></div>` : '';
+  const max = 10;
+  return `<h4>${T('Auditorías LPA de la línea', 'LPA audits of the line')} (${l.length})</h4>` + l.slice(0, max).map((a) =>
+    `<div class="aud${a.id === DATOS.focoAuditoria ? ' foco' : ''}" style="--e:${EST_COLOR[a.grupo] || EST_COLOR.ninguna}"><i></i>
+      <div><b>${esc(a.fecha)}</b> · ${esc(a.nivel)}<small>${esc(a.auditor || '—')}${a.area ? ' · ' + esc(a.area) : ''}</small></div>
+      <em>${esc(EN ? (a.estatusEn || a.estatus) : a.estatus)}</em></div>`).join('') +
+    (l.length > max ? `<p>${T('y', 'and')} ${l.length - max} ${T('más', 'more')}</p>` : '');
+}
+function showPanel(e) {
+  const d = e.data;
+  let html = '';
+  if (e.kind === 'equipo') {
+    const ln = e.linea;
+    const ns = nearestAisle(e.center, e.size.w, e.size.d, 'seguro');
+    const np = nearestAisle(e.center, e.size.w, e.size.d, 'precaucion');
+    html = head(T('Equipo de producción', 'Production equipment'), ln.color, `${T('Equipo', 'Equipment')}: <b class="code">${esc(d.id)}</b>${sep}${T('Línea', 'Line')}: <b>${esc(ln.nombre)}</b>${sep}${T('Tipo', 'Type')}: <b>${esc(d.tipo)}</b>`) + `
+      ${audPanel(ln.id)}
+      <div class="p-grid">
+        <div><span>${T('Ancho', 'Width')}</span><b>${f1(e.size.w)} m</b></div><div><span>${T('Largo', 'Length')}</span><b>${f1(e.size.d)} m</b></div>
+        <div><span>${T('Altura bloque', 'Block height')}</span><b>${f1(e.size.h)} m</b></div><div><span>${T('Superficie', 'Surface')}</span><b>${(e.size.w * e.size.d).toFixed(0)} m²</b></div>
+      </div>
+      <div class="p-row"><span>${T('Descripción', 'Description')}</span><b>${esc(d.nombre)}</b></div>
+      <div class="p-row"><span>${T('Posición (x, z)', 'Position (x, z)')}</span><b>${f1((d.x1 + d.x2) / 2)}, ${f1((d.z1 + d.z2) / 2)} m</b></div>
+      ${filasOrientacion(e.center)}
+      <h4>${T('Pasillos más cercanos', 'Nearest aisles')}</h4>
+      <div class="p-row"><span><span class="badge seguro">● ${T('Seguro', 'Safe')}</span></span><span class="chips">${aisleChip(ns)}</span></div>
+      <div class="p-row"><span><span class="badge precaucion">▲ ${T('Precaución', 'Caution')}</span></span><span class="chips">${aisleChip(np)}</span></div>
+      <h4>${T('Otros equipos de', 'Other equipment of')} ${esc(ln.nombre)}</h4>
+      <div class="chips">${ln.equipos.filter((q) => q.id !== d.id).map((q) => chipGo(q.id, q.id, ln.color)).join('') || '—'}</div>
+      <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar', '◎ Focus')}</button><button class="btn" data-act="line" data-line="${ln.id}">${T('Ver línea', 'View line')} ${ln.id}</button></div>`;
+  } else if (e.kind === 'pasillo') {
+    const cfg = AISLE[d.tipo];
+    const near = [...entities.values()].filter((q) => q.kind === 'equipo')
+      .map((q) => ({ q, dist: rectToAisle(q.center, q.size.w, q.size.d, d) })).filter((x) => x.dist < 8).sort((a, b) => a.dist - b.dist).slice(0, 8);
+    const conecta = aisleList.filter((o) => o !== d && Math.min(distToAisle(o.A, d), distToAisle(o.B, d), distToAisle(d.A, o), distToAisle(d.B, o)) < 2.2);
+    html = head(T('Pasillo', 'Aisle'), cfg.color, `${T('Pasillo', 'Aisle')}: <b class="code">${d.id}</b>${sep}${T('Tipo', 'Type')}: <b>${T(cfg.nombre, d.tipo === 'seguro' ? 'Safe' : 'Caution')}</b>${sep}${T('Longitud', 'Length')}: <b>${f1(d.len)} m</b>`) + `
+      <span class="badge ${d.tipo}">${d.tipo === 'seguro' ? '● Se puede caminar seguro' : '▲ Precaución: tráfico de grúa'}</span>
+      <div class="p-note">${CONFIG.textos[d.tipo]}</div>
+      <div class="p-grid" style="margin-top:10px">
+        <div><span>Inicio (x, z)</span><b>${f1(d.a[0])}, ${f1(d.a[1])}</b></div><div><span>Fin (x, z)</span><b>${f1(d.b[0])}, ${f1(d.b[1])}</b></div>
+      </div>
+      <div class="p-row"><span>🧭 Recorrido</span><b>${direccionTramo(d)}</b></div>
+      ${filasOrientacion(e.center)}
+      ${conecta.length ? `<h4>Conecta con</h4><div class="chips">${conecta.map((o) => chipGo(o.id, o.id, AISLE[o.tipo].color)).join('')}</div>` : ''}
+      ${near.length ? `<h4>Equipos a menos de 8 m</h4><div class="chips">${near.map(({ q, dist }) => chipGo(q.id, q.id, q.linea.color, `<em>${f1(dist)} m</em>`)).join('')}</div>` : ''}
+      <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar', '◎ Focus')}</button></div>`;
+  } else if (e.kind === 'grua') {
+    const caut = aisleList.filter((a) => a.tipo === 'precaucion' && rectToAisle(e.center, e.size.w, e.size.d, a) < 6);
+    html = head(T('Grúa viajera (O/H crane)', 'Overhead crane (O/H crane)'), '#eab308', `${T('Grúa', 'Crane')}: <b>${esc(d.nombre)}</b>${sep}${T('Capacidad', 'Capacity')}: <b>${d.capacidad} t</b>`) + `
+      <span class="badge precaucion">▲ No transitar bajo carga suspendida</span>
+      <div class="p-grid" style="margin-top:10px">
+        <div><span>Claro del puente</span><b>${f1(e.size.w)} m</b></div><div><span>Altura puente</span><b>${f1(CONFIG.alturaGrua)} m</b></div>
+      </div>
+      ${filasOrientacion(e.center)}
+      <p>Mueve troqueles, rollos y material en esta zona. Los pasillos amarillos marcan su tráfico.</p>
+      ${caut.length ? `<h4>Pasillos de precaución cercanos</h4><div class="chips">${caut.map((a) => chipGo(a.id, a.id, '#facc15')).join('')}</div>` : ''}
+      <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar', '◎ Focus')}</button></div>`;
+  } else if (e.kind === 'riesgo') {
+    html = head('Zona de riesgo', '#f97316', `Zona: <b>${d.nombre}</b>${sep}Tipo: <b>Carro de transferencia</b>`) + `
+      <span class="badge riesgo">⚠ Ruta de equipo móvil</span>
+      <div class="p-note">${d.desc}</div>
+      <div class="p-grid" style="margin-top:10px"><div><span>Superficie</span><b>${e.area.toFixed(0)} m²</b></div><div><span>Tramos</span><b>${d.rects.length}</b></div></div>
+      ${filasOrientacion(e.center)}
+      <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar', '◎ Focus')}</button></div>`;
+  } else {
+    const ns = nearestAisle(e.center, e.size.w, e.size.d, 'seguro');
+    html = head(T('Área especial', 'Special area'), d.color, `${T('Área', 'Area')}: <b>${esc(d.nombre)}</b>${sep}${T('Tipo', 'Type')}: <b>${esc(d.tipo)}</b>`) + `
+      <div class="p-grid">
+        <div><span>Ancho</span><b>${f1(e.size.w)} m</b></div><div><span>Largo</span><b>${f1(e.size.d)} m</b></div>
+        <div><span>Superficie</span><b>${(e.size.w * e.size.d).toFixed(0)} m²</b></div><div><span>Altura bloque</span><b>${f1(d.h)} m</b></div>
+      </div>
+      <p>${d.desc}</p>
+      ${filasOrientacion(e.center)}
+      <div class="p-row"><span><span class="badge seguro">● Pasillo seguro más cercano</span></span><span class="chips">${aisleChip(ns)}</span></div>
+      <div class="p-actions"><button class="btn" data-act="focus">${T('◎ Enfocar', '◎ Focus')}</button></div>`;
+  }
+  panel.innerHTML = html;
+  panel.classList.remove('hidden');
+}
+function showDiePanel(d) {
+  const c = toWorld(d.x, d.z);
+  panel.innerHTML = head('Troquel en piso', '#94a3b8', `Troquel${sep}Almacén: <b>${d.nombre}</b>`) + `
+    <div class="p-grid"><div><span>Posición X</span><b>${f1(d.x)} m</b></div><div><span>Posición Z</span><b>${f1(d.z)} m</b></div>
+      <div><span>Huella</span><b>${f1(d.w)} × ${f1(d.d)} m</b></div><div><span>Altura</span><b>${f1(d.h)} m</b></div></div>
+    ${filasOrientacion(c)}
+    <p>Posición tomada de la cuadrícula de troqueles del plano.</p>`;
+  panel.classList.remove('hidden');
+}
+panel.addEventListener('click', (ev) => {
+  const act = ev.target.closest('[data-act]')?.dataset.act;
+  if (act === 'close') return select(null);
+  if (act === 'focus' && state.sel) {
+    if (state.sel.id === '__troquel') { const d = dieItems[state.sel.i]; return focus(toWorld(d.x, d.z), { w: d.w, d: d.d, h: d.h }); }
+    const e = entities.get(state.sel.id); return focus(e.center, e.size);
+  }
+  if (act === 'line') return goLine(ev.target.closest('[data-line]').dataset.line);
+  const g = ev.target.closest('[data-go]');
+  if (g) goEntity(g.dataset.go);
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') select(null);
+  if (e.target.tagName !== 'INPUT' && (e.key === 'h' || e.key === 'H')) goHome();
+});
+
+/* ======================================================================
+   5. NAVEGACIÓN
+   ====================================================================== */
+let manualFly = null;
+function flyTo(target, dist, dir = VIEW_DIR, duration = 1.5) {
+  const pos = target.clone().addScaledVector(dir.clone().normalize(), dist);
+  const gsap = window.gsap;
+  if (gsap) {
+    gsap.ticker.lagSmoothing(0);
+    gsap.killTweensOf([camera.position, controls.target]);
+    gsap.to(controls.target, { x: target.x, y: target.y, z: target.z, duration, ease: 'power3.inOut' });
+    gsap.to(camera.position, { x: pos.x, y: pos.y, z: pos.z, duration, ease: 'power3.inOut' });
+  } else manualFly = { t: 0, duration, p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target.clone() };
+}
+controls.addEventListener('start', () => { window.gsap?.killTweensOf([camera.position, controls.target]); manualFly = null; });
+function fitDistance(w, d, margin = 1.15) {
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const span = Math.max(d, w / Math.max(camera.aspect * 0.8, 0.5));
+  return (span * margin) / (2 * Math.tan(vFov / 2)) + 4;
+}
+function focus(center, size) { flyTo(center.clone().setY(Math.min(size.h || 0, 4) * 0.4), Math.max(fitDistance(size.w, size.d, 1.8), 12)); }
+
+function goLine(id) {
+  const o = lineObjs[id];
+  state.line = id;
+  for (const [lid, x] of Object.entries(lineObjs)) {
+    const on = lid === id;
+    x.pad.material.opacity = on ? 0.16 : 0.06;
+    x.outline.material.opacity = on ? 1 : 0.5;
+    x.label.userData.el.classList.toggle('active', on);
+  }
+  document.querySelectorAll('.line-btn').forEach((b) => b.classList.toggle('active', b.dataset.line === id));
+  renderLineDetail(id);
+  flyTo(o.info.center.clone(), Math.max(fitDistance(o.info.w, o.info.d, 1.5), 18));
+  if (window.innerWidth <= 820) document.body.classList.remove('menu-open');
+}
+function clearLine() {
+  state.line = null;
+  for (const x of Object.values(lineObjs)) { x.pad.material.opacity = 0.06; x.outline.material.opacity = 0.5; x.label.userData.el.classList.remove('active'); }
+  document.querySelectorAll('.line-btn').forEach((b) => b.classList.remove('active'));
+  document.getElementById('lineDetail').classList.add('hidden');
+}
+function goHome() { select(null); clearLine(); flyTo(HOME.target.clone(), HOME.dist); }
+function goTop() { flyTo(HOME.target.clone(), Math.max(plantW * 1.08, plantD * 1.55), NORTE.clone().multiplyScalar(-0.002).setY(1)); }
+
+// Menú: líneas
+const lineGrid = document.getElementById('lineGrid');
+lineGrid.innerHTML = L.lineas.map((ln) =>
+  `<button class="line-btn" data-line="${ln.id}" style="--c:${ln.color}" title="${ln.nombre} — ${ln.sub}"><b>${ln.id}</b><small>${ln.sub}</small></button>`).join('');
+lineGrid.addEventListener('click', (e) => { const b = e.target.closest('[data-line]'); if (b) goLine(b.dataset.line); });
+function renderLineDetail(id) {
+  const o = lineObjs[id], ln = o.data;
+  const el = document.getElementById('lineDetail');
+  el.innerHTML = `<div class="zd-title">${esc(ln.nombre)} · ${ln.equipos.length} ${T('equipo', 'item')}${ln.equipos.length > 1 ? 's' : ''}${AUD_BY[ln.id] ? ' · ' + EST_TXT[estadoLinea(ln.id)] : ''}</div>
+    <div class="zd-sub">${esc(ln.sub)} · ${f1(o.info.w)} × ${f1(o.info.d)} m · 🧭 ${orientacion(o.info.center).sector}</div>
+    <div class="chips">${ln.equipos.map((q) => chipGo(q.id, q.id, ln.color)).join('')}</div>`;
+  el.classList.remove('hidden');
+}
+document.getElementById('lineDetail').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) goEntity(b.dataset.go); });
+
+// Menú: áreas, zonas de riesgo y grúas
+const areaBtn = (id, name, sub, color) => `<button class="area-btn" data-go="${id}" style="--c:${color}"><i></i><span>${name}</span><small>${sub}</small></button>`;
+document.getElementById('areaList').innerHTML =
+  L.areas.map((a) => areaBtn(a.id, a.nombre, a.tipo, a.color)).join('') +
+  ((L.riesgo || []).length ? `<div class="sub-h">Zonas de riesgo</div>` + L.riesgo.map((r) => areaBtn(r.id, r.nombre, 'Equipo móvil', '#f97316')).join('') : '') +
+  ((L.gruas || []).length ? `<div class="sub-h">Grúas viajeras</div>` + L.gruas.map((g) => areaBtn(g.id, g.nombre, `${g.capacidad} t`, '#eab308')).join('') : '');
+document.getElementById('areaList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-go]');
+  if (b) { goEntity(b.dataset.go); if (window.innerWidth <= 820) document.body.classList.remove('menu-open'); }
+});
+
+// Menú: pasillos
+const nSeg = aisleList.filter((a) => a.tipo === 'seguro').length, nPre = aisleList.length - nSeg;
+document.getElementById('sumSeguro').textContent = `${nSeg} ${T('tramos', 'segments')} · ${sumLen('seguro').toFixed(0)} m · ${T('se puede caminar seguro', 'safe to walk')}`;
+document.getElementById('sumPrecaucion').textContent = `${nPre} ${T('tramos', 'segments')} · ${sumLen('precaucion').toFixed(0)} m · ${T('tráfico de grúa, troqueles, rollos', 'crane, dies and coils traffic')}`;
+document.getElementById('tglSeguro').addEventListener('change', (e) => { layers.seguro.visible = e.target.checked; });
+document.getElementById('tglPrecaucion').addEventListener('change', (e) => { layers.precaucion.visible = e.target.checked; });
+document.getElementById('tglAisleIds').addEventListener('change', (e) => document.body.classList.toggle('hide-aisle-ids', !e.target.checked));
+document.getElementById('tglSafety').addEventListener('change', (e) => setSafety(e.target.checked));
+function setSafety(on) {
+  state.safety = on;
+  equipMats.forEach((m) => { m.opacity = on ? 0.22 : 1; m.depthWrite = !on; });
+  dieMat.opacity = on ? 0.2 : 1; dieMat.depthWrite = !on;
+  for (const k of ['seguro', 'precaucion']) layers[k].children.forEach((h) => { h.position.y += on ? 0.03 : -0.03; });
+  updateLabels();
+}
+
+// Búsqueda
+const searchEl = document.getElementById('search'), resultsEl = document.getElementById('results');
+let found = [];
+const searchIndex = [
+  ...L.lineas.map((ln) => ({ type: 'line', id: ln.id, label: ln.nombre, sub: ln.sub, color: ln.color, q: `${ln.id} ${ln.nombre} ${ln.sub}` })),
+  ...[...entities.values()].map((e) => {
+    const d = e.data;
+    if (e.kind === 'equipo') return { type: 'ent', id: d.id, label: d.id, sub: d.nombre, color: e.linea.color, q: `${d.id} ${d.nombre} ${d.tipo} ${e.linea.nombre}` };
+    if (e.kind === 'pasillo') return { type: 'ent', id: d.id, label: d.id, sub: `Pasillo ${AISLE[d.tipo].nombre.toLowerCase()} · ${f1(d.len)} m`, color: AISLE[d.tipo].color, q: `${d.id} pasillo ${d.tipo} ${AISLE[d.tipo].nombre}` };
+    if (e.kind === 'grua') return { type: 'ent', id: d.id, label: d.nombre, sub: 'Grúa viajera', color: '#eab308', q: `${d.nombre} grua grúa crane` };
+    if (e.kind === 'riesgo') return { type: 'ent', id: d.id, label: d.nombre, sub: 'Zona de riesgo', color: '#f97316', q: `${d.nombre} transfer riesgo` };
+    return { type: 'ent', id: d.id, label: d.nombre, sub: d.tipo, color: d.color, q: `${d.nombre} ${d.tipo}` };
+  }),
+];
+searchEl.addEventListener('input', () => {
+  const q = searchEl.value.trim().toLowerCase();
+  if (!q) { resultsEl.classList.add('hidden'); return; }
+  const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  found = searchIndex.filter((r) => norm(r.q).includes(norm(q))).slice(0, 40);
+  resultsEl.innerHTML = found.length
+    ? found.map((r, k) => `<li><button data-k="${k}" style="--c:${r.color}"><b>${r.label}</b><small>${r.sub}</small></button></li>`).join('')
+    : `<li class="empty">${T('Sin resultados', 'No results')}</li>`;
+  resultsEl.classList.remove('hidden');
+});
+const openResult = (r) => { if (!r) return; r.type === 'line' ? goLine(r.id) : goEntity(r.id); resultsEl.classList.add('hidden'); searchEl.blur(); };
+searchEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') openResult(found[0]); if (e.key === 'Escape') resultsEl.classList.add('hidden'); });
+resultsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) openResult(found[+b.dataset.k]); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.search')) resultsEl.classList.add('hidden'); });
+
+// Vista
+document.getElementById('btnHome').addEventListener('click', goHome);
+document.getElementById('btnTop').addEventListener('click', goTop);
+document.getElementById('menuBtn').addEventListener('click', () => document.body.classList.toggle('menu-open'));
+document.getElementById('selLabels').addEventListener('change', (e) => { state.labelMode = e.target.value; updateLabels(); });
+document.getElementById('tglCranes').addEventListener('change', (e) => { layers.cranes.visible = e.target.checked; });
+document.getElementById('tglAnim').addEventListener('change', (e) => { state.anim = e.target.checked; });
+document.getElementById('tglColumns').addEventListener('change', (e) => { layers.columns.visible = e.target.checked; });
+document.getElementById('tglTheme').addEventListener('change', (e) => applyTheme(e.target.checked ? 'light' : 'dark'));
+function applyTheme(name) {
+  theme = THEMES[name];
+  document.body.classList.toggle('light', name === 'light');
+  scene.background.set(theme.bg); scene.fog.color.set(theme.bg);
+  floorMat.color.set(theme.floor); slabMat.color.set(theme.slab);
+  plantMat.color.set(theme.plant); columnMat.color.set(theme.column); dieMat.color.set(theme.die);
+  WHITE.set(name === 'light' ? 0x0f172a : 0xffffff);
+  ring.material.color.copy(WHITE); beam.material.color.copy(WHITE);
+  if (state.sel) paint(state.sel);
+  buildGrid();
+}
+
+// Estadísticas
+document.getElementById('stats').innerHTML = `
+  <div><b>${L.lineas.length}</b>${T('Líneas', 'Lines')}</div>
+  <div><b>${[...entities.values()].filter((e) => e.kind === 'equipo').length}</b>${T('Equipos', 'Equipment')}</div>
+  <div><b>${aisleList.length}</b>${T('Pasillos', 'Aisles')}</div>
+  <div><b>${(L.gruas || []).length}</b>${T('Grúas', 'Cranes')}</div>`;
+
+// ---- Brújula HUD ----
+const roseEl = document.getElementById('compassRose');
+const headingEl = document.getElementById('compassHeading');
+{
+  let html = '';
+  for (let d = 0; d < 360; d += 10) {
+    const major = d % 90 === 0, r1 = major ? 37 : 41, a = THREE.MathUtils.degToRad(d);
+    html += `<line x1="${(Math.sin(a) * r1).toFixed(2)}" y1="${(-Math.cos(a) * r1).toFixed(2)}" x2="${(Math.sin(a) * 45).toFixed(2)}" y2="${(-Math.cos(a) * 45).toFixed(2)}" class="${major ? 'major' : ''}"/>`;
+  }
+  document.getElementById('compassTicks').innerHTML = html;
+}
+const _fwd = new THREE.Vector3(), _up = new THREE.Vector3(), _v = new THREE.Vector3(), _r = new THREE.Vector3();
+let lastAng = null;
+function updateCompass() {
+  camera.getWorldDirection(_fwd);
+  _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+  _v.set(_fwd.x + _up.x, 0, _fwd.z + _up.z);
+  if (_v.lengthSq() < 1e-8) return;
+  _v.normalize();
+  _r.set(-_v.z, 0, _v.x);
+  const ang = THREE.MathUtils.radToDeg(Math.atan2(NORTE.dot(_r), NORTE.dot(_v)));
+  if (lastAng !== null && Math.abs(ang - lastAng) < 0.1) return;
+  lastAng = ang;
+  roseEl.setAttribute('transform', `rotate(${ang.toFixed(1)})`);
+  roseEl.querySelectorAll('text').forEach((t) => t.setAttribute('transform', `rotate(${(-ang).toFixed(1)} ${t.getAttribute('x')} ${t.getAttribute('y')})`));
+  const rumbo = rumboDe(_v);
+  headingEl.textContent = `${T('Vista hacia', 'Facing')} ${abrevRumbo(rumbo)} · ${Math.round(rumbo) % 360}°`;
+}
+document.getElementById('compass').addEventListener('click', () => {
+  const off = camera.position.clone().sub(controls.target);
+  const horiz = Math.max(Math.hypot(off.x, off.z), 0.002);
+  flyTo(controls.target.clone(), off.length(), NORTE.clone().multiplyScalar(-horiz).setY(off.y), 1.0);
+});
+
+/* ======================================================================
+   7. LOOP DE RENDER
+   ====================================================================== */
+function updateLabels() {
+  const cam = camera.position;
+  const selId = state.sel?.id, hovId = state.hover?.id;
+  for (const q of equipLabels) {
+    let v = state.labelMode === 'all' ? true : state.labelMode === 'off' ? false : q.world.distanceTo(cam) < CONFIG.distanciaEtiquetas;
+    if (state.safety) v = false;
+    q.label.visible = v || q.id === selId || q.id === hovId;
+  }
+}
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+const clock = new THREE.Clock();
+let frame = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  if (manualFly) {
+    manualFly.t = Math.min(1, manualFly.t + dt / manualFly.duration);
+    const k = manualFly.t < 0.5 ? 4 * manualFly.t ** 3 : 1 - (-2 * manualFly.t + 2) ** 3 / 2;
+    camera.position.lerpVectors(manualFly.p0, manualFly.p1, k);
+    controls.target.lerpVectors(manualFly.t0, manualFly.t1, k);
+    if (manualFly.t >= 1) manualFly = null;
+  }
+  controls.update();
+  processHover();
+  if (frame++ % 6 === 0) updateLabels();
+  updateCompass();
+  if (state.anim) {
+    texPrecaucion.offset.x -= dt * 0.35;          // franjas que "avanzan" = tráfico
+    for (const c of cranes) c.trolley.position.x = Math.sin(t * c.speed + c.phase) * c.w * 0.36;
+  }
+  if (marker.visible) {
+    const s = (ring.userData.base ?? 1) * (1 + Math.sin(t * 3) * 0.05);
+    ring.scale.set(s, s, s);
+    ring.material.opacity = 0.65 + Math.sin(t * 3) * 0.3;
+  }
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+});
+// ---- V9.19.16: color por estatus, seguimiento, foco y Esc desde la app ----
+function aplicarColores() {
+  document.body.classList.toggle('est', colorMode === 'estatus');
+  for (const e of entities.values()) if (e.kind === 'equipo' && e.setColor) e.setColor(colorMode === 'estatus' ? EST_COLOR[estadoLinea(e.linea.id)] : e.linea.color);
+  if (state.sel) paint(state.sel);
+}
+const selColor = document.getElementById('selColor');
+selColor.value = colorMode;
+selColor.addEventListener('change', (e) => { colorMode = e.target.value; aplicarColores(); });
+aplicarColores();
+if (AUDS.length && MODO === 'seguimiento') {
+  const porEst = { vencida: [], pendiente: [], realizada: [] };
+  L.lineas.forEach((ln) => { const s0 = estadoLinea(ln.id); if (porEst[s0]) porEst[s0].push(ln); });
+  const sinPlano = Object.keys(AUD_BY).filter((id) => !L.lineas.some((ln) => ln.id === id));
+  const sec = document.createElement('section');
+  sec.className = 'sec'; sec.id = 'lpaSec';
+  sec.innerHTML = `<h3>${T('Seguimiento LPA', 'LPA tracking')}${DATOS.periodo ? ' · ' + esc(DATOS.periodo) : ''}</h3>
+    <div class="lpa-sum">${['vencida', 'pendiente', 'realizada'].map((k) =>
+      `<button data-est="${k}" style="--c:${EST_COLOR[k]}"><b>${porEst[k].length}</b><small>${T('líneas', 'lines')} · ${EST_TXT[k].toLowerCase()}</small></button>`).join('')}</div>
+    <div class="zd-sub">${AUDS.length} ${T('auditorías en', 'audits on')} ${Object.keys(AUD_BY).length} ${T('líneas', 'lines')}${sinPlano.length ? ` · ${sinPlano.length} ${T('sin ubicar en el plano', 'not on the layout')}: ${sinPlano.map(esc).join(', ')}` : ''}</div>
+    <div id="lpaList" class="chips" style="margin-top:6px"></div>`;
+  document.querySelector('.scroll').prepend(sec);
+  sec.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-est]');
+    if (b) {
+      const on = !b.classList.contains('active');
+      sec.querySelectorAll('[data-est]').forEach((x) => x.classList.toggle('active', x === b && on));
+      document.getElementById('lpaList').innerHTML = on ? porEst[b.dataset.est].map((ln) => chipGo(equipoPrincipal(ln), ln.id, EST_COLOR[b.dataset.est])).join('') : '';
+      return;
+    }
+    const g = ev.target.closest('[data-go]');
+    if (g) goEntity(g.dataset.go);
+  });
+}
+window.addEventListener('message', (e) => {
+  if (e.source !== window.parent || e.origin !== location.origin) return;
+  if (e.data && e.data.tipo === 'ktmex-twin-esc') select(null);   // Esc en la app: cierra el panel, no el mapa
+});
+document.getElementById('loading').classList.add('done');
+if (DATOS.foco) {
+  const ln = L.lineas.find((x) => x.id === DATOS.foco);
+  if (ln) setTimeout(() => { goEntity(equipoPrincipal(ln)); }, 350);
+}
+window.parent?.postMessage({ tipo: 'ktmex-twin-ok', equipos: [...entities.values()].filter((e) => e.kind === 'equipo').length }, location.origin);
+
+// Depuración desde consola: twin.goEntity('P-03'), twin.goLine('BL2')…
+window.twin = { scene, camera, controls, entities, goEntity, goLine, goHome, goTop, LAYOUT: L, L, state, estadoLinea, select };
+
+</script>
+</body>
+</html>
