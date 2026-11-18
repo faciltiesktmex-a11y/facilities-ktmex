@@ -3291,6 +3291,18 @@
             { name: "Lenin Wenceslao",       aliases: ["lenin", "wenceslao", "wences"], photo: PHOTO_LENIN, color: "#0891b2" }
         ];
 
+        // KTMEX V9.19.20: parte una etiqueta en renglones de hasta «max» caracteres (máximo 5 renglones).
+        function ktmexPartirEtiqueta(texto, max) {
+            const palabras = String(texto || '').split(/\s+/).filter(Boolean); if (!palabras.length) return '';
+            const lineas = []; let actual = '';
+            palabras.forEach(p => { if (!actual) actual = p; else if ((actual + ' ' + p).length <= max) actual += ' ' + p; else { lineas.push(actual); actual = p; } });
+            if (actual) lineas.push(actual);
+            if (lineas.length > 5) { const r = lineas.slice(0, 5); r[4] = r[4].replace(/.{0,1}$/, '') + '…'; return r; }
+            return lineas.length === 1 ? lineas[0] : lineas;
+        }
+        function ktmexAnchoColumna(chart, n) { const ca = chart.chartArea; return ((ca && ca.right > ca.left) ? ca.right - ca.left : chart.width * 0.85) / Math.max(1, n); }
+        // Columnas angostas: la letra de la etiqueta baja hasta 8 px para que las palabras largas quepan.
+        function ktmexTamEtiqueta(chart, n, fs) { const w = ktmexAnchoColumna(chart, n); return w >= 110 ? fs : Math.max(8, Math.min(fs, Math.floor(w / 9.5))); }
         function stripAccents(s) {
             return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
@@ -3303,10 +3315,23 @@
             const norm = stripAccents(String(text || '').toLowerCase());
             if (!norm.trim()) return null;
             let best = null, bestPos = Infinity;
+            // KTMEX V9.19.20: un nombre propio seguido de un apellido que no es el de esa persona NO es esa persona
+            // (p. ej. «Jorge Patlán» no es «Jorge Muñíz»): se muestra el nombre escrito con sus iniciales.
+            const palabrasDe = (t) => stripAccents(String(t || '').toLowerCase()).split(/[^a-z0-9ñ]+/).filter(Boolean);
+            const conocidas = new Set(['bkup','backup','respaldo','b1','b2','y','and','e']);
+            PEOPLE_DIRECTORY.forEach(p => { palabrasDe(p.name).forEach(w => conocidas.add(w)); p.aliases.forEach(a => palabrasDe(a).forEach(w => conocidas.add(w))); });
             PEOPLE_DIRECTORY.forEach(person => {
+                const propias = new Set(palabrasDe(person.name).concat(...person.aliases.map(palabrasDe)));
                 person.aliases.forEach(alias => {
-                    const pos = norm.indexOf(stripAccents(alias));
-                    if (pos !== -1 && pos < bestPos) { bestPos = pos; best = person; }
+                    const a = stripAccents(alias); let pos = norm.indexOf(a);
+                    while (pos !== -1) {
+                        const antes = pos === 0 ? ' ' : norm[pos - 1], despues = norm.slice(pos + a.length);
+                        const palabraCompleta = !/[a-z0-9ñ]/.test(antes) && !/^[a-z0-9ñ]/.test(despues);
+                        const siguiente = (despues.match(/^[^a-z0-9ñ]+([a-z0-9ñ]+)/) || [])[1];
+                        const otroApellido = siguiente && !propias.has(siguiente) && !conocidas.has(siguiente);
+                        if (palabraCompleta && !otroApellido) { if (pos < bestPos) { bestPos = pos; best = person; } break; }
+                        pos = norm.indexOf(a, pos + 1);
+                    }
                 });
             });
             return best;
@@ -4438,7 +4463,11 @@
                 }, (meta.max && !stacked) ? { max: meta.max } : {}, stacked ? { stacked: true } : {});
                 const catAxis = () => Object.assign({
                     border: { display: false }, grid: { display: false },
-                    ticks: { font: { size: fs, weight: '600' }, color: '#0f172a', autoSkip: false, maxRotation: horizontal ? 0 : (labels.length > 6 ? 60 : 0), minRotation: horizontal ? 0 : (labels.length > 6 ? 45 : 0) },
+                    ticks: Object.assign({ font: { size: fs, weight: '600' }, color: '#0f172a', autoSkip: false, maxRotation: horizontal ? 0 : (labels.length > 6 ? 60 : 0), minRotation: horizontal ? 0 : (labels.length > 6 ? 45 : 0) },
+                        // KTMEX V9.19.20: con pocas etiquetas largas (p. ej. las 4 contramedidas) se parten en renglones para que no se empalmen.
+                        (!horizontal && labels.length <= 6) ? {
+                            font: (c) => ({ size: ktmexTamEtiqueta(c.chart, labels.length, fs), weight: '600' }),
+                            callback: function(v) { const lbl = String(this.getLabelForValue(v) ?? ''); const w = ktmexAnchoColumna(this.chart, labels.length), f = ktmexTamEtiqueta(this.chart, labels.length, fs); return ktmexPartirEtiqueta(lbl, Math.max(6, Math.floor((w - 6) / (f * 0.6)))); } } : {}),
                     title: meta.catTitle ? { display: true, text: meta.catTitle, font: { size: fs, weight: '600' }, color: '#64748b' } : { display: false }
                 }, stacked ? { stacked: true } : {});
                 let scales = {};
