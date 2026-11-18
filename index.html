@@ -749,6 +749,7 @@ const LPA_AREAS = {
       <div id="lang-switch" style="display:flex;background:#1E293B;border:1px solid #334155;border-radius:8px;padding:2px;margin-left:4px">
         <button id="lang-es" onclick="setLanguage('es')" title="Español" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:#2563EB;color:white">ES</button>
         <button id="lang-en" onclick="setLanguage('en')" title="English" style="padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:transparent;color:#94A3B8">EN</button>
+        <button id="lang-ja" onclick="setLanguage('ja')" title="日本語" style="display:none;padding:4px 7px;border:none;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;background:transparent;color:#94A3B8">JA</button>
       </div>
       <button id="btn-logout" onclick="logout()" style="display:none;padding:6px 12px;background:#EF4444;color:#fff;border:none;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer">
         <i class="fas fa-sign-out-alt" style="margin-right:5px"></i>Salir
@@ -3555,7 +3556,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.18';
+const FRONTEND_BUILD = '9.19.19';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4444,7 +4445,7 @@ function enforceManagerEnglish_(root=document){
     LANG='en';
     localStorage.setItem('ktmex_lang','en');
   }
-  if($('lang-switch'))$('lang-switch').style.display='none';
+  try{v919IdiomaBotones_();}catch(e){}
   applyLanguage(root);
 }
 
@@ -4504,6 +4505,23 @@ function uiPatron_(t){ for(const [re,rp] of I18N_PATRONES){ if(re.test(t)) retur
 // V9.19.16: textos de los mapas de planta para la gerencia en inglés
 Object.assign(TEXT_I18N,{'Estampado':'Stamping','Seguimiento en planta':'Plant tracking','Cerrar mapa':'Close map'});
 Object.assign(TEXT_I18N,{'Sin foto registrada.':'No photo recorded.','Ver en tamaño completo':'View full size','Abrir foto':'Open photo'});   // V9.19.18
+// V9.19.19 — Japonés para los usuarios japoneses: se aplica SOBRE el inglés (LANG sigue en 'en').
+// Lo que no está en JA_I18N se queda en inglés.
+let LANG_JA=false; try{LANG_JA=localStorage.getItem('ktmex_lang_ja')==='1';}catch(e){}
+const JA_I18N={"(optional)":"(任意)","(recommended for history)":"(履歴のため推奨)","* Required fields":"* 必須項目","+ Add Another Day or Time":"+ 日時を追加","1 - Critical (Imminent safety risk)":"1 - 緊急(差し迫った安全リスク)","1 pending":"1件保留","1 · Critical — imminent risk":"1 · 緊急 — 差し迫ったリスク","2 - Operational (Line stoppage)":"2 - 稼働(ライン停止)","2 · Operational — line stoppage":"2 · 稼働 — ライン停止","3 - Preventive (Scheduled TPM)":"3 - 予防(計画TPM)","3 images + 1 PDF":"画像3枚 + PDF 1件","3 · Preventive — scheduled TPM":"3 · 予防 — 計画TPM","4 - Improvement (Projects / aesthetics)":"4 - 改善(プロジェクト/美観)","4 · Improvement — projects / aesthetics":"4 · 改善 — プロジェクト/美観","APPROVAL SIGNATURE":"承認署名","ASSISTANT / SPOTTER SIGNATURE":"補助者/監視者署名","Abierta":"オープン","Abierto":"オープン","Above minimum":"最小在庫以上","Abrir →":"開く →","Accept signature":"署名を承認","Aceptar":"OK","Accompanying Person":"同行者","Accounting":"経理","Action":"対策","Action Closure":"対策の完了","Action Plan":"アクションプラン","Actions":"操作","Active Time by Technician":"技術者別の稼働時間","Active kWh":"有効電力量 kWh","Activities in my area":"自部門の作業","Activity Completion":"作業完了","Add":"追加","Add Block":"ブロックを追加","Add a note…":"メモを追加…","Add activity to the Daily Plan":"日次計画に作業を追加","Add note":"メモを追加","Add quotation PDF":"見積PDFを追加","Administration Dashboard":"管理ダッシュボード","Administrative Access":"管理者アクセス","Air conditioning":"空調","All":"すべて","All (including closed)":"すべて(完了を含む)","All Areas":"全エリア","All Departments":"全部門","All Priorities":"全優先度","All Statuses":"全ステータス","All technicians":"全技術者","Already captured when the activity started.":"作業開始時に登録済みです。","Analytics":"分析","Approval chain":"承認フロー","Approve":"承認","Approved":"承認済み","Approved by Manager — Pending Technician Assignment":"マネージャー承認済み — 技術者割当待ち","Are model, tooling, or set-up changes validated before production starts?":"機種・治具・段取りの変更は生産開始前に検証されていますか?","Area":"エリア","Area *":"エリア *","Area / Activity":"エリア / 作業","Area / Department *":"エリア / 部門 *","Area Manager Name *":"エリア責任者名 *","Areas":"エリア","Assigned Amount":"割当金額","Assigned Technician":"担当技術者","Assigned areas:":"担当エリア:","Assigned to Technician":"技術者に割当済み","At least 10 characters.":"10文字以上。","At or below minimum":"最小在庫以下","Audit Compliance":"監査遵守率","Audit Schedule":"監査スケジュール","Audit criteria in English":"監査基準(英語)","Auditor":"監査員","Authorized":"承認済み","Authorized for Purchasing":"購買承認済み","Auto":"自動","Automatically Closed — No Close-out Evidence":"自動クローズ — 完了証拠なし","Automatically closed — no confirmation":"自動クローズ — 確認なし","Availability":"空き状況","Avg. Effective":"平均実働","Avg. Pause":"平均中断","BEFORE photo":"作業前の写真","Back to Status":"ステータスに戻る","Bin Inventory":"棚在庫","Blanking":"ブランキング","Blue Shift":"青シフト","Budget":"予算","Budget Number":"予算番号","Calculating indicators…":"指標を計算中…","Cancel":"キャンセル","Cancel RFQ":"RFQを取り消す","Cancelled":"取消","Cancelled and rejected":"取消・却下","Category":"カテゴリー","Cerrado":"完了","Change Status":"ステータス変更","Change my photo":"写真を変更","Change password":"パスワード変更","Check":"確認","Check Request Status by Folio":"番号で依頼状況を確認","Check status":"状況を確認","Check status by reference number":"参照番号で状況を確認","Checklist":"チェックリスト","Close":"閉じる","Close Activity":"作業を完了","Close Date":"完了日","Close map":"マップを閉じる","Close-out Comment (optional)":"完了コメント(任意)","Closed":"完了","Closed (all)":"完了(すべて)","Closing PDF":"完了PDF","Comment":"コメント","Comment *":"コメント *","Comment / Comentario":"コメント","Company":"会社","Compl. %":"遵守 %","Completed":"完了","Completed / Realizada":"実施済み","Completed Late / Vencida realizada":"遅延実施","Completion":"完了","Compliance":"遵守率","Compliance %":"遵守率 %","Compliance by Area":"エリア別遵守率","Compressor Room":"コンプレッサー室","Compressors":"コンプレッサー","Confirm":"確認","Confirm new password *":"新しいパスワード(確認) *","Confirm pause":"中断を確定","Confirmations report":"確認レポート","Control":"管理","Corrective Action":"是正処置","Corrective Action *":"是正処置 *","Cost":"費用","Current Stock":"現在庫","Current password *":"現在のパスワード *","Daily Compliance Trend":"日別遵守率の推移","Daily Plan":"日次計画","Dashboard":"ダッシュボード","Date":"日付","Date *":"日付 *","Date range":"期間","Dates":"日付","Day":"日","Department":"部門","Department…":"部門…","Description":"内容","Description / Purpose *":"内容 / 目的 *","Detailed Description *":"詳細 *","Does the Team Member perform the operation according to the MOE?":"作業者はMOEどおりに作業していますか?","Does the operation have the corresponding QCPS?":"工程に該当するQCPSがありますか?","Download":"ダウンロード","Due Date":"期限","Due Date / Fecha compromiso *":"期限 *","Edit":"編集","Edit Corrective Action":"是正処置を編集","Electrical installation":"電気設備","Email":"メール","Email (contact, optional)":"メール(連絡先、任意)","Energy History":"エネルギー履歴","English":"英語","Environmental":"環境","Equipment / Location":"設備 / 場所","Equipment Status":"設備状態","Excel":"Excel","Exclude from analysis":"分析から除外","Execution Date *":"実施日 *","Facilities Board":"ファシリティーズ・ボード","Facilities Budget":"ファシリティーズ予算","Facilities Comment":"ファシリティーズのコメント","Facilities Department · KTMEX":"ファシリティーズ部 · KTMEX","Facilities Inspections":"ファシリティーズ点検","Facilities LPA":"ファシリティーズ LPA","Facilities Management":"ファシリティーズ管理","Facilities Operational Analytics":"ファシリティーズ運用分析","Facilities System":"ファシリティーズ・システム","Finding":"指摘事項","Finding / Hallazgo *":"指摘事項 *","Finding / Observations":"指摘事項 / 所見","Findings and Release":"指摘と解除","Finish":"完了","First Filter — Engineering":"第1承認 — エンジニアリング","Folio":"番号","Folio / Priority":"番号 / 優先度","Folio Number:":"番号:","From / To":"開始 / 終了","General":"一般","Generate QR":"QRを作成","Grace Period":"猶予期間","Grace Period / En tolerancia":"猶予期間内","Green Shift":"緑シフト","Help":"ヘルプ","High":"高","History":"履歴","Human Resources":"人事","Hydraulic installation":"給排水設備","If a Quality Alert applies to the operation, is it current?":"工程に品質アラートがある場合、最新ですか?","In Progress":"実施中","In requisition":"購買依頼中","Incorrect username or password":"ユーザー名またはパスワードが違います","Infrastructure / Building":"インフラ / 建物","Inspection Detail":"点検詳細","Inspection History":"点検履歴","Inspection Point":"点検箇所","Inspections":"点検","Internal Logistics":"構内物流","Interpretation:":"解釈:","Inventory":"在庫","Is one-piece flow being followed in the operation?":"工程で一個流しが守られていますか?","Is the MOE available at the operation?":"工程にMOEがありますか?","Is the MOE updated?":"MOEは最新ですか?","Is the QCPS updated?":"QCPSは最新ですか?","Is the area free of unnecessary parts or objects?":"エリアに不要な部品や物はありませんか?","Is the area properly identified and delimited?":"エリアは適切に表示・区画されていますか?","Is this a new installation? *":"新規設置ですか? *","Item":"項目","Items waiting for your approval are in":"承認待ちの項目は次にあります:","KTMEX Facilities System":"KTMEX ファシリティーズ・システム","LPA Audit":"LPA監査","LPA Audits":"LPA監査","LPA Quality":"LPA 品質","LPA Quality ·":"LPA 品質 ·","LPA Results":"LPA結果","Latest Receipt":"最新入庫","Layer":"レイヤー","Layer *":"レイヤー *","Layer 1":"レイヤー1","Layer 2":"レイヤー2","Layer 3":"レイヤー3","Layered Process Audit · Quality":"階層別工程監査 · 品質","Level":"レベル","Level *":"レベル *","Lighting":"照明","Line / Process":"ライン / 工程","Location / Bin *":"場所 / 棚 *","Log Out":"ログアウト","Low":"低","Low stock":"在庫少","Machine":"設備","Machines":"設備","Maintenance":"保全","Maintenance / Mantenimiento":"保全","Manager":"マネージャー","Manager view: read-only analytics.":"マネージャー表示:閲覧専用の分析です。","Material":"資材","Material Wait":"資材待ち","Medium":"中","Month":"月","Month / Mes":"月","Monthly Area Report":"エリア月次レポート","My Activities":"自分の作業","My activities":"自分の作業","My requests":"自分の依頼","N1 Quarterly · N2 Monthly · N3 Biweekly · N4 Weekly · Official scheduled dates":"N1 四半期 · N2 月次 · N3 隔週 · N4 毎週 · 正式予定日","NG by Area":"エリア別NG","New Purchase Request":"新規購買依頼","New RFQ":"新規RFQ","New Request":"新規依頼","New request":"新規依頼","New installation?":"新規設置?","New password *":"新しいパスワード *","Nivel":"レベル","No":"いいえ","No records":"記録なし","No.":"No.","No photo selected.":"写真が選択されていません。","Nonconformities":"不適合","Nonconformities / No conformidades":"不適合","Nonconformity":"不適合","Notes":"メモ","Notificaciones / Notifications":"通知","Notifications":"通知","OK / NOK / N/A":"OK / NOK / 該当なし","Observe the complete work cycle and compare it against the sequence defined in the MOE.":"作業サイクル全体を観察し、MOEの手順と比較してください。","On-time Closure":"期限内完了","Open":"オープン","Open (closed hidden)":"オープン(完了は非表示)","Open NC":"不適合を開く","Open Report →":"レポートを開く →","Open form":"フォームを開く","Open form →":"フォームを開く →","Open to sign":"開いて署名","Open →":"開く →","Optimal":"最適","Originator":"起票者","Other":"その他","Otro":"その他","Out of stock":"在庫切れ","Overdue":"期限超過","Overdue / Vencida":"期限超過","Own Activities":"自分の作業","Packaging / Empaque":"梱包","Part *":"品番 *","Part No.":"品番","Part Number *":"品番 *","Password":"パスワード","Pause Activity":"作業を中断","Pause Reason *":"中断理由 *","Paused":"中断中","Pendientes":"保留","Pending Engineering":"エンジニアリング承認待ち","Pending Engineering Approval":"エンジニアリング承認待ち","Pending Engineering Closure":"エンジニアリング完了確認待ち","Pending Manager Approval":"マネージャー承認待ち","Pending Manager Approvals":"マネージャー承認待ち","Pending Validation":"検証待ち","Period":"期間","Personas":"人","Photo of the nonconformity / Foto de la no conformidad *":"不適合の写真 *","Photographic Evidence *":"写真による証拠 *","Plant tracking":"工場内フォロー","Platform Request":"高所作業車の依頼","Pneumatic installation":"空圧設備","Por iniciar":"未着手","Por revisar":"確認待ち","Position":"役職","Preventivo":"予防保全","Print / PDF":"印刷 / PDF","Print blank checklist":"空のチェックリストを印刷","Print checklist":"チェックリストを印刷","Priority":"優先度","Priority Level *":"優先度 *","Priority Matrix":"優先度マトリクス","Problem Solving":"問題解決","Process / Line":"工程 / ライン","Pumps":"ポンプ","Purchase Management":"購買管理","Purchase Request":"購買依頼","Purchase Request Submitted!":"購買依頼を送信しました!","Purchase Status":"購買状況","Purchase request quotations":"購買依頼の見積","Purchase request ·":"購買依頼 ·","Purchases":"購買","Purchasing":"購買","Purchasing Panel":"購買パネル","Purchasing in Progress":"購買手続き中","Purpose":"目的","Purpose of Material or Service *":"資材・サービスの目的 *","Quality":"品質","Quality / Calidad":"品質","Quality LPA":"品質 LPA","Quantity":"数量","Quantity *":"数量 *","Quantity / Unit":"数量 / 単位","Question":"質問","Question in English":"質問(英語)","Quoting":"見積中","RFQ notes":"RFQメモ","Reaction":"対応レベル","Read-only for Manager. Indicators separate effective work time from waiting time.":"マネージャーは閲覧のみ。指標は実働時間と待ち時間を分けて表示します。","Reason for removal *":"削除理由 *","Rechazado por Manager":"マネージャー却下","Refresh":"更新","Reject":"却下","Rejected":"却下","Rejected by Engineering":"エンジニアリング却下","Rejected by Manager":"マネージャー却下","Rejected by Manager — Returned to Engineering":"マネージャー却下 — エンジニアリングへ差し戻し","Remove":"削除","Request Date *":"依頼日 *","Request Submitted!":"依頼を送信しました!","Request Type":"依頼種別","Request Type *":"依頼種別 *","Request approvals, technician assignment, and LPA results.":"依頼の承認、技術者の割当、LPA結果。","Request follow-up":"依頼のフォロー","Requester":"依頼者","Requester Name *":"依頼者名 *","Requester attachments":"依頼者の添付","Requesting Department *":"依頼部門 *","Requests":"依頼","Required Date":"希望日","Required Dates and Times":"希望日時","Required Receipt Date *":"希望納期 *","Reset":"リセット","Reset all":"すべてリセット","Responsable / Owner":"責任者","Responsible":"責任者","Responsible / Responsable *":"責任者 *","Restrooms / Sanitary":"トイレ / 衛生設備","Result":"結果","Return for corrections":"修正のため差し戻す","Review":"確認","Review Required (Auto-close)":"確認が必要(自動クローズ)","Review approvals, rejections and reasons.":"承認・却下とその理由を確認します。","Room Checklists":"部屋のチェックリスト","Safety":"安全","Save":"保存","Save Audit":"監査を保存","Save Changes":"変更を保存","Save Checklist":"チェックリストを保存","Save Inspection":"点検を保存","Save Quality LPA":"品質LPAを保存","Save password":"パスワードを保存","Scheduled":"予定","Search":"検索","Search inventory":"在庫を検索","Second Filter — Manager":"第2承認 — マネージャー","Security":"警備","Senior Manager":"シニアマネージャー","Shift":"シフト","Shift *":"シフト *","Show closed":"完了を表示","Sign In":"ログイン","Sign on behalf (absence)":"代理署名(不在時)","Signature needed":"署名が必要","Signed plan":"署名済み計画","Stamping":"プレス","Stamping / Estampado":"プレス","Start":"開始","Start Activity":"作業を開始","Start Now":"今すぐ開始","Start audit →":"監査を開始 →","Status":"ステータス","Status / Estatus":"ステータス","Status / Traceability":"ステータス / 追跡","Stock at zero":"在庫ゼロ","Submit Evidence":"証拠を提出","Submit Purchase Request":"購買依頼を送信","Submit Request":"依頼を送信","Submit Request to Facilities":"ファシリティーズへ依頼を送信","Supervisor":"監督者","Support Technicians":"応援技術者","Suspended":"保留","Technical Support / Training":"技術支援 / 研修","Technician":"技術者","Technician Activities":"技術者の作業","Technician Daily Activities":"技術者の日次作業","Technician Detail":"技術者の詳細","The audit is performed 100% on the shop floor (Gemba). Full PPE is required before starting.":"監査は100%現場(現場)で行います。開始前に保護具をすべて着用してください。","There are no weekend documents yet.":"週末作業の書類はまだありません。","This queue remains visible while Purchases, LPA, or Action Plans are refreshed.":"購買・LPA・アクションプランの更新中もこの一覧は表示されたままです。","Time slot":"時間帯","To approve":"承認待ち","To sign":"署名待ち","Todas":"すべて","Todos":"すべて","Tool":"工具","Tools":"ツール","Total":"合計","Total Contribution":"合計貢献","Total Purchases":"購買合計","Total Requests":"依頼合計","Training":"研修","Type":"種別","Type (optional)":"種別(任意)","Unassigned":"未割当","Unplanned":"計画外","Unplanned Activity":"計画外作業","Update from Excel":"Excelから更新","Upload PDF":"PDFをアップロード","User confirmation":"ユーザー確認","Username":"ユーザー名","Utilities":"ユーティリティ","Validate & Close":"検証して完了","Validated Support Participations":"検証済みの応援参加","Validated Support Time":"検証済みの応援時間","Verification Point / Expected Standard":"確認ポイント / 基準","Verify evidence that the change was validated and released before production; confirm that applicable parameters and documents are updated.":"変更が生産前に検証・承認された証拠を確認し、該当するパラメーターと文書が更新されていることを確認してください。","Verify that a valid QCPS is available and applicable to the product being manufactured. Note: Blanking does not require a QCPS.":"生産中の製品に該当する有効なQCPSがあることを確認してください。注:ブランキングはQCPS不要です。","Verify that applicable Quality Alerts are posted in the area and correspond to the audited product.":"該当する品質アラートがエリアに掲示され、監査対象製品に対応していることを確認してください。","Verify that area markings are in good condition and the area is clean according to the operating standard.":"区画線が良好な状態で、作業標準どおりエリアが清潔であることを確認してください。","Verify that the MOE is available, legible, clean, current, and accessible to the Team Member.":"MOEがあり、読みやすく、清潔で、最新で、作業者が見られることを確認してください。","Verify that the MOE revision matches the current approved version.":"MOEの改訂が現行の承認版と一致していることを確認してください。","Verify the QCPS revision date and confirm its controls match the current process and product.":"QCPSの改訂日を確認し、管理項目が現在の工程と製品に合っていることを確認してください。","Verify the absence of NOK, suspect, or unidentified material.":"NOK品・疑わしい品・識別のない材料がないことを確認してください。","View Activities":"作業を見る","View Attached Photo":"添付写真を見る","View full year":"年間を表示","View photo":"写真を見る","Waiting for spare parts":"部品待ち","Week":"週","Weekend Work (my area)":"週末作業(自部門)","Weekend Work Request":"週末作業依頼","Weekend Works":"週末作業","Weekend work requests":"週末作業依頼","Weekend works · your signature":"週末作業 · あなたの署名","Welding":"溶接","Welding digital twin":"溶接デジタルツイン","With Manager":"マネージャー確認中","Work Area *":"作業エリア *","Work Completed":"作業完了","Work Description":"作業内容","Work Request":"作業依頼","Work Request (Folio) *":"作業依頼(番号) *","Work area":"作業エリア","Work request ·":"作業依頼 ·","Work requests · Purchase requests · LPA audits · Administration panel":"作業依頼 · 購買依頼 · LPA監査 · 管理パネル","Work zone":"作業ゾーン","Yes":"はい","You sign as":"署名者","Your account does not have permission to access this section.":"このアカウントにはこのセクションへのアクセス権がありません。","Your inbox":"受信トレイ","Your session expired":"セッションの有効期限が切れました","on the left.":"(左側)。","— Select Auditor —":"— 監査員を選択 —","— Select —":"— 選択 —","← Back":"← 戻る","🔍 Search folio or requester…":"🔍 番号または依頼者で検索…","🔍 Search folio, name, area…":"🔍 番号・氏名・エリアで検索…","Últimos avisos del sistema":"システムからの最新のお知らせ","Sin notificaciones":"通知はありません","Marcar todas como leídas":"すべて既読にする","Imprimir":"印刷","Imprimir checklist":"チェックリストを印刷","Descargar Excel":"Excelをダウンロード","Descargar PDF":"PDFをダウンロード","Ver":"表示","Ver historial":"履歴を見る","Hoy":"今日","Mes anterior":"前月","Mes siguiente":"翌月","Mes del programa":"計画月","Pendientes de firma":"署名待ち","Todas las etapas":"全段階","Documento final":"最終書類","Engineers and Manager — KTMEX Facilities":"エンジニアとマネージャー — KTMEX ファシリティーズ","Registered by plant staff. Facilities Engineering collects the signatures: Engineering → Senior Manager → President.":"工場スタッフが登録します。署名はファシリティーズ・エンジニアリングが集めます:エンジニアリング → シニアマネージャー → 社長。","Every NP item must have a corrective action. Critical findings: maximum containment time 24h.":"NP項目には必ず是正処置が必要です。重大な指摘:封じ込めは最大24時間。","Perform layered process audits in the 5 Facilities & Utilities areas.":"ファシリティーズ&ユーティリティの5エリアで階層別工程監査を行います。","Trends, compliance, NG, and inspection details.":"推移、遵守率、NG、点検の詳細。","Register a new Facilities installation or maintenance request.":"ファシリティーズの新しい設置・保全依頼を登録します。","Request materials, spare parts, or services for Facilities.":"ファシリティーズ向けの資材・部品・サービスを依頼します。","Pasa (P)":"合格 (P)","No Pasa (NP)":"不合格 (NP)","Inconformidad":"不適合","Riesgo":"リスク","Firma":"署名","Tu comentario":"あなたのコメント","Tu firma *":"あなたの署名 *","Comentario del manager…":"マネージャーのコメント…","Pantalla completa":"全画面","Siguiente pendiente ›":"次の保留 ›","Programar":"予定を作成","Suspendidas":"保留中","Nombre":"氏名","Nombre completo":"氏名","Usuarios":"ユーザー","Usuario (ej. ana.lopez)":"ユーザー(例:ana.lopez)","Agregar usuario":"ユーザーを追加","Administrar usuarios de LPA Quality":"LPA品質のユーザー管理","LPA auditor passwords":"LPA監査員のパスワード","Actualizar desde Excel":"Excelから更新","+ Nueva pregunta":"+ 新しい質問","Cambiar foto":"写真を変更","Mantener la original":"元の写真のまま","Cargando…":"読み込み中…","Cargando solicitudes…":"依頼を読み込み中…","Cargando el formulario…":"フォームを読み込み中…","Cargando formulario…":"フォームを読み込み中…","Continuar":"続ける","Limpiar":"クリア","Generar":"作成","Inicio":"ホーム","Clic para ver la lista":"クリックで一覧を表示","Filtrar la tabla":"表を絞り込む","Elige un estatus…":"ステータスを選択…","Versiones del tablero":"ボードのバージョン","Plano de planta · zonas de trabajo":"工場レイアウト · 作業ゾーン","Calendario de inspecciones":"点検カレンダー","— Seleccione —":"— 選択 —","— Sin asignar —":"— 未割当 —","— Sin cambio —":"— 変更なし —","🔍 Buscar por auditor…":"🔍 監査員で検索…","📅 Calendario / Calendar":"📅 カレンダー","📋 Checklist":"📋 チェックリスト","Turno":"シフト","Primer Turno":"第1シフト","Segundo Turno":"第2シフト","Mixed Shift":"混合シフト","Todos los turnos":"全シフト","Por semana":"週別","Por mes":"月別","Tiempo extra":"残業","Tiempo activo":"稼働時間","Cobertura de jornada":"勤務時間カバー率","Cobertura jornada":"勤務時間カバー率","Jornada vs tiempo extra":"勤務時間と残業","Arranque promedio":"平均開始時刻","Hora de arranque del turno":"シフト開始時刻","Tiempo pausado por motivo — todo el equipo":"理由別の中断時間 — チーム全体","Aprobadas completas":"全承認済み","Aprueba las solicitudes de tu departamento, consulta sus actividades y revisa el plan firmado.":"自部門の依頼を承認し、作業を確認し、署名済み計画を確認します。","Nuevo Problem Solving":"新しい問題解決","RFQ y Bench Mark":"RFQ とベンチマーク","Electrical Substations I and II":"受変電設備 I・II","Subestaciones":"受変電設備","Cuarto de Bombas":"ポンプ室","Iniciar →":"開始 →","Pendiente de alta":"登録待ち","En compra":"購買中","En espera de material":"資材待ち","Espera de material":"資材待ち","Espera de proveedor":"仕入先待ち","Falta de material":"資材不足","Festivo":"祝日","Domingo":"日曜日","Contratista":"協力会社","Job leader":"作業責任者","Organizador *":"主催者 *","Work requests":"作業依頼","Purchase requests":"購買依頼","Choose one of the totals above or a status to see the work requests.":"上の合計かステータスを選ぶと作業依頼が表示されます。","Choose one of the totals above or a status to see the purchase requests.":"上の合計かステータスを選ぶと購買依頼が表示されます。","Auditorías realizadas / Completed audits":"実施済み監査","Consulta las auditorías ejecutadas en tus áreas autorizadas. Los Champions de Welding pueden consultar el historial de Welding.":"権限のあるエリアで実施された監査を確認できます。溶接のチャンピオンは溶接の履歴を確認できます。","No hay auditorías realizadas en las áreas autorizadas.":"権限のあるエリアで実施済みの監査はありません。","No nonconformities / Sin no conformidades.":"不適合はありません。","Target ≥90%":"目標 ≥90%","online":"online"};
+function esJapones_(){return !!(SESSION&&SESSION.user&&SESSION.user.japones);}
+// Textos con números (contadores, días, fechas): se traducen por patrón.
+const JA_PAT=[[/^Approve all \((\d+)\)$/,'すべて承認 ($1)'],[/^(\d+) days? waiting$/,'$1日待ち'],[/^(\d+) pending$/,'$1件保留'],
+  [/^(.*) · (\d+) days? ago$/,'$1 · $2日前'],[/^(\d+) days? ago$/,'$1日前'],[/^(\d+) work requests? waiting in$/,'$1件の作業依頼が待機中:'],
+  [/^(\d+) purchase requests? waiting in$/,'$1件の購買依頼が待機中:'],[/^Saturday (\d{4}-\d{2}-\d{2})$/,'$1(土)'],[/^Sign (\d{4}-\d{2}-\d{2})$/,'$1 に署名'],
+  [/^Weekend work · (.+)$/,'週末作業 · $1'],[/^You have (\d+) document\(s\) awaiting your signature$/,'署名待ちの書類が$1件あります'],
+  [/^(\d+) request\(s\)$/,'$1件の依頼'],[/^(\d+) closed request\(s\) hidden\.$/,'完了した依頼$1件を非表示']];
+function jaOver_(en){if(!(LANG==='en'&&LANG_JA&&esJapones_()))return en;const t=String(en??''),tr=t.trim();
+  if(JA_I18N[t]||JA_I18N[tr])return JA_I18N[t]||JA_I18N[tr];
+  const m=tr.match(/^·\s*(.+)$/); if(m&&JA_I18N[m[1]])return '· '+JA_I18N[m[1]];
+  for(const [re,rp] of JA_PAT){if(re.test(tr))return tr.replace(re,rp);}
+  return t;}
+function uiTextLang_(es){return jaOver_(LANG==='en'?uiText(es):es);}
 function uiText(es) {
   if(LANG==='es') return es;
   const raw=String(es??'');
@@ -4577,7 +4595,7 @@ function applyLanguage(root=document) {
     const raw=node.__esOriginal;
     const trimmed=raw.trim();
     if(!trimmed) continue;
-    const target=LANG==='en'?uiText(trimmed):trimmed;
+    const target=uiTextLang_(trimmed);
     const lead=raw.match(/^\s*/)?.[0]||'';
     const tail=raw.match(/\s*$/)?.[0]||'';
     const desired=lead+target+tail;
@@ -4585,25 +4603,20 @@ function applyLanguage(root=document) {
   }
   scope.querySelectorAll?.('input[placeholder],textarea[placeholder]').forEach(el=>{
     if(el.dataset.esPlaceholder===undefined) el.dataset.esPlaceholder=el.getAttribute('placeholder')||'';
-    const desired=LANG==='en'?uiText(el.dataset.esPlaceholder):el.dataset.esPlaceholder;
+    const desired=uiTextLang_(el.dataset.esPlaceholder);
     if(el.getAttribute('placeholder')!==desired) el.setAttribute('placeholder',desired);
   });
   scope.querySelectorAll?.('[title]').forEach(el=>{
     if(el.dataset.esTitle===undefined) el.dataset.esTitle=el.getAttribute('title')||'';
-    const desired=LANG==='en'?uiText(el.dataset.esTitle):el.dataset.esTitle;
+    const desired=uiTextLang_(el.dataset.esTitle);
     if(el.getAttribute('title')!==desired) el.setAttribute('title',desired);
   });
   scope.querySelectorAll?.('option').forEach(el=>{
     if(el.dataset.esText===undefined) el.dataset.esText=el.textContent;
-    const desired=LANG==='en'?(STATUS_I18N[el.value]||uiText(el.dataset.esText)):el.dataset.esText;
+    const desired=jaOver_(LANG==='en'?(STATUS_I18N[el.value]||uiText(el.dataset.esText)):el.dataset.esText);
     if(el.textContent!==desired) el.textContent=desired;
   });
-  if($('lang-es')&&$('lang-en')){
-    $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
-    $('lang-es').style.color=LANG==='es'?'#fff':'#94A3B8';
-    $('lang-en').style.background=LANG==='en'?'#2563EB':'transparent';
-    $('lang-en').style.color=LANG==='en'?'#fff':'#94A3B8';
-  }
+  try{v919IdiomaBotones_();}catch(e){}
   }finally{ if(!_reentrante) _I18N_APPLYING=false; }
 }
 
@@ -4684,12 +4697,7 @@ function setLanguage(lang){
     applyLanguage($('view-lpa-quality-form'));
     updateLpaQAuditLanguageFast();
     if($('lpaq-auditor-filter')) populateLpaQAuditorFilter();
-    if($('lang-es')&&$('lang-en')){
-      $('lang-es').style.background=LANG==='es'?'#2563EB':'transparent';
-      $('lang-es').style.color=LANG==='es'?'#fff':'#94A3B8';
-      $('lang-en').style.background=LANG==='en'?'#2563EB':'transparent';
-      $('lang-en').style.color=LANG==='en'?'#fff':'#94A3B8';
-    }
+    try{v919IdiomaBotones_();}catch(e){}
     return;
   }
 
@@ -4872,7 +4880,7 @@ function configureRoleUI() {
   if(role==='manager'){
     LANG='en';
     localStorage.setItem('ktmex_lang','en');
-    if($('lang-switch'))$('lang-switch').style.display='none';
+    try{v919IdiomaBotones_();}catch(e){}
     if($('manager-approval-box'))$('manager-approval-box').style.display='';
     // Manager: Dashboard + Auditorías LPA. El resto se gestiona desde Dashboard.
     ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
@@ -5112,13 +5120,13 @@ async function goPreventivo(){
     const [r,html]=await Promise.all([api({action:'getCMDatos',token:SESSION.token}),obtenerHtmlDash_('centro-mantenimiento.html','Centro de Mantenimiento KTMEX')]);
     if(!r||!r.success){const sinVersion=/no reconocida/i.test(String(r&&r.error||''));
       cont.innerHTML=cmCaja_(sinVersion?pmT('<b>El servidor todavía no tiene la versión 9.19 del Centro de Mantenimiento.</b><br>Abre el proyecto de Apps Script, pega el <b>Code.gs</b> nuevo, guarda y ve a <b>Implementar → Administrar implementaciones → ✏️ (editar) → Versión: Nueva versión → Implementar</b>. No uses «Nueva implementación»: eso crea otra URL y el sistema seguiría llamando a la anterior.','<b>The server does not have version 9.19 of the Maintenance Center yet.</b><br>Engineering must publish the new Code.gs as a new version of the same deployment.'):escapeHtml((r&&r.error)||pmT('No disponible','Not available')),true);return;}
-    const boot={lang:LANG,soloIngles:isManagerProfile_(),layoutUrl:new URL('layout-centro-mantenimiento.png',location.href).href,
+    const boot={lang:(LANG==='en'&&LANG_JA&&esJapones_())?'ja':LANG,soloIngles:isManagerProfile_(),layoutUrl:new URL('layout-centro-mantenimiento.png',location.href).href,
       fotos:cmFotos_(r),trad:cmTraducciones_(r),cursosEn:(typeof ENTR_CURSOS_EN!=='undefined'?ENTR_CURSOS_EN:{}),servidor:r};
     cont.innerHTML='<iframe id="cm-frame" title="Centro de Mantenimiento" style="width:100%;height:calc(100dvh - 64px);min-height:560px;border:0;display:block;background:transparent"></iframe>';
     $('cm-frame').srcdoc=dashInyectar_(html,'cm-data',boot);
   }catch(e){cont.innerHTML=cmCaja_(escapeHtml(e.message||String(e)),true);}
 }
-function cmIdiomaCambiado_(){const fr=$('cm-frame');if(fr&&fr.contentWindow){try{fr.contentWindow.postMessage({type:'cm-lang',lang:LANG},'*');}catch(e){}}}
+function cmIdiomaCambiado_(){const fr=$('cm-frame');if(fr&&fr.contentWindow){try{fr.contentWindow.postMessage({type:'cm-lang',lang:(LANG==='en'&&LANG_JA&&esJapones_())?'ja':LANG},'*');}catch(e){}}}
 window.addEventListener('message',async ev=>{
   const fr=$('cm-frame'); if(!fr||ev.source!==fr.contentWindow)return; const d=ev.data||{};
   if(d.type==='cm-lang-cambio'){if(typeof setLanguage==='function')setLanguage(d.lang);return;}
@@ -5172,7 +5180,7 @@ async function htAbrir_(ctx){
   $('ht-guardado').textContent=''; $('ht-barra').innerHTML=ctx.barra||''; $('ht-acciones').innerHTML=ctx.acciones||'';
   try{
     const html=await htObtenerHtml_(ctx.archivo), base=new URL('./',window.location.href).href;
-    const cfg={claves:Object.keys(ctx.claves),datos:ctx.datos,soloLectura:!ctx.editable,css:ctx.css||'',aviso:ctx.aviso||'',tickets:ctx.tickets||null,bloquearCampos:!!ctx.bloquearCampos};
+    const cfg={claves:Object.keys(ctx.claves),datos:ctx.datos,idioma:ctx.idioma||'',soloLectura:!ctx.editable,css:ctx.css||'',aviso:ctx.aviso||'',tickets:ctx.tickets||null,bloquearCampos:!!ctx.bloquearCampos};
     const puente=`<script>window.__HT=${JSON.stringify(cfg).replace(/</g,'\\u003c')};<\/script><script>(${htPuente_.toString()})();<\/script>`;
     $('ht-frame').srcdoc=html.replace(/<head([^>]*)>/i,'<head$1><base href="'+base+'">'+puente);
     $('ht-cargando').style.display='none'; $('ht-frame').style.display='';
@@ -5190,6 +5198,7 @@ function htPuente_(){
   Storage.prototype.getItem=function(k){
     if(C.claves.indexOf(k)>=0)return D[k]==null?null:D[k];
     if(/gsheet/i.test(k))return null;                       // sin sincronización con hojas externas
+    if(k==='facilities_lang'&&C.idioma)return C.idioma;      // V9.19.19: el tablero abre en el idioma del sistema
     return gi.apply(this,arguments);
   };
   Storage.prototype.setItem=function(k,v){
@@ -5291,8 +5300,12 @@ async function goBoard(){
   const ocultar='[onclick*="connectToSharedFile"],[onclick*="reconnectClick"],[onclick*="file-input"],[onclick*="toggleGSheetPanel"],'+
     '[onclick*="openTicketsSyncModal"],[onclick*="downloadGSheetTemplate"],#gsheet-panel{display:none!important}';
   htAbrir_({archivo:'facilities-board.html',
-    claves:{'facilities_projects_board_data':'datos','facilities_projects_board_dates':'fechas'},
-    datos:{'facilities_projects_board_data':r.datos,'facilities_projects_board_dates':r.fechas},
+    // V9.19.19: las secciones personalizadas, las secciones ocultas y la foto de la curva S también se guardan en el servidor.
+    claves:{'facilities_projects_board_data':'datos','facilities_projects_board_dates':'fechas','facilities_custom_sections_v1':'secciones',
+      'facilities_hidden_sections_v1':'ocultas','facilities_scurve_last_week':'curvaS'},
+    datos:{'facilities_projects_board_data':r.datos,'facilities_projects_board_dates':r.fechas,'facilities_custom_sections_v1':r.secciones??null,
+      'facilities_hidden_sections_v1':r.ocultas??null,'facilities_scurve_last_week':r.curvaS??null},
+    idioma:(LANG==='en'&&LANG_JA&&esJapones_())?'ja':LANG,
     editable:r.puedeEditar,tickets:r.solicitudes.conteo,
     // En consulta: sin ventana de edición, sin Guardar ni Agregar proyecto, y con los campos bloqueados.
     css:ocultar+(r.puedeEditar?'':' .modal-overlay,.gantt-click-hint,[onclick*="applyWeeks"],[onclick*="openProjectModal(null)"]{display:none!important}'),
@@ -13354,7 +13367,7 @@ function aplicarInventarioAdmin_(res) {
 
     const globalAlert=$('admin-stock-alert');
     if(globalAlert){
-      if(res.bajoMinimoCount>0&&!mgrEsAprobador_()){   // V9.19.3: Inagaki no ve la barra de inventario
+      if(false&&res.bajoMinimoCount>0&&!mgrEsAprobador_()){   // V9.19.19: se quitó el aviso de stock mínimo (sigue en Inventario)
         globalAlert.style.display='';
         const examples=(res.bajoMinimoItems||[]).slice(0,5).map(x=>x.codigo).join(', ');
         $('admin-stock-alert-text').innerHTML=`<i class="fas fa-triangle-exclamation" style="margin-right:7px"></i><strong>${res.bajoMinimoCount} material(es)</strong> están en su stock mínimo o por debajo${examples?' · Ej.: '+examples:''}.`;
@@ -15735,6 +15748,135 @@ function exportChecklistMonthlyExcel(){
 </script>
 
 
+<style id="v91919-css">
+/* V9.19.19 — Barra lateral solo con íconos (76 px), estado de conexión junto al logo y barra superior con idioma y relojes. */
+:root{--v81-sidebar:76px}
+@media (min-width:1001px){
+  #v81-collapse{display:none!important}
+  nav>div>div:first-child{display:flex!important;flex-direction:column!important;align-items:center!important;gap:5px!important;padding:3px 0 10px!important}
+  nav>div>div:first-child>div:last-child{display:none!important}
+  #v81-bottom-tools{flex-direction:column!important;align-items:center!important;gap:8px!important}
+  body.v81-sidebar-collapsed #v81-bottom-tools #btn-logout{display:flex!important;align-items:center;justify-content:center;width:36px;height:34px;padding:0!important;margin:0!important;font-size:0!important}
+  body.v81-sidebar-collapsed #v81-bottom-tools #btn-logout i{font-size:.85rem!important;margin:0!important}
+  body.v81-sidebar-collapsed #v81-role-card{justify-content:center;padding:6px!important;border:0!important;background:transparent!important}
+  body.v81-sidebar-collapsed #v81-role-card>div:last-child{display:none!important}
+}
+#v919-net{display:inline-flex;align-items:center;gap:4px;font:700 .58rem/1 Inter,system-ui,sans-serif;color:#CBD5E1;cursor:pointer;padding:3px 6px;border-radius:99px;background:rgba(255,255,255,.06);white-space:nowrap;letter-spacing:.02em}
+#v919-net .d{width:8px;height:8px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 2px rgba(34,197,94,.25);flex:none}
+#v919-net[data-e="sync"] .d,#v919-net[data-e="pend"] .d{background:#F59E0B;box-shadow:0 0 0 2px rgba(245,158,11,.25)}
+#v919-net[data-e="sync"] .d{animation:v919pulso 1s infinite}
+#v919-net[data-e="off"] .d{background:#94A3B8;box-shadow:0 0 0 2px rgba(148,163,184,.25)}
+#v919-net[data-e="err"] .d{background:#EF4444;box-shadow:0 0 0 2px rgba(239,68,68,.3)}
+@keyframes v919pulso{50%{opacity:.35}}
+#offline-status{display:none!important}
+#v919-tip{position:fixed;z-index:9999;background:#0F172A;color:#F8FAFC;font:600 .74rem/1.2 Inter,system-ui,sans-serif;padding:6px 10px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none;display:none;white-space:nowrap}
+#v919-top{display:flex;justify-content:flex-end;padding:8px 16px 0;pointer-events:none;position:relative;z-index:30}
+#v919-top .p{pointer-events:auto;display:flex;align-items:center;gap:10px;background:#0B1730;border:1px solid #1E3354;border-radius:12px;padding:5px 8px 5px 6px;box-shadow:0 4px 14px rgba(11,23,48,.18);max-width:100%}
+#v919-top #lang-switch{margin:0!important;background:#13223F!important;border-color:#24395E!important;padding:3px!important;gap:2px}
+#v919-top #lang-switch button{display:inline-flex;align-items:center;gap:5px;padding:5px 9px!important;font-size:.72rem!important}
+#v919-top #lang-switch svg{width:18px;height:12px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+#v919-top .clk{border-left:1px solid #24395E;padding-left:10px;font:600 .74rem/1.35 Inter,system-ui,sans-serif;color:#E2E8F0;white-space:nowrap}
+#v919-top .clk b{display:inline-block;width:22px;color:#93C5FD;font-weight:800}
+@media (max-width:1000px){
+  #v919-top{padding:6px 10px 0}
+  #v919-top .p{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  #v919-top .clk{font-size:.66rem;padding-left:6px}
+  #v919-top #lang-switch button{padding:4px 6px!important}
+  #v919-top #lang-switch .t{display:none}
+  nav>div>div:first-child{gap:6px!important}
+}
+@media (max-width:420px){#v919-top .clk .lg{display:none}}
+</style>
+<script id="v91919-js">
+// V9.19.19 — barra lateral fija solo con íconos (el nombre aparece al pasar el mouse), estado de conexión
+// bajo el logo y, arriba a la derecha, los botones de idioma (ES/EN/JA) y los relojes de México y Japón.
+(function(){
+  const FLAG={es:'<svg viewBox="0 0 18 12"><rect width="6" height="12" fill="#006847"/><rect x="6" width="6" height="12" fill="#fff"/><rect x="12" width="6" height="12" fill="#CE1126"/><circle cx="9" cy="6" r="1.6" fill="#8C6239"/></svg>',
+    en:'<svg viewBox="0 0 18 12"><rect width="18" height="12" fill="#B22234"/><g fill="#fff"><rect y="1.7" width="18" height="1.7"/><rect y="5.1" width="18" height="1.7"/><rect y="8.5" width="18" height="1.7"/></g><rect width="8" height="6.8" fill="#3C3B6E"/></svg>',
+    ja:'<svg viewBox="0 0 18 12"><rect width="18" height="12" fill="#fff"/><circle cx="9" cy="6" r="3.4" fill="#BC002D"/></svg>'};
+  function $i(id){return document.getElementById(id);}
+  function armar(){
+    if($i('v919-top'))return;
+    // barra superior
+    const top=document.createElement('div'); top.id='v919-top';
+    top.innerHTML='<div class="p"><div class="clk"><div><b>MX</b><span id="v919-mx"></span></div><div><b>JP</b><span id="v919-jp"></span></div></div></div>';
+    const nav=document.querySelector('nav'); (nav&&nav.parentNode?nav.parentNode.insertBefore(top,nav.nextSibling):document.body.prepend(top));
+    const ls=$i('lang-switch'); if(ls){top.firstChild.insertBefore(ls,top.firstChild.firstChild);
+      [['es','ES'],['en','EN'],['ja','JA']].forEach(function(x){const b=$i('lang-'+x[0]);if(b)b.innerHTML=FLAG[x[0]]+'<span class="t">'+x[1]+'</span>';});}
+    // estado de conexión junto al logo
+    const brand=nav&&nav.firstElementChild&&nav.firstElementChild.firstElementChild;
+    if(brand&&!$i('v919-net')){const n=document.createElement('div');n.id='v919-net';n.innerHTML='<span class="d"></span><span class="l">online</span>';
+      n.onclick=function(ev){ev.stopPropagation();try{openOfflineQueuePanel();}catch(e){}};
+      brand.insertBefore(n,brand.children[1]||null);}
+    // la barra queda siempre angosta
+    document.body.classList.add('v81-sidebar-collapsed');
+    // nombre de cada opción al pasar el mouse
+    const tip=document.createElement('div');tip.id='v919-tip';document.body.appendChild(tip);
+    document.addEventListener('mouseover',function(ev){
+      if(window.innerWidth<=1000){tip.style.display='none';return;}
+      const b=ev.target.closest&&ev.target.closest('nav button[id^="nav-"], #notif-bell, #btn-logout, #v81-role-card, #v919-net');
+      if(!b){tip.style.display='none';return;}
+      let t=(b.id==='v919-net'?b.title:(b.textContent||'').replace(/\s+/g,' ').trim())||b.title||'';
+      if(b.id==='notif-bell')t=b.title||'Notificaciones';
+      if(b.id==='v81-role-card')t=(($i('v81-role-name')||{}).textContent||'');
+      if(!t){tip.style.display='none';return;}
+      const r=b.getBoundingClientRect(); tip.textContent=t; tip.style.display='block';
+      tip.style.left=(r.right+10)+'px'; tip.style.top=Math.max(6,r.top+r.height/2-tip.offsetHeight/2)+'px';
+    });
+    document.addEventListener('scroll',function(){tip.style.display='none';},true);
+    reloj(); setInterval(reloj,20000);
+    v919IdiomaBotones_();
+  }
+  function reloj(){
+    const d=new Date(), mx=$i('v919-mx'), jp=$i('v919-jp'); if(!mx||!jp)return;
+    const L=(typeof LANG!=='undefined'?LANG:'es'), ja=(typeof LANG_JA!=='undefined'&&LANG_JA&&esJapones_());
+    try{
+      const hm=new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+      let fecha, hora;
+      if(ja){const q=new Intl.DateTimeFormat('ja-JP',{timeZone:'America/Mexico_City',year:'numeric',month:'numeric',day:'numeric',weekday:'short'}).formatToParts(d);
+        const gq=function(t){const x=q.find(function(y){return y.type===t;});return x?x.value:'';};
+        fecha=gq('year')+'年'+gq('month')+'月'+gq('day')+'日('+gq('weekday')+') '; hora=hm.replace(':','時')+'分';}
+      else if(L==='en'){fecha=new Intl.DateTimeFormat('en-US',{timeZone:'America/Mexico_City',weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(d)+' · '; hora=hm+' hrs';}
+      else{fecha=new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(d).replace(/\./g,'')+' · '; hora=hm+' hrs';}
+      mx.innerHTML=' <span class="lg">'+fecha+'</span>'+hora;
+      const p=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+      const g=function(t){const x=p.find(function(y){return y.type===t;});return x?x.value:'';};
+      jp.innerHTML=' <span class="lg">'+g('year')+'年'+g('month')+'月'+g('day')+'日('+g('weekday')+') </span>'+g('hour')+'時'+g('minute')+'分';
+    }catch(e){}
+  }
+  window.v919Reloj_=reloj;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',armar);else armar();
+})();
+// Botones de idioma: el manager no ve «ES» (trabaja en inglés); «JA» solo para los usuarios japoneses.
+function v919IdiomaBotones_(){
+  const ls=document.getElementById('lang-switch'); if(!ls)return;
+  ls.style.display='flex';
+  const mgr=typeof isManagerProfile_==='function'&&isManagerProfile_(), ja=esJapones_(), jaOn=LANG==='en'&&LANG_JA&&ja;
+  const es=document.getElementById('lang-es'), en=document.getElementById('lang-en'), jb=document.getElementById('lang-ja');
+  if(es)es.style.display=mgr?'none':'';
+  if(jb)jb.style.display=ja?'':'none';
+  const pinta=function(b,on){if(!b)return;b.style.background=on?'#2563EB':'transparent';b.style.color=on?'#fff':'#94A3B8';};
+  pinta(es,LANG==='es'); pinta(en,LANG==='en'&&!jaOn); pinta(jb,jaOn);
+  try{v919Reloj_();}catch(e){}
+}
+// setLanguage('ja'): el sistema queda en inglés con la capa en japonés encima.
+(function(){
+  const base=setLanguage;
+  setLanguage=function(lang){
+    if(lang==='ja'){
+      if(!esJapones_())return;
+      LANG_JA=true; try{localStorage.setItem('ktmex_lang_ja','1');}catch(e){}
+      base('en');
+    }else{
+      const cambiaJa=LANG_JA; LANG_JA=false; try{localStorage.setItem('ktmex_lang_ja','0');}catch(e){}
+      base(lang);
+      if(cambiaJa&&LANG==='en'){try{applyLanguage();}catch(e){}}
+    }
+    try{cmIdiomaCambiado_();}catch(e){}
+    try{v919IdiomaBotones_();}catch(e){}
+  };
+})();
+</script>
 <script>
 // ===== V8.2 PWA / OFFLINE PILOTO PARA CHECKLISTS =====
 const OFFLINE_DB='ktmex_facilities_offline_v1';
@@ -15758,7 +15900,16 @@ async function queueOfflineChecklist(payload){
   return localId;
 }
 function renderOfflineChecklistNotice(){const k=$('chk-kpis');if(k)k.innerHTML='<div class="card" style="padding:13px;border:1px solid #F59E0B;background:#FFFBEB"><b style="color:#92400E">Modo sin conexión</b><div style="font-size:.72rem;color:#92400E;margin-top:4px">Puedes completar y guardar checklists. Dashboard e historial se actualizarán cuando regrese Internet.</div></div>';}
-async function updateOfflineStatus(){const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0,conError=0;try{const todos=await offlineQueueAll();n=todos.length;conError=todos.filter(x=>x.status==='error'||colaRequiereRevision_(x)).length;}catch(_){}
+// V9.19.19: el estado se muestra junto al logo (online / offline / sync / pendientes / revisar).
+function v919Estado_(e,etiqueta,detalle){const n=$('v919-net');if(!n)return;n.dataset.e=e;n.querySelector('.l').textContent=etiqueta;n.title=detalle;}
+const _v919UpdateOffline=async function(){let n=0,conError=0;try{const todos=await offlineQueueAll();n=todos.length;conError=todos.filter(x=>x.status==='error'||colaRequiereRevision_(x)).length;}catch(_){}
+  const pl=k=>k===1?'':'s';
+  if(conError&&navigator.onLine&&!OFFLINE_SYNC_RUNNING)v919Estado_('err',conError+' review',`${conError} registro${pl(conError)} por revisar · toca aquí`);
+  else if(!navigator.onLine)v919Estado_('off','offline'+(n?' · '+n:''),`Sin conexión · ${n} pendiente${pl(n)} de sincronizar`);
+  else if(OFFLINE_SYNC_RUNNING)v919Estado_('sync','sync · '+n,`Sincronizando · ${n} pendiente${pl(n)}`);
+  else if(n)v919Estado_('pend','online · '+n,`En línea · ${n} pendiente${pl(n)} de sincronizar`);
+  else v919Estado_('ok','online','En línea · Todo sincronizado');};
+async function updateOfflineStatus(){try{await _v919UpdateOffline();}catch(e){}const el=$('offline-status'),tx=$('offline-status-text');if(!el||!tx)return;let n=0,conError=0;try{const todos=await offlineQueueAll();n=todos.length;conError=todos.filter(x=>x.status==='error'||colaRequiereRevision_(x)).length;}catch(_){}
   // V9.2.0: si algún registro necesita intervención, el indicador lo dice en rojo.
   if(conError&&navigator.onLine&&!OFFLINE_SYNC_RUNNING){el.style.background='#B91C1C';el.querySelector('i').className='fas fa-triangle-exclamation';tx.textContent=`${conError} registro${conError===1?'':'s'} por revisar · toca aquí`;return;}if(!navigator.onLine){el.style.background='#991B1B';el.querySelector('i').className='fas fa-wifi-slash';tx.textContent=`Sin conexión · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else if(OFFLINE_SYNC_RUNNING){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate fa-spin';tx.textContent=`Sincronizando · ${n} pendiente${n===1?'':'s'}`;}else if(n){el.style.background='#92400E';el.querySelector('i').className='fas fa-rotate';tx.textContent=`En línea · ${n} pendiente${n===1?'':'s'} de sincronizar`;}else{el.style.background='#064E3B';el.querySelector('i').className='fas fa-wifi';tx.textContent='En línea · Todo sincronizado';}}
 async function validateOrRestoreOfflineSession(){

@@ -1888,7 +1888,7 @@ span.flag.crit{background:var(--crit-bg);color:var(--crit)}span.flag.ok{backgrou
 // ══════════════════════════════════════════════════════════════
 var BOOT={}; try{BOOT=JSON.parse(document.getElementById('cm-data').textContent||'{}');}catch(e){BOOT={};}
 var S=BOOT.servidor||{}, FOTOS=BOOT.fotos||{}, TRAD=BOOT.trad||{}, CURSOS_EN=BOOT.cursosEn||{};
-var SOLO_INGLES=!!BOOT.soloIngles, LANG=SOLO_INGLES?'en':(BOOT.lang==='en'?'en':'es');
+var SOLO_INGLES=!!BOOT.soloIngles, LANG=BOOT.lang==='ja'?'ja':(SOLO_INGLES?'en':(BOOT.lang==='en'?'en':'es'));   // V9.19.19: 'ja' desde el sistema
 // V9.19.4: japonés solo dentro del Centro (el resto del sistema sigue ES/EN). Se recuerda en este navegador.
 try{if(localStorage.getItem('ktmex-cm-lang')==='ja')LANG='ja';}catch(e){}
 var YO=S.yo||{}, CFG=S.cfg||{anticipacionMinDias:14,leadTimeDias:30};
@@ -1922,7 +1922,7 @@ function errTxt(r,es,en){if(!r)return T(es,en);if(LANG==='ja'&&r.errorJa)return 
 window.addEventListener('message',function(e){
   if(e.source!==parent)return; var d=e.data||{};
   if(d.type==='cm-resultado'&&PEND[d.id]){var f=PEND[d.id];delete PEND[d.id];f(d.ok?(d.result||{success:false}):{success:false,error:d.error||'Error'});}
-  else if(d.type==='cm-lang'){if(SOLO_INGLES&&LANG==='ja')return;setLang(SOLO_INGLES?'en':(d.lang==='en'?'en':'es'),true);}
+  else if(d.type==='cm-lang'){if(d.lang==='ja'){setLang('ja',true);return;}setLang(SOLO_INGLES?'en':(d.lang==='en'?'en':'es'),true);}   // V9.19.19
 });
 
 // ── Fechas y formato ──
