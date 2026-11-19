@@ -742,6 +742,7 @@ const LPA_AREAS = {
       <button onclick="goHerramientasElectricas()" id="nav-electricas" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-bolt" style="margin-right:5px"></i>Herramientas
       </button>
+      <button onclick="goDojo()" id="nav-dojo" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-graduation-cap" style="margin-right:5px"></i>Facilities Dojo</button>
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
       </button>
@@ -1922,6 +1923,45 @@ const LPA_AREAS = {
   </div>
 </div>
 
+<!-- V9.19.21: Facilities Dojo y Sistema MOE · JRA · Safety -->
+<div id="modal-dojo" class="modal-bg" style="display:none;padding:0">
+  <div style="width:100vw;height:100dvh;background:#0b1f3a;display:flex;flex-direction:column">
+    <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="font-size:.84rem"><i class="fas fa-graduation-cap" style="margin-right:7px;color:#FBBF24"></i><b>Facilities Dojo</b> <span id="dojo-sub" style="color:#BFDBFE"></span></div>
+      <div style="display:flex;gap:8px;align-items:center"><span id="dojo-estado" style="font-size:.7rem;color:#BFDBFE"></span><button class="btn-g" onclick="dojoCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
+    </div>
+    <iframe id="dojo-frame" title="Facilities Dojo" style="flex:1;width:100%;border:0;background:#eef1f5"></iframe>
+  </div>
+</div>
+<div id="modal-moe" class="modal-bg" style="display:none;padding:0">
+  <div style="width:100vw;height:100dvh;background:#eef2f5;display:flex;flex-direction:column">
+    <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="font-size:.84rem"><i class="fas fa-helmet-safety" style="margin-right:7px;color:#D9F15C"></i><b>MOE · JRA · Safety</b> <span style="color:#BFDBFE">· catálogo compartido en el servidor</span></div>
+      <div style="display:flex;gap:8px;align-items:center"><span id="moe-estado" style="font-size:.7rem;color:#BFDBFE"></span><button class="btn-g" onclick="moeCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
+    </div>
+    <iframe id="moe-frame" title="MOE · JRA · Safety" style="flex:1;width:100%;border:0;background:#eef2f5"></iframe>
+  </div>
+</div>
+<!-- V9.19.21: gráficas personalizables -->
+<div id="graf-studio" class="modal-bg" style="display:none">
+  <div class="modal-box" style="max-width:520px;width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:1rem;color:#0F2A4A"><i class="fas fa-sliders" style="margin-right:7px"></i>Personalizar gráfica</b><button class="btn-g" onclick="grafStudioCerrar_()"><i class="fas fa-xmark"></i></button></div>
+    <div id="graf-studio-titulo" style="font-size:.78rem;color:#64748B;margin:-4px 0 12px"></div>
+    <div id="graf-studio-cuerpo"></div>
+    <div style="font-size:.7rem;color:#64748B;margin-top:10px">Los cambios se aplican al instante y los ven todos los usuarios.</div>
+  </div>
+</div>
+<div id="graf-pres" style="display:none;position:fixed;inset:0;z-index:9000;background:#0B1220;color:#fff;flex-direction:column">
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0F1B33">
+    <b id="graf-pres-titulo" style="flex:1;font-size:1rem"></b><span id="graf-pres-num" style="font-size:.78rem;color:#93C5FD"></span>
+    <button class="btn-g" onclick="grafPresMover_(-1)" title="Anterior">◀</button><button class="btn-g" onclick="grafPresMover_(1)" title="Siguiente">▶</button>
+    <button class="btn-g" id="graf-pres-auto" onclick="grafPresAuto_()">Auto</button><button class="btn-g" onclick="grafPresFs_()" title="Pantalla completa"><i class="fas fa-expand"></i></button>
+    <button class="btn-g" onclick="grafPresSalir_()">Salir</button>
+  </div>
+  <div style="flex:1;padding:22px;min-height:0"><div style="position:relative;height:100%;background:#fff;border-radius:14px;padding:16px"><canvas id="graf-pres-canvas"></canvas></div></div>
+  <div style="text-align:center;font-size:.72rem;color:#94A3B8;padding:6px">← → navegar · Esc salir</div>
+</div>
+
 <div id="modal-board-versiones" class="modal-bg" style="display:none">
   <div class="card slide" style="width:100%;max-width:560px;padding:20px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2247,6 +2287,7 @@ const LPA_AREAS = {
         <p id="admin-rol-label" style="font-size:.78rem;color:#64748B;margin:0"></p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="goMoe()" id="btn-moe" class="btn-g" style="display:none"><i class="fas fa-helmet-safety" style="margin-right:6px"></i>MOE · JRA · Safety</button>
         <button onclick="showQR()" class="btn-g"><i class="fas fa-qrcode" style="margin-right:6px"></i>Generar QR</button>
         <button onclick="refreshAdmin()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
       </div>
@@ -3556,7 +3597,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.19';
+const FRONTEND_BUILD = '9.19.21';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4876,6 +4917,10 @@ function configureRoleUI() {
   if($('nav-wwaprob')){const uu=SESSION&&SESSION.user;$('nav-wwaprob').style.display=(role==='aprobador'||role==='ingeniero'||(uu&&uu.aprobadorWW))?'':'none';}   // V9.9.0
   if($('nav-board')){const un=String(SESSION&&SESSION.user&&SESSION.user.username||'').toLowerCase();
     $('nav-board').style.display=(['aramirez','ploya','ainagaki','ykojima'].includes(un)||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';}
+  // V9.19.21: MOE · JRA · Safety en el panel de administradores (Ingeniería, managers y técnico administrador).
+  if($('btn-moe'))$('btn-moe').style.display=(role==='ingeniero'||role==='manager'||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';
+  // V9.19.21: Facilities Dojo para técnicos e ingenieros.
+  if($('nav-dojo'))$('nav-dojo').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
 
   if(role==='manager'){
     LANG='en';
@@ -4912,7 +4957,7 @@ function configureRoleUI() {
   }
   // V9.9.0: quien solo aprueba Weekend Work no ve nada más.
   if(role==='aprobador'){
-    ['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-pm','nav-rfq','nav-board'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-pm','nav-rfq','nav-board','nav-dojo'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-wwaprob'))$('nav-wwaprob').style.display='';
   }
   configureManagerDashboardTabs();
@@ -7104,10 +7149,10 @@ function renderElectricHistory() {
   const active=chartRows.map(r=>r.consumoActivoKWh===''||r.consumoActivoKWh==null?null:Number(r.consumoActivoKWh));
   const reactive=chartRows.map(r=>r.consumoReactivoKVARh===''||r.consumoReactivoKVARh==null?null:Number(r.consumoReactivoKVARh));
 
-  if(ELEC_HISTORY_CHART){ELEC_HISTORY_CHART.destroy();ELEC_HISTORY_CHART=null;}
+  if(ELEC_HISTORY_CHART){try{ELEC_HISTORY_CHART.destroy();}catch(e){}ELEC_HISTORY_CHART=null;}
   const canvas=$('electric-history-chart');
   if(canvas && typeof Chart!=='undefined'){
-    ELEC_HISTORY_CHART=new Chart(canvas,{
+    ELEC_HISTORY_CHART=grafCrear_('elec-historia',canvas,{
       type:'line',
       data:{labels,datasets:[
         {label:'Consumo activo (kWh)',data:active,tension:.2},
@@ -12766,7 +12811,7 @@ function opsChartDefaults_(title){
 function opsCreateBar_(key,canvasId,labels,datasets,opts){
   opsDestroyChart_(key);
   const c=$(canvasId);if(!c||typeof Chart==='undefined')return;
-  OPS_ANALYTICS_CHARTS[key]=new Chart(c,{
+  OPS_ANALYTICS_CHARTS[key]=grafCrear_('ops-'+key,c,{
     type:'bar',
     data:{labels:labels,datasets:datasets},
     options:Object.assign(opsChartDefaults_(),opts||{})
@@ -12775,7 +12820,7 @@ function opsCreateBar_(key,canvasId,labels,datasets,opts){
 function opsCreateLine_(key,canvasId,labels,datasets,opts){
   opsDestroyChart_(key);
   const c=$(canvasId);if(!c||typeof Chart==='undefined')return;
-  OPS_ANALYTICS_CHARTS[key]=new Chart(c,{
+  OPS_ANALYTICS_CHARTS[key]=grafCrear_('ops-'+key,c,{
     type:'line',
     data:{labels:labels,datasets:datasets},
     options:Object.assign(opsChartDefaults_(),opts||{})
@@ -13188,7 +13233,7 @@ async function loadEngAnalytics(){
 function engChart_(key,canvasId,cfg){
   opsDestroyChart_(key);
   const c=$(canvasId); if(!c||typeof Chart==='undefined')return;
-  OPS_ANALYTICS_CHARTS[key]=new Chart(c,cfg);
+  OPS_ANALYTICS_CHARTS[key]=grafCrear_('eng-'+key,c,cfg);
 }
 function engHm_(min){const m=Math.max(0,Math.round(Number(min)||0));return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 function engSec_(titulo,sub,cuerpo){
@@ -15360,7 +15405,7 @@ function renderReporteEnergia_(r){
       </div>
       <div style="flex:1 1 420px;border:1px solid #CBD5E1;border-radius:6px;padding:10px;background:#fff">
         <div style="text-align:center;font-weight:700;font-size:.9rem;color:#0F172A;margin-bottom:6px">${titulo}</div>
-        <canvas id="energia-chart" style="width:100%;height:320px"></canvas>
+        <div style="position:relative;height:320px"><canvas id="energia-chart"></canvas></div>
       </div>
     </div>`
     :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay lecturas registradas para esta subestación y turno en el mes seleccionado.</div>'}
@@ -15373,6 +15418,14 @@ function renderReporteEnergia_(r){
 // para que también salga al imprimir.
 function dibujarGraficaEnergia_(r){
   const c=$('energia-chart'); if(!c)return;
+  if(typeof Chart!=='undefined'){   // V9.19.21: con Chart.js para poder personalizarla
+    const datos=(r.filas||[]).filter(x=>x.consumoActivo!==null);
+    grafCrear_('energia',c,{type:'bar',data:{labels:datos.map(x=>{const p=String(x.fecha).split('-');return p[2]+'/'+p[1];}),datasets:[
+      {label:'Consumo kWh',data:datos.map(x=>x.consumoActivo),backgroundColor:'#3B64A8',borderColor:'#27477E',borderWidth:1},
+      {type:'line',label:'Promedio',data:datos.map(()=>r.promedioActivo||0),borderColor:'#C0392B',backgroundColor:'#C0392B',borderWidth:2,pointRadius:0,fill:false}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right'}},scales:{y:{beginAtZero:true,title:{display:true,text:'kWh'}},x:{ticks:{maxRotation:45,minRotation:45,font:{size:9}}}}}});
+    return;
+  }
   const datos=(r.filas||[]).filter(x=>x.consumoActivo!==null);
   const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
   const w=Math.max(360,rect.width), h=320;
@@ -15528,7 +15581,7 @@ function renderReporteAgua_(r){
       </div>
       <div style="flex:1 1 440px;border:1px solid #CBD5E1;border-radius:6px;padding:10px;background:#fff">
         <div style="text-align:center;font-weight:700;font-size:.9rem;color:#0F172A;margin-bottom:6px">Consumo de agua y reposición ${nombrePeriodo}</div>
-        <canvas id="agua-chart" style="width:100%;height:320px"></canvas>
+        <div style="position:relative;height:320px"><canvas id="agua-chart"></canvas></div>
       </div>
     </div>`
     :'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No hay lecturas para este turno y periodo.</div>'}
@@ -15539,6 +15592,14 @@ function renderReporteAgua_(r){
 // Barras agrupadas: consumo (azul) y reposición (verde azulado) por periodo.
 function dibujarGraficaAgua_(r){
   const c=$('agua-chart'); if(!c)return;
+  if(typeof Chart!=='undefined'){   // V9.19.21: con Chart.js para poder personalizarla
+    const datos=r.filas||[];
+    grafCrear_('agua',c,{type:'bar',data:{labels:datos.map(x=>aguaEtiqueta_(r,x.clave)),datasets:[
+      {label:'Consumo de agua',data:datos.map(x=>x.conConsumo?x.consumo:null),backgroundColor:'#2563EB'},
+      {label:'Agua de reposición',data:datos.map(x=>x.conReposicion?x.reposicion:null),backgroundColor:'#0F766E'}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,title:{display:true,text:'m³'}},x:{ticks:{maxRotation:45,minRotation:45,font:{size:9}}}}}});
+    return;
+  }
   const datos=r.filas||[];
   const dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
   const w=Math.max(360,rect.width), h=320;
@@ -15719,7 +15780,7 @@ function exportChecklistMonthlyExcel(){
     var frag=document.createDocumentFragment();
     frag.appendChild(sec('Operación')); move(frag,'nav-sol'); move(frag,'nav-act'); move(frag,'nav-compra');
     frag.appendChild(sec('Control')); move(frag,'nav-inv'); move(frag,'nav-recepcion'); move(frag,'nav-checklists'); move(frag,'nav-lpa');
-    frag.appendChild(sec('Ingeniería')); move(frag,'nav-electricas');
+    frag.appendChild(sec('Ingeniería')); move(frag,'nav-electricas'); move(frag,'nav-dojo');
     frag.appendChild(sec('Gestión')); move(frag,'nav-admin');
     menu.insertBefore(frag,menu.firstChild);
     var role=document.createElement('div');role.id='v81-role-card';role.innerHTML='<div id=\"v81-avatar\" title=\"Cambiar mi foto\" onclick=\"cambiarFotoPerfil_()\" style=\"cursor:pointer;flex:none\"></div><div style=\"min-width:0;flex:1\"><div id=\"v81-role-name\">Sesión no iniciada</div><div id=\"v81-role-meta\">Facilities KTMEX</div></div>';
@@ -15876,6 +15937,322 @@ function v919IdiomaBotones_(){
     try{v919IdiomaBotones_();}catch(e){}
   };
 })();
+</script>
+<script id="v91921-js">
+// ══════════════════════════════════════════════════════════════
+// V9.19.21 — FACILITIES DOJO: la ventana carga facilities-dojo.html y le pasa el usuario y su avance.
+// El Dojo manda cada cambio (dojo-guardar) y pide traducciones (dojo-traducir); aquí se llama al servidor.
+// ══════════════════════════════════════════════════════════════
+let DOJO_DATOS=null, DOJO_COLA=Promise.resolve();
+function dojoIdioma_(){return (LANG==='en'&&LANG_JA&&esJapones_())?'ja':LANG;}
+async function goDojo(){
+  if(!SESSION||!SESSION.token)return;
+  $('modal-dojo').style.display='flex'; $('dojo-estado').textContent='Cargando…'; $('dojo-sub').textContent='';
+  try{
+    const r=await api({action:'dojoAbrir',token:SESSION.token});
+    if(!r.success){toast(r.error||'No se pudo abrir Facilities Dojo.','err');$('modal-dojo').style.display='none';return;}
+    DOJO_DATOS=Object.assign({},r,{lang:dojoIdioma_()});
+    $('dojo-sub').textContent='· '+r.usuario.nombre+(r.instructor?' · instructor':'');
+    $('dojo-frame').src='facilities-dojo.html?v='+FRONTEND_BUILD;
+    $('dojo-estado').textContent='';
+  }catch(e){toast('No se pudo abrir Facilities Dojo: '+e.message,'err');$('modal-dojo').style.display='none';}
+}
+function dojoGuardar_(d){
+  const req={action:'dojoGuardar',token:SESSION.token};
+  if(d.perfil!==undefined)req.perfil=JSON.stringify(d.perfil);
+  if(d.cfg!==undefined)req.cfg=JSON.stringify(d.cfg);
+  if(d.otros!==undefined)req.otros=JSON.stringify(d.otros);
+  $('dojo-estado').textContent='Guardando…';
+  DOJO_COLA=DOJO_COLA.then(()=>api(req)).then(r=>{$('dojo-estado').textContent=r&&r.success?'Avance guardado':'No se guardó: '+((r&&r.error)||'error');})
+    .catch(e=>{$('dojo-estado').textContent='Sin conexión: el avance no se guardó';toast('Facilities Dojo: el avance no se guardó ('+e.message+'). Revisa tu conexión.','err');});
+  return DOJO_COLA;
+}
+async function dojoCerrar_(){
+  const fr=$('dojo-frame');
+  try{if(fr&&fr.contentWindow)fr.contentWindow.postMessage({tipo:'dojo-cerrar'},'*');}catch(e){}
+  await new Promise(r=>setTimeout(r,350)); await DOJO_COLA.catch(()=>{});
+  $('modal-dojo').style.display='none'; if(fr)fr.src='about:blank';
+}
+window.addEventListener('message',async e=>{
+  const fr=$('dojo-frame'); if(!fr||!fr.contentWindow||e.source!==fr.contentWindow)return;
+  const d=e.data||{};
+  if(d.tipo==='dojo-listo'&&DOJO_DATOS)fr.contentWindow.postMessage({tipo:'dojo-init',datos:DOJO_DATOS},'*');
+  else if(d.tipo==='dojo-guardar')dojoGuardar_(d);
+  else if(d.tipo==='dojo-traducir'){
+    let r; try{r=await api({action:'dojoTraducir',token:SESSION.token,lang:d.lang,textos:d.textos});}catch(err){r={success:false,error:err.message};}
+    try{fr.contentWindow.postMessage({tipo:'dojo-traduccion',id:d.id,traducciones:r.success?r.traducciones:[],error:r.success?'':(r.error||'error')},'*');}catch(err){}
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// V9.19.21 — SISTEMA MOE · JRA · SAFETY: el catálogo de peligros y la matriz validada se toman del
+// servidor al abrir y cada cambio se sube. Los borradores se quedan en el navegador.
+// ══════════════════════════════════════════════════════════════
+const MOE_CLAVES={catalogo:'ktmex_catalogo_v1',matriz:'ktmex_matriz_validada'};
+const MOE_SYNC={timer:null,ult:{},subiendo:false};
+async function goMoe(){
+  if(!SESSION||!SESSION.token)return;
+  $('modal-moe').style.display='flex'; $('moe-estado').textContent='Cargando catálogo…';
+  try{
+    const r=await api({action:'moeCompartidoLeer',token:SESSION.token});
+    if(!r.success){toast(r.error||'No se pudo abrir MOE · JRA · Safety.','err');$('modal-moe').style.display='none';return;}
+    Object.keys(MOE_CLAVES).forEach(c=>{const k=MOE_CLAVES[c];
+      if(r[c]!==null&&r[c]!==undefined){try{localStorage.setItem(k,r[c]);}catch(e){}MOE_SYNC.ult[c]=r[c];}
+      else MOE_SYNC.ult[c]=null;   // si este navegador ya tenía un catálogo, se sube en la primera revisión
+    });
+    try{localStorage.setItem('moejra_lang',dojoIdioma_()==='ja'?'ja':'es');}catch(e){}
+    $('moe-frame').src='moe-jra-safety.html?v='+FRONTEND_BUILD;
+    $('moe-estado').textContent=r.actualizado?'Catálogo del '+String(r.actualizado).slice(0,10)+(r.por?' · '+r.por:''):'';
+    clearInterval(MOE_SYNC.timer); MOE_SYNC.timer=setInterval(moeRevisar_,4000);
+  }catch(e){toast('No se pudo abrir MOE · JRA · Safety: '+e.message,'err');$('modal-moe').style.display='none';}
+}
+async function moeRevisar_(){
+  if(MOE_SYNC.subiendo)return; MOE_SYNC.subiendo=true;
+  try{
+    for(const c of Object.keys(MOE_CLAVES)){
+      let v=null; try{v=localStorage.getItem(MOE_CLAVES[c]);}catch(e){}
+      if(v!==null&&v!==MOE_SYNC.ult[c]){
+        const r=await api({action:'moeCompartidoGuardar',token:SESSION.token,clave:c,valor:v});
+        if(r&&r.success){MOE_SYNC.ult[c]=v;$('moe-estado').textContent=(c==='catalogo'?'Catálogo':'Matriz')+' guardado en el servidor';}
+        else $('moe-estado').textContent='No se guardó: '+((r&&r.error)||'error');
+      }
+    }
+  }catch(e){$('moe-estado').textContent='Sin conexión: el catálogo no se guardó';}
+  finally{MOE_SYNC.subiendo=false;}
+}
+async function moeCerrar_(){
+  clearInterval(MOE_SYNC.timer); MOE_SYNC.timer=null;
+  await moeRevisar_();
+  $('modal-moe').style.display='none'; $('moe-frame').src='about:blank';
+}
+
+// ══════════════════════════════════════════════════════════════
+// V9.19.21 — GRÁFICAS PERSONALIZABLES (las funciones del Facilities Board)
+//  · «Personalizar»: tipo (10), paleta (9), color por serie o por elemento, valores, leyenda,
+//    cuadrícula, degradado, grosor y esquinas. Lo cambia Ingeniería y lo ven todos.
+//  · «PNG» descarga la gráfica y «Presentar» la muestra a pantalla completa con las demás de la vista.
+// ══════════════════════════════════════════════════════════════
+const GRAF_TIPOS=[['','Original'],['bar','Barras'],['hbar','Barras horizontales'],['stacked','Barras apiladas'],['line','Líneas'],['area','Área'],['stepped','Línea escalonada'],['doughnut','Dona'],['pie','Pastel'],['polar','Área polar'],['radar','Radar']];
+const GRAF_PALETAS={
+  original:null,
+  oceano:['#0ea5e9','#2563eb','#06b6d4','#6366f1','#0891b2','#38bdf8','#1d4ed8','#14b8a6','#818cf8','#0284c7'],
+  atardecer:['#f97316','#ef4444','#f59e0b','#ec4899','#fb7185','#eab308','#dc2626','#f43f5e','#fbbf24','#c2410c'],
+  bosque:['#16a34a','#65a30d','#0d9488','#15803d','#84cc16','#059669','#4d7c0f','#22c55e','#10b981','#166534'],
+  violeta:['#7c3aed','#a855f7','#6366f1','#d946ef','#8b5cf6','#c084fc','#4f46e5','#e879f9','#6d28d9','#9333ea'],
+  neon:['#22d3ee','#a3e635','#f472b6','#facc15','#818cf8','#fb923c','#34d399','#f87171','#60a5fa','#c084fc'],
+  pastel:['#93c5fd','#fca5a5','#86efac','#fde68a','#c4b5fd','#f9a8d4','#a5f3fc','#fdba74','#bef264','#d8b4fe'],
+  daltonismo:['#0072b2','#e69f00','#009e73','#cc79a7','#56b4e9','#d55e00','#f0e442','#000000','#999999','#882255'],
+  mono:['#0f172a','#334155','#475569','#64748b','#94a3b8','#cbd5e1','#1e293b','#52525b','#71717a','#a1a1aa']};
+const GRAF_PAL_NOMBRE={original:'Original',oceano:'Océano',atardecer:'Atardecer',bosque:'Bosque',violeta:'Violeta',neon:'Neón',pastel:'Pastel',daltonismo:'Apto daltonismo',mono:'Monocromo'};
+const GRAF_BASE=['#2563EB','#F59E0B','#10B981','#EF4444','#8B5CF6','#06B6D4','#EC4899','#84CC16','#F97316','#64748B'];
+const GRAF={estilos:{},puedeEditar:false,cargado:false,cargando:false,reg:{},guardar:{},pres:{lista:[],i:0,chart:null,auto:null}};
+try{const c=JSON.parse(localStorage.getItem('ktmex_graf_estilos')||'null');if(c&&c.estilos)GRAF.estilos=c.estilos;}catch(e){}
+function grafClon_(o){
+  if(Array.isArray(o))return o.map(grafClon_);
+  if(o&&typeof o==='object'&&Object.getPrototypeOf(o)===Object.prototype){const r={};Object.keys(o).forEach(k=>{r[k]=grafClon_(o[k]);});return r;}
+  return o;
+}
+function grafHex_(c){const m=String(c||'').trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);if(!m)return null;let h=m[1];if(h.length===3)h=h.split('').map(x=>x+x).join('');return '#'+h.toLowerCase();}
+function grafAlfa_(c,a){const h=grafHex_(c);if(!h)return c;const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function grafTono_(c,p){const h=grafHex_(c);if(!h)return c;const n=parseInt(h.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(v+(p/100)*255)));return '#'+[n>>16&255,n>>8&255,n&255].map(v=>f(v).toString(16).padStart(2,'0')).join('');}
+function grafColorBase_(d,i){const b=Array.isArray(d.backgroundColor)?d.backgroundColor[0]:d.backgroundColor;return grafHex_(b)||grafHex_(d.borderColor)||GRAF_BASE[i%GRAF_BASE.length];}
+const GRAF_PLUG_FONDO={id:'grafFondo',beforeDraw(c){const g=c.ctx;g.save();g.globalCompositeOperation='destination-over';g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.restore();}};
+const GRAF_PLUG_VALORES={id:'grafValores',afterDatasetsDraw(c){
+  const g=c.ctx; g.save(); g.font='600 10px sans-serif'; g.fillStyle='#0F172A'; g.textAlign='center'; g.textBaseline='bottom';
+  const radial=['pie','doughnut','polarArea'].includes(c.config.type);
+  c.data.datasets.forEach((d,i)=>{const m=c.getDatasetMeta(i); if(m.hidden)return;
+    m.data.forEach((el,j)=>{const v=d.data[j]; if(v===null||v===undefined||v==='')return; const n=typeof v==='object'?(v.y??v.r??v.x):v; if(!isFinite(n))return;
+      const t=Number(n).toLocaleString(undefined,{maximumFractionDigits:1}); let x,y;
+      if(radial){const p=el.tooltipPosition();x=p.x;y=p.y+5;g.fillStyle='#fff';}
+      else if(c.options.indexAxis==='y'){x=el.x+14;y=el.y+5;g.fillStyle='#0F172A';}
+      else{x=el.x;y=el.y-3;g.fillStyle='#0F172A';}
+      g.fillText(t,x,y);});});
+  g.restore();}};
+function grafAplicar_(cfg,st){
+  cfg.options=cfg.options||{}; const o=cfg.options; o.plugins=o.plugins||{};
+  cfg.plugins=(cfg.plugins||[]).concat([GRAF_PLUG_FONDO]);
+  const orig=cfg.type, t=st.tipo||'', labels=(cfg.data&&cfg.data.labels)||[];
+  let ds=(cfg.data&&cfg.data.datasets)||[];
+  const radialT=['doughnut','pie','polar','radar'].includes(t);
+  if(t){
+    if(radialT){ds=ds.filter(d=>!d.type||d.type===orig);cfg.data.datasets=ds;}
+    if(t==='hbar'||t==='bar'||t==='stacked')cfg.type='bar';
+    else if(t==='line'||t==='area'||t==='stepped')cfg.type='line';
+    else cfg.type=t==='polar'?'polarArea':t;
+    const eraY=o.indexAxis==='y';
+    if(t==='hbar'){o.indexAxis='y'; if(!eraY&&o.scales){const x=o.scales.x,y=o.scales.y;o.scales.x=y||{};o.scales.y=x||{};}}
+    else if(!radialT&&eraY){delete o.indexAxis;if(o.scales){const x=o.scales.x,y=o.scales.y;o.scales.x=y||{};o.scales.y=x||{};}}
+    ds.forEach(d=>{
+      if(d.type&&d.type!==orig&&!radialT)return;   // series mixtas (p. ej. la línea del promedio) conservan su tipo
+      delete d.type;
+      if(cfg.type==='line'){d.fill=t==='area'?'origin':false;d.stepped=t==='stepped'?true:false;if(d.tension===undefined)d.tension=.25;}
+    });
+    if(radialT){delete o.scales;if(cfg.type==='radar'||cfg.type==='polarArea')o.scales={r:{beginAtZero:true}};delete o.indexAxis;}
+    else{o.scales=o.scales||{};['x','y'].forEach(a=>{o.scales[a]=o.scales[a]||{};o.scales[a].stacked=t==='stacked'?true:(o.scales[a].stacked&&t!=='bar'&&t!=='hbar'?o.scales[a].stacked:false);});}
+  }
+  const tipo=cfg.type, radial=['pie','doughnut','polarArea'].includes(tipo);
+  const pal=GRAF_PALETAS[st.paleta]||null, cols=st.colores||{};
+  const porElemento=ds.length===1&&(radial||st.colorCadaUno);
+  ds.forEach((d,i)=>{
+    if(porElemento){
+      const base=Array.isArray(d.backgroundColor)?d.backgroundColor:null;
+      const lista=labels.map((_,j)=>cols['e'+j]||(pal?pal[j%pal.length]:(base&&grafHex_(base[j])?base[j]:(radial?GRAF_BASE[j%GRAF_BASE.length]:grafColorBase_(d,0)))));
+      d.backgroundColor=st.degradado&&tipo==='bar'?grafDegradado_(lista):lista; d.borderColor=tipo==='line'?lista[0]:lista.map(c=>grafTono_(c,-12)); if(radial)d.borderColor='#fff';
+    }else{
+      const c=cols[i]||(pal?pal[i%pal.length]:null);
+      if(c||st.degradado){const b=c||grafColorBase_(d,i);
+        if(tipo==='line'||d.type==='line'){d.borderColor=b;d.pointBackgroundColor=b;d.backgroundColor=d.fill?grafAlfa_(b,.22):b;}
+        else if(tipo==='radar'){d.borderColor=b;d.backgroundColor=grafAlfa_(b,.22);d.pointBackgroundColor=b;}
+        else{d.backgroundColor=st.degradado?grafDegradado_([b]):b;d.borderColor=grafTono_(b,-12);}}
+    }
+    if((tipo==='bar')&&!(d.type&&d.type!=='bar')){if(st.grosor)d.barPercentage=Math.max(.15,Math.min(1,st.grosor/100));if(st.esquinas!==undefined&&st.esquinas!=='')d.borderRadius=+st.esquinas;}
+  });
+  if(st.leyenda&&st.leyenda!=='auto'){o.plugins.legend=Object.assign({},o.plugins.legend||{},st.leyenda==='none'?{display:false}:{display:true,position:st.leyenda});}
+  if(st.cuadricula===false&&o.scales)Object.keys(o.scales).forEach(a=>{o.scales[a]=Object.assign({},o.scales[a],{grid:Object.assign({},o.scales[a].grid||{},{display:false})});});
+  if(st.valores)cfg.plugins.push(GRAF_PLUG_VALORES);
+  return cfg;
+}
+function grafDegradado_(lista){
+  return ctx=>{const c=ctx.chart,a=c.chartArea,b=lista[(ctx.dataIndex||0)%lista.length]||lista[0];if(!a)return b;
+    const hor=c.options.indexAxis==='y',g=hor?c.ctx.createLinearGradient(a.left,0,a.right,0):c.ctx.createLinearGradient(0,a.bottom,0,a.top);
+    g.addColorStop(0,grafAlfa_(b,.45));g.addColorStop(1,b);return g;};
+}
+function grafCrear_(clave,canvas,cfg){
+  if(typeof canvas==='string')canvas=$(canvas);
+  if(!canvas||typeof Chart==='undefined')return null;
+  const prev=GRAF.reg[clave]; if(prev&&prev.chart){try{prev.chart.destroy();}catch(e){}}
+  try{const ex=Chart.getChart&&Chart.getChart(canvas);if(ex)ex.destroy();}catch(e){}
+  GRAF.reg[clave]={canvas:canvas,cfg:grafClon_(cfg),chart:null};
+  const ch=grafDibujar_(clave); grafCargarEstilos_(); return ch;
+}
+function grafDibujar_(clave){
+  const R=GRAF.reg[clave]; if(!R)return null;
+  if(!R.canvas.isConnected){delete GRAF.reg[clave];return null;}
+  if(R.chart){try{R.chart.destroy();}catch(e){}}
+  try{R.chart=new Chart(R.canvas,grafAplicar_(grafClon_(R.cfg),GRAF.estilos[clave]||{}));}
+  catch(e){console.warn('Gráfica '+clave+': estilo no aplicable',e);R.chart=new Chart(R.canvas,grafClon_(R.cfg));}
+  grafBarra_(clave); return R.chart;
+}
+function grafCargarEstilos_(){
+  if(GRAF.cargado||GRAF.cargando||!SESSION||!SESSION.token)return;
+  GRAF.cargando=true;
+  api({action:'graficasEstilo',token:SESSION.token}).then(r=>{
+    GRAF.cargando=false; if(!r||!r.success)return; GRAF.cargado=true; GRAF.puedeEditar=!!r.puedeEditar;
+    const antes=JSON.stringify(GRAF.estilos); GRAF.estilos=r.estilos||{};
+    try{localStorage.setItem('ktmex_graf_estilos',JSON.stringify({estilos:GRAF.estilos}));}catch(e){}
+    Object.keys(GRAF.reg).forEach(k=>{if(antes!==JSON.stringify(GRAF.estilos))grafDibujar_(k);else grafBarra_(k);});
+  }).catch(()=>{GRAF.cargando=false;});
+}
+function grafTitulo_(clave){
+  const R=GRAF.reg[clave]; if(!R)return clave;
+  const caja=R.canvas.closest('.card')||R.canvas.parentElement&&R.canvas.parentElement.parentElement;
+  let t='';
+  if(caja){const h=[...caja.querySelectorAll('h2,h3,h4,b,strong,div')].find(x=>x!==R.canvas.parentElement&&!x.contains(R.canvas)&&x.children.length===0&&(x.textContent||'').trim().length>2);if(h)t=h.textContent.trim();}
+  return t||clave;
+}
+function grafBarra_(clave){
+  const R=GRAF.reg[clave]; if(!R)return; const cont=R.canvas.parentElement; if(!cont)return;
+  if(getComputedStyle(cont).position==='static')cont.style.position='relative';
+  let b=cont.querySelector(':scope>.graf-barra');
+  if(!b){b=document.createElement('div');b.className='graf-barra';cont.appendChild(b);}
+  b.dataset.k=clave;
+  b.innerHTML=(GRAF.puedeEditar?`<button type="button" title="Personalizar gráfica" onclick="grafStudio_('${clave}')"><i class="fas fa-sliders"></i></button>`:'')+
+    `<button type="button" title="Descargar PNG" onclick="grafPng_('${clave}')"><i class="fas fa-image"></i></button>`+
+    `<button type="button" title="Presentar" onclick="grafPresentar_('${clave}')"><i class="fas fa-expand"></i></button>`;
+}
+function grafPng_(clave){
+  const R=GRAF.reg[clave]; if(!R||!R.chart)return;
+  const a=document.createElement('a'); a.href=R.chart.toBase64Image('image/png',1);
+  a.download=(grafTitulo_(clave).replace(/[^\wáéíóúñ -]+/gi,'').trim().replace(/\s+/g,'_')||clave)+'.png'; document.body.appendChild(a); a.click(); a.remove();
+}
+// ── Personalizar ──
+let GRAF_STUDIO=null;
+function grafStudio_(clave){
+  if(!GRAF.puedeEditar){toast('Solo Ingeniería puede personalizar las gráficas.','err');return;}
+  const R=GRAF.reg[clave]; if(!R)return; GRAF_STUDIO=clave;
+  $('graf-studio-titulo').textContent=grafTitulo_(clave);
+  grafStudioPintar_(); $('graf-studio').style.display='flex';
+}
+function grafStudioPintar_(){
+  const k=GRAF_STUDIO, R=GRAF.reg[k]; if(!R)return; const st=GRAF.estilos[k]||{};
+  const ds=(R.cfg.data&&R.cfg.data.datasets)||[], labels=(R.cfg.data&&R.cfg.data.labels)||[];
+  const tipoAct=st.tipo||'', radial=['doughnut','pie','polar'].includes(tipoAct)||['pie','doughnut','polarArea'].includes(R.cfg.type);
+  const porEl=ds.length===1&&(radial||st.colorCadaUno), pal=GRAF_PALETAS[st.paleta]||null;
+  const colorDe=(i,d)=>porEl?((st.colores||{})['e'+i]||(pal?pal[i%pal.length]:GRAF_BASE[i%GRAF_BASE.length])):((st.colores||{})[i]||(pal?pal[i%pal.length]:grafColorBase_(d,i)));
+  const items=porEl?labels.slice(0,16).map((l,i)=>({i:'e'+i,n:String(l),c:colorDe(i)})):ds.map((d,i)=>({i:i,n:d.label||('Serie '+(i+1)),c:colorDe(i,d)}));
+  const op=(v,t,sel)=>`<option value="${v}" ${sel===v?'selected':''}>${t}</option>`;
+  const L='display:block;font-size:.72rem;font-weight:700;color:#475569;margin:10px 0 4px';
+  $('graf-studio-cuerpo').innerHTML=`
+    <label style="${L}">Tipo de gráfica</label><select class="inp" onchange="grafStudioCambio_('tipo',this.value)">${GRAF_TIPOS.map(x=>op(x[0],x[1],tipoAct)).join('')}</select>
+    <label style="${L}">Paleta de colores</label><select class="inp" onchange="grafStudioCambio_('paleta',this.value)">${Object.keys(GRAF_PALETAS).map(p=>op(p,GRAF_PAL_NOMBRE[p],st.paleta||'original')).join('')}</select>
+    <label style="${L}">Colores</label><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px">${items.map(x=>`<label style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:#334155;min-width:0"><input type="color" value="${grafHex_(x.c)||'#2563eb'}" onchange="grafStudioColor_('${x.i}',this.value)" style="width:30px;height:24px;border:0;padding:0;background:none;flex:none"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(x.n)}</span></label>`).join('')}</div>
+    ${ds.length===1&&!radial?`<label style="display:flex;gap:7px;align-items:center;font-size:.78rem;margin-top:8px"><input type="checkbox" ${st.colorCadaUno?'checked':''} onchange="grafStudioCambio_('colorCadaUno',this.checked)">Color distinto por elemento</label>`:''}
+    <label style="${L}">Estilo</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.78rem">
+      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.valores?'checked':''} onchange="grafStudioCambio_('valores',this.checked)">Mostrar valores</label>
+      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.cuadricula===false?'':'checked'} onchange="grafStudioCambio_('cuadricula',this.checked)">Cuadrícula</label>
+      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.degradado?'checked':''} onchange="grafStudioCambio_('degradado',this.checked)">Degradado</label>
+      <label style="display:flex;gap:7px;align-items:center">Leyenda <select class="inp" style="padding:3px 6px;font-size:.74rem" onchange="grafStudioCambio_('leyenda',this.value)">${[['auto','Automática'],['top','Arriba'],['bottom','Abajo'],['right','Derecha'],['none','Sin leyenda']].map(x=>op(x[0],x[1],st.leyenda||'auto')).join('')}</select></label>
+      <label>Grosor de barras <input type="range" min="20" max="100" value="${st.grosor||80}" style="width:100%" oninput="grafStudioCambio_('grosor',+this.value)"></label>
+      <label>Esquinas <input type="range" min="0" max="16" value="${st.esquinas||0}" style="width:100%" oninput="grafStudioCambio_('esquinas',+this.value)"></label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn-g" onclick="grafStudioReset_()"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Restablecer</button>
+      <button class="btn-g" onclick="grafPng_('${k}')"><i class="fas fa-image" style="margin-right:5px"></i>PNG</button>
+      <button class="btn-p" onclick="grafStudioCerrar_()">Listo</button>
+    </div>`;
+}
+function grafStudioCambio_(campo,valor){
+  const k=GRAF_STUDIO; if(!k)return; const st=Object.assign({},GRAF.estilos[k]||{});
+  if(valor===''||valor===null)delete st[campo]; else st[campo]=valor;
+  if(campo==='paleta')delete st.colores;
+  GRAF.estilos[k]=st; grafDibujar_(k); grafGuardar_(k);
+  if(['tipo','paleta','colorCadaUno'].includes(campo))grafStudioPintar_();
+}
+function grafStudioColor_(i,c){const k=GRAF_STUDIO;if(!k)return;const st=Object.assign({},GRAF.estilos[k]||{});st.colores=Object.assign({},st.colores||{});st.colores[i]=c;GRAF.estilos[k]=st;grafDibujar_(k);grafGuardar_(k);}
+function grafStudioReset_(){const k=GRAF_STUDIO;if(!k)return;delete GRAF.estilos[k];grafDibujar_(k);grafGuardar_(k);grafStudioPintar_();}
+function grafStudioCerrar_(){$('graf-studio').style.display='none';GRAF_STUDIO=null;}
+function grafGuardar_(k){
+  try{localStorage.setItem('ktmex_graf_estilos',JSON.stringify({estilos:GRAF.estilos}));}catch(e){}
+  clearTimeout(GRAF.guardar[k]);
+  GRAF.guardar[k]=setTimeout(()=>{
+    const st=GRAF.estilos[k];
+    api({action:'graficasGuardarEstilo',token:SESSION.token,clave:k,estilo:st&&Object.keys(st).length?JSON.stringify(st):''})
+      .then(r=>{if(!r||!r.success)toast((r&&r.error)||'No se guardó el estilo de la gráfica.','err');}).catch(e=>toast('No se guardó el estilo de la gráfica: '+e.message,'err'));
+  },700);
+}
+// ── Presentar ──
+function grafPresentar_(desde){
+  const lista=Object.keys(GRAF.reg).filter(k=>{const R=GRAF.reg[k];return R&&R.chart&&R.canvas.isConnected&&R.canvas.offsetParent;})
+    .sort((a,b)=>GRAF.reg[a].canvas.compareDocumentPosition(GRAF.reg[b].canvas)&Node.DOCUMENT_POSITION_FOLLOWING?-1:1);
+  if(!lista.length)return;
+  GRAF.pres.lista=lista; GRAF.pres.i=Math.max(0,lista.indexOf(desde));
+  $('graf-pres').style.display='flex'; document.addEventListener('keydown',grafPresTecla_); grafPresPintar_();
+}
+function grafPresPintar_(){
+  const P=GRAF.pres, k=P.lista[P.i], R=GRAF.reg[k]; if(!R)return;
+  $('graf-pres-titulo').textContent=grafTitulo_(k); $('graf-pres-num').textContent=(P.i+1)+' / '+P.lista.length;
+  if(P.chart){try{P.chart.destroy();}catch(e){}}
+  const cfg=grafAplicar_(grafClon_(R.cfg),GRAF.estilos[k]||{}); cfg.options=Object.assign({},cfg.options,{responsive:true,maintainAspectRatio:false,animation:{duration:500}});
+  P.chart=new Chart($('graf-pres-canvas'),cfg);
+}
+function grafPresMover_(d){const P=GRAF.pres;if(!P.lista.length)return;P.i=(P.i+d+P.lista.length)%P.lista.length;grafPresPintar_();}
+function grafPresAuto_(){const P=GRAF.pres;if(P.auto){clearInterval(P.auto);P.auto=null;$('graf-pres-auto').classList.remove('on');$('graf-pres-auto').textContent='Auto';return;}P.auto=setInterval(()=>grafPresMover_(1),8000);$('graf-pres-auto').textContent='Pausa';}
+function grafPresFs_(){const el=$('graf-pres');try{if(document.fullscreenElement)document.exitFullscreen();else el.requestFullscreen();}catch(e){}}
+function grafPresTecla_(e){if($('graf-pres').style.display==='none')return;if(e.key==='ArrowRight')grafPresMover_(1);else if(e.key==='ArrowLeft')grafPresMover_(-1);else if(e.key==='Escape')grafPresSalir_();}
+function grafPresSalir_(){const P=GRAF.pres;if(P.auto){clearInterval(P.auto);P.auto=null;$('graf-pres-auto').textContent='Auto';}if(P.chart){try{P.chart.destroy();}catch(e){}P.chart=null;}
+  $('graf-pres').style.display='none';document.removeEventListener('keydown',grafPresTecla_);try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+(function(){const st=document.createElement('style');st.textContent=`
+  .graf-barra{position:absolute;top:2px;right:2px;display:flex;gap:4px;z-index:3;opacity:.35;transition:opacity .15s}
+  .graf-barra:hover,*:hover>.graf-barra{opacity:1}
+  .graf-barra button{width:26px;height:24px;border:1px solid #CBD5E1;background:#fff;border-radius:6px;color:#334155;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .graf-barra button:hover{background:#EFF6FF;color:#1D4ED8;border-color:#93C5FD}
+  @media (hover:none){.graf-barra{opacity:1}}
+  @media print{.graf-barra{display:none!important}}`;document.head.appendChild(st);})();
+// Textos en inglés y japonés
+try{Object.assign(TEXT_I18N,{'Personalizar gráfica':'Customize chart','Tipo de gráfica':'Chart type','Paleta de colores':'Color palette','Colores':'Colors','Estilo':'Style','Mostrar valores':'Show values','Cuadrícula':'Grid','Degradado':'Gradient','Leyenda':'Legend','Grosor de barras':'Bar thickness','Esquinas':'Corners','Restablecer':'Reset','Listo':'Done','Color distinto por elemento':'Different color per item','Automática':'Automatic','Arriba':'Top','Abajo':'Bottom','Derecha':'Right','Sin leyenda':'No legend','Barras':'Bars','Barras horizontales':'Horizontal bars','Barras apiladas':'Stacked bars','Líneas':'Lines','Área':'Area','Línea escalonada':'Stepped line','Dona':'Doughnut','Pastel':'Pie','Área polar':'Polar area','Radar':'Radar','Océano':'Ocean','Atardecer':'Sunset','Bosque':'Forest','Violeta':'Violet','Neón':'Neon','Apto daltonismo':'Colorblind-safe','Monocromo':'Monochrome','Los cambios se aplican al instante y los ven todos los usuarios.':'Changes apply instantly and everyone sees them.','Salir':'Exit','Pausa':'Pause','← → navegar · Esc salir':'← → navigate · Esc exit','Descargar PNG':'Download PNG','Presentar':'Present','Cerrar':'Close','· catálogo compartido en el servidor':'· shared catalog on the server'});}catch(e){}
+try{Object.assign(JA_I18N,{'Customize chart':'グラフをカスタマイズ','Chart type':'グラフの種類','Color palette':'カラーパレット','Colors':'色','Style':'スタイル','Show values':'値を表示','Grid':'グリッド','Gradient':'グラデーション','Legend':'凡例','Bar thickness':'棒の太さ','Corners':'角の丸み','Reset':'リセット','Done':'完了','Different color per item':'項目ごとに色を変える','Automatic':'自動','Top':'上','Bottom':'下','Right':'右','No legend':'凡例なし','Bars':'棒グラフ','Horizontal bars':'横棒グラフ','Stacked bars':'積み上げ棒グラフ','Lines':'折れ線','Area':'面グラフ','Stepped line':'ステップ線','Doughnut':'ドーナツ','Pie':'円グラフ','Polar area':'鶏頭図','Radar':'レーダー','Original':'オリジナル','Changes apply instantly and everyone sees them.':'変更はすぐに反映され、全員に表示されます。','Exit':'終了','Pause':'一時停止','← → navigate · Esc exit':'← → 移動 · Esc 終了','Download PNG':'PNGをダウンロード','Present':'プレゼン','Facilities Dojo':'Facilities Dojo','Close':'閉じる','· shared catalog on the server':'· サーバーの共有カタログ'});}catch(e){}
+
 </script>
 <script>
 // ===== V8.2 PWA / OFFLINE PILOTO PARA CHECKLISTS =====
