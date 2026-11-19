@@ -1943,14 +1943,12 @@ const LPA_AREAS = {
   </div>
 </div>
 <!-- V9.19.21: gráficas personalizables -->
-<div id="graf-studio" class="modal-bg" style="display:none">
-  <div class="modal-box" style="max-width:520px;width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:1rem;color:#0F2A4A"><i class="fas fa-sliders" style="margin-right:7px"></i>Personalizar gráfica</b><button class="btn-g" onclick="grafStudioCerrar_()"><i class="fas fa-xmark"></i></button></div>
-    <div id="graf-studio-titulo" style="font-size:.78rem;color:#64748B;margin:-4px 0 12px"></div>
-    <div id="graf-studio-cuerpo"></div>
-    <div style="font-size:.7rem;color:#64748B;margin-top:10px">Los cambios se aplican al instante y los ven todos los usuarios.</div>
-  </div>
-</div>
+<aside id="graf-studio" class="graf-studio" aria-hidden="true" role="dialog">
+  <div class="studio-head"><div><div class="studio-eyebrow">Personalizar gráfica</div><div class="studio-name" id="graf-studio-titulo"></div></div><button type="button" class="studio-x" onclick="grafStudioCerrar_()" aria-label="Cerrar">✕</button></div>
+  <div class="studio-body" id="graf-studio-cuerpo"></div>
+  <div class="studio-foot"><div class="st-note">Los cambios se aplican al instante y los ven todos los usuarios.</div>
+    <button type="button" onclick="grafStudioReset_()">↺ Restablecer</button><button type="button" onclick="GRAF_STUDIO&&grafPng_(GRAF_STUDIO)">⬇ PNG</button><button type="button" class="st-done" onclick="grafStudioCerrar_()">Listo</button></div>
+</aside>
 <div id="graf-pres" style="display:none;position:fixed;inset:0;z-index:9000;background:#0B1220;color:#fff;flex-direction:column">
   <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0F1B33">
     <b id="graf-pres-titulo" style="flex:1;font-size:1rem"></b><span id="graf-pres-num" style="font-size:.78rem;color:#93C5FD"></span>
@@ -3597,7 +3595,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.21';
+const FRONTEND_BUILD = '9.19.22';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -16110,6 +16108,14 @@ function grafAplicar_(cfg,st){
   if(st.leyenda&&st.leyenda!=='auto'){o.plugins.legend=Object.assign({},o.plugins.legend||{},st.leyenda==='none'?{display:false}:{display:true,position:st.leyenda});}
   if(st.cuadricula===false&&o.scales)Object.keys(o.scales).forEach(a=>{o.scales[a]=Object.assign({},o.scales[a],{grid:Object.assign({},o.scales[a].grid||{},{display:false})});});
   if(st.valores)cfg.plugins.push(GRAF_PLUG_VALORES);
+  ds.forEach(d=>{const lin=tipo==='line'||tipo==='radar'||d.type==='line';
+    if(lin){if(st.linea!==undefined)d.borderWidth=st.linea;if(st.punto!==undefined){d.pointRadius=st.punto;d.pointHoverRadius=st.punto+2;}
+      if(tipo==='line'&&!d.stepped&&st.suave!==undefined)d.tension=st.suave?.35:0;
+      if((d.fill&&d.fill!==false||tipo==='radar')&&st.relleno!==undefined){const b=grafHex_(d.borderColor)||grafColorBase_(d,0);d.backgroundColor=grafAlfa_(b,st.relleno/100);}}
+    if(radial&&st.borde!==undefined)d.borderWidth=st.borde;});
+  if(tipo==='doughnut'&&st.hueco!==undefined)o.cutout=st.hueco+'%';
+  if(st.fuente&&st.fuente!=='md'){const fs=st.fuente==='sm'?10:14;o.font={size:fs};o.plugins.legend=Object.assign({},o.plugins.legend||{});o.plugins.legend.labels=Object.assign({},o.plugins.legend.labels||{},{font:{size:fs}});
+    if(o.scales)Object.keys(o.scales).forEach(a=>{const sc=o.scales[a]=Object.assign({},o.scales[a]);sc.ticks=Object.assign({},sc.ticks||{},{font:Object.assign({},(sc.ticks||{}).font||{},{size:fs})});});}
   return cfg;
 }
 function grafDegradado_(lista){
@@ -16129,10 +16135,14 @@ function grafDibujar_(clave){
   const R=GRAF.reg[clave]; if(!R)return null;
   if(!R.canvas.isConnected){delete GRAF.reg[clave];return null;}
   if(R.chart){try{R.chart.destroy();}catch(e){}}
+  grafAlto_(R,(GRAF.estilos[clave]||{}).alto);
   try{R.chart=new Chart(R.canvas,grafAplicar_(grafClon_(R.cfg),GRAF.estilos[clave]||{}));}
   catch(e){console.warn('Gráfica '+clave+': estilo no aplicable',e);R.chart=new Chart(R.canvas,grafClon_(R.cfg));}
   grafBarra_(clave); return R.chart;
 }
+// «Alto de la gráfica»: Compacta 75 % · Normal · Alta 135 % del alto original del recuadro.
+function grafAlto_(R,alto){const c=R.canvas.parentElement;if(!c)return;if(!c.dataset.altoOrig)c.dataset.altoOrig=c.style.height||'';
+  const base=parseFloat(c.dataset.altoOrig)||0; if(!base)return; c.style.height=(alto==='sm'?Math.round(base*.75):alto==='lg'?Math.round(base*1.35):base)+'px';}
 function grafCargarEstilos_(){
   if(GRAF.cargado||GRAF.cargando||!SESSION||!SESSION.token)return;
   GRAF.cargando=true;
@@ -16165,53 +16175,91 @@ function grafPng_(clave){
   const a=document.createElement('a'); a.href=R.chart.toBase64Image('image/png',1);
   a.download=(grafTitulo_(clave).replace(/[^\wáéíóúñ -]+/gi,'').trim().replace(/\s+/g,'_')||clave)+'.png'; document.body.appendChild(a); a.click(); a.remove();
 }
-// ── Personalizar ──
+// ── Personalizar (V9.19.22: la misma interfaz del Facilities Board: panel lateral con mosaicos) ──
+const GRAF_CT_SVG=i=>`<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" stroke="currentColor" stroke-width="0" aria-hidden="true">${i}</svg>`;
+const GRAF_TIPO_DEF={
+  line:{n:'Líneas',fam:'cart',icon:GRAF_CT_SVG('<polyline points="3,18 9,10 14,14 21,5" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="10" r="1.8"/><circle cx="14" cy="14" r="1.8"/><circle cx="21" cy="5" r="1.8"/>')},
+  area:{n:'Área',fam:'cart',icon:GRAF_CT_SVG('<path d="M3 20V17L9 10L14 14L21 5V20Z" opacity=".3"/><polyline points="3,17 9,10 14,14 21,5" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')},
+  stepped:{n:'Línea escalonada',fam:'cart',icon:GRAF_CT_SVG('<polyline points="3,19 8,19 8,13 13,13 13,7 21,7" fill="none" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>')},
+  bar:{n:'Barras',fam:'cart',icon:GRAF_CT_SVG('<rect x="3.5" y="11" width="4.5" height="9" rx="1"/><rect x="9.8" y="4" width="4.5" height="16" rx="1"/><rect x="16" y="8" width="4.5" height="12" rx="1"/>')},
+  hbar:{n:'Barras horizontales',fam:'cart',icon:GRAF_CT_SVG('<rect x="4" y="3.5" width="10" height="4.5" rx="1"/><rect x="4" y="9.8" width="16" height="4.5" rx="1"/><rect x="4" y="16" width="12" height="4.5" rx="1"/>')},
+  stacked:{n:'Barras apiladas',fam:'cart',icon:GRAF_CT_SVG('<rect x="4" y="12" width="6" height="8" rx="1"/><rect x="4" y="5" width="6" height="6" rx="1" opacity=".45"/><rect x="13" y="8" width="6" height="12" rx="1"/><rect x="13" y="3" width="6" height="4" rx="1" opacity=".45"/>')},
+  doughnut:{n:'Dona',fam:'radial',icon:GRAF_CT_SVG('<path d="M12 3A9 9 0 1 1 3.9 8" fill="none" stroke-width="4.5"/><path d="M3.3 6.5A9 9 0 0 1 10 3.1" fill="none" stroke-width="4.5" opacity=".4"/>')},
+  pie:{n:'Pastel',fam:'radial',icon:GRAF_CT_SVG('<path d="M12 12V3A9 9 0 1 1 4 16.2Z"/><path d="M12 12 4 16.2A9 9 0 0 1 12 3Z" opacity=".4"/>')},
+  polar:{n:'Área polar',fam:'radial',icon:GRAF_CT_SVG('<path d="M12 12V3.5A8.5 8.5 0 0 1 20.5 12Z"/><path d="M12 12H18A6 6 0 0 1 12 18Z" opacity=".6"/><path d="M12 12V17A5 5 0 0 1 7 12Z" opacity=".4"/><path d="M12 12H5.5A6.5 6.5 0 0 1 12 5.5Z" opacity=".8"/>')},
+  radar:{n:'Radar',fam:'radar',icon:GRAF_CT_SVG('<polygon points="12,3 20.5,9.2 17.3,19.5 6.7,19.5 3.5,9.2" fill="none" stroke-width="1.6"/><polygon points="12,8 16.3,11.1 14.7,16.3 9.3,16.3 7.7,11.1" opacity=".45"/>')}};
+const GRAF_DEFAULT_CAT=['#3b82f6','#f97316','#10b981','#8b5cf6','#ef4444','#eab308','#06b6d4','#ec4899','#84cc16','#64748b'];
+// Tipo con el que se ve hoy la gráfica (si no se ha personalizado, el original).
+function grafTipoActual_(k){
+  const st=GRAF.estilos[k]||{}; if(st.tipo)return st.tipo;
+  const c=(GRAF.reg[k]||{}).cfg||{}, o=c.options||{}, ds=(c.data&&c.data.datasets)||[];
+  if(c.type==='bar')return o.indexAxis==='y'?'hbar':((o.scales&&o.scales.x&&o.scales.x.stacked)?'stacked':'bar');
+  if(c.type==='line')return ds.some(d=>d.stepped)?'stepped':(ds.some(d=>d.fill&&d.fill!==false)?'area':'line');
+  if(c.type==='polarArea')return 'polar';
+  return GRAF_TIPO_DEF[c.type]?c.type:'bar';
+}
+function grafTiposPermitidos_(k){
+  const ds=((GRAF.reg[k]||{}).cfg||{}).data?.datasets||[], multi=ds.filter(d=>!d.type||d.type===GRAF.reg[k].cfg.type).length>1;
+  return ['line','area','stepped','bar','hbar','stacked'].concat(multi?['radar']:['doughnut','pie','polar','radar']);
+}
 let GRAF_STUDIO=null;
 function grafStudio_(clave){
   if(!GRAF.puedeEditar){toast('Solo Ingeniería puede personalizar las gráficas.','err');return;}
-  const R=GRAF.reg[clave]; if(!R)return; GRAF_STUDIO=clave;
-  $('graf-studio-titulo').textContent=grafTitulo_(clave);
-  grafStudioPintar_(); $('graf-studio').style.display='flex';
+  const R=GRAF.reg[clave]; if(!R)return;
+  document.querySelectorAll('.graf-objetivo').forEach(x=>x.classList.remove('graf-objetivo'));
+  const caja=R.canvas.closest('.card')||R.canvas.parentElement; if(caja)caja.classList.add('graf-objetivo');
+  GRAF_STUDIO=clave; grafStudioPintar_();
+  const el=$('graf-studio'); el.classList.add('open'); el.setAttribute('aria-hidden','false'); document.body.classList.add('graf-studio-open');
+}
+function grafStudioCerrar_(){
+  const el=$('graf-studio'); if(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}
+  document.body.classList.remove('graf-studio-open'); document.querySelectorAll('.graf-objetivo').forEach(x=>x.classList.remove('graf-objetivo')); GRAF_STUDIO=null;
 }
 function grafStudioPintar_(){
   const k=GRAF_STUDIO, R=GRAF.reg[k]; if(!R)return; const st=GRAF.estilos[k]||{};
+  const tipo=grafTipoActual_(k), fam=GRAF_TIPO_DEF[tipo].fam, isBar=['bar','hbar','stacked'].includes(tipo), isLine=['line','area','stepped'].includes(tipo);
   const ds=(R.cfg.data&&R.cfg.data.datasets)||[], labels=(R.cfg.data&&R.cfg.data.labels)||[];
-  const tipoAct=st.tipo||'', radial=['doughnut','pie','polar'].includes(tipoAct)||['pie','doughnut','polarArea'].includes(R.cfg.type);
-  const porEl=ds.length===1&&(radial||st.colorCadaUno), pal=GRAF_PALETAS[st.paleta]||null;
-  const colorDe=(i,d)=>porEl?((st.colores||{})['e'+i]||(pal?pal[i%pal.length]:GRAF_BASE[i%GRAF_BASE.length])):((st.colores||{})[i]||(pal?pal[i%pal.length]:grafColorBase_(d,i)));
-  const items=porEl?labels.slice(0,16).map((l,i)=>({i:'e'+i,n:String(l),c:colorDe(i)})):ds.map((d,i)=>({i:i,n:d.label||('Serie '+(i+1)),c:colorDe(i,d)}));
-  const op=(v,t,sel)=>`<option value="${v}" ${sel===v?'selected':''}>${t}</option>`;
-  const L='display:block;font-size:.72rem;font-weight:700;color:#475569;margin:10px 0 4px';
-  $('graf-studio-cuerpo').innerHTML=`
-    <label style="${L}">Tipo de gráfica</label><select class="inp" onchange="grafStudioCambio_('tipo',this.value)">${GRAF_TIPOS.map(x=>op(x[0],x[1],tipoAct)).join('')}</select>
-    <label style="${L}">Paleta de colores</label><select class="inp" onchange="grafStudioCambio_('paleta',this.value)">${Object.keys(GRAF_PALETAS).map(p=>op(p,GRAF_PAL_NOMBRE[p],st.paleta||'original')).join('')}</select>
-    <label style="${L}">Colores</label><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px">${items.map(x=>`<label style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:#334155;min-width:0"><input type="color" value="${grafHex_(x.c)||'#2563eb'}" onchange="grafStudioColor_('${x.i}',this.value)" style="width:30px;height:24px;border:0;padding:0;background:none;flex:none"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(x.n)}</span></label>`).join('')}</div>
-    ${ds.length===1&&!radial?`<label style="display:flex;gap:7px;align-items:center;font-size:.78rem;margin-top:8px"><input type="checkbox" ${st.colorCadaUno?'checked':''} onchange="grafStudioCambio_('colorCadaUno',this.checked)">Color distinto por elemento</label>`:''}
-    <label style="${L}">Estilo</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.78rem">
-      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.valores?'checked':''} onchange="grafStudioCambio_('valores',this.checked)">Mostrar valores</label>
-      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.cuadricula===false?'':'checked'} onchange="grafStudioCambio_('cuadricula',this.checked)">Cuadrícula</label>
-      <label style="display:flex;gap:7px;align-items:center"><input type="checkbox" ${st.degradado?'checked':''} onchange="grafStudioCambio_('degradado',this.checked)">Degradado</label>
-      <label style="display:flex;gap:7px;align-items:center">Leyenda <select class="inp" style="padding:3px 6px;font-size:.74rem" onchange="grafStudioCambio_('leyenda',this.value)">${[['auto','Automática'],['top','Arriba'],['bottom','Abajo'],['right','Derecha'],['none','Sin leyenda']].map(x=>op(x[0],x[1],st.leyenda||'auto')).join('')}</select></label>
-      <label>Grosor de barras <input type="range" min="20" max="100" value="${st.grosor||80}" style="width:100%" oninput="grafStudioCambio_('grosor',+this.value)"></label>
-      <label>Esquinas <input type="range" min="0" max="16" value="${st.esquinas||0}" style="width:100%" oninput="grafStudioCambio_('esquinas',+this.value)"></label>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-      <button class="btn-g" onclick="grafStudioReset_()"><i class="fas fa-rotate-left" style="margin-right:5px"></i>Restablecer</button>
-      <button class="btn-g" onclick="grafPng_('${k}')"><i class="fas fa-image" style="margin-right:5px"></i>PNG</button>
-      <button class="btn-p" onclick="grafStudioCerrar_()">Listo</button>
-    </div>`;
+  const principales=ds.filter(d=>!d.type||d.type===R.cfg.type), multi=principales.length>1;
+  const porEl=ds.length===1&&(fam==='radial'||st.colorCadaUno), pal=GRAF_PALETAS[st.paleta]||null, cols=st.colores||{};
+  const E=escapeHtml;
+  const sec=(t,inner)=>`<section class="st-sec"><h5>${E(t)}</h5>${inner}</section>`;
+  const tog=(l,p,v)=>`<label class="st-row"><span>${E(l)}</span><span class="st-switch"><input type="checkbox" ${v?'checked':''} onchange="grafStudioCambio_('${p}',this.checked)"><i></i></span></label>`;
+  const rng=(l,p,mn,mx,v,u)=>`<label class="st-row st-range"><span>${E(l)}</span><input type="range" min="${mn}" max="${mx}" value="${v}" oninput="grafStudioCambio_('${p}',+this.value);this.nextElementSibling.textContent=this.value+'${u||''}'"><b>${v}${u||''}</b></label>`;
+  const selc=(l,p,opts,v)=>`<label class="st-row"><span>${E(l)}</span><select class="st-select" onchange="grafStudioCambio_('${p}',this.value)">${opts.map(o=>`<option value="${o[0]}" ${o[0]===v?'selected':''}>${E(o[1])}</option>`).join('')}</select></label>`;
+  let h=sec('Tipo de gráfica',`<div class="st-types">${grafTiposPermitidos_(k).map(t=>`<button type="button" class="st-type${t===tipo?' on':''}" onclick="grafStudioCambio_('tipo','${t}')">${GRAF_TIPO_DEF[t].icon}<span>${E(GRAF_TIPO_DEF[t].n)}</span></button>`).join('')}</div>`);
+  h+=sec('Paleta de colores',`<div class="st-pals">${Object.keys(GRAF_PALETAS).map(n=>{const p=GRAF_PALETAS[n],sw=(p||GRAF_DEFAULT_CAT).slice(0,4);
+    return `<button type="button" class="st-pal${(st.paleta||'original')===n?' on':''}" onclick="grafStudioCambio_('paleta','${n}')" title="${E(GRAF_PAL_NOMBRE[n])}"><span class="sws">${sw.map(c=>`<i style="background:${c}"></i>`).join('')}</span><small>${E(GRAF_PAL_NOMBRE[n])}</small></button>`;}).join('')}</div>`);
+  const items=porEl?labels.slice(0,24).map((l,i)=>({k:'e'+i,n:String(l),c:cols['e'+i]||(pal?pal[i%pal.length]:GRAF_BASE[i%GRAF_BASE.length])}))
+                   :ds.map((d,i)=>({k:i,n:d.label||('Serie '+(i+1)),c:cols[i]||(pal?pal[i%pal.length]:grafColorBase_(d,i))}));
+  h+=sec('Colores',`<div class="st-colors">${items.map(x=>`<label class="st-color"><input type="color" value="${grafHex_(x.c)||'#2563eb'}" oninput="grafStudioColor_('${x.k}',this.value)"><span>${E(x.n)}</span></label>`).join('')}</div>`+
+    (ds.length===1&&fam!=='radial'?tog('Color distinto por elemento','colorCadaUno',st.colorCadaUno):'')+
+    `<button type="button" class="st-link" onclick="grafStudioCambio_('colores',null)">↺ Restablecer colores</button>`);
+  let s=tog('Etiquetas de datos','valores',st.valores);
+  if(fam!=='radial'||tipo==='polar')s+=tog('Líneas de cuadrícula','cuadricula',st.cuadricula!==false);
+  s+=selc('Leyenda','leyenda',[['auto','Auto'],['top','Arriba'],['bottom','Abajo'],['right','Derecha'],['none','Oculta']],st.leyenda||'auto');
+  if(isBar)s+=tog('Relleno degradado','degradado',st.degradado)+rng('Esquinas redondeadas','esquinas',0,20,st.esquinas??0,'px')+rng('Grosor de barras','grosor',20,100,st.grosor??90,'%');
+  if(isLine||fam==='radar')s+=rng('Grosor de línea','linea',1,7,st.linea??3,'px')+rng('Tamaño de punto','punto',0,9,st.punto??3,'px');
+  if(tipo==='line'||tipo==='area')s+=tog('Curvas suaves','suave',st.suave!==false);
+  if(tipo==='area'||fam==='radar')s+=rng('Opacidad del relleno','relleno',2,70,st.relleno??22,'%');
+  if(fam==='radial')s+=rng('Grosor del borde','borde',0,8,st.borde??2,'px');
+  if(tipo==='doughnut')s+=rng('Hueco de la dona','hueco',20,85,st.hueco??50,'%');
+  s+=selc('Tamaño de texto','fuente',[['sm','Pequeño'],['md','Normal'],['lg','Grande']],st.fuente||'md')+selc('Alto de la gráfica','alto',[['sm','Compacta'],['md','Normal'],['lg','Alta']],st.alto||'md');
+  h+=sec('Estilo',s);
+  const body=$('graf-studio-cuerpo'), prev=body.scrollTop; body.innerHTML=h; body.scrollTop=prev;
+  $('graf-studio-titulo').textContent=grafTitulo_(k);
+  try{if(LANG==='en')applyLanguage($('graf-studio'));}catch(e){}
 }
 function grafStudioCambio_(campo,valor){
   const k=GRAF_STUDIO; if(!k)return; const st=Object.assign({},GRAF.estilos[k]||{});
-  if(valor===''||valor===null)delete st[campo]; else st[campo]=valor;
-  if(campo==='paleta')delete st.colores;
+  if(valor===''||valor===null||valor===undefined)delete st[campo]; else st[campo]=valor;
+  if(campo==='paleta'){delete st.colores;if(valor==='original')delete st.paleta;}
   GRAF.estilos[k]=st; grafDibujar_(k); grafGuardar_(k);
-  if(['tipo','paleta','colorCadaUno'].includes(campo))grafStudioPintar_();
+  if(['tipo','paleta','colorCadaUno','colores'].includes(campo))grafStudioPintar_();
 }
 function grafStudioColor_(i,c){const k=GRAF_STUDIO;if(!k)return;const st=Object.assign({},GRAF.estilos[k]||{});st.colores=Object.assign({},st.colores||{});st.colores[i]=c;GRAF.estilos[k]=st;grafDibujar_(k);grafGuardar_(k);}
 function grafStudioReset_(){const k=GRAF_STUDIO;if(!k)return;delete GRAF.estilos[k];grafDibujar_(k);grafGuardar_(k);grafStudioPintar_();}
-function grafStudioCerrar_(){$('graf-studio').style.display='none';GRAF_STUDIO=null;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&GRAF_STUDIO&&$('graf-pres').style.display==='none')grafStudioCerrar_();});
+
 function grafGuardar_(k){
   try{localStorage.setItem('ktmex_graf_estilos',JSON.stringify({estilos:GRAF.estilos}));}catch(e){}
   clearTimeout(GRAF.guardar[k]);
@@ -16248,9 +16296,54 @@ function grafPresSalir_(){const P=GRAF.pres;if(P.auto){clearInterval(P.auto);P.a
   .graf-barra button{width:26px;height:24px;border:1px solid #CBD5E1;background:#fff;border-radius:6px;color:#334155;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
   .graf-barra button:hover{background:#EFF6FF;color:#1D4ED8;border-color:#93C5FD}
   @media (hover:none){.graf-barra{opacity:1}}
-  @media print{.graf-barra{display:none!important}}`;document.head.appendChild(st);})();
+  @media print{.graf-barra{display:none!important}}
+  .graf-objetivo{outline:2px solid #4f46e5!important;outline-offset:3px}
+  .graf-studio{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:100vw;z-index:950;display:flex;flex-direction:column;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-left:1px solid #E2E8F0;box-shadow:-24px 0 60px -24px rgba(15,23,42,.35);transform:translateX(104%);transition:transform .32s cubic-bezier(.2,.8,.2,1);font-family:Inter,system-ui,sans-serif}
+  .graf-studio.open{transform:none}
+  .graf-studio .studio-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 14px;border-bottom:1px solid #eef1f6;background:linear-gradient(180deg,#f8faff,#fff)}
+  .graf-studio .studio-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4f46e5}
+  .graf-studio .studio-name{font-size:15px;font-weight:800;color:#0f172a;margin-top:2px;letter-spacing:-.01em}
+  .graf-studio .studio-x{border:none;background:#f1f5f9;width:32px;height:32px;border-radius:10px;font-size:14px;cursor:pointer;color:#475569;flex:none}
+  .graf-studio .studio-x:hover{background:#e2e8f0}
+  .graf-studio .studio-body{flex:1;overflow-y:auto;padding:6px 18px 18px;-webkit-overflow-scrolling:touch}
+  .graf-studio .st-sec{padding:14px 0 12px;border-bottom:1px dashed #e8edf5}.graf-studio .st-sec:last-child{border-bottom:none}
+  .graf-studio .st-sec h5{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin:0 0 10px}
+  .graf-studio .st-types,.graf-studio .st-pals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .graf-studio .st-type{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 7px;border:1px solid #e6ebf3;background:#fff;border-radius:12px;cursor:pointer;color:#64748b;font:inherit;font-size:10.5px;font-weight:700;line-height:1.15;text-align:center;transition:all .14s}
+  .graf-studio .st-type:hover{border-color:#c7d2fe;color:#4338ca;background:#f8f9ff}
+  .graf-studio .st-type.on{border-color:#4f46e5;background:#eef2ff;color:#4338ca;box-shadow:0 6px 14px -8px rgba(79,70,229,.7)}
+  .graf-studio .st-pal{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:1px solid #e6ebf3;background:#fff;border-radius:12px;cursor:pointer;font:inherit;transition:all .14s}
+  .graf-studio .st-pal:hover{border-color:#c7d2fe}.graf-studio .st-pal.on{border-color:#4f46e5;background:#eef2ff}
+  .graf-studio .st-pal .sws{display:flex}.graf-studio .st-pal .sws i{width:16px;height:16px;border-radius:50%;margin-left:-4px;box-shadow:0 0 0 2px #fff}.graf-studio .st-pal .sws i:first-child{margin-left:0}
+  .graf-studio .st-pal small{font-size:10.5px;font-weight:700;color:#475569}
+  .graf-studio .st-colors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .graf-studio .st-color{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 5px;border:1px solid #e6ebf3;border-radius:10px;font-size:11px;font-weight:600;color:#334155;min-width:0;background:#fff}
+  .graf-studio .st-color span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .graf-studio .st-color input[type=color]{width:26px;height:26px;border:none;padding:0;background:none;cursor:pointer;border-radius:8px;flex:none}
+  .graf-studio .st-color input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+  .graf-studio .st-color input[type=color]::-webkit-color-swatch{border:2px solid #fff;border-radius:8px;box-shadow:0 0 0 1px #cbd5e1}
+  .graf-studio .st-link{border:none;background:none;color:#4f46e5;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;padding:6px 0 0}
+  .graf-studio .st-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;font-size:12.5px;font-weight:600;color:#334155;cursor:pointer}
+  .graf-studio .st-range>span{flex:0 0 118px}.graf-studio .st-range input[type=range]{flex:1;max-width:150px;accent-color:#4f46e5}
+  .graf-studio .st-range b{min-width:42px;text-align:right;font-size:11.5px;color:#64748b;font-variant-numeric:tabular-nums}
+  .graf-studio .st-switch{position:relative;width:38px;height:22px;flex:none}
+  .graf-studio .st-switch input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0;z-index:2}
+  .graf-studio .st-switch i{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:background .15s}
+  .graf-studio .st-switch i::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+  .graf-studio .st-switch input:checked+i{background:linear-gradient(135deg,#4f46e5,#2563eb)}.graf-studio .st-switch input:checked+i::after{transform:translateX(16px)}
+  .graf-studio .st-select{max-width:150px;font:inherit;font-size:12px;padding:5px 8px;border:1px solid #e2e8f3;border-radius:9px;background:#fff;color:#334155}
+  .graf-studio .studio-foot{display:flex;align-items:center;gap:8px;padding:12px 18px 14px;border-top:1px solid #eef1f6;background:#fff;flex-wrap:wrap}
+  .graf-studio .studio-foot .st-note{flex:1 1 100%;font-size:10.5px;color:#94a3b8;margin-bottom:2px}
+  .graf-studio .studio-foot button{font:inherit;font-size:12px;font-weight:700;padding:9px 14px;border-radius:11px;cursor:pointer;border:1px solid #e2e8f3;background:#f6f8fc;color:#334155}
+  .graf-studio .studio-foot button:hover{background:#eef2ff;border-color:#c7d2fe}
+  .graf-studio .studio-foot .st-done{margin-left:auto;background:linear-gradient(135deg,#4f46e5,#2563eb);color:#fff;border:none;box-shadow:0 8px 16px -8px rgba(37,99,235,.8)}
+  @media (min-width:1280px){body.graf-studio-open{margin-right:392px}body{transition:margin .3s cubic-bezier(.2,.8,.2,1)}}
+  @media (max-width:760px){.graf-studio{top:auto;width:100%;height:58vh;border-left:none;border-top:1px solid #E2E8F0;border-radius:24px 24px 0 0;transform:translateY(104%);box-shadow:0 -24px 60px -20px rgba(15,23,42,.4)}.graf-studio.open{transform:none}}
+  @media print{.graf-studio{display:none!important}}`;document.head.appendChild(st);})();
 // Textos en inglés y japonés
+try{Object.assign(TEXT_I18N,{'Etiquetas de datos':'Data labels','Líneas de cuadrícula':'Grid lines','Relleno degradado':'Gradient fill','Esquinas redondeadas':'Rounded corners','Grosor de línea':'Line width','Tamaño de punto':'Point size','Curvas suaves':'Smooth curves','Opacidad del relleno':'Fill opacity','Grosor del borde':'Border width','Hueco de la dona':'Doughnut hole','Tamaño de texto':'Text size','Pequeño':'Small','Normal':'Normal','Grande':'Large','Alto de la gráfica':'Chart height','Compacta':'Compact','Alta':'Tall','Oculta':'Hidden','Auto':'Auto','↺ Restablecer colores':'↺ Reset colors','↺ Restablecer':'↺ Reset','⬇ PNG':'⬇ PNG'});}catch(e){}
 try{Object.assign(TEXT_I18N,{'Personalizar gráfica':'Customize chart','Tipo de gráfica':'Chart type','Paleta de colores':'Color palette','Colores':'Colors','Estilo':'Style','Mostrar valores':'Show values','Cuadrícula':'Grid','Degradado':'Gradient','Leyenda':'Legend','Grosor de barras':'Bar thickness','Esquinas':'Corners','Restablecer':'Reset','Listo':'Done','Color distinto por elemento':'Different color per item','Automática':'Automatic','Arriba':'Top','Abajo':'Bottom','Derecha':'Right','Sin leyenda':'No legend','Barras':'Bars','Barras horizontales':'Horizontal bars','Barras apiladas':'Stacked bars','Líneas':'Lines','Área':'Area','Línea escalonada':'Stepped line','Dona':'Doughnut','Pastel':'Pie','Área polar':'Polar area','Radar':'Radar','Océano':'Ocean','Atardecer':'Sunset','Bosque':'Forest','Violeta':'Violet','Neón':'Neon','Apto daltonismo':'Colorblind-safe','Monocromo':'Monochrome','Los cambios se aplican al instante y los ven todos los usuarios.':'Changes apply instantly and everyone sees them.','Salir':'Exit','Pausa':'Pause','← → navegar · Esc salir':'← → navigate · Esc exit','Descargar PNG':'Download PNG','Presentar':'Present','Cerrar':'Close','· catálogo compartido en el servidor':'· shared catalog on the server'});}catch(e){}
+try{Object.assign(JA_I18N,{'Data labels':'データラベル','Grid lines':'グリッド線','Gradient fill':'グラデーション塗り','Rounded corners':'角の丸み','Line width':'線の太さ','Point size':'点のサイズ','Smooth curves':'なめらかな曲線','Fill opacity':'塗りの不透明度','Border width':'枠線の太さ','Doughnut hole':'ドーナツの穴','Text size':'文字サイズ','Small':'小','Large':'大','Chart height':'グラフの高さ','Compact':'コンパクト','Tall':'高い','Hidden':'非表示','↺ Reset colors':'↺ 色をリセット','↺ Reset':'↺ リセット'});}catch(e){}
 try{Object.assign(JA_I18N,{'Customize chart':'グラフをカスタマイズ','Chart type':'グラフの種類','Color palette':'カラーパレット','Colors':'色','Style':'スタイル','Show values':'値を表示','Grid':'グリッド','Gradient':'グラデーション','Legend':'凡例','Bar thickness':'棒の太さ','Corners':'角の丸み','Reset':'リセット','Done':'完了','Different color per item':'項目ごとに色を変える','Automatic':'自動','Top':'上','Bottom':'下','Right':'右','No legend':'凡例なし','Bars':'棒グラフ','Horizontal bars':'横棒グラフ','Stacked bars':'積み上げ棒グラフ','Lines':'折れ線','Area':'面グラフ','Stepped line':'ステップ線','Doughnut':'ドーナツ','Pie':'円グラフ','Polar area':'鶏頭図','Radar':'レーダー','Original':'オリジナル','Changes apply instantly and everyone sees them.':'変更はすぐに反映され、全員に表示されます。','Exit':'終了','Pause':'一時停止','← → navigate · Esc exit':'← → 移動 · Esc 終了','Download PNG':'PNGをダウンロード','Present':'プレゼン','Facilities Dojo':'Facilities Dojo','Close':'閉じる','· shared catalog on the server':'· サーバーの共有カタログ'});}catch(e){}
 
 </script>
