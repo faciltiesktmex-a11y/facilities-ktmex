@@ -1923,7 +1923,7 @@ const LPA_AREAS = {
   </div>
 </div>
 
-<!-- V9.19.21: Facilities Dojo y Sistema MOE · JRA · Safety -->
+<!-- V9.19.21: Facilities Dojo y Sistema MOE · JRA · Facilities -->
 <div id="modal-dojo" class="modal-bg" style="display:none;padding:0">
   <div style="width:100vw;height:100dvh;background:#0b1f3a;display:flex;flex-direction:column">
     <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -1936,10 +1936,10 @@ const LPA_AREAS = {
 <div id="modal-moe" class="modal-bg" style="display:none;padding:0">
   <div style="width:100vw;height:100dvh;background:#eef2f5;display:flex;flex-direction:column">
     <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <div style="font-size:.84rem"><i class="fas fa-helmet-safety" style="margin-right:7px;color:#D9F15C"></i><b>MOE · JRA · Safety</b> <span style="color:#BFDBFE">· catálogo compartido en el servidor</span></div>
+      <div style="font-size:.84rem"><i class="fas fa-helmet-safety" style="margin-right:7px;color:#D9F15C"></i><b>MOE · JRA · Facilities</b> <span style="color:#BFDBFE">· catálogo compartido en el servidor</span></div>
       <div style="display:flex;gap:8px;align-items:center"><span id="moe-estado" style="font-size:.7rem;color:#BFDBFE"></span><button class="btn-g" onclick="moeCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
     </div>
-    <iframe id="moe-frame" title="MOE · JRA · Safety" style="flex:1;width:100%;border:0;background:#eef2f5"></iframe>
+    <iframe id="moe-frame" title="MOE · JRA · Facilities" style="flex:1;width:100%;border:0;background:#eef2f5"></iframe>
   </div>
 </div>
 <!-- V9.19.21: gráficas personalizables -->
@@ -2285,7 +2285,7 @@ const LPA_AREAS = {
         <p id="admin-rol-label" style="font-size:.78rem;color:#64748B;margin:0"></p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="goMoe()" id="btn-moe" class="btn-g" style="display:none"><i class="fas fa-helmet-safety" style="margin-right:6px"></i>MOE · JRA · Safety</button>
+        <button onclick="goMoe()" id="btn-moe" class="btn-g" style="display:none"><i class="fas fa-helmet-safety" style="margin-right:6px"></i>MOE · JRA · Facilities</button>
         <button onclick="showQR()" class="btn-g"><i class="fas fa-qrcode" style="margin-right:6px"></i>Generar QR</button>
         <button onclick="refreshAdmin()" class="btn-g"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Actualizar</button>
       </div>
@@ -2536,6 +2536,7 @@ const LPA_AREAS = {
         </div>
       </div>
       <div id="dash-daily-kpis" class="v840-kpi-grid" style="margin-bottom:12px"></div>
+      <div id="dash-daily-auto" style="display:none;margin-bottom:12px"></div>
       <div id="dash-daily-list" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
 
@@ -3595,7 +3596,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.22';
+const FRONTEND_BUILD = '9.19.23';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3620,6 +3621,16 @@ function canViewOperationsAnalytics(){
 
 
 const TEXT_I18N = {
+  // ── V9.19.23: actividades cerradas por el sistema ──
+  'Cerradas por el sistema':'Closed by the system',
+  'Últimos 30 días · Plan Diario y espontáneas. Reanúdala (queda en pausa para el técnico) o elimínala; el comentario es obligatorio.':'Last 30 days · Daily Plan and spontaneous. Resume it (it stays paused for the technician) or remove it; the comment is required.',
+  '24 h en curso sin evidencia':'24 h running without evidence',
+  'Periodo vencido':'Period expired',
+  'Espontánea':'Spontaneous',
+  'Reanudar':'Resume',
+  '¿Por qué se cambia? (obligatorio)':'Why is it being changed? (required)',
+  'No hay actividades cerradas por el sistema en los últimos 30 días.':'No activities closed by the system in the last 30 days.',
+  'Cerrada el':'Closed on',
   // ── V8.6.5: ampliación del diccionario de inglés ──
   'Fotografía del ANTES':'BEFORE photo',
   'Fotografías del DESPUÉS':'AFTER photos',
@@ -4915,7 +4926,7 @@ function configureRoleUI() {
   if($('nav-wwaprob')){const uu=SESSION&&SESSION.user;$('nav-wwaprob').style.display=(role==='aprobador'||role==='ingeniero'||(uu&&uu.aprobadorWW))?'':'none';}   // V9.9.0
   if($('nav-board')){const un=String(SESSION&&SESSION.user&&SESSION.user.username||'').toLowerCase();
     $('nav-board').style.display=(['aramirez','ploya','ainagaki','ykojima'].includes(un)||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';}
-  // V9.19.21: MOE · JRA · Safety en el panel de administradores (Ingeniería, managers y técnico administrador).
+  // V9.19.21: MOE · JRA · Facilities en el panel de administradores (Ingeniería, managers y técnico administrador).
   if($('btn-moe'))$('btn-moe').style.display=(role==='ingeniero'||role==='manager'||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';
   // V9.19.21: Facilities Dojo para técnicos e ingenieros.
   if($('nav-dojo'))$('nav-dojo').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
@@ -12759,6 +12770,7 @@ async function loadDashboardDaily(force){
       const r=await api({action:'getDailyActivitiesAdmin',token:SESSION.token,date:date});
       if(!r.success){toast(r.error||'No se pudo cargar el Plan Diario','err');return;}
       DASH_DAILY_DATA=r.items||[];DASH_DAILY_TECHS=r.tecnicos||[];DASH_DAILY_LAST_KEY=date;DASH_DAILY_LAST_AT=Date.now();renderDashboardDaily();
+      loadAutoCerradas_();
       if(isManagerProfile_())setTimeout(()=>enforceManagerEnglish_($('panel-daily-dash')),0);
     }catch(e){toast('Error Plan Diario: '+e.message,'err');}
     finally{DASH_DAILY_LOADING=null;}
@@ -12776,6 +12788,54 @@ function renderDashboardDaily(){
     const rows=byTech[tech].sort((a,b)=>String(a.creado||'').localeCompare(String(b.creado||''))),complete=rows.length>=3;
     return `<div class="card" style="padding:15px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px"><div><b style="color:#0F2A4A">${escapeHtml(tech)}</b><div style="font-size:.68rem;color:#64748B">${rows.length} actividad(es) declarada(s)</div></div><span class="badge ${complete?'b-done':'b-rech'}">${rows.length}/3 mínimo</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">${rows.map((x,i)=>{const a=x.actividad||{},supports=v840FrontParse_(a.tecnicosApoyoJSON||x.tecnicosApoyoJSON),supportTimes=x.apoyosCalculados||[],eff=a.tiempoEfectivoMinutos!==undefined&&a.tiempoEfectivoMinutos!==''?Number(a.tiempoEfectivoMinutos):dailyLiveMinutes_(a);return `<div style="padding:10px;border:1px solid #E2E8F0;border-radius:9px;background:#F8FAFC"><div style="display:flex;justify-content:space-between;gap:6px"><b style="font-size:.74rem">Actividad ${i+1}</b>${dailyStatusBadge_(a.estatusActividad||x.estatus)}</div><div style="font-size:.78rem;font-weight:700;color:#334155;margin-top:5px">${escapeHtml(x.descripcion||'')}</div><div style="font-size:.67rem;color:#64748B;margin-top:3px">${escapeHtml(x.area||'')} · ${escapeHtml(x.categoria||'Sin categoría')}</div>${a.horaInicio?`<div style="font-size:.67rem;color:#475569;margin-top:5px"><b>Tiempo efectivo:</b> ${actFmtMin_(eff||0)} · <b>Pausas:</b> ${actFmtMin_(a.minutosPausaAcumulados||0)}</div>`:''}${supportTimes.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Técnicos de apoyo:</b><br>${supportTimes.map(s=>escapeHtml(s.nombre||'')+' · '+actFmtMin_(s.minutosEfectivos||0)+' · '+escapeHtml(s.estado||'')).join('<br>')}</div>`:(supports.length?`<div style="font-size:.66rem;color:#1D4ED8;margin-top:4px"><b>Apoyos:</b> ${supports.map(s=>escapeHtml(s.nombre||s)).join(', ')}</div>`:'')}${x.estatus==='Pendiente de cierre por Ingeniería'&&SESSION.user.rol==='ingeniero'?`<div style="display:flex;gap:5px;margin-top:7px"><button class="btn-ok" onclick="closeDailyEngineeringUI('${x.id}')">Cerrar / validar</button><button class="btn-red" onclick="returnDailyEngineeringUI('${x.id}')">Devolver</button></div>`:''}${x.estatus==='Declarada'&&SESSION.user.rol==='ingeniero'?`<button class="btn-red" style="margin-top:7px" onclick="deleteDailyAdminDuplicateUI('${x.id}')"><i class="fas fa-trash"></i> Eliminar duplicada</button>`:''}</div>`;}).join('')}</div></div>`;
   }).join('');
+}
+
+// V9.19.23 — Cerradas por el sistema: Ingeniería las reanuda (quedan en pausa) o las elimina, con comentario.
+let AUTO_CERRADAS=[];
+async function loadAutoCerradas_(){
+  const box=$('dash-daily-auto'); if(!box)return;
+  if(!SESSION||SESSION.user.rol!=='ingeniero'){box.style.display='none';box.innerHTML='';return;}
+  try{
+    const r=await api({action:'ingAutoCerradasListar',token:SESSION.token});
+    if(!r.success){box.style.display='none';return;}
+    AUTO_CERRADAS=r.items||[]; renderAutoCerradas_();
+  }catch(e){box.style.display='none';}
+}
+function autoCerradaFecha_(iso){try{const d=new Date(iso);if(isNaN(d))return '';return d.toLocaleString(LANG==='en'?'en-US':'es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function renderAutoCerradas_(){
+  const box=$('dash-daily-auto'); if(!box)return;
+  const L=AUTO_CERRADAS||[];
+  box.style.display='';
+  const T=function(t){return uiTextLang_?uiTextLang_(t):t;};
+  box.innerHTML=`<div class="card" style="padding:14px 16px;border-left:4px solid #DC2626">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div><h3 style="font-size:.92rem;color:#0F2A4A;margin:0 0 3px"><i class="fas fa-robot" style="margin-right:6px;color:#DC2626"></i>${T('Cerradas por el sistema')} <span class="badge b-rech" id="auto-cerradas-n">${L.length}</span></h3>
+      <p style="font-size:.7rem;color:#64748B;margin:0">${T('Últimos 30 días · Plan Diario y espontáneas. Reanúdala (queda en pausa para el técnico) o elimínala; el comentario es obligatorio.')}</p></div>
+    </div>
+    ${L.length?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:10px">${L.map(function(x){
+      return `<div class="auto-cerrada" data-id="${escapeHtml(x.id)}" style="padding:10px;border:1px solid #FECACA;border-radius:9px;background:#FEF2F2">
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:start"><b style="font-size:.74rem;color:#0F2A4A">${escapeHtml(x.folio)} · ${escapeHtml(x.tecnico)}</b><span class="badge b-rech" style="white-space:nowrap">${T(x.motivo==='vencido'?'Periodo vencido':'24 h en curso sin evidencia')}</span></div>
+        <div style="font-size:.78rem;font-weight:700;color:#334155;margin-top:4px">${escapeHtml(x.descripcion)}</div>
+        <div style="font-size:.66rem;color:#64748B;margin-top:3px">${escapeHtml(x.fecha)}${x.area?' · '+escapeHtml(x.area):''}${x.esEspontanea?' · '+T('Espontánea'):''} · ${T('Cerrada el')} ${escapeHtml(autoCerradaFecha_(x.cerradaEn))}</div>
+        <textarea class="inp auto-com" rows="2" maxlength="500" placeholder="${escapeHtml(T('¿Por qué se cambia? (obligatorio)'))}" style="margin-top:7px;font-size:.74rem;resize:vertical"></textarea>
+        <div style="display:flex;gap:5px;margin-top:6px"><button class="btn-ok" onclick="accionAutoCerrada_('${escapeHtml(x.id)}','reanudar',this)"><i class="fas fa-play" style="margin-right:4px"></i>${T('Reanudar')}</button><button class="btn-red" onclick="accionAutoCerrada_('${escapeHtml(x.id)}','eliminar',this)"><i class="fas fa-trash" style="margin-right:4px"></i>${T('Eliminar')}</button></div>
+      </div>`;}).join('')}</div>`:`<div style="font-size:.74rem;color:#94A3B8;margin-top:8px">${T('No hay actividades cerradas por el sistema en los últimos 30 días.')}</div>`}
+  </div>`;
+}
+async function accionAutoCerrada_(id,accion,btn){
+  const card=btn&&btn.closest('.auto-cerrada'); const ta=card&&card.querySelector('.auto-com');
+  const com=String(ta&&ta.value||'').trim();
+  const en=LANG==='en';
+  if(com.length<10){toast(en?'Write why it is being changed (at least 10 characters).':'Escribe por qué se cambia (al menos 10 caracteres).','err');if(ta)ta.focus();return;}
+  const x=(AUTO_CERRADAS||[]).find(function(i){return String(i.id)===String(id);})||{};
+  if(accion==='eliminar'&&!confirm((en?'Remove ':'¿Eliminar ')+(x.folio||'')+(en?'? It will be removed from lists and indicators; a record with your comment is kept.':'? Sale de listas e indicadores; queda el registro con tu comentario.')))return;
+  card.querySelectorAll('button').forEach(function(b){b.disabled=true;});
+  try{
+    const r=await api({action:'ingAutoCerradaAccion',token:SESSION.token,id:id,accion:accion,comentario:com});
+    if(!r.success){toast(r.error||'Error','err');card.querySelectorAll('button').forEach(function(b){b.disabled=false;});return;}
+    toast(accion==='reanudar'?(en?(r.folio+' reopened: paused for the technician.'):(r.folio+' reanudada: queda en pausa para el técnico.')):(en?(r.folio+' removed.'):(r.folio+' eliminada.')),'ok');
+    loadDashboardDaily(true);
+  }catch(e){toast('Error: '+e.message,'err');card.querySelectorAll('button').forEach(function(b){b.disabled=false;});}
 }
 
 let OPS_ANALYTICS_DATA=null;
@@ -15993,16 +16053,16 @@ async function goMoe(){
   $('modal-moe').style.display='flex'; $('moe-estado').textContent='Cargando catálogo…';
   try{
     const r=await api({action:'moeCompartidoLeer',token:SESSION.token});
-    if(!r.success){toast(r.error||'No se pudo abrir MOE · JRA · Safety.','err');$('modal-moe').style.display='none';return;}
+    if(!r.success){toast(r.error||'No se pudo abrir MOE · JRA · Facilities.','err');$('modal-moe').style.display='none';return;}
     Object.keys(MOE_CLAVES).forEach(c=>{const k=MOE_CLAVES[c];
       if(r[c]!==null&&r[c]!==undefined){try{localStorage.setItem(k,r[c]);}catch(e){}MOE_SYNC.ult[c]=r[c];}
       else MOE_SYNC.ult[c]=null;   // si este navegador ya tenía un catálogo, se sube en la primera revisión
     });
     try{localStorage.setItem('moejra_lang',dojoIdioma_()==='ja'?'ja':'es');}catch(e){}
-    $('moe-frame').src='moe-jra-safety.html?v='+FRONTEND_BUILD;
+    $('moe-frame').src='moe-jra-facilities.html?v='+FRONTEND_BUILD;
     $('moe-estado').textContent=r.actualizado?'Catálogo del '+String(r.actualizado).slice(0,10)+(r.por?' · '+r.por:''):'';
     clearInterval(MOE_SYNC.timer); MOE_SYNC.timer=setInterval(moeRevisar_,4000);
-  }catch(e){toast('No se pudo abrir MOE · JRA · Safety: '+e.message,'err');$('modal-moe').style.display='none';}
+  }catch(e){toast('No se pudo abrir MOE · JRA · Facilities: '+e.message,'err');$('modal-moe').style.display='none';}
 }
 async function moeRevisar_(){
   if(MOE_SYNC.subiendo)return; MOE_SYNC.subiendo=true;
