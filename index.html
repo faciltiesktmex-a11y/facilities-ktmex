@@ -1699,6 +1699,15 @@ const LPA_AREAS = {
         <p style="font-size:.78rem;color:#64748B;line-height:1.5;margin:0 0 12px">Circuitos, protecciones, conductores, caída de tensión, tableros, BOM e impresión de memoria.</p>
         <span style="font-size:.76rem;color:#2563EB;font-weight:650">Abrir memoria →</span>
       </div>
+
+      <div class="card" id="tool-pluma" onclick="abrirPlumaPdf()" style="padding:20px;cursor:pointer;transition:.18s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div style="width:44px;height:44px;background:#EEF2FF;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <i class="fas fa-file-signature" style="color:#2236C9;font-size:18px"></i>
+        </div>
+        <h3 style="font-size:.98rem;font-weight:700;color:var(--navy);margin:0 0 5px">Pluma PDF</h3>
+        <p style="font-size:.78rem;color:#64748B;line-height:1.5;margin:0 0 12px">Abre un PDF, escribe texto, firma y guarda el documento. Todo se hace en tu equipo; el PDF no se sube al servidor.</p>
+        <span style="font-size:.76rem;color:#2236C9;font-weight:650">Abrir Pluma PDF →</span>
+      </div>
 <div class="card" onclick="goPS()" style="padding:20px;cursor:pointer;transition:.18s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
         <div style="width:44px;height:44px;background:#EFF6FF;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
           <i class="fas fa-lightbulb" style="color:#2563EB;font-size:18px"></i>
@@ -1937,9 +1946,19 @@ const LPA_AREAS = {
   <div style="width:100vw;height:100dvh;background:#eef2f5;display:flex;flex-direction:column">
     <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div style="font-size:.84rem"><i class="fas fa-helmet-safety" style="margin-right:7px;color:#D9F15C"></i><b>MOE · JRA · Facilities</b> <span style="color:#BFDBFE">· catálogo compartido en el servidor</span></div>
-      <div style="display:flex;gap:8px;align-items:center"><span id="moe-estado" style="font-size:.7rem;color:#BFDBFE"></span><button class="btn-g" onclick="moeCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="moe-estado" style="font-size:.7rem;color:#BFDBFE"></span><span id="moe-sust-info" style="font-size:.7rem;color:#BFDBFE"></span><input type="file" id="moe-sust-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="moeSustanciasArchivo_(this)"><button id="moe-sust-btn" class="btn-g" style="display:none" onclick="$('moe-sust-file').click()"><i class="fas fa-flask" style="margin-right:5px"></i>Cargar Excel de sustancias</button><button class="btn-g" onclick="moeCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
     </div>
     <iframe id="moe-frame" title="MOE · JRA · Facilities" style="flex:1;width:100%;border:0;background:#eef2f5"></iframe>
+  </div>
+</div>
+<!-- V9.19.24: Pluma PDF (Herramientas) -->
+<div id="modal-pluma" class="modal-bg" style="display:none;padding:0">
+  <div style="width:100vw;height:100dvh;background:#e8eaf0;display:flex;flex-direction:column">
+    <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="font-size:.84rem"><i class="fas fa-file-signature" style="margin-right:7px;color:#D9F15C"></i><b>Pluma PDF</b> <span id="pluma-sub" style="color:#BFDBFE">· el PDF se queda en tu equipo</span></div>
+      <button class="btn-g" onclick="cerrarPlumaPdf()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button>
+    </div>
+    <iframe id="pluma-frame" title="Pluma PDF" style="flex:1;width:100%;border:0;background:#e8eaf0"></iframe>
   </div>
 </div>
 <!-- V9.19.21: gráficas personalizables -->
@@ -3596,7 +3615,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.23';
+const FRONTEND_BUILD = '9.19.24';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -3621,6 +3640,15 @@ function canViewOperationsAnalytics(){
 
 
 const TEXT_I18N = {
+  // ── V9.19.24 ──
+  'Pluma PDF':'Pluma PDF',
+  'Abre un PDF, escribe texto, firma y guarda el documento. Todo se hace en tu equipo; el PDF no se sube al servidor.':'Open a PDF, add text, sign and save it. Everything happens on your device; the PDF is not uploaded.',
+  'Abrir Pluma PDF →':'Open Pluma PDF →',
+  '· el PDF se queda en tu equipo':'· the PDF stays on your device',
+  'Escribir un comentario a Facilities':'Write a comment to Facilities',
+  'Lo verán Ingeniería y el técnico asignado. No cambia el estatus.':'Engineering and the assigned technician will see it. It does not change the status.',
+  'Enviar comentario':'Send comment',
+  'Comentario del solicitante':'Requester comment',
   // ── V9.19.23: actividades cerradas por el sistema ──
   'Cerradas por el sistema':'Closed by the system',
   'Últimos 30 días · Plan Diario y espontáneas. Reanúdala (queda en pausa para el técnico) o elimínala; el comentario es obligatorio.':'Last 30 days · Daily Plan and spontaneous. Resume it (it stays paused for the technician) or remove it; the comment is required.',
@@ -4937,7 +4965,8 @@ function configureRoleUI() {
     try{v919IdiomaBotones_();}catch(e){}
     if($('manager-approval-box'))$('manager-approval-box').style.display='';
     // Manager: Dashboard + Auditorías LPA. El resto se gestiona desde Dashboard.
-    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion','nav-electricas'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-compra','nav-act','nav-inv','nav-recepcion'].forEach(id=>{if($(id))$(id).style.display='none';});
+    if($('nav-electricas'))$('nav-electricas').style.display='';   // V9.19.24: los managers entran a Herramientas solo para Pluma PDF
     if($('nav-lpa'))$('nav-lpa').style.display='';
     if($('nav-admin')){
       $('nav-admin').style.display='';
@@ -4986,13 +5015,13 @@ function roleCanView(v) {
   if(v==='ww-aprob'&&SESSION.user&&SESSION.user.aprobadorWW)return true;   // V9.13.0: antes los roles LPA, manager y compras recibían «sin permiso»
   if(role==='manager'){
     // V8.8.0: Inagaki y Kojima entran al panel para firmar su etapa.
-    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login','pm','rfq'].includes(v);
+    return ['admin','lpa-select','lpa-form','lpa-quality','lpa-quality-form','checklists','platform','login','pm','rfq','electricas'].includes(v);   // V9.19.24: Herramientas (solo Pluma PDF)
   }
   if(role==='lpa')return ['home','lpa-select','lpa-quality','lpa-quality-form','platform','login'].includes(v);
   if(role==='compras')return ['home','solicitud','compras-rol','platform','login','rfq'].includes(v)||
     (!!(SESSION&&SESSION.user&&SESSION.user.tieneLPA)&&['lpa-select','lpa-quality','lpa-quality-form'].includes(v));   // V9.4.1
   if(role==='aprobador')return ['home','ww-aprob','login'].includes(v);   // V9.9.0
-  if(v==='electricas'&&!['tecnico','ingeniero'].includes(role))return false;
+  if(v==='electricas'&&!['tecnico','ingeniero','manager'].includes(role))return false;
   if(role==='tecnico'){
     if(v==='admin')return hasAdminPrivilege();
     return v!=='compras-rol';
@@ -5256,6 +5285,7 @@ function htPuente_(){
     return gi.apply(this,arguments);
   };
   Storage.prototype.setItem=function(k,v){
+    if(k==='facilities_lang'&&C.idioma){C.idioma=String(v||'');}   // V9.19.24: los botones EN/ES/日本語 del tablero sí cambian el idioma
     if(C.claves.indexOf(k)>=0){D[k]=String(v);if(!C.soloLectura)parent.postMessage({tipo:'ht-guardar',clave:k,valor:String(v)},'*');return;}
     return si.apply(this,arguments);
   };
@@ -6652,13 +6682,33 @@ async function notifyTechnicianAssignments() {
 // ── Herramientas Eléctricas ───────────────────────────────────
 function goHerramientasElectricas() {
   if (!requireLogin('electricas')) return;
-  if (!['tecnico','ingeniero'].includes(SESSION.user.rol)) {
+  if (!['tecnico','ingeniero','manager'].includes(SESSION.user.rol)) {
     toast('Herramientas está disponible solo para Técnicos e Ingenieros.','err');
     showView('home'); return;
   }
   showView('electricas');
+  plumaSoloManager_();
   closeElectricHistory();
   closeElectricTool();
+}
+
+// V9.19.24 — Pluma PDF. Los managers ven en Herramientas solo esta herramienta.
+function plumaSoloManager_(){
+  const mgr=!!(SESSION&&SESSION.user&&SESSION.user.rol==='manager');
+  document.querySelectorAll('#elec-tool-selector .card').forEach(function(c){c.style.display=(mgr&&c.id!=='tool-pluma')?'none':'';});
+  const h=document.querySelector('#view-electricas button[onclick="showElectricHistory()"]'); if(h)h.style.display=mgr?'none':'';
+}
+function abrirPlumaPdf(){
+  if(!SESSION||!['tecnico','ingeniero','manager'].includes(SESSION.user.rol)){toast('Acceso no autorizado.','err');return;}
+  $('modal-pluma').style.display='flex';
+  const f=$('pluma-frame'); if(!f.getAttribute('src'))f.src='pluma-pdf.html?v='+FRONTEND_BUILD;
+}
+function cerrarPlumaPdf(){
+  let pendiente=false;
+  try{const w=$('pluma-frame').contentWindow;pendiente=!!(w&&w.eval('typeof dirty!=="undefined"&&dirty'));}catch(e){}
+  if(pendiente&&!confirm(LANG==='en'?'Close Pluma PDF? Anything not saved will be lost.':'¿Cerrar Pluma PDF? Lo que no hayas guardado se pierde.'))return;
+  try{$('pluma-frame').contentWindow.eval('dirty=false');}catch(e){}   // evita un segundo aviso del navegador
+  $('modal-pluma').style.display='none'; $('pluma-frame').src='about:blank'; $('pluma-frame').removeAttribute('src');
 }
 
 function decodeToolHtml(b64) {
@@ -7439,11 +7489,27 @@ async function consultarSolicitudFolio(){
       ${susp?`<div style="padding:11px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:9px;margin-top:12px"><b>Solicitud suspendida — Información requerida</b><br>${escapeHtml(s.motivoSuspension||s.comentarioIngenieria||'Consulta con Ingeniería.')}</div><div style="margin-top:10px"><textarea id="sol-info-adicional" class="inp" rows="3" placeholder="Agrega aquí la información solicitada por Ingeniería"></textarea><div style="margin-top:9px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><label style="display:block;font-size:.76rem;font-weight:700;color:#334155;margin-bottom:5px"><i class="fas fa-paperclip" style="margin-right:5px;color:#2563EB"></i>Archivos adicionales (opcionales)</label><p style="font-size:.68rem;color:#64748B;margin:0 0 7px">Hasta 3 imágenes + 1 PDF. Puedes responder únicamente con texto.</p><input id="sol-info-imagenes" type="file" accept="image/*" multiple class="inp" style="padding:7px;margin-bottom:6px"><input id="sol-info-pdf" type="file" accept="application/pdf,.pdf" class="inp" style="padding:7px"></div><button class="btn-p" style="margin-top:8px" onclick="enviarInfoAdicionalSolicitud('${s.folio}')"><i class="fas fa-paper-plane" style="margin-right:5px"></i>Enviar información a Ingeniería</button></div>`:''}
       ${(!rej&&!susp&&s.comentarioIngenieria)?`<div style="padding:10px;background:#EFF6FF;border-radius:8px;margin-top:12px"><b>Comentario de Ingeniería</b><br>${escapeHtml(s.comentarioIngenieria)}</div>`:''}
       ${parseSolicitudFotosAdicionales(s).length?`<div style="margin-top:12px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px"><b style="font-size:.75rem">Imágenes adicionales enviadas</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px">${parseSolicitudFotosAdicionales(s).map((f,i)=>`<a href="${escapeHtml(f.url||'#')}" target="_blank" rel="noopener" class="btn-g" style="font-size:.7rem;text-decoration:none">Imagen ${i+1}</a>`).join('')}</div></div>`:''}
+      ${!/^Cerrad|Cancelad/i.test(String(s.estatus||''))?`<div style="margin-top:14px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px">
+        <label for="sol-comentario" style="display:block;font-size:.78rem;font-weight:700;color:#0F2A4A;margin-bottom:6px"><i class="fas fa-comment-dots" style="margin-right:6px;color:#2563EB"></i>Escribir un comentario a Facilities</label>
+        <textarea id="sol-comentario" class="inp" rows="3" maxlength="500" placeholder="Por ejemplo: ¿cuándo se atiende? · el problema empeoró · ya no es necesario…" style="resize:vertical"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px"><span style="font-size:.66rem;color:#94A3B8">Lo verán Ingeniería y el técnico asignado. No cambia el estatus.</span><button class="btn-p" style="width:auto;padding:8px 16px" onclick="enviarComentarioSolicitud('${escapeHtml(s.folio)}',this)"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Enviar comentario</button></div>
+      </div>`:''}
       ${survey?renderSatisfactionSurvey(s.folio):''}
       ${s.estatus==='Cerrada sin encuesta de satisfacción'?'<div style="padding:10px;background:#F8FAFC;border-radius:8px;margin-top:12px">Cerrada automáticamente sin encuesta de satisfacción.</div>':''}
       ${s.promedioSatisfaccion?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px"><b>Encuesta registrada:</b> ${Number(s.promedioSatisfaccion).toFixed(2)} / 5</div>`:''}
     </div>`;
   }catch(e){box.innerHTML=`<div class="card" style="padding:18px;color:#B91C1C">${e.message}</div>`;}
+}
+// V9.19.24 — comentario del solicitante en cualquier estatus (mientras no esté cerrada).
+async function enviarComentarioSolicitud(folio,btn){
+  const el=$('sol-comentario'),comentario=el?el.value.trim():'';
+  if(!comentario){toast(LANG==='en'?'Write your comment':'Escribe tu comentario','err');if(el)el.focus();return;}
+  if(btn)btn.disabled=true;
+  try{
+    const r=await api({action:'addRequestCommentByFolio',folio,comentario});
+    if(r.success){toast(LANG==='en'?'Comment sent to Facilities.':'Comentario enviado a Facilities.');consultarSolicitudFolio();}
+    else{toast(r.error||'No se pudo enviar el comentario','err');if(btn)btn.disabled=false;}
+  }catch(e){toast(e.message||'No se pudo enviar el comentario','err');if(btn)btn.disabled=false;}
 }
 async function enviarInfoAdicionalSolicitud(folio){
   const el=$('sol-info-adicional'),comentario=el?el.value.trim():'';
@@ -11958,8 +12024,8 @@ function wwRenderFinalBase_(r){
     const x=f[k]||{};
     const nombre=wwFinalDosNombres_(x.titular)+(x.empresa?' · '+x.empresa:'');
     return `<div style="flex:1;min-width:150px;text-align:center">
-      <div style="height:58px;display:flex;align-items:flex-end;justify-content:center">
-        ${x.imagen?`<img src="${x.imagen}" alt="${escapeHtml(x.titulo)}" style="max-height:56px;max-width:150px;object-fit:contain">`:''}
+      <div style="height:96px;display:flex;align-items:flex-end;justify-content:center">
+        ${x.imagen?`<img class="wwf-firma" src="${x.imagen}" alt="${escapeHtml(x.titulo)}" style="width:100%;height:94px;object-fit:contain;object-position:center bottom">`:''}
       </div>
       <div style="height:1.5px;background:#94A3B8;margin:2px 10px 5px"></div>
       <div style="font-size:.8rem;font-weight:700;color:#0F1F3D">${escapeHtml(x.titulo||k)}</div>
@@ -12069,6 +12135,8 @@ function wwRenderFinalBase_(r){
     </div>`:''}
   </div>`;
 
+  wwRecortarFirmas_($('wwf-body'));   // V9.19.24: la firma llena su recuadro
+
   // QR de acceso al sistema.
   try{
     const q=$('wwf-qr'); q.innerHTML='';
@@ -12083,6 +12151,39 @@ function wwRenderFinalBase_(r){
     if(!tabla)return;
     const disponible=docEl.clientWidth-60;
     if(tabla.scrollWidth>disponible)docEl.style.width=(tabla.scrollWidth+60)+'px';
+  });
+}
+
+// V9.19.24 — Las firmas vienen como imagen con mucho blanco alrededor; se recorta al trazo
+// para que, al escalarla, llene el recuadro de la firma (antes se veía pequeña).
+function wwRecortarImagen_(src){
+  return new Promise(function(res){
+    const im=new Image();
+    im.onload=function(){
+      try{
+        const w=im.naturalWidth,h=im.naturalHeight; if(!w||!h)return res(null);
+        const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0);
+        const px=g.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=-1,y1=-1;
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;
+          if(px[i+3]>40&&(px[i]<200||px[i+1]<200||px[i+2]<200)){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}
+        if(x1<0)return res(null);
+        const pad=Math.round(Math.max(x1-x0,y1-y0)*0.04)+2;
+        x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(w-1,x1+pad);y1=Math.min(h-1,y1+pad);
+        if((x1-x0+1)>=w*0.97&&(y1-y0+1)>=h*0.97)return res(null);   // ya está ajustada
+        const o=document.createElement('canvas');o.width=x1-x0+1;o.height=y1-y0+1;
+        o.getContext('2d').drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);
+        res(o.toDataURL('image/png'));
+      }catch(e){res(null);}   // imagen de otro origen: se deja como está
+    };
+    im.onerror=function(){res(null);};
+    im.src=src;
+  });
+}
+function wwRecortarFirmas_(raiz){
+  if(!raiz)return;
+  raiz.querySelectorAll('img.wwf-firma').forEach(function(img){
+    if(img.dataset.recortada)return; img.dataset.recortada='1';
+    wwRecortarImagen_(img.getAttribute('src')).then(function(u){if(u)img.src=u;});
   });
 }
 
@@ -14339,6 +14440,7 @@ function renderHistorial(r) {
       <div>
         <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${translateHistoryAction(h.accion)}</p>
         <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
+        ${h.comentario?`<p style="font-size:.74rem;color:#475569;margin:3px 0 0;white-space:pre-wrap">${escapeHtml(h.comentario)}</p>`:''}
       </div>
     </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">'+uiText('Sin historial')+'</p>';
 }
@@ -14563,6 +14665,7 @@ function renderCompraHistorial(r) {
       <div>
         <p style="font-size:.82rem;color:#334155;margin:0 0 1px">${h.accion}</p>
         <p style="font-size:.7rem;color:#94A3B8;margin:0">${fmtDate(h.fecha)} · ${h.usuario}</p>
+        ${h.comentario?`<p style="font-size:.74rem;color:#475569;margin:3px 0 0;white-space:pre-wrap">${escapeHtml(h.comentario)}</p>`:''}
       </div>
     </div>`).join(''):'<p style="font-size:.8rem;color:#94A3B8">Sin historial</p>';
 }
@@ -16048,6 +16151,62 @@ window.addEventListener('message',async e=>{
 // ══════════════════════════════════════════════════════════════
 const MOE_CLAVES={catalogo:'ktmex_catalogo_v1',matriz:'ktmex_matriz_validada'};
 const MOE_SYNC={timer:null,ult:{},subiendo:false};
+// V9.19.24 — Listas para el encabezado del MOE (las lee la mejora inyectada en cada módulo).
+window.MOE_LISTAS=null; let MOE_LISTAS_INFO=null;
+function moeListasAplicar_(L){
+  L=L||{};
+  const su=L.sustancias||{};
+  window.MOE_LISTAS={areas:L.areas||[],subareas:L.subareas||{},departamentos:DEPARTAMENTOS.slice(),sustancias:Array.isArray(su.lista)?su.lista:[]};
+  MOE_LISTAS_INFO={puede:!!L.puedeCargarSustancias,archivo:su.archivo||'',actualizado:su.actualizado||'',por:su.por||''};
+  moeSustInfoPintar_();
+}
+function moeSustInfoPintar_(){
+  const i=MOE_LISTAS_INFO||{},n=(window.MOE_LISTAS&&window.MOE_LISTAS.sustancias||[]).length;
+  if($('moe-sust-info'))$('moe-sust-info').textContent=n?('· Sustancias: '+n+(i.actualizado?' ('+String(i.actualizado).slice(0,10)+(i.por?' · '+i.por:'')+')':'')):'· Sin lista de sustancias';
+  if($('moe-sust-btn'))$('moe-sust-btn').style.display=i.puede?'':'none';
+}
+// Lee el Excel de Ambiental: busca el encabezado de la columna de nombre (sustancia / nombre /
+// producto / químico) en los primeros renglones; el resto de columnas útiles va como detalle.
+function moeSustanciasLeer_(wb){
+  const reNom=/sustancia|nombre|producto|qu[ií]mico|material|chemical|substance/i, reNo=/^(no\.?|n[uú]m(ero)?|#|id|item|consecutivo)$/i;
+  let mejor=null;
+  wb.SheetNames.forEach(function(nh){
+    const filas=XLSX.utils.sheet_to_json(wb.Sheets[nh],{header:1,defval:'',raw:false});
+    for(let r=0;r<Math.min(15,filas.length);r++){
+      const fila=filas[r].map(function(c){return String(c||'').trim();});
+      if(fila.filter(Boolean).length<2)continue;   // un título suelto no es encabezado
+      const c=fila.findIndex(function(t){return t&&reNom.test(t)&&!reNo.test(t);});
+      if(c>=0){
+        const det=fila.map(function(t,i){return {t:t,i:i};}).filter(function(x){return x.i!==c&&x.t&&!reNo.test(x.t);}).slice(0,3);
+        const lista=filas.slice(r+1).map(function(f){
+          const n=String(f[c]||'').trim(); if(!n)return null;
+          const d=det.map(function(x){const v=String(f[x.i]||'').trim();return v?x.t+': '+v:'';}).filter(Boolean).join(' · ');
+          return d?{n:n,d:d}:{n:n};
+        }).filter(Boolean);
+        if(!mejor||lista.length>mejor.lista.length)mejor={hoja:nh,columna:fila[c],lista:lista};
+        break;
+      }
+    }
+  });
+  return mejor;
+}
+async function moeSustanciasArchivo_(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f)return;
+  try{
+    if(typeof XLSX==='undefined')await wwCargarScript_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+    const m=moeSustanciasLeer_(wb);
+    if(!m||!m.lista.length){toast('No encontré la columna de sustancias. El Excel debe tener un encabezado como «Sustancia», «Nombre» o «Producto».','err');return;}
+    const ej=m.lista.slice(0,5).map(function(x){return '• '+x.n;}).join('\n');
+    if(!confirm('Hoja «'+m.hoja+'», columna «'+m.columna+'»: '+m.lista.length+' sustancias.\n\n'+ej+(m.lista.length>5?'\n…':'')+'\n\nEsta lista reemplaza a la anterior para todos. ¿Cargarla?'))return;
+    const r=await api({action:'moeSustanciasGuardar',token:SESSION.token,lista:m.lista,archivo:f.name});
+    if(!r.success){toast(r.error||'No se pudo guardar la lista','err');return;}
+    if(window.MOE_LISTAS)window.MOE_LISTAS.sustancias=m.lista.filter(function(x,i,a){return a.findIndex(function(y){return y.n.toLowerCase()===x.n.toLowerCase();})===i;});
+    MOE_LISTAS_INFO=Object.assign(MOE_LISTAS_INFO||{},{actualizado:r.actualizado,por:r.por,archivo:f.name});
+    moeSustInfoPintar_();
+    toast(r.total+' sustancias cargadas. Ya aparecen en «Sustancias químicas usadas».');
+  }catch(e){toast('No se pudo leer el Excel: '+(e.message||e),'err');}
+}
 async function goMoe(){
   if(!SESSION||!SESSION.token)return;
   $('modal-moe').style.display='flex'; $('moe-estado').textContent='Cargando catálogo…';
@@ -16059,6 +16218,7 @@ async function goMoe(){
       else MOE_SYNC.ult[c]=null;   // si este navegador ya tenía un catálogo, se sube en la primera revisión
     });
     try{localStorage.setItem('moejra_lang',dojoIdioma_()==='ja'?'ja':'es');}catch(e){}
+    moeListasAplicar_(r.listas);   // V9.19.24: listas del encabezado y sustancias químicas
     $('moe-frame').src='moe-jra-facilities.html?v='+FRONTEND_BUILD;
     $('moe-estado').textContent=r.actualizado?'Catálogo del '+String(r.actualizado).slice(0,10)+(r.por?' · '+r.por:''):'';
     clearInterval(MOE_SYNC.timer); MOE_SYNC.timer=setInterval(moeRevisar_,4000);
