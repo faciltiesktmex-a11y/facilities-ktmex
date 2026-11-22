@@ -742,6 +742,7 @@ const LPA_AREAS = {
       <button onclick="goHerramientasElectricas()" id="nav-electricas" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-bolt" style="margin-right:5px"></i>Herramientas
       </button>
+      <button onclick="goProyectos()" id="nav-proyectos" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-chart-gantt" style="margin-right:5px"></i>Proyectos</button>
       <button onclick="goDojo()" id="nav-dojo" style="display:none;padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'"><i class="fas fa-graduation-cap" style="margin-right:5px"></i>Facilities Dojo</button>
       <button onclick="goAdmin()" id="nav-admin" style="padding:6px 12px;color:#94A3B8;font-size:.78rem;font-weight:500;background:none;border:none;cursor:pointer;border-radius:7px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='none'">
         <i class="fas fa-lock" style="margin-right:5px"></i>Admin
@@ -936,6 +937,17 @@ const LPA_AREAS = {
           <label style="display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:6px"><i class="fas fa-dollar-sign" style="color:#2563EB;margin-right:5px"></i>Anota el monto asignado para el trabajo *</label>
           <input type="number" id="s-presupuesto-monto" class="inp" min="0" step="0.01" inputmode="decimal" placeholder="Ej. 125500.00">
           <p style="font-size:.72rem;color:#64748B;margin-top:4px">Monto en pesos mexicanos (MXN).</p>
+        </div>
+        <!-- V9.19.26: Basic Plan obligatorio -->
+        <div id="s-bp-box" style="margin-top:14px;padding:12px;background:#fff;border:1.5px dashed #93C5FD;border-radius:12px">
+          <p style="font-size:.8rem;font-weight:700;color:#0F2A4A;margin:0 0 4px"><i class="fas fa-table-cells-large" style="color:#2563EB;margin-right:6px"></i>Basic Plan *</p>
+          <p style="font-size:.72rem;color:#475569;margin:0 0 9px">Describe lo que necesitas: antecedentes, objetivos, KPI, actividades y cronograma. El técnico lo toma como base de su Gantt. Después lo puedes editar con tu folio.</p>
+          <div id="s-bp-vacio"><button type="button" class="btn-g" style="width:100%" onclick="bpAbrirEditor_('nuevo')"><i class="fas fa-pen-ruler" style="margin-right:6px"></i>Crear Basic Plan</button></div>
+          <div id="s-bp-listo" style="display:none;gap:10px;align-items:center">
+            <img id="s-bp-img" alt="Basic Plan" style="width:120px;aspect-ratio:1.414;object-fit:cover;border:1px solid #CBD5E1;border-radius:8px;cursor:zoom-in" onclick="bpVerImagen_(this.src)">
+            <div style="flex:1"><b style="font-size:.8rem;color:#047857">✓ Basic Plan listo</b><div id="s-bp-info" style="font-size:.7rem;color:#64748B"></div>
+              <div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn-g" style="padding:5px 10px;font-size:.74rem" onclick="bpAbrirEditor_('nuevo')">Editar</button><button type="button" class="btn-g" style="padding:5px 10px;font-size:.74rem;color:#B91C1C" onclick="bpQuitarNuevo_()">Quitar</button></div></div>
+          </div>
         </div>
       </div>
       <button class="btn-p" id="btn-sol-submit" onclick="submitSolicitud()" style="width:100%">
@@ -1951,6 +1963,21 @@ const LPA_AREAS = {
     <iframe id="moe-frame" title="MOE · JRA · Facilities" style="flex:1;width:100%;border:0;background:#eef2f5"></iframe>
   </div>
 </div>
+<!-- V9.19.26: Basic Plan (editor) y Proyectos (Gantt) -->
+<div id="modal-bp" class="modal-bg" style="display:none;padding:0;z-index:120">
+  <iframe id="bp-frame" title="Basic Plan" style="width:100vw;height:100dvh;border:0;background:#fff"></iframe>
+</div>
+<div id="modal-bp-img" class="modal-bg" style="display:none;z-index:125;cursor:zoom-out" onclick="this.style.display='none'"><img alt="Basic Plan" style="max-width:96vw;max-height:94dvh;border-radius:8px;background:#fff"></div>
+<div id="modal-gantt" class="modal-bg" style="display:none;padding:0;z-index:110">
+  <div style="width:100vw;height:100dvh;background:#eef2f8;display:flex;flex-direction:column">
+    <div style="padding:8px 14px;background:#0F2A4A;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-size:.84rem"><i class="fas fa-chart-gantt" style="margin-right:7px;color:#D9F15C"></i><b id="gantt-titulo">Proyectos</b> <span id="gantt-estado" style="color:#BFDBFE"></span></div>
+      <div style="display:flex;gap:8px;align-items:center"><button id="gantt-btn-pend" class="btn-g" style="display:none" onclick="ganttPendientesVer_()"><i class="fas fa-plus" style="margin-right:5px"></i><span id="gantt-pend-n"></span></button><button class="btn-g" onclick="ganttCerrar_()"><i class="fas fa-xmark" style="margin-right:5px"></i>Cerrar</button></div>
+    </div>
+    <div id="gantt-pend" style="display:none;background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 14px;max-height:40dvh;overflow:auto"></div>
+    <iframe id="gantt-frame" title="Proyectos" style="flex:1;width:100%;border:0;background:#eef2f8"></iframe>
+  </div>
+</div>
 <!-- V9.19.24: Pluma PDF (Herramientas) -->
 <div id="modal-pluma" class="modal-bg" style="display:none;padding:0">
   <div style="width:100vw;height:100dvh;background:#e8eaf0;display:flex;flex-direction:column">
@@ -2857,6 +2884,7 @@ const LPA_AREAS = {
         <p style="font-size:.68rem;color:#94A3B8;font-weight:600;text-transform:uppercase;margin:0 0 5px">Descripción</p>
         <p id="ms-desc" style="font-size:.84rem;color:#334155;margin:0;line-height:1.6"></p>
       </div>
+      <div id="ms-proyecto" class="card-sm" style="display:none;padding:12px"></div>
       <div id="ms-foto-wrap" style="display:none">
         <a id="ms-foto" href="#" target="_blank" class="btn-g" style="font-size:.78rem"><i class="fas fa-image" style="margin-right:5px"></i>Ver fotografía adjunta</a>
       </div>
@@ -3615,7 +3643,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.24';
+const FRONTEND_BUILD = '9.19.26';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -4958,6 +4986,7 @@ function configureRoleUI() {
   if($('btn-moe'))$('btn-moe').style.display=(role==='ingeniero'||role==='manager'||(role==='tecnico'&&hasAdminPrivilege()))?'':'none';
   // V9.19.21: Facilities Dojo para técnicos e ingenieros.
   if($('nav-dojo'))$('nav-dojo').style.display=(role==='tecnico'||role==='ingeniero')?'':'none';
+  if($('nav-proyectos'))$('nav-proyectos').style.display=(role==='tecnico'||role==='ingeniero'||role==='manager')?'':'none';   // V9.19.26
 
   if(role==='manager'){
     LANG='en';
@@ -4995,7 +5024,7 @@ function configureRoleUI() {
   }
   // V9.9.0: quien solo aprueba Weekend Work no ve nada más.
   if(role==='aprobador'){
-    ['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-pm','nav-rfq','nav-board','nav-dojo'].forEach(id=>{if($(id))$(id).style.display='none';});
+    ['nav-sol','nav-lpa','nav-checklists','nav-compra','nav-act','nav-platform','nav-inv','nav-recepcion','nav-electricas','nav-admin','nav-pm','nav-rfq','nav-board','nav-dojo','nav-proyectos'].forEach(id=>{if($(id))$(id).style.display='none';});
     if($('nav-wwaprob'))$('nav-wwaprob').style.display='';
   }
   configureManagerDashboardTabs();
@@ -6692,6 +6721,188 @@ function goHerramientasElectricas() {
   closeElectricTool();
 }
 
+// ══════════════════════════════════════════════════════════════
+// V9.19.26 — BASIC PLAN (solicitud de instalación nueva) Y PROYECTOS (Gantt por solicitud)
+// ══════════════════════════════════════════════════════════════
+let BP_NUEVO=null, BP_CTX=null;
+const GANTT_ETAPAS={basic:'Basic Plan',master:'Master Schedule',specs:'Specifications',ringi:'Ringi Approval',po:'Purchase Order',kickoff:'Construction Kick Off',trial:'Trial',eval:'Evaluation',approval:'Approval',handover:'Handover'};
+const GANTT_ESTATUS={prog:['En progreso','#2563EB'],late:['Retrasado','#DC2626'],done:['Completado','#059669'],none:['Sin plan','#64748B']};
+function esSiNueva_(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')==='si';}
+function bpPintarNuevo_(){
+  const ok=!!BP_NUEVO;
+  if($('s-bp-vacio'))$('s-bp-vacio').style.display=ok?'none':'';
+  if($('s-bp-listo'))$('s-bp-listo').style.display=ok?'flex':'none';
+  if(ok){$('s-bp-img').src=BP_NUEVO.png;$('s-bp-info').textContent=(BP_NUEVO.data.objs||[]).length+' elementos · '+BP_NUEVO.at.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});}
+}
+function bpQuitarNuevo_(){if(confirm('¿Quitar el Basic Plan?')){BP_NUEVO=null;bpPintarNuevo_();}}
+function bpVerImagen_(src){const m=$('modal-bp-img');m.querySelector('img').src=src;m.style.display='flex';}
+function bpAbrirEditor_(modo,ctx){BP_CTX=Object.assign({modo:modo},ctx||{});$('modal-bp').style.display='flex';$('bp-frame').src='basic-plan-editor.html?embed=1&v='+FRONTEND_BUILD;}
+function bpCerrarEditor_(){$('modal-bp').style.display='none';$('bp-frame').src='about:blank';}
+window.addEventListener('message',async function(e){
+  const fr=$('bp-frame'); if(!fr||!fr.contentWindow||e.source!==fr.contentWindow)return;
+  const m=e.data||{};
+  if(m.type==='basicplan:ready'){
+    const data=BP_CTX?(BP_CTX.modo==='nuevo'?(BP_NUEVO&&BP_NUEVO.data):BP_CTX.data):null;
+    if(data)fr.contentWindow.postMessage({type:'basicplan:load',data:data},'*');
+  }else if(m.type==='basicplan:cancel'){bpCerrarEditor_();}
+  else if(m.type==='basicplan:save'){
+    if(!m.data||!Array.isArray(m.data.objs)||!m.data.objs.length){toast('El Basic Plan está vacío: agrega antecedentes, objetivos, KPI y actividades.','err');return;}
+    if(!m.png){toast('No se pudo generar la imagen del Basic Plan en este navegador. Prueba con Chrome o Edge.','err');return;}
+    if(BP_CTX&&BP_CTX.modo==='folio'){
+      toast('Guardando Basic Plan…');
+      try{
+        const r=await api({action:'basicPlanGuardar',folio:BP_CTX.folio,nombre:BP_CTX.nombre,basicPlan:{data:JSON.stringify(m.data),png:m.png}});
+        if(!r.success){toast(r.error||'No se guardó el Basic Plan','err');return;}
+        bpCerrarEditor_();toast('Basic Plan guardado. Ingeniería y el técnico reciben el aviso.');consultarSolicitudFolio();
+      }catch(err){toast('No se guardó: '+err.message,'err');}
+    }else{BP_NUEVO={data:m.data,png:m.png,at:new Date()};bpCerrarEditor_();bpPintarNuevo_();}
+  }
+});
+async function bpEditarFolio_(folio){
+  const nombre=String(($('sol-bp-nombre')||{}).value||'').trim();
+  if(nombre.length<4){toast('Escribe tu nombre completo, como en la solicitud','err');if($('sol-bp-nombre'))$('sol-bp-nombre').focus();return;}
+  try{
+    const r=await api({action:'basicPlanLeer',folio:folio,nombre:nombre});
+    if(!r.success){toast(r.error||'No se pudo abrir','err');return;}
+    let data=null;try{data=r.data?JSON.parse(r.data):null;}catch(e){data=null;}
+    bpAbrirEditor_('folio',{folio:folio,nombre:nombre,data:data});
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+// Sección del proyecto en «Consultar estatus».
+function v91926EstatusProyecto_(s){
+  if(!esSiNueva_(s.esNueva))return '';
+  const bp=s.basicPlan||{}, g=s.gantt, F=escapeHtml(s.folio);
+  let h='<div style="margin-top:14px;padding:12px;border:1px solid #BFDBFE;background:#F8FBFF;border-radius:10px">'
+    +'<p style="font-size:.8rem;font-weight:700;color:#0F2A4A;margin:0 0 8px"><i class="fas fa-table-cells-large" style="color:#2563EB;margin-right:6px"></i>Basic Plan</p>';
+  if(bp.existe)h+='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><img src="'+escapeHtml(driveMiniatura_(bp.url,400))+'" alt="Basic Plan" style="width:130px;aspect-ratio:1.414;object-fit:cover;border:1px solid #CBD5E1;border-radius:8px;cursor:zoom-in" onclick="bpVerImagen_(\''+escapeHtml(driveMiniatura_(bp.url,1600))+'\')">'
+    +'<div style="font-size:.72rem;color:#64748B">'+(bp.actualizado?'Actualizado el '+escapeHtml(fmtDateTime(bp.actualizado)):'')+(bp.por?' · '+escapeHtml(bp.por):'')+'<br><a href="'+escapeHtml(bp.url)+'" target="_blank" rel="noopener">Abrir en tamaño completo</a></div></div>';
+  else h+='<p style="font-size:.74rem;color:#B45309;margin:0">Esta solicitud todavía no tiene Basic Plan.</p>';
+  if(bp.editable)h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px"><input id="sol-bp-nombre" class="inp" style="flex:1;min-width:180px" placeholder="Tu nombre, como en la solicitud *"><button class="btn-g" style="width:auto" onclick="bpEditarFolio_(\''+F+'\')"><i class="fas fa-pen-ruler" style="margin-right:5px"></i>'+(bp.existe?'Editar Basic Plan':'Crear Basic Plan')+'</button></div>';
+  else if(bp.existe)h+='<p style="font-size:.68rem;color:#94A3B8;margin:6px 0 0">Ya no se puede editar: Ingeniería lo validó o la solicitud está cerrada.</p>';
+  h+='</div><div style="margin-top:10px;padding:12px;border:1px solid #E2E8F0;background:#fff;border-radius:10px">'
+    +'<p style="font-size:.8rem;font-weight:700;color:#0F2A4A;margin:0 0 8px"><i class="fas fa-chart-gantt" style="color:#2563EB;margin-right:6px"></i>Avance del proyecto</p>';
+  if(g){
+    const e=GANTT_ESTATUS[g.status]||GANTT_ESTATUS.none;
+    h+='<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:10px;background:#E2E8F0;border-radius:6px;overflow:hidden"><div style="width:'+g.pct+'%;height:100%;background:'+e[1]+'"></div></div><b style="font-size:.85rem">'+g.pct+'%</b></div>'
+      +'<p style="font-size:.72rem;color:#475569;margin:6px 0 0"><b style="color:'+e[1]+'">'+e[0]+'</b>'+(g.siguiente?' · Etapa actual: <b>'+escapeHtml(GANTT_ETAPAS[g.siguiente]||g.siguiente)+'</b>':' · Proyecto entregado')+(g.inicio?' · Plan: '+escapeHtml(fmtDate(g.inicio))+' → '+escapeHtml(fmtDate(g.fin)):'')+'</p>'
+      +'<button class="btn-g" style="width:auto;margin-top:8px" onclick="ganttVerPublico_(\''+F+'\')"><i class="fas fa-eye" style="margin-right:5px"></i>Ver Gantt del proyecto</button>';
+    if(g.puedeFirmar){
+      h+='<div style="margin-top:12px;padding:10px;border:1.5px solid #86EFAC;background:#F0FDF4;border-radius:10px"><p style="font-size:.78rem;font-weight:700;color:#166534;margin:0 0 4px">Firma de conformidad</p>'
+        +'<p style="font-size:.7rem;color:#475569;margin:0 0 8px">El trabajo está listo para entrega. Si estás de acuerdo, firma; la fecha de tu firma será la fecha de entrega.</p>'
+        +'<input id="sol-gf-nombre" class="inp" placeholder="Tu nombre, como en la solicitud *" style="margin-bottom:6px">'
+        +'<canvas id="sol-gf-canvas" width="600" height="180" style="width:100%;height:140px;background:#fff;border:1px dashed #94A3B8;border-radius:8px;touch-action:none"></canvas>'
+        +'<div style="display:flex;justify-content:space-between;margin:4px 0 6px"><button class="btn-g" style="width:auto;padding:4px 10px;font-size:.72rem" onclick="ganttFirmaLimpiar_()">Borrar firma</button><span style="font-size:.66rem;color:#94A3B8">Firma con el dedo o el mouse</span></div>'
+        +'<textarea id="sol-gf-com" class="inp" rows="2" maxlength="800" placeholder="Comentarios sobre lo entregado (opcional)"></textarea>'
+        +'<button class="btn-p" style="margin-top:8px;background:#16A34A" onclick="ganttFirmarPublico_(\''+F+'\',this)"><i class="fas fa-signature" style="margin-right:6px"></i>Firmar conformidad</button></div>';
+      setTimeout(ganttFirmaPad_,30);
+    }
+  }else h+='<p style="font-size:.74rem;color:#64748B;margin:0">El técnico asignado todavía no crea el Gantt del proyecto. Aquí verás el avance en cuanto lo haga.</p>';
+  return h+'</div>';
+}
+let GF_TRAZO=false;
+function ganttFirmaPad_(){
+  const cv=$('sol-gf-canvas'); if(!cv||cv.dataset.listo)return; cv.dataset.listo='1'; GF_TRAZO=false;
+  const g=cv.getContext('2d'); g.lineWidth=2.6; g.lineCap='round'; g.lineJoin='round'; g.strokeStyle='#0f172a';
+  let abajo=false; const pt=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+  cv.onpointerdown=e=>{abajo=true;cv.setPointerCapture(e.pointerId);const p=pt(e);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+.01,p[1]+.01);g.stroke();GF_TRAZO=true;e.preventDefault();};
+  cv.onpointermove=e=>{if(!abajo)return;const p=pt(e);g.lineTo(p[0],p[1]);g.stroke();};
+  cv.onpointerup=cv.onpointercancel=()=>{abajo=false;};
+}
+function ganttFirmaLimpiar_(){const cv=$('sol-gf-canvas');if(cv){cv.getContext('2d').clearRect(0,0,cv.width,cv.height);GF_TRAZO=false;}}
+async function ganttFirmarPublico_(folio,btn){
+  const nombre=String(($('sol-gf-nombre')||{}).value||'').trim();
+  if(nombre.length<4){toast('Escribe tu nombre completo','err');return;}
+  if(!GF_TRAZO){toast('Dibuja tu firma','err');return;}
+  if(!confirm('¿Firmar la conformidad del proyecto '+folio+'? La fecha de hoy queda como fecha de entrega.'))return;
+  btn.disabled=true;
+  try{
+    const r=await api({action:'ganttFirmar',folio:folio,nombre:nombre,firma:$('sol-gf-canvas').toDataURL('image/png'),comentarios:String(($('sol-gf-com')||{}).value||'').trim()});
+    if(!r.success){toast(r.error||'No se registró la firma','err');btn.disabled=false;return;}
+    toast('Firma registrada. Ingeniería valida la entrega.');consultarSolicitudFolio();
+  }catch(e){toast('Error: '+e.message,'err');btn.disabled=false;}
+}
+
+// ── Ventana Proyectos (Gantt) ─────────────────────────────
+let GANTT_COLA=Promise.resolve(), GANTT_PEND=[];
+window.KTMEX_GANTT=null;
+function ganttAbrirVentana_(cfg,titulo){
+  window.KTMEX_GANTT=Object.assign({miniatura:function(u,w){return driveMiniatura_(u,w);},cerrar:ganttCerrar_},cfg);
+  $('gantt-titulo').textContent=titulo; $('gantt-estado').textContent='';
+  $('modal-gantt').style.display='flex';
+  $('gantt-frame').src='gantt-proyectos.html?v='+FRONTEND_BUILD+'&t='+Date.now();
+}
+function ganttGuardarCola_(p){
+  $('gantt-estado').textContent='· Guardando…';
+  const c={};Object.keys(p).forEach(k=>{if(k!=='_meta')c[k]=p[k];});
+  const req={action:'ganttGuardar',token:SESSION.token,id:p.id,proyecto:JSON.stringify(c)};
+  const pr=GANTT_COLA.then(()=>api(req)).then(r=>{$('gantt-estado').textContent=r&&r.success?'· Guardado':'· No se guardó';return r;})
+    .catch(e=>{$('gantt-estado').textContent='· Sin conexión';return {success:false,error:e.message};});
+  GANTT_COLA=pr.then(()=>{},()=>{});
+  return pr;
+}
+async function goProyectos(abrirId){
+  if(!SESSION||!SESSION.token)return;
+  try{
+    const r=await api({action:'ganttListar',token:SESSION.token});
+    if(!r.success){toast(r.error||'No se pudieron abrir los proyectos','err');return;}
+    GANTT_PEND=r.pendientes||[];
+    ganttAbrirVentana_({proyectos:r.proyectos||[],puedeValidar:!!r.puedeValidar,soloLectura:false,abrir:abrirId||'',unSolo:false,
+      guardar:ganttGuardarCola_,
+      subir:(id,nombre,b64)=>api({action:'ganttArchivo',token:SESSION.token,id:id,nombre:nombre,base64:b64}).catch(e=>({success:false,error:e.message})),
+      eliminar:id=>api({action:'ganttEliminar',token:SESSION.token,id:id}).catch(e=>({success:false,error:e.message}))},
+      'Proyectos · '+((r.proyectos||[]).length)+' Gantt');
+    $('gantt-btn-pend').style.display=GANTT_PEND.length?'':'none';
+    $('gantt-pend-n').textContent=GANTT_PEND.length+' por crear';
+    $('gantt-pend').style.display='none';
+  }catch(e){toast('No se pudieron abrir los proyectos: '+e.message,'err');}
+}
+function ganttPendientesVer_(){
+  const b=$('gantt-pend'); if(b.style.display!=='none'){b.style.display='none';return;}
+  b.style.display='';
+  b.innerHTML='<p style="font-size:.76rem;font-weight:700;color:#0F2A4A;margin:0 0 6px">Instalaciones nuevas sin Gantt</p>'+GANTT_PEND.map(x=>
+    '<div style="display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #F1F5F9;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b style="font-size:.78rem">'+escapeHtml(x.folio)+'</b> <span style="font-size:.74rem;color:#475569">'+escapeHtml(x.descripcion)+'</span><div style="font-size:.66rem;color:#94A3B8">'+escapeHtml(x.estatus)+(x.tecnico?' · '+escapeHtml(x.tecnico):' · sin técnico')+(x.basicPlanURL?' · con Basic Plan':'')+'</div></div>'
+    +'<button class="btn-p" style="width:auto;padding:6px 12px;font-size:.74rem" onclick="ganttCrearDesde_(\''+escapeHtml(x.solicitudId)+'\',this)"><i class="fas fa-plus" style="margin-right:5px"></i>Crear Gantt</button></div>').join('');
+}
+async function ganttCrearDesde_(solicitudId,btn){
+  if(btn)btn.disabled=true;
+  try{
+    const r=await api({action:'ganttCrear',token:SESSION.token,solicitudId:solicitudId});
+    if(!r.success){toast(r.error||'No se creó el Gantt','err');if(btn)btn.disabled=false;return;}
+    toast('Gantt creado. Arma el Master Schedule.');
+    await GANTT_COLA.catch(()=>{}); goProyectos(r.id);
+  }catch(e){toast('Error: '+e.message,'err');if(btn)btn.disabled=false;}
+}
+async function ganttVerPublico_(folio){
+  try{
+    const r=await api({action:'ganttPublico',folio:folio});
+    if(!r.success){toast(r.error||'No disponible','err');return;}
+    ganttAbrirVentana_({proyectos:[r.proyecto],puedeValidar:false,soloLectura:true,abrir:r.proyecto.id,unSolo:true,
+      guardar:()=>Promise.resolve({success:false}),subir:()=>Promise.resolve({success:false}),eliminar:()=>Promise.resolve({success:false})},'Proyecto '+folio);
+    $('gantt-btn-pend').style.display='none';$('gantt-pend').style.display='none';
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function ganttCerrar_(){
+  await GANTT_COLA.catch(()=>{});
+  $('modal-gantt').style.display='none'; $('gantt-frame').src='about:blank'; window.KTMEX_GANTT=null;
+}
+// Detalle de la solicitud (Ingeniería / técnico administrador / manager): Basic Plan y Gantt.
+async function msProyecto_(r){
+  const box=$('ms-proyecto'); if(!box)return;
+  if(!esSiNueva_(r.esNueva)){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='';
+  const bp=r.basicPlanURL?'<div style="display:flex;gap:10px;align-items:center"><img src="'+escapeHtml(driveMiniatura_(r.basicPlanURL,400))+'" alt="Basic Plan" style="width:110px;aspect-ratio:1.414;object-fit:cover;border:1px solid #CBD5E1;border-radius:7px;cursor:zoom-in" onclick="bpVerImagen_(\''+escapeHtml(driveMiniatura_(r.basicPlanURL,1600))+'\')"><div style="font-size:.7rem;color:#64748B">'+(r.basicPlanActualizado?escapeHtml(fmtDateTime(r.basicPlanActualizado)):'')+(r.basicPlanPor?' · '+escapeHtml(r.basicPlanPor):'')+'<br><a href="'+escapeHtml(r.basicPlanURL)+'" target="_blank" rel="noopener">Abrir Basic Plan</a></div></div>'
+    :'<p style="font-size:.74rem;color:#B45309;margin:0">Sin Basic Plan (solicitud anterior a la 9.19.26 o pendiente del solicitante).</p>';
+  box.innerHTML='<p style="font-size:.68rem;color:#64748B;font-weight:700;text-transform:uppercase;margin:0 0 7px"><i class="fas fa-table-cells-large" style="margin-right:5px;color:#2563EB"></i>Basic Plan y Gantt</p>'+bp+'<div id="ms-gantt" style="margin-top:9px;font-size:.74rem;color:#94A3B8">Consultando el Gantt…</div>';
+  try{
+    const g=await api({action:'ganttEstado',token:SESSION.token,solicitudId:r.id});
+    const el=$('ms-gantt'); if(!el||!g.success){if(el)el.textContent='';return;}
+    if(g.existe){const e=GANTT_ESTATUS[g.info.status]||GANTT_ESTATUS.none;
+      el.innerHTML='<span style="color:'+e[1]+';font-weight:700">'+e[0]+' · '+g.info.pct+'%</span>'+(g.info.siguiente?' · etapa actual: '+escapeHtml(GANTT_ETAPAS[g.info.siguiente]):'')+' <button class="btn-g" style="padding:4px 10px;font-size:.72rem;margin-left:6px" onclick="goProyectos(\''+escapeHtml(g.id)+'\')"><i class="fas fa-chart-gantt" style="margin-right:4px"></i>Abrir Gantt</button>';}
+    else if(g.puedeCrear)el.innerHTML='Todavía no hay Gantt. <button class="btn-p" style="width:auto;padding:4px 10px;font-size:.72rem;margin-left:6px" onclick="ganttCrearDesde_(\''+escapeHtml(r.id)+'\',this)"><i class="fas fa-plus" style="margin-right:4px"></i>Crear Gantt</button>';
+    else el.textContent=g.sinTecnico?'Todavía no hay Gantt: se crea cuando se asigne un técnico.':'Todavía no hay Gantt: lo crea el técnico asignado.';
+  }catch(e){const el=$('ms-gantt');if(el)el.textContent='';}
+}
+
 // V9.19.24 — Pluma PDF. Los managers ven en Herramientas solo esta herramienta.
 function plumaSoloManager_(){
   const mgr=!!(SESSION&&SESSION.user&&SESSION.user.rol==='manager');
@@ -7439,11 +7650,12 @@ async function submitSolicitud() {
   if(!imageFiles.length&&!pdfFile){toast('Adjunta al menos una imagen o un archivo PDF','err');return;}
   if(nueva==='Si'&&(!presupuestoNumero||presupuestoMonto==='')){toast('Para una instalación nueva, anota el número y el monto del presupuesto asignado','err');return;}
   if(nueva==='Si'&&(Number(presupuestoMonto)<0||!Number.isFinite(Number(presupuestoMonto)))){toast('Ingresa un monto de presupuesto válido','err');return;}
+  if(nueva==='Si'&&!BP_NUEVO){toast('Para una instalación nueva, crea el Basic Plan','err');const b=$('s-bp-box');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});return;}
   if(email&&!/\S+@\S+\.\S+/.test(email)){toast('Ingresa un email válido','err');return;}
   const btn=$('btn-sol-submit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Enviando…';
   try{
     const at=await buildSolicitudAttachments(imageFiles,pdfFile);
-    const res=await api({action:'submitRequest',fecha,nombre,email,gerente,departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,presupuestoNumero:nueva==='Si'?presupuestoNumero:'',presupuestoMonto:nueva==='Si'?presupuestoMonto:'',imagenes:at.imagenes,pdf:at.pdf});
+    const res=await api({action:'submitRequest',fecha,nombre,email,gerente,departamento:depto,tipoSolicitud:tipo,descripcion:desc,esNueva:nueva,basicPlan:nueva==='Si'&&BP_NUEVO?{data:JSON.stringify(BP_NUEVO.data),png:BP_NUEVO.png}:null,presupuestoNumero:nueva==='Si'?presupuestoNumero:'',presupuestoMonto:nueva==='Si'?presupuestoMonto:'',imagenes:at.imagenes,pdf:at.pdf});
     if(res.success){$('sol-folio').textContent=res.folio;if(CORREO_CONFIRMACION_ACTIVO){const m=$('sol-success-msg');if(m)m.textContent='Facilities revisará tu solicitud a la brevedad. Recibirás confirmación por email.';}$('sol-form').style.display='none';$('sol-success').style.display='';}else toast(res.error||'Error al enviar','err');
   }catch(e){toast('Error: '+e.message,'err');}
   btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:8px"></i>Enviar Solicitud';
@@ -7494,6 +7706,7 @@ async function consultarSolicitudFolio(){
         <textarea id="sol-comentario" class="inp" rows="3" maxlength="500" placeholder="Por ejemplo: ¿cuándo se atiende? · el problema empeoró · ya no es necesario…" style="resize:vertical"></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px"><span style="font-size:.66rem;color:#94A3B8">Lo verán Ingeniería y el técnico asignado. No cambia el estatus.</span><button class="btn-p" style="width:auto;padding:8px 16px" onclick="enviarComentarioSolicitud('${escapeHtml(s.folio)}',this)"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Enviar comentario</button></div>
       </div>`:''}
+      ${v91926EstatusProyecto_(s)}
       ${survey?renderSatisfactionSurvey(s.folio):''}
       ${s.estatus==='Cerrada sin encuesta de satisfacción'?'<div style="padding:10px;background:#F8FAFC;border-radius:8px;margin-top:12px">Cerrada automáticamente sin encuesta de satisfacción.</div>':''}
       ${s.promedioSatisfaccion?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px"><b>Encuesta registrada:</b> ${Number(s.promedioSatisfaccion).toFixed(2)} / 5</div>`:''}
@@ -7549,6 +7762,7 @@ function resetSolicitud() {
   $('s-gerente').value=''; $('s-depto').value=''; $('s-tipo').value='';
   SOL_CAMERA_FILES=[]; if($('s-fotos'))$('s-fotos').value=''; if($('s-pdf'))$('s-pdf').value=''; if($('s-files-preview'))$('s-files-preview').textContent='Sin archivos seleccionados.';
   document.querySelectorAll('input[name="s-nueva"]').forEach(r=>r.checked=false);
+  BP_NUEVO=null; bpPintarNuevo_();
   togglePresupuestoFields();
   $('s-fecha').value=new Date().toISOString().slice(0,10);
 }
@@ -11283,7 +11497,8 @@ async function cargarConfirmacionWeekend_(){
           <span class="badge ${res.pendientes?'b-wait':'b-done'}">${res.confirmadas} de ${res.total} confirmadas</span>
         </div>
         <p style="font-size:.73rem;color:#475569;margin:9px 0 11px">Busca tu actividad y ciérrala en cuanto termines, aunque sea antes de lo planeado. Indica a qué hora trabajaste realmente, o por qué no se realizó, con tu nombre y tu firma.
-          <br><b style="color:#B45309"><i class="fas fa-clock" style="margin-right:4px"></i>Las confirmaciones cierran el ${escapeHtml(wwFmtCierre_(res.cierre))}.</b></p>
+          <br><b style="color:#B45309"><i class="fas fa-clock" style="margin-right:4px"></i>Las confirmaciones cierran el ${escapeHtml(wwFmtCierre_(res.cierre))}.</b>
+          ${d.sinPresident?'<br><span style="color:#64748B"><i class="fas fa-circle-info" style="margin-right:4px"></i>Habilitado por Ingeniería mientras se recaba la firma del President.</span>':''}</p>
         <div style="display:flex;flex-direction:column;gap:7px">
           ${d.actividades.map(a=>`
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:${a.confirmada?'#F0FDF4':'#F8FAFC'};border:1px solid ${a.confirmada?'#BBF7D0':'#E2E8F0'}">
@@ -14392,6 +14607,7 @@ function openSolicitudModal(id) {
   $('ms-comment').value='';
 
   renderHistorial(r);
+  msProyecto_(r);
   $('modal-sol').style.display='flex';
   if(rol==='manager')applyLanguage($('modal-sol'));
 }
@@ -15941,7 +16157,7 @@ function exportChecklistMonthlyExcel(){
     var frag=document.createDocumentFragment();
     frag.appendChild(sec('Operación')); move(frag,'nav-sol'); move(frag,'nav-act'); move(frag,'nav-compra');
     frag.appendChild(sec('Control')); move(frag,'nav-inv'); move(frag,'nav-recepcion'); move(frag,'nav-checklists'); move(frag,'nav-lpa');
-    frag.appendChild(sec('Ingeniería')); move(frag,'nav-electricas'); move(frag,'nav-dojo');
+    frag.appendChild(sec('Ingeniería')); move(frag,'nav-proyectos'); move(frag,'nav-electricas'); move(frag,'nav-dojo');
     frag.appendChild(sec('Gestión')); move(frag,'nav-admin');
     menu.insertBefore(frag,menu.firstChild);
     var role=document.createElement('div');role.id='v81-role-card';role.innerHTML='<div id=\"v81-avatar\" title=\"Cambiar mi foto\" onclick=\"cambiarFotoPerfil_()\" style=\"cursor:pointer;flex:none\"></div><div style=\"min-width:0;flex:1\"><div id=\"v81-role-name\">Sesión no iniciada</div><div id=\"v81-role-meta\">Facilities KTMEX</div></div>';
