@@ -152,6 +152,8 @@ input[type=date].inp,input[type=time].inp,input[type=number].inp,select.inp{min-
 #view-admin .mgr-layout #mgr-sol-cards,#view-admin .mgr-layout #mgr-compra-cards{display:grid!important}
 #view-admin .mgr-layout #panel-compra .compra-tabla{display:none!important}
 #view-admin .mgr-layout #fs-ocultas{display:none!important}
+.lpaq-item.lpaq-nok{border:2px solid #DC2626!important;background:#FEF2F2}
+.lpaq-item.lpaq-nok .lpaq-photo{border-color:#DC2626}
 .mgr-hint{grid-column:1 / -1;background:#fff;border:1px dashed #CBD5E1;border-radius:12px;padding:22px 18px;font-size:.84rem;color:#475569;text-align:center}
 .mgr-hint b{color:var(--navy)}
 .mgr-hint .ico{font-size:1.4rem;display:block;margin-bottom:8px;color:#94A3B8}
@@ -1349,6 +1351,7 @@ const LPA_AREAS = {
         <p style="font-size:.66rem;color:#92400E;margin:5px 0 0;background:#FEF3C7;border:1px solid #FDE68A;border-radius:7px;padding:6px 8px"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>Las contraseñas se muestran en texto legible, igual que en la hoja <b>Usuarios</b> de Google Sheets. Cualquiera con acceso de lectura al spreadsheet puede verlas: comparte ese archivo únicamente con quien lo necesite. Si alguna aparece como <b>no legible</b>, se perdió al cifrarse y solo se recupera generando una temporal.</p>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-p" onclick="lpaquAbrir()" style="background:#1D4ED8"><i class="fas fa-users-gear" style="margin-right:5px"></i>Usuarios LPA: altas, cambios y bajas</button>
         <button class="btn-g" onclick="loadLpaPasswordPanel()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
         <button class="btn-p" onclick="resetAllLpaPasswords()" style="background:#B45309"><i class="fas fa-key" style="margin-right:5px"></i>Reiniciar todos</button>
       </div>
@@ -1356,7 +1359,7 @@ const LPA_AREAS = {
     <div style="border:1px solid #CBD5E1;border-radius:10px;padding:12px;margin-top:14px">
       <h4 style="margin:0 0 10px;color:var(--navy)">Administrar usuarios de LPA Quality</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
-        <input id="lpaq-new-username" class="inp" placeholder="Usuario (ej. ana.lopez)" autocomplete="off">
+        <input id="lpaq-new-username" class="inp" placeholder="Usuario (ej. ana.lopez)" autocomplete="off" autocapitalize="off" spellcheck="false" data-sin-formato="1">
         <input id="lpaq-new-name" class="inp" placeholder="Nombre completo" autocomplete="off">
         <input id="lpaq-new-position" class="inp" placeholder="Puesto" value="LPA Auditor">
         <select id="lpaq-new-level" class="inp"><option>N4</option><option>N3</option><option>N2</option><option>N1</option></select>
@@ -1364,6 +1367,7 @@ const LPA_AREAS = {
         <input id="lpaq-new-email" class="inp" placeholder="Correo (opcional)" type="email">
       </div>
       <input id="lpaq-new-reason" class="inp" placeholder="Motivo / referencia (opcional)" style="margin-top:8px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:.74rem;color:#334155;margin-top:8px;cursor:pointer"><input type="checkbox" id="lpaq-new-programa" checked> Generar su programa de auditorías hasta el fin del calendario, según la frecuencia de su nivel</label>
       <button class="btn-p" onclick="crearUsuarioLpa()" style="margin-top:9px"><i class="fas fa-user-plus" style="margin-right:5px"></i>Agregar usuario</button>
       <p style="font-size:.68rem;color:#64748B;margin:8px 0 0">Suspender = solo LPA Quality. Bloquear = desactiva la cuenta general de Facilities y cierra sesiones. Se conserva el historial.</p>
     </div>
@@ -1415,6 +1419,33 @@ const LPA_AREAS = {
  </div>
 </div>
 
+<!-- V9.19.29: ventana de usuarios LPA (altas, cambios y bajas) -->
+<div id="modal-lpaq-usuarios" class="modal-bg" style="display:none">
+ <div class="modal-box" style="max-width:1100px;width:96vw;padding:20px;max-height:94vh;overflow:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+    <div><strong style="font-size:1rem;color:var(--navy)"><i class="fas fa-users-gear" style="color:#1D4ED8;margin-right:7px"></i>Usuarios LPA Quality</strong>
+      <div id="lpaqu-sub" style="font-size:.7rem;color:#64748B;margin-top:2px"></div></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn-p" onclick="lpaquEditar('')"><i class="fas fa-user-plus" style="margin-right:5px"></i>Nuevo usuario</button>
+      <button class="btn-g" onclick="lpaquCargar()"><i class="fas fa-rotate" style="margin-right:5px"></i>Actualizar</button>
+      <button class="btn-g" onclick="$('modal-lpaq-usuarios').style.display='none';if(window.LPAQ_REFRESH&&typeof loadLpaQDashboard==='function')loadLpaQDashboard();" style="padding:6px 11px">×</button>
+    </div>
+  </div>
+  <div id="lpaqu-form" style="display:none;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:12px;padding:12px;margin-bottom:12px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <input id="lpaqu-buscar" class="inp" style="flex:1;min-width:200px" placeholder="Buscar nombre, usuario o área…" oninput="lpaquListar()">
+    <select id="lpaqu-filtro" class="inp" style="width:auto" onchange="lpaquListar()"><option value="">Todos</option><option value="activos">Con acceso activo</option><option value="sin">Sin acceso / quitados</option><option value="vencidas">Con auditorías vencidas</option></select>
+  </div>
+  <div id="lpaqu-lista" style="overflow:auto"></div>
+ </div>
+</div>
+<!-- V9.19.29: detalle de auditoría LPA Quality -->
+<div id="modal-lpaq-aud" class="modal-bg" style="display:none">
+ <div class="modal-box" style="max-width:760px;padding:22px;max-height:92vh;overflow:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong id="lpaqa-title">Auditoría</strong><button class="btn-g" onclick="$('modal-lpaq-aud').style.display='none'" style="padding:5px 9px">×</button></div>
+  <div id="lpaqa-body"></div>
+ </div>
+</div>
 <!-- ══════════════════════ VIEW: CHECKLISTS FACILITIES V8.0 ══ -->
 <div id="view-checklists" style="display:none;max-width:1180px;margin:0 auto;padding:26px 16px" class="fade">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
@@ -3643,7 +3674,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.28';
+const FRONTEND_BUILD = '9.19.29';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -8299,7 +8330,7 @@ async function lpaqpProgramar(){
   if(!q.auditorUsername||!q.fecha||!q.area){toast('Elige auditor, fecha y área.','err');return;}
   try{const r=await api(Object.assign({action:'lpaqProgramarAuditoria',token:SESSION.token,modo:'crear'},q));
     if(!r.success){toast(r.error||'No se pudo programar','err');return;}
-    toast('Auditoría programada para '+(r.auditorNombre||q.auditorUsername)+' el '+r.fecha,'ok'); $('lpaqp-maquina').value=''; window.LPAQ_REFRESH=true; loadLpaQDashboard();
+    toast('Auditoría programada para '+(r.auditorNombre||q.auditorUsername)+' el '+r.fecha+(r.areaAgregada?' · se le asignó el área «'+r.areaAgregada+'»':''),'ok'); $('lpaqp-maquina').value=''; window.LPAQ_REFRESH=true; loadLpaQDashboard();
   }catch(e){toast('Error: '+e.message,'err');}
 }
 async function lpaqpCancelar(id){
@@ -8314,8 +8345,8 @@ async function lpaqpCancelar(id){
 function renderLpaQAuditHistory(rows){
   const el=$('lpaq-audits-history'); if(!el)return;
   if(!rows.length){el.innerHTML='<div style="font-size:.78rem;color:#94A3B8">No hay auditorías realizadas en las áreas autorizadas.</div>';return;}
-  el.innerHTML='<table style="width:100%;border-collapse:collapse;min-width:760px"><thead><tr><th>Fecha</th><th>Folio</th><th>Auditor</th><th>Área</th><th>Máquina</th><th>Nivel</th><th>Conformes</th><th>NC</th></tr></thead><tbody>'+
-    rows.slice().sort((a,b)=>String(b.fecha||b.executionDate||'').localeCompare(String(a.fecha||a.executionDate||''))).map(r=>`<tr><td>${r.fecha||r.executionDate||''}</td><td>${r.folio||''}</td><td>${r.auditorNombre||r.auditor||''}</td><td>${r.area||''}</td><td>${r.machine||r.maquina||''}</td><td>${r.level||r.nivel||''}</td><td>${r.ok??''}</td><td>${r.nok??''}</td></tr>`).join('')+'</tbody></table>';
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;min-width:760px"><thead><tr><th>Fecha</th><th>Folio</th><th>Auditor</th><th>Área</th><th>Máquina</th><th>Nivel</th><th>Conformes</th><th>NC</th><th></th></tr></thead><tbody>'+
+    rows.slice().sort((a,b)=>String(b.fecha||b.executionDate||'').localeCompare(String(a.fecha||a.executionDate||''))).map(r=>`<tr><td>${escapeHtml(lpaqFechaTxt_(r.fecha||r.executionDate||''))}</td><td>${escapeHtml(r.folio||'')}</td><td>${escapeHtml(r.auditorNombre||r.auditor||'')}</td><td>${escapeHtml(r.area||'')}</td><td>${escapeHtml(r.machine||r.maquina||r.linea||'')}</td><td>${escapeHtml(r.level||r.nivel||'')}</td><td>${r.ok??''}</td><td>${r.nok??''}</td><td><button class="btn-g" style="padding:4px 9px" onclick="lpaqVerAuditoria('${escapeHtml(r.id||'')}','${escapeHtml(r.folio||'')}')"><i class="fas fa-eye" style="margin-right:4px"></i>${LANG==='en'?'View':'Ver'}</button></td></tr>`).join('')+'</tbody></table>';   // V9.19.29: «Ver» abre el detalle
 }
 // V9.19.17 — Dulce actualiza el catálogo subiendo el Excel (LPA Master Catalog).
 // 1) Se lee el archivo aquí y el servidor devuelve el resumen de cambios sin guardar nada.
@@ -8519,6 +8550,7 @@ function renderLpaQChecklist(){
       <label><input type="radio" name="lpaq-${q.id}" value="NOK" onchange="toggleLpaQNC('${q.id}',true,false)"> NOK</label>
       <label><input type="radio" name="lpaq-${q.id}" value="N/A" onchange="toggleLpaQNC('${q.id}',false,true)"> N/A</label>
     </div>
+    <textarea class="inp lpaq-comment" rows="1" maxlength="500" style="margin-top:8px;font-size:.76rem" placeholder="${LANG==='en'?'Additional comment (optional) · e.g. document with a part number different from the visual aid':'Comentario adicional (opcional) · p. ej. documento con un número de parte distinto al de la ayuda visual'}"></textarea>
     <div id="lpaq-nc-${q.id}" style="display:none;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px;margin-top:10px">
       <div style="font-size:.75rem;font-weight:700;color:#9A3412;margin-bottom:7px">NC · Reaction ${q.reaction}</div>
       <textarea class="inp lpaq-finding" rows="2" placeholder="Finding / Hallazgo *"></textarea>
@@ -8536,7 +8568,8 @@ function renderLpaQChecklist(){
       <input class="inp lpaq-owner" placeholder="Assigned executor / Responsable ejecutor (optional)" style="margin-top:8px">
       <textarea class="inp lpaq-accion" rows="2" placeholder="Corrective action / Acción para corregirla *" style="margin-top:8px"></textarea>
       <label style="display:block;font-size:.72rem;font-weight:700;color:#9A3412;margin-top:8px">Photo of the nonconformity / Foto de la no conformidad *</label>
-      <input class="inp lpaq-photo" type="file" accept="image/*" capture="environment" style="margin-top:4px" onchange="lpaqVistaFoto_(this)">
+      <input class="inp lpaq-photo" type="file" accept="image/*" style="margin-top:4px" onchange="lpaqVistaFoto_(this)">
+      <div class="lpaq-falta-foto" style="display:none;font-size:.72rem;font-weight:700;color:#B91C1C;margin-top:4px"><i class="fas fa-camera" style="margin-right:5px"></i>${LANG==='en'?'Take or choose the photo: the audit cannot be saved without it.':'Toma o elige la foto: sin ella la auditoría no se puede guardar.'}</div>
       <img class="lpaq-photo-prev" alt="" style="display:none;max-width:160px;max-height:120px;border-radius:8px;border:1px solid #FED7AA;margin-top:6px;object-fit:cover">
       ${q.reaction==='D'?'<textarea class="inp lpaq-just" rows="2" placeholder="Technical justification / Justificación técnica *" style="margin-top:8px"></textarea>':''}
     </div>
@@ -8549,6 +8582,8 @@ function lpaqFaltantes_(){
   let sinResp=0, ncInc=0;
   qs.forEach(q=>{
     const res=document.querySelector(`input[name="lpaq-${q.id}"]:checked`)?.value||'';
+    const cc=document.querySelector(`.lpaq-item[data-qid="${q.id}"]`), ff=cc&&cc.querySelector('.lpaq-falta-foto');   // V9.19.29: aviso de foto en la tarjeta
+    if(ff)ff.style.display=(res==='NOK'&&!(cc.querySelector('.lpaq-photo')?.files?.length))?'':'none';
     if(!res){sinResp++;return;}
     if(res==='NOK'){const c=document.querySelector(`.lpaq-item[data-qid="${q.id}"]`); if(!c)return;
       const ok=(c.querySelector('.lpaq-finding')?.value.trim())&&(c.querySelector('.lpaq-resp-area')?.value)&&(c.querySelector('.lpaq-photo')?.files?.length)&&(c.querySelector('.lpaq-accion')?.value.trim())&&(q.reaction!=='D'||c.querySelector('.lpaq-just')?.value.trim());
@@ -8579,6 +8614,7 @@ function lpaqVistaFoto_(inp,sel){
 function toggleLpaQNC(qid,on,clearWhenHidden=false){
   const el=$('lpaq-nc-'+qid); if(!el) return;
   el.style.display=on?'':'none';
+  const card=el.closest('.lpaq-item'); if(card)card.classList.toggle('lpaq-nok',!!on);   // V9.19.29: NOK en rojo
 
   if(!on && clearWhenHidden){
     const finding=el.querySelector('.lpaq-finding');
@@ -8610,7 +8646,7 @@ async function submitLpaQuality(){
     const card=document.querySelector(`.lpaq-item[data-qid="${q.id}"]`);
     const result=document.querySelector(`input[name="lpaq-${q.id}"]:checked`)?.value||'';
     if(!result){invalid=true;break;}
-    const resp={questionId:q.id,result,reactionLevel:q.reaction};
+    const resp={questionId:q.id,result,reactionLevel:q.reaction,comentario:(card?.querySelector('.lpaq-comment')?.value||'').trim().slice(0,500)};   // V9.19.29
     if(result==='NOK'){
       const finding=card.querySelector('.lpaq-finding')?.value.trim()||'';
       const owner=card.querySelector('.lpaq-owner')?.value.trim()||'';
@@ -8637,26 +8673,84 @@ async function submitLpaQuality(){
 }
 function openLpaQNC(id){
   const r=(LPAQ_DASH.nc||[]).find(x=>x.id===id);if(!r)return;
+  const E=escapeHtml, en=LANG==='en';
+  const q=(LPAQ_CATALOG||[]).find(x=>String(x.id)===String(r.questionId));
+  const preg=q?(en&&q.en?q.en:(q.es||q.en||'')):(r.pregunta||'');
   $('lpaqn-id').value=id;$('lpaqn-title').textContent=id+' · '+r.questionId;
-  $('lpaqn-info').innerHTML=`<strong>${r.area}</strong> · Reaction ${r.reactionLevel}<br>`+
-    `${r.machine?'<b>Machine:</b> '+r.machine+'<br>':''}`+
-    `${r.areaResponsable?'<b>Responsible Area:</b> '+r.areaResponsable+'<br>':''}`+
-    `${r.championNombre?'<b>LPA Champion:</b> '+r.championNombre+'<br>':''}`+
-    `${escapeHtml(r.hallazgo||'')}`+
-    `${r.comentarioCierre?'<br><b>Closure comment / Comentario de cierre:</b> '+escapeHtml(r.comentarioCierre):''}`;
-  $('lpaqn-fotos').innerHTML=lpaqFotoNC_('Nonconformity photo / Foto de la no conformidad',r.fotoHallazgoURL,r.auditorNombre)+
-    lpaqFotoNC_('Closure evidence / Evidencia de cierre',r.evidenciaCierreURL,r.estatus==='Pendiente de validación'?'Pendiente de validación':(r.validadoPor?'Validó: '+r.validadoPor:''));
+  // V9.19.29: detalle completo de la no conformidad (pregunta, auditoría, hallazgo, comentario y acción).
+  const fila=(t,v)=>v?`<div><b>${t}:</b> ${E(String(v))}</div>`:'';
+  $('lpaqn-info').innerHTML=`<div style="font-weight:700;color:#0F172A;margin-bottom:4px">${E(r.area||'')} · Reaction ${E(r.reactionLevel||'')} · ${E(r.estatus||'')}</div>`+
+    (preg?`<div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:7px 9px;margin:4px 0 6px"><span style="font-size:.66rem;color:#64748B">${E(r.questionId||'')} · ${E(r.category||'')}</span><br>${E(preg)}</div>`:'')+
+    fila(en?'Audit':'Auditoría',[r.folio,lpaqFechaTxt_(r.fecha),r.auditorNombre].filter(Boolean).join(' · '))+
+    fila(en?'Part number':'Número de parte',r.parte)+
+    fila(en?'Machine':'Máquina',r.machine)+
+    fila(en?'Responsible area':'Área responsable',r.areaResponsable)+
+    fila('LPA Champion',r.championNombre)+
+    fila(en?'Finding':'Hallazgo',r.hallazgo)+
+    fila(en?'Auditor comment':'Comentario del auditor',r.comentarioAuditor)+
+    fila(en?'Corrective action':'Acción correctiva',r.accion)+
+    fila(en?'Due date':'Fecha compromiso',lpaqFechaTxt_(r.fechaCompromiso))+
+    fila(en?'Closure comment':'Comentario de cierre',r.comentarioCierre)+
+    (r.auditId||r.folio?`<button class="btn-g" style="margin-top:7px;padding:5px 10px" onclick="lpaqVerAuditoria('${E(r.auditId||'')}','${E(r.folio||'')}')"><i class="fas fa-list-check" style="margin-right:5px"></i>${en?'View full audit':'Ver auditoría completa'}</button>`:'');
+  $('lpaqn-fotos').innerHTML=lpaqFotoNC_(en?'Nonconformity photo':'Foto de la no conformidad',r.fotoHallazgoURL,r.auditorNombre,id,'hallazgo')+
+    lpaqFotoNC_(en?'Closure evidence':'Evidencia de cierre',r.evidenciaCierreURL,r.estatus==='Pendiente de validación'?(en?'Pending validation':'Pendiente de validación'):(r.validadoPor?(en?'Validated by: ':'Validó: ')+r.validadoPor:''),id,'cierre');
+  lpaqCargarFotosNC_($('lpaqn-fotos'));
   const pv=$('lpaqn-photo-prev'); if(pv){pv.removeAttribute('src');pv.style.display='none';}
   $('lpaqn-action').value=r.accion||'';$('lpaqn-owner').value=r.responsable||'';$('lpaqn-due').value=r.fechaCompromiso||'';$('lpaqn-comment').value='';
   $('lpaqn-photo').value='';$('modal-lpaq-nc').style.display='flex';
 }
-// V9.19.18: tarjeta con la foto del hallazgo o de la evidencia (miniatura de Drive y liga para abrirla).
-function lpaqFotoNC_(titulo,url,pie){
+function lpaqFechaTxt_(f){const k=String(f||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(k)?k:String(f||'');}
+// V9.19.18/29: tarjeta con la foto. La imagen la entrega el sistema (no depende de que el champion pueda abrir Drive).
+function lpaqFotoNC_(titulo,url,pie,ncId,cual){
   const E=escapeHtml;
-  if(!url)return `<div class="lpaqn-foto" style="border:1px dashed #CBD5E1;border-radius:10px;padding:10px;font-size:.72rem;color:#94A3B8"><b style="color:#475569">${E(titulo)}</b><br>Sin foto registrada.</div>`;
+  if(!url)return `<div class="lpaqn-foto" style="border:1px dashed #CBD5E1;border-radius:10px;padding:10px;font-size:.72rem;color:#94A3B8"><b style="color:#475569">${E(titulo)}</b><br>${LANG==='en'?'No photo recorded.':'Sin foto registrada.'}</div>`;
   return `<div class="lpaqn-foto" style="border:1px solid #E2E8F0;border-radius:10px;padding:8px;font-size:.72rem"><b style="color:#0F172A">${E(titulo)}</b>
-    <a href="${E(url)}" target="_blank" rel="noopener" style="display:block;margin-top:6px"><img src="${E(driveMiniatura_(url,500))}" alt="${E(titulo)}" style="width:100%;max-height:220px;object-fit:contain;background:#F1F5F9;border-radius:8px" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none;padding:10px;background:#F1F5F9;border-radius:8px;color:#1D4ED8">Abrir foto</span></a>
-    <a href="${E(url)}" target="_blank" rel="noopener" style="color:#1D4ED8;font-weight:600">Ver en tamaño completo</a>${pie?'<div style="color:#64748B;margin-top:2px">'+E(pie)+'</div>':''}</div>`;
+    <div class="lpaqn-img" data-nc="${E(ncId||'')}" data-cual="${E(cual||'hallazgo')}" style="margin-top:6px;min-height:90px;display:flex;align-items:center;justify-content:center;background:#F1F5F9;border-radius:8px;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>${LANG==='en'?'Loading photo…':'Cargando foto…'}</div>
+    <a href="${E(url)}" target="_blank" rel="noopener" style="color:#1D4ED8;font-weight:600;display:inline-block;margin-top:4px">${LANG==='en'?'Open in Drive':'Abrir en Drive'}</a>${pie?'<div style="color:#64748B;margin-top:2px">'+E(pie)+'</div>':''}</div>`;
+}
+const LPAQ_FOTO_CACHE={};
+async function lpaqCargarFotosNC_(cont){
+  if(!cont)return;
+  for(const box of cont.querySelectorAll('.lpaqn-img[data-nc]')){
+    const k=box.dataset.nc+'|'+box.dataset.cual;
+    try{
+      let r=LPAQ_FOTO_CACHE[k];
+      if(!r){r=await api({action:'lpaqFotoNC',token:SESSION.token,id:box.dataset.nc,cual:box.dataset.cual}); if(r&&r.success)LPAQ_FOTO_CACHE[k]=r;}
+      if(r&&r.success&&r.dataUrl){box.innerHTML='';const img=document.createElement('img');img.src=r.dataUrl;img.alt='';img.style.cssText='width:100%;max-height:260px;object-fit:contain;border-radius:8px;cursor:zoom-in';
+        img.onclick=()=>{const w=window.open('');if(w){w.document.write('<title>Foto</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+r.dataUrl+'" style="max-width:100%;max-height:100vh"></body>');}};
+        box.appendChild(img);}
+      else box.innerHTML='<span style="padding:10px;text-align:center">'+escapeHtml((r&&r.error)||(LANG==='en'?'The photo could not be loaded.':'No se pudo cargar la foto.'))+'</span>';
+    }catch(e){box.innerHTML='<span style="padding:10px">'+escapeHtml(e.message||String(e))+'</span>';}
+  }
+}
+// V9.19.29 — Detalle de una auditoría: todas las respuestas, comentarios y no conformidades con su foto.
+async function lpaqVerAuditoria(auditId,folio){
+  const m=$('modal-lpaq-aud'), b=$('lpaqa-body'); if(!m||!b)return;
+  const en=LANG==='en', E=escapeHtml;
+  $('lpaqa-title').textContent=(en?'Audit ':'Auditoría ')+(folio||'');
+  b.innerHTML='<div style="padding:20px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>'+(en?'Loading…':'Cargando…')+'</div>';
+  m.style.display='flex';
+  try{
+    const r=await api({action:'lpaqDetalleAuditoria',token:SESSION.token,auditId,folio});
+    if(!r.success){b.innerHTML='<div style="padding:16px;color:#B91C1C">'+E(r.error||'Error')+'</div>';return;}
+    const a=r.auditoria;
+    const col={OK:'#15803D',NOK:'#B91C1C','N/A':'#64748B'};
+    b.innerHTML=`<div style="font-size:.78rem;background:#F8FAFC;border-radius:10px;padding:10px;margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 12px">
+        <div><b>${en?'Date':'Fecha'}:</b> ${E(a.fecha)}</div><div><b>${en?'Area':'Área'}:</b> ${E(a.area)}</div><div><b>${en?'Level':'Nivel'}:</b> ${E(a.nivel)}</div>
+        <div><b>Auditor:</b> ${E(a.auditor)}</div><div><b>${en?'Part number':'No. de parte'}:</b> ${E(a.parte||'—')}</div><div><b>${en?'Line / machine':'Línea / máquina'}:</b> ${E(a.linea||'—')}</div>
+        <div><b>OK:</b> ${E(String(a.ok??''))} · <b>NOK:</b> ${E(String(a.nok??''))} · <b>N/A:</b> ${E(String(a.na??''))}</div></div>`+
+      (r.respuestas.length?r.respuestas.map(x=>{const t=en&&x.en?x.en:(x.es||x.en||x.questionId);
+        return `<div style="border:1px solid ${x.resultado==='NOK'?'#FCA5A5':'#E2E8F0'};background:${x.resultado==='NOK'?'#FEF2F2':'#fff'};border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:.76rem">
+          <div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#64748B;font-size:.68rem">${E(x.questionId)} · ${E(x.category)} · Reaction ${E(x.reaction)}</span><b style="color:${col[x.resultado]||'#334155'}">${E(x.resultado)}</b></div>
+          <div style="margin-top:3px;color:#0F172A">${E(t)}</div>
+          ${x.comentario?`<div style="margin-top:5px;color:#1E40AF"><i class="fas fa-comment" style="margin-right:5px"></i>${E(x.comentario)}</div>`:''}
+          ${x.hallazgo?`<div style="margin-top:5px"><b>${en?'Finding':'Hallazgo'}:</b> ${E(x.hallazgo)}</div>`:''}
+          ${x.nc?`<div style="margin-top:5px;font-size:.72rem;color:#475569"><b>${E(x.nc.id)}</b> · ${E(x.nc.estatus)} · ${E(x.nc.areaResponsable)}${x.nc.championNombre?' · '+E(x.nc.championNombre):''}${x.nc.accion?'<br><b>'+(en?'Action':'Acción')+':</b> '+E(x.nc.accion):''}${x.nc.fechaCompromiso?' · '+(en?'due ':'compromiso ')+E(x.nc.fechaCompromiso):''}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px;margin-top:6px">${x.nc.tieneFoto?lpaqFotoNC_(en?'Nonconformity photo':'Foto de la no conformidad','#','',x.nc.id,'hallazgo'):''}${x.nc.tieneCierre?lpaqFotoNC_(en?'Closure evidence':'Evidencia de cierre','#','',x.nc.id,'cierre'):''}</div>`:''}
+        </div>`;}).join(''):`<div style="font-size:.76rem;color:#94A3B8">${en?'This audit has no answers recorded.':'Esta auditoría no tiene respuestas registradas.'}</div>`);
+    b.querySelectorAll('.lpaqn-foto a[href="#"]').forEach(x=>x.remove());
+    lpaqCargarFotosNC_(b);
+  }catch(e){b.innerHTML='<div style="padding:16px;color:#B91C1C">'+E(e.message||String(e))+'</div>';}
 }
 async function saveLpaQNC(mode){
   const id=$('lpaqn-id').value,file=$('lpaqn-photo').files?.[0];let fotoBase64='',fotoName='';
@@ -9524,6 +9618,105 @@ async function loadLpaPasswordPanel(){
   }catch(e){box.innerHTML='';toast('Error: '+e.message,'err');}
 }
 
+// ══════════════════════════════════════════════════════════════
+// V9.19.29 — VENTANA «USUARIOS LPA»: alta, cambios (nivel, áreas, puesto, validador, correo),
+// quitar acceso (borra sus pendientes; conserva el historial), reactivar y generar su programa.
+// ══════════════════════════════════════════════════════════════
+let LPAQU={usuarios:[],areas:[],hasta:'',frec:{}};
+function lpaquAbrir(){$('modal-lpaq-usuarios').style.display='flex';$('lpaqu-form').style.display='none';lpaquCargar();}
+async function lpaquCargar(){
+  const el=$('lpaqu-lista'); el.innerHTML='<div style="padding:14px;color:#64748B;font-size:.78rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando usuarios…</div>';
+  try{const r=await api({action:'lpaqUsuarios',token:SESSION.token,modo:'listar'});
+    if(!r.success){el.innerHTML='<div style="padding:14px;color:#B91C1C">'+escapeHtml(r.error||'Error')+'</div>';return;}
+    LPAQU={usuarios:r.usuarios||[],areas:r.areas||[],hasta:r.programaHasta||'',frec:r.frecuencias||{}};
+    $('lpaqu-sub').textContent=LPAQU.usuarios.length+' usuarios · el calendario LPA llega hasta el '+LPAQU.hasta+' · Frecuencias: N1 '+(LPAQU.frec.N1||'')+', N2 '+(LPAQU.frec.N2||'')+', N3 '+(LPAQU.frec.N3||'')+', N4 '+(LPAQU.frec.N4||'');
+    lpaquListar();
+  }catch(e){el.innerHTML='<div style="padding:14px;color:#B91C1C">'+escapeHtml(e.message)+'</div>';}
+}
+function lpaquListar(){
+  const el=$('lpaqu-lista'), E=escapeHtml, q=lpaqpNorm_($('lpaqu-buscar').value||''), f=$('lpaqu-filtro').value;
+  let rows=LPAQU.usuarios.filter(u=>!q||lpaqpNorm_([u.nombre,u.username,u.puesto,(u.areas||[]).join(' ')].join(' ')).includes(q));
+  if(f==='activos')rows=rows.filter(u=>u.accesoActivo);
+  if(f==='sin')rows=rows.filter(u=>!u.accesoActivo);
+  if(f==='vencidas')rows=rows.filter(u=>u.vencidas>0);
+  if(!rows.length){el.innerHTML='<div style="padding:14px;color:#94A3B8;font-size:.78rem">Sin usuarios con ese filtro.</div>';return;}
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;min-width:960px;font-size:.73rem"><thead><tr style="background:#F1F5F9"><th style="text-align:left;padding:6px">Nombre</th><th style="text-align:left;padding:6px">Usuario</th><th style="text-align:left;padding:6px">Puesto</th><th style="padding:6px">Nivel</th><th style="text-align:left;padding:6px">Áreas</th><th style="padding:6px">Valida</th><th style="text-align:left;padding:6px">Estado</th><th style="padding:6px">Pendientes</th><th></th></tr></thead><tbody>'+
+    rows.map(u=>{
+      const est=u.excluido?'<span class="badge" style="background:#F1F5F9;color:#475569">Facilities (no audita)</span>':!u.cuenta?'<span class="badge" style="background:#FEE2E2;color:#991B1B">Sin cuenta</span>':!u.cuentaActiva?'<span class="badge" style="background:#FEE2E2;color:#991B1B">Cuenta bloqueada</span>':u.sinFila?'<span class="badge" style="background:#F1F5F9;color:#475569">Sin nivel ni áreas</span>':u.accesoActivo?'<span class="badge b-done">Activo</span>':'<span class="badge" style="background:#FEF3C7;color:#92400E">Sin acceso LPA</span>';
+      const bloqueado=u.admin||u.excluido;
+      const btn=bloqueado?'<span style="font-size:.66rem;color:#94A3B8">'+(u.admin?'Administración LPA':'—')+'</span>':
+        `<button class="btn-g" style="padding:4px 8px" onclick="lpaquEditar('${E(u.username)}')"><i class="fas fa-pen" style="margin-right:4px"></i>Editar</button>`+
+        (u.accesoActivo&&u.cuentaActiva&&u.nivel&&(u.areas||[]).length?`<button class="btn-g" style="padding:4px 8px;background:#DBEAFE;color:#1D4ED8" onclick="lpaquPrograma('${E(u.username)}')"><i class="fas fa-calendar-plus" style="margin-right:4px"></i>Generar programa</button>`:'')+
+        (u.accesoActivo&&!u.gerencia?`<button class="btn-g" style="padding:4px 8px;background:#FEE2E2;color:#991B1B" onclick="lpaquQuitar('${E(u.username)}')"><i class="fas fa-user-minus" style="margin-right:4px"></i>Eliminar</button>`:'')+
+        (!u.accesoActivo&&!u.sinFila?`<button class="btn-g" style="padding:4px 8px;background:#DCFCE7;color:#166534" onclick="lpaquReactivar('${E(u.username)}')"><i class="fas fa-user-check" style="margin-right:4px"></i>Reactivar</button>`:'');
+      return `<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:6px;font-weight:600;color:var(--navy)">${E(u.nombre||'—')}${u.gerencia?' <span class="badge b-media">Gerencia</span>':''}</td><td style="padding:6px" class="mono">${E(u.username)}</td><td style="padding:6px">${E(u.puesto||'—')}</td><td style="padding:6px;text-align:center">${E(u.nivel||'—')}</td>
+        <td style="padding:6px;max-width:260px">${E((u.areas||[]).join(', ')||'—')}</td><td style="padding:6px;text-align:center">${u.validador?'Sí':'—'}</td><td style="padding:6px">${est}</td>
+        <td style="padding:6px;text-align:center">${u.pendientes||0}${u.vencidas?' <span style="color:#B91C1C;font-weight:700">('+u.vencidas+' vencidas)</span>':''}</td><td style="padding:6px;text-align:right;white-space:nowrap">${btn}</td></tr>`;}).join('')+'</tbody></table>';
+}
+function lpaquEditar(username){
+  const u=username?LPAQU.usuarios.find(x=>x.username===username):null, E=escapeHtml, box=$('lpaqu-form'), nuevo=!u;
+  const sel=new Set(u?u.areas:[]);
+  box.innerHTML=`<div style="font-weight:700;color:#1E3A8A;margin-bottom:8px">${nuevo?'Nuevo usuario LPA (cuenta exclusiva de LPA con contraseña temporal)':'Editar a '+E(u.nombre||u.username)}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+      ${nuevo?'<input id="lpaqu-f-user" class="inp" placeholder="Usuario (ej. ana.lopez)" autocomplete="off" autocapitalize="off" spellcheck="false" data-sin-formato="1">':`<div class="inp mono" style="background:#F8FAFC">${E(u.username)}</div>`}
+      <input id="lpaqu-f-nombre" class="inp" placeholder="Nombre completo" value="${E(u?u.nombre:'')}">
+      <input id="lpaqu-f-puesto" class="inp" placeholder="Puesto" value="${E(u?(u.puesto||'LPA Auditor'):'LPA Auditor')}">
+      <select id="lpaqu-f-nivel" class="inp">${['N4','N3','N2','N1'].map(n=>`<option ${u&&u.nivel===n?'selected':''}>${n}</option>`).join('')}</select>
+      <input id="lpaqu-f-email" class="inp" type="email" placeholder="Correo (opcional)" value="${E(u?u.email:'')}">
+      ${nuevo?'':`<label style="display:flex;align-items:center;gap:6px;font-size:.74rem"><input type="checkbox" id="lpaqu-f-valida" ${u.validador?'checked':''}> Valida cierres de NC</label>`}
+    </div>
+    <div style="font-size:.72rem;font-weight:700;color:#334155;margin:10px 0 4px">Áreas que audita *</div>
+    <div id="lpaqu-f-areas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:3px 10px;background:#fff;border:1px solid #CBD5E1;border-radius:8px;padding:8px;max-height:170px;overflow:auto">
+      ${LPAQU.areas.map(a=>`<label style="display:flex;gap:6px;align-items:center;font-size:.72rem;cursor:pointer"><input type="checkbox" value="${E(a)}" ${sel.has(a)?'checked':''}>${E(a)}</label>`).join('')}</div>
+    <input id="lpaqu-f-motivo" class="inp" placeholder="Motivo / referencia (opcional)" style="margin-top:8px">
+    <label style="display:flex;align-items:center;gap:7px;font-size:.74rem;color:#334155;margin-top:8px;cursor:pointer"><input type="checkbox" id="lpaqu-f-programa" ${nuevo?'checked':''}> Generar su programa de auditorías hasta el ${E(LPAQU.hasta)} (cada ${'N1 trimestral · N2 mensual · N3 quincenal · N4 semanal'}), rotando sus áreas</label>
+    ${nuevo?'':'<div style="font-size:.68rem;color:#64748B;margin-top:5px">Si cambias el nivel, sus auditorías pendientes pasan al nivel nuevo. Si le quitas un área, sus pendientes de esa área no se borran solas: el sistema te avisa cuántas son.</div>'}
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn-p" onclick="lpaquGuardar(${nuevo?"''":"'"+E(u.username)+"'"})"><i class="fas fa-floppy-disk" style="margin-right:5px"></i>${nuevo?'Crear usuario':'Guardar cambios'}</button><button class="btn-g" onclick="$('lpaqu-form').style.display='none'">Cancelar</button></div>`;
+  box.style.display=''; box.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+async function lpaquGuardar(username){
+  const areas=[...document.querySelectorAll('#lpaqu-f-areas input:checked')].map(x=>x.value);
+  const q={nombre:$('lpaqu-f-nombre').value.trim(),puesto:$('lpaqu-f-puesto').value.trim(),nivel:$('lpaqu-f-nivel').value,areas:areas.join(','),
+    email:$('lpaqu-f-email').value.trim(),motivo:$('lpaqu-f-motivo').value.trim(),generarPrograma:!!$('lpaqu-f-programa').checked};
+  if(!areas.length){toast('Elige al menos un área.','err');return;}
+  if(q.nombre.length<3){toast('Captura el nombre completo.','err');return;}
+  try{
+    let r;
+    if(!username){
+      const un=$('lpaqu-f-user').value.trim().toLowerCase(); if(!un){toast('Captura el usuario.','err');return;}
+      if(!confirm('Se creará una cuenta exclusiva para LPA Quality con contraseña temporal y cambio obligatorio al iniciar sesión. ¿Continuar?'))return;
+      r=await api(Object.assign({action:'adminCreateLpaUser',token:SESSION.token,username:un},q));
+      if(r.success&&r.passwordTemporal)mostrarPasswordTemporal_(r.nombre,r.username,r.passwordTemporal);
+    }else{
+      q.validador=!!$('lpaqu-f-valida')?.checked;
+      r=await api(Object.assign({action:'lpaqUsuarios',token:SESSION.token,modo:'guardar',username},q));
+    }
+    if(!r.success){toast(r.error||'No se pudo guardar','err');return;}
+    toast(r.message||'Guardado','ok'); $('lpaqu-form').style.display='none';
+    await lpaquCargar(); try{loadLpaPasswordPanel();}catch(e){} window.LPAQ_REFRESH=true;
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function lpaquQuitar(username){
+  const u=LPAQU.usuarios.find(x=>x.username===username)||{};
+  const motivo=prompt('Eliminar a '+(u.nombre||username)+' de LPA Quality.\n\nSe quita su acceso LPA y se eliminan sus '+(u.pendientes||0)+' auditoría(s) pendientes. Su historial (auditorías realizadas y hallazgos) se conserva y se puede reactivar.\n\nEscribe el motivo:','');
+  if(motivo===null)return; if(!motivo.trim()){toast('Escribe el motivo.','err');return;}
+  try{const r=await api({action:'lpaqUsuarios',token:SESSION.token,modo:'quitar',username,motivo:motivo.trim()});
+    if(!r.success){toast(r.error||'No se pudo','err');return;} toast(r.message,'ok'); await lpaquCargar(); window.LPAQ_REFRESH=true;
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function lpaquReactivar(username){
+  if(!confirm('¿Reactivar el acceso LPA de '+username+'?'))return;
+  try{const r=await api({action:'lpaqUsuarios',token:SESSION.token,modo:'reactivar',username});
+    if(!r.success){toast(r.error||'No se pudo','err');return;} toast(r.message,'ok'); await lpaquCargar(); window.LPAQ_REFRESH=true;
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+async function lpaquPrograma(username){
+  const u=LPAQU.usuarios.find(x=>x.username===username)||{};
+  if(!confirm('Generar el programa de '+(u.nombre||username)+' ('+u.nivel+', '+(LPAQU.frec[u.nivel]||'')+') desde mañana hasta el '+LPAQU.hasta+', rotando sus áreas: '+(u.areas||[]).join(', ')+'.\n\nLas fechas que ya tenga cubiertas no se duplican. ¿Continuar?'))return;
+  try{const r=await api({action:'lpaqUsuarios',token:SESSION.token,modo:'programa',username});
+    if(!r.success){toast(r.error||'No se pudo','err');return;} toast(r.message,'ok'); await lpaquCargar(); window.LPAQ_REFRESH=true;
+  }catch(e){toast('Error: '+e.message,'err');}
+}
 async function crearUsuarioLpa(){
   const username=$('lpaq-new-username')?.value.trim(), nombre=$('lpaq-new-name')?.value.trim();
   if(!username||!nombre){toast('Captura usuario y nombre completo.','err');return;}
@@ -9531,7 +9724,7 @@ async function crearUsuarioLpa(){
   try{
     const r=await api({action:'adminCreateLpaUser',token:SESSION.token,username,nombre,
       puesto:$('lpaq-new-position').value.trim(),nivel:$('lpaq-new-level').value,
-      areas:$('lpaq-new-areas').value,email:$('lpaq-new-email').value.trim(),motivo:$('lpaq-new-reason').value.trim()});
+      areas:$('lpaq-new-areas').value,email:$('lpaq-new-email').value.trim(),motivo:$('lpaq-new-reason').value.trim(),generarPrograma:!!$('lpaq-new-programa')?.checked});
     if(!r.success){toast(r.error||'No se pudo crear el usuario','err');return;}
     $('lpaq-new-username').value='';$('lpaq-new-name').value='';$('lpaq-new-areas').value='';$('lpaq-new-email').value='';
     await loadLpaPasswordPanel();mostrarPasswordTemporal_(r.nombre,r.username,r.passwordTemporal);
