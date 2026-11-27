@@ -112,6 +112,20 @@ thead th{padding:9px 12px;background:#F8FAFC;border-bottom:1px solid var(--borde
 #view-admin .mgr-layout > #mgr-resumen{grid-column:1;grid-row:2 / span 60;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;margin-bottom:0!important}
 #view-admin .mgr-layout #kpi-row{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important}
 @media (max-width:980px){#view-admin .mgr-layout{display:block}#view-admin .mgr-layout > #mgr-resumen{position:static;max-height:none;margin-bottom:16px!important}}
+/* V9.19.30 — Weekend Work aprobadores: bandeja a la izquierda */
+.wwa-layout{display:grid;grid-template-columns:330px minmax(0,1fr);column-gap:18px;align-items:start}
+#wwa-inbox{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.wwa-layout .wwa-main{min-width:0}
+#wwa-inbox .mgr-c{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+#wwa-inbox .mgr-c:hover{border-color:#93C5FD}
+#wwa-inbox .mgr-c.sel{border:2px solid #2563EB;box-shadow:0 4px 14px -8px rgba(37,99,235,.6)}
+#wwa-inbox .wwa-acts{list-style:none;margin:5px 0 0;padding:0;font-size:.71rem;color:#334155}
+#wwa-inbox .wwa-acts li{padding:2px 0;border-top:1px dashed #E2E8F0;overflow-wrap:anywhere}
+#wwa-inbox .wwa-acts li:first-child{border-top:0}
+#wwa-inbox .mgr-btns{flex-wrap:wrap}
+.wwa-hint{border:1px dashed #CBD5E1;border-radius:14px;padding:34px 20px;text-align:center;color:#475569;font-size:.84rem;background:#fff}
+.wwa-hint .ico{font-size:1.6rem;color:#94A3B8;display:block;margin-bottom:8px}
+@media (max-width:980px){.wwa-layout{display:block}#wwa-inbox{position:static;max-height:none;margin-bottom:16px}}
 .mgr-inbox{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:14px;padding:12px}
 .mgr-ih{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .mgr-ih b{font-size:.95rem;color:var(--navy)}
@@ -1930,17 +1944,22 @@ const LPA_AREAS = {
 <!-- ══════════════════════════════════════════════════════════
      V9.9.0 — APROBACIONES DE WEEKEND WORK
      ══════════════════════════════════════════════════════════ -->
-<div id="view-ww-aprob" style="display:none;max-width:1100px;margin:0 auto;padding:26px 16px" class="fade">
+<div id="view-ww-aprob" style="display:none;max-width:1480px;margin:0 auto;padding:26px 16px" class="fade">
   <div class="card" style="padding:18px 20px;margin-bottom:14px">
     <h2 style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:0"><i class="fas fa-clipboard-check" style="color:#2563EB;margin-right:8px"></i>Weekend Work · Mi área</h2>
     <p id="wwa-sub" style="font-size:.76rem;color:#64748B;margin:4px 0 0">Aprueba las solicitudes de tu departamento, consulta sus actividades y revisa el plan firmado.</p>
   </div>
-  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" id="wwa-filtros">
-    <button class="btn-g" data-f="pendientes" onclick="wwAprobFiltro('pendientes')">Por aprobar</button>
-    <button class="btn-g" data-f="todas" onclick="wwAprobFiltro('todas')">Actividades de mi área</button>
-    <button class="btn-g" data-f="firmado" onclick="wwAprobFiltro('firmado')"><i class="fas fa-file-signature" style="margin-right:6px"></i>Plan firmado</button>
+  <!-- V9.19.30: diseño como el de Inagaki — bandeja «Por aprobar» a la izquierda; detalle y filtros a la derecha -->
+  <div class="wwa-layout">
+    <aside id="wwa-inbox"></aside>
+    <div class="wwa-main">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" id="wwa-filtros">
+        <button class="btn-g" data-f="todas" onclick="wwAprobFiltro('todas')"><i class="fas fa-list" style="margin-right:6px"></i>Actividades de mi área</button>
+        <button class="btn-g" data-f="firmado" onclick="wwAprobFiltro('firmado')"><i class="fas fa-file-signature" style="margin-right:6px"></i>Plan firmado</button>
+      </div>
+      <div id="wwa-lista"></div>
+    </div>
   </div>
-  <div id="wwa-lista"></div>
 </div>
 
 <div id="view-ps" style="display:none;max-width:1220px;margin:0 auto;padding:26px 16px" class="fade">
@@ -3674,7 +3693,7 @@ let NOTIF_DATA=[]; let NOTIF_TIMER=null; let NOTIF_LAST_UNREAD=0; let NOTIF_CURR
 
 // V8.8.3 — Identificador de la versión de esta interfaz. Sirve para
 // distinguir un problema real de una copia vieja en caché del navegador.
-const FRONTEND_BUILD = '9.19.29';
+const FRONTEND_BUILD = '9.19.30';
 
 let _I18N_APPLYING = false;   // V8.6.5: evita que la traducción se retroalimente
 let LANG = localStorage.getItem('ktmex_lang');
@@ -5568,7 +5587,7 @@ async function wwMisBuscar(){
   }catch(e){$('wwm-lista').innerHTML=`<div style="color:#B91C1C;font-size:.8rem">Error: ${escapeHtml(e.message||String(e))}</div>`;}
 }
 
-let WWA_DATA=null, WWA_FILTRO='pendientes';
+let WWA_DATA=null, WWA_FILTRO='', WWA_SEL='';   // V9.19.30: '' = detalle de la tarjeta elegida (o aviso)
 function goWwAprob(){ if(!requireLogin('ww-aprob'))return; showView('ww-aprob'); wwAprobCargar(); }
 async function wwAprobCargar(){
   $('wwa-lista').innerHTML='<div class="card" style="padding:22px;text-align:center;color:#64748B"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Cargando…</div>';
@@ -5578,6 +5597,7 @@ async function wwAprobCargar(){
     WWA_DATA=r;
     $('wwa-sub').textContent=r.esIngenieroFacilities&&!(r.misDepartamentos||[]).length?'Como ingeniero de Facilities puedes aprobar en lugar de un responsable ausente, con motivo.'
       :'Tus departamentos: '+(r.misDepartamentos||[]).join(', ')+'. Aprueba, consulta las actividades de tu área y revisa el plan firmado.';
+    wwaInboxRender_();
     wwAprobFiltro(WWA_FILTRO);
   }catch(e){$('wwa-lista').innerHTML=`<div class="card" style="padding:20px;color:#B91C1C">Error: ${escapeHtml(e.message||String(e))}</div>`;}
 }
@@ -5594,11 +5614,43 @@ function wwAprobCard_(x,conAcciones){
       <button class="btn-g" style="width:auto;color:#B91C1C" onclick="wwAprobAccion('${escapeHtml(x.clave)}','rechazar')"><i class="fas fa-thumbs-down" style="margin-right:6px"></i>Rechazar</button></div>`:''}
   </div>`;
 }
+// V9.19.30 — Bandeja «Por aprobar» del lado izquierdo, como la de Inagaki.
+function wwaPendientes_(){return ((WWA_DATA&&WWA_DATA.items)||[]).filter(x=>x.puedeAprobar||x.puedeSustituir).sort((a,b)=>String(a.fechaEnvio||'').localeCompare(String(b.fechaEnvio||'')));}
+function wwaInboxRender_(){
+  const box=$('wwa-inbox'); if(!box)return;
+  const L=wwaPendientes_(), E=escapeHtml;
+  let h=`<div class="mgr-inbox"><div class="mgr-ih"><b><i class="fas fa-inbox" style="margin-right:7px"></i>Por aprobar</b><span class="mgr-badge ${L.length?'':'ok'}">${L.length?L.length+' pendiente'+(L.length===1?'':'s'):'Al día'}</span></div>`;
+  if(!L.length)h+=`<div class="mgr-empty"><i class="fas fa-circle-check" style="margin-right:7px"></i>No tienes solicitudes por aprobar. Las nuevas aparecen aquí cuando tu área las declara.</div>`;
+  h+=L.map(x=>{
+    const acts=x.actividades||[], d=mgrDias_(x.fechaEnvio), k=E(x.clave);
+    return `<div class="mgr-c${WWA_SEL===x.clave?' sel':''}" data-clave="${k}" onclick="wwaVer('${k}')">
+      <div class="k ww">Weekend work · <span class="mono">${E(x.requestNo||'—')}</span></div>
+      <div class="t">${E(x.registrante||'—')}</div>
+      <div class="s">${E(x.departamento||'')}${x.sabado?' · sábado '+E(wwFechaLarga_(x.sabado)):''}</div>
+      <ul class="wwa-acts">${acts.slice(0,4).map(a=>`<li><b>#${E(String(a.n))}</b> ${E(a.actividad||'')}${a.areaTrabajo?' <span style="color:#64748B">· '+E(a.areaTrabajo)+'</span>':''}</li>`).join('')}${acts.length>4?`<li style="color:#64748B">+${acts.length-4} actividad(es) más</li>`:''}</ul>
+      <div class="s ${d>=2?'late':''}" style="margin-top:4px">${acts.length} actividad${acts.length===1?'':'es'} · ${d===0?'declarada hoy':'esperando '+d+' día'+(d===1?'':'s')}</div>
+      <div class="mgr-btns"><button onclick="event.stopPropagation();wwaVer('${k}')">Ver detalle</button><button class="rj" onclick="event.stopPropagation();wwAprobAccion('${k}','rechazar')">Rechazar</button><button class="ap" onclick="event.stopPropagation();wwAprobAccion('${k}','${x.puedeSustituir?'sustituir':'aprobar'}')">${x.puedeSustituir?'Aprobar (sustituto)':'Aprobar'}</button></div>
+    </div>`;}).join('');
+  box.innerHTML=h+'</div>';
+}
+function wwaVer(clave){
+  WWA_SEL=clave; wwAprobFiltro('');
+  document.querySelectorAll('#wwa-inbox .mgr-c').forEach(c=>c.classList.toggle('sel',c.dataset.clave===clave));
+  if(window.innerWidth<=980){const m=document.querySelector('#view-ww-aprob .wwa-main');if(m)m.scrollIntoView({behavior:'smooth',block:'start'});}
+}
 function wwAprobFiltro(f){
+  if(f==='pendientes')f='';
   WWA_FILTRO=f;
   document.querySelectorAll('#wwa-filtros button').forEach(b=>{const on=b.dataset.f===f;b.style.background=on?'#0F2A4A':'';b.style.color=on?'#fff':'';});
   if(f==='firmado'){wwPlanFirmadoCargar_();return;}
   if(!WWA_DATA)return;
+  if(!f){   // V9.19.30: detalle de la solicitud elegida en la bandeja
+    const x=wwaPendientes_().find(i=>i.clave===WWA_SEL)||((WWA_DATA.items||[]).find(i=>i.clave===WWA_SEL));
+    if(!x){WWA_SEL='';$('wwa-lista').innerHTML=`<div class="wwa-hint"><i class="fas fa-hand-pointer ico"></i>Toca una solicitud de <b>Por aprobar</b>, a la izquierda, para ver aquí su detalle completo.<br><span style="font-size:.76rem;color:#64748B">O elige «Actividades de mi área» o «Plan firmado» para consultar.</span></div>`;return;}
+    const pend=x.puedeAprobar||x.puedeSustituir;
+    $('wwa-lista').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 2px 8px"><b style="color:#0F2A4A;font-size:.92rem"><i class="fas fa-magnifying-glass" style="margin-right:7px;color:#2563EB"></i>Detalle de la solicitud</b>${pend?'':'<span style="font-size:.7rem;color:#64748B">Ya no está pendiente de tu aprobación</span>'}</div>`+wwAprobCard_(x,true);
+    return;
+  }
   if(f==='todas'){
     // Actividades de mi área: solo consulta, agrupadas por fin de semana (el más próximo primero).
     const L=(WWA_DATA.items||[]).slice().sort((a,b)=>String(b.sabado||'').localeCompare(String(a.sabado||''))||String(b.fechaEnvio).localeCompare(String(a.fechaEnvio)));
@@ -5610,8 +5662,6 @@ function wwAprobFiltro(f){
     }).join('')+'<p style="font-size:.66rem;color:#94A3B8;margin:12px 2px"><i class="fas fa-eye" style="margin-right:5px"></i>Esta pestaña es solo de consulta. Para aprobar o rechazar, usa «Por aprobar».</p>';
     return;
   }
-  const L=(WWA_DATA.items||[]).filter(x=>x.puedeAprobar||x.puedeSustituir);
-  $('wwa-lista').innerHTML=L.length?L.map(x=>wwAprobCard_(x,true)).join(''):'<div class="card" style="padding:24px;text-align:center;color:#94A3B8;font-size:.82rem">No tienes solicitudes por aprobar.</div>';
 }
 
 // ── Plan firmado: solo para consulta, desde el sábado a las 08:00 ──
